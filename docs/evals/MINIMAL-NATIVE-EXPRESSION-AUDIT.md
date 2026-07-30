@@ -1,5 +1,7 @@
 # Minimal Native Expression Audit — kleosrules V16.0.22
 
+> **RETIRED (V2):** Historical audit of the deleted Rust `kleos-gate`. Not operational law. See `docs/DECISIONS/hooks-architecture.md`.
+
 **Verdict: ALREADY MINIMAL**
 
 The artefact passes every criterion with concrete evidence. No rewrite is required.

@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT=""
+for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
+  if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then
+    ROOT="$(cd "$d" && pwd)"; break
+  fi
+done
+[[ -z "$ROOT" ]] && ROOT="$(cd "$HERE/.." && pwd)"
 STATE="$ROOT/state"
 HANDOFF="$ROOT/HANDOFF.md"
-POLICY="$ROOT/hooks/policy/intent.json"
+POLICY="$HERE/policy/intent.json"
 MAX_BODY="$(jq -r '.max_intent_body_lines // 6' "$POLICY" 2>/dev/null || echo 6)"
 MAX_ANCH="$(jq -r '.max_named_anchors // 5' "$POLICY" 2>/dev/null || echo 5)"
 INPUT="$(cat)"
@@ -46,8 +53,9 @@ echo "$TEXT" | grep -q 'Done-when:' && echo "$TEXT" | grep -q 'INTENT:' || follo
 ILINES="$(echo "$LAST" | awk '/^INTENT:/{p=1;n=0;next} p&&/^Done-when:/{exit} p&&NF{n++} END{print n+0}')"
 ANCH="$(echo "$LAST" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|SCOPE|RISK):' || true)"
 [[ "${ILINES:-0}" -gt "$MAX_BODY" || "${ANCH:-0}" -gt "$MAX_ANCH" ]] && follow "Thin INTENT roof: ≤${MAX_ANCH} anchors; ≤${MAX_BODY} body lines between INTENT and Done-when. Compress. History=input not authority."
+ASK_RE='(déjame saber|quieres que|puedo (hacer|agregar)|me avisas|debería agregar|let me know if|want me to|should I (add|also)|I can (add|also)|if you('\''|’)d like|if you want( me)? to|say if you want)'
+echo "$LAST" | grep -iqE "$ASK_RE" && follow "STOP REJECTED: partial handoff / permission ask. Do not ask. Execute missing Done-when NOW, then Done-when: met."
 echo "$TEXT" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || {
-  echo "$LAST" | grep -iqE '(déjame saber|quieres que|puedo (hacer|agregar)|me avisas|debería agregar|let me know if|want me to|should I (add|also)|I can (add|also)|if you('\''|’)d like|if you want( me)? to|say if you want)' && follow "STOP REJECTED: partial handoff / permission ask. Do not ask. Execute missing Done-when NOW, then Done-when: met."
   follow "PREMATURE STOP: Done-when not met. Finish every Done-when point. Write Done-when: met then stop."
 }
 accept

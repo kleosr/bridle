@@ -18,6 +18,6 @@ Work ends when `Done-when` is fully met — not after the first draft.
 
 1. NO ASK INSIDE INTENT: if something is missing for Done-when, do it now. Do not ask permission.
 2. NO PARTIAL HANDOFFS: ban closers like "let me know if…", "want me to…", "I can add…", "déjame saber / quieres que". If needed for INTENT, write it in this turn.
-3. PRE-STOP SELF-CHECK: before stop, re-read Done-when. Any open point → keep working.
+3. PRE-STOP SELF-CHECK: before stop, re-read Done-when against disk/evidence. Any open point or unrun TOOLCHAIN check → keep working. First draft ≠ met.
 4. CASCADE FIX: broken import/test from your change → fix same turn. Do not leave red.
-5. CLOSE SIGNAL: when Done-when is met, write `Done-when: met` then stop. `stop_gate` audits history and will force another pass if you stop early.
+5. CLOSE SIGNAL: when Done-when is met, write `Done-when: met` then stop. `stop_gate` audits markers and will force another pass if you stop early.

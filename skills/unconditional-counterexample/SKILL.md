@@ -27,7 +27,7 @@ Phases 1→4 as a fake deepen).
 ## Self-target rule
 
 If `{problem}` targets this pack’s own law (Master Mind / USER-RULES / kleosr /
-always-on companions / `kleos-gate`):
+always-on companions / Bash hooks):
 
 1. Do **not** auto-advance Phases 1→4.
 2. Emit Phase-1 sketch only (restate \(C\), map structure, candidate seam).

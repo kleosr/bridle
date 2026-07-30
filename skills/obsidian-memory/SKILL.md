@@ -28,25 +28,25 @@ Pattern: **raw = source, wiki = compiled, continuous refeed**
 
 | Lifecycle | Force |
 |-----------|--------|
-| sessionStart | playbook + capped hot + context-meter + recall nudge |
-| beforeSubmitPrompt | classify hints (≤2) + index/hot pointers (stopwords; min 2 hits) |
-| Mid-session | companion + roof nudge every 12 tools |
-| CODE write roof | deny CODE_EXT until ledger `obsidian_recall` when `recall_gate_enabled` (default ON). Cursor `MCP:vault_read` of `wiki/hot`\|`wiki/index` (or `MCP:search_*`) sets recall; CallMcpTool + `user-obsidian` still works. |
+| sessionStart | Bash inject: amnesia + HANDOFF tail |
+| beforeSubmitPrompt | Bash classify + thin INTENT duty |
+| Mid-session | companion roofs; durable fact → COMPLETE vault_append |
+| CODE write | Soft: vault_read hot\|index first (companions). Hard size: `lean_gate.sh` |
 | Durable fact | same-turn `vault_append` (agent must) |
 | Ops triad | **ingest → query → lint** (+ write-back) |
-| Fleet | missing hub → refeed disk AGENTS/README/HANDOFF ([[instructions/MAX-MEMORY]]) |
-| preCompact / stop | write-back Session + hot/log (save INTO vault) |
+| Fleet | missing hub → refeed disk AGENTS/README/HANDOFF |
+| stop | write-back Session + hot; mirror HANDOFF |
 
 ## Curator (Cursor-native)
 
 Harness seeds + classifies the ask; agent deep-reads; vault stays SSOT. Not Neo4j.
 
-1. **Force** — playbook + hot + meter; ask classify/pointers (`hooks/policy/context.json`).
-2. **Agent** — obey hints; `search_simple` / targeted `vault_read` only for next-action pages.
-3. **Roof** — CODE write needs recall; stop needs persist.
-4. **Law** — `docs/CURSOR-CURATOR.md` + `docs/LAYER-STACK.md` + companion `context-curator.mdc`.
+1. **Force** — `session_start` / `before_submit_prompt` inject `additional_context` only.
+2. **Agent** — thin INTENT; `search_simple` / targeted `vault_read` for next-action pages.
+3. **Roof** — soft recall before CODE; hard lean LOC via `lean_gate.sh`; stop needs persist.
+4. **Law** — `docs/ARCHITECTURE.md` + `docs/CURATOR.md` + companion `context-curator.mdc`.
 
-Policy: `KLEOS_VAULT` or `context.json` `vault_root`.
+Vault path: MCP `user-obsidian` (see companion). No pack-local `context.json` gate.
 
 ## Server
 
@@ -63,7 +63,7 @@ Down → say so; fall back to `HANDOFF.md` / `AGENTS.md` — never invent vault 
 | Knowledge / intent | this skill / `user-obsidian` | Decisions, concepts, sessions |
 | Work lineage | git / HANDOFF / Sessions | What changed; parent run |
 
-Pack units (prompt→context→harness→loop→graph): `docs/LAYER-STACK.md`.
+Pack units (prompt→context→harness→loop→graph): `docs/ARCHITECTURE.md`.
 Vault is the **knowledge graph** plane — not Neo4j unless asked.
 Debug: fix the layer whose unit broke (one input / window / pass / run / job).
 Process rule: fix rulebook/judge — not hand-patch agent output (`harness-retro`).
@@ -218,4 +218,4 @@ Never delete or empty wiki pages as “flush.” Never flush as a thin stub.
 ## Fleet
 
 `session-handoff` · `ship-loop` · `codebase-memory` · companion `obsidian-memory.mdc`
-· kleos-gate sessionStart/stop/preCompact memory roofs.
+· Bash `session_start` / `before_submit_prompt` / `stop_gate` memory roofs.

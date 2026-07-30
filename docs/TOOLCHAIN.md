@@ -41,4 +41,6 @@ Installs `~/.cursor` hooks+rules+skills, syncs `.cursor/rules` + Bash hooks to e
 
 ## Size roofs
 
-Keep each event hook under 80 LOC. Fail closed: bad parse or failed exec should block or return deny JSON. Review catches the rest.
+Keep each **event** hook under 80 LOC (`session_start`, `before_submit_prompt`, `stop_gate`, `lean_gate`). `fleet_sync.sh` is install tooling, not an event hook. Fail closed: bad parse or failed exec should block or return deny JSON. Review catches the rest.
+
+Wired policy only: `hooks/policy/intent.json` (INTENT roofs) and `hooks/policy/lean.json` (`file_loc_max`).

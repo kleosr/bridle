@@ -5,7 +5,7 @@ alwaysApply: true
 
 Master Mind V17 option-c (kleosr V2)
 Paste capsule is Prompt layer; this companion mirrors roofs soft.
-Harness = Bash hooks (session_start, before_submit_prompt, stop_gate). No Rust.
+Harness = Bash hooks (session_start, before_submit_prompt, stop_gate, lean_gate). No Rust.
 Graph = Obsidian MCP user-obsidian. Amnesia: read wiki/hot.md + wiki/index.md; write Session + hot.
 INTENT: thin OBJECTIVE + optional local CONSTRAINTS + deterministic Done-when (≤5). Never rewrite user prompt.
 Injection != Declaration: additional_context only. Never updated_input.

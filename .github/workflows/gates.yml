@@ -10,18 +10,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: kleos-gate tests
-        run: cargo test --manifest-path hooks/kleos-gate/Cargo.toml
-      - name: Release binary
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Syntax (bash -n)
         run: |
-          cargo build --release --manifest-path hooks/kleos-gate/Cargo.toml
-          mkdir -p hooks/bin
-          cp -f hooks/kleos-gate/target/release/kleos-gate hooks/bin/kleos-gate
-          chmod +x hooks/bin/kleos-gate
-      - name: Sync then verify
-        run: hooks/bin/kleos-gate sync
-      - name: Gate diff (prose scan)
-        run: hooks/bin/kleos-gate gate-diff
-      - name: Hook bench
-        run: hooks/bin/kleos-gate bench
+          chmod +x hooks/*.sh
+          bash -n hooks/session_start.sh
+          bash -n hooks/before_submit_prompt.sh
+          bash -n hooks/stop_gate.sh
+          bash -n hooks/lean_gate.sh
+          bash -n hooks/fleet_sync.sh
+      - name: Event hook LOC roof (≤80)
+        run: |
+          for f in hooks/session_start.sh hooks/before_submit_prompt.sh hooks/stop_gate.sh hooks/lean_gate.sh; do
+            n=$(wc -l < "$f")
+            echo "$f: $n"
+            test "$n" -le 80
+          done
+      - name: Smoke before_submit_prompt
+        run: |
+          echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
+            | bash hooks/before_submit_prompt.sh \
+            | jq -e '.additional_context | length > 0'
+      - name: Smoke stop_gate (INTENT missing → followup)
+        run: |
+          echo '{"status":"completed","messages":[{"role":"assistant","content":"All done"}]}' \
+            | bash hooks/stop_gate.sh \
+            | jq -e '.followup_message | length > 0'
+      - name: Smoke lean_gate allow
+        run: |
+          echo '{"tool_name":"Write","tool_input":{"file_path":"hooks/session_start.sh"}}' \
+            | bash hooks/lean_gate.sh \
+            | jq -e '.action == "allow"'
+      - name: No Rust gate / updated_input
+        run: |
+          ! grep -R --include='*.sh' -n 'updated_input' hooks/
+          ! test -e hooks/kleos-gate
+          ! test -e hooks/bin/kleos-gate
+          test -f hooks/policy/intent.json
+          test -f hooks/policy/lean.json
+          test "$(ls hooks/policy/*.json | wc -l)" -eq 2
+      - name: Fleet install + verify
+        run: FORCE=1 bash hooks/fleet_sync.sh all

@@ -6,5 +6,5 @@ Injection != Declaration: Bash hooks inject additional_context only; you declare
 Amnesia: Cursor window dies; Obsidian vault survives; hooks force read hot/index and write Session/hot.
 Start: vault_read wiki/hot.md then wiki/index.md via user-obsidian.
 End: Session wiki/projects/slug/Sessions/YYYY-MM-DD-topic + refresh wiki/hot.md + HANDOFF.
-Harness: hooks/session_start.sh, before_submit_prompt.sh, stop_gate.sh. No Rust. No pack Python.
-Stop Gate followups if INTENT or Done-when or Session missing. Never fight a deny.
+Harness: hooks/session_start.sh, before_submit_prompt.sh, stop_gate.sh, lean_gate.sh. No Rust. No pack Python.
+Stop Gate: followup if INTENT/Done-when missing or unmet; after accept forces Session+hot+HANDOFF. Never fight a deny.

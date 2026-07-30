@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT=""
+for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
+  if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then
+    ROOT="$(cd "$d" && pwd)"; break
+  fi
+done
+[[ -z "$ROOT" ]] && ROOT="$(cd "$HERE/.." && pwd)"
 STATE="$ROOT/state"
 mkdir -p "$STATE"
 INPUT="$(cat)"
@@ -9,7 +16,7 @@ ROUTE="other"
 echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash' && ROUTE="code"
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
-DUTY="$(jq -r '.duty // empty' "$ROOT/hooks/policy/intent.json" 2>/dev/null || true)"
+DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
 [[ -z "$DUTY" ]] && DUTY="Thin INTENT: OBJECTIVE + optional local CONSTRAINTS + deterministic Done-when. Never rewrite user prompt."
 jq -n --arg c "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}

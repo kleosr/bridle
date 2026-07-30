@@ -22,6 +22,7 @@ Cursor reasons in a window that dies. Obsidian keeps what must survive. Bash hoo
 
 ## Runtime map
 
-- **Muscles:** Bash scripts under `/hooks` (max 80 LOC each, fail-closed).
+- **Muscles:** Bash scripts under `/hooks` (event hooks max 80 LOC each; fail-closed where registered).
+- **Policy (wired only):** `hooks/policy/intent.json` + `hooks/policy/lean.json`.
 - **Brain:** Obsidian via MCP. No local datasets, no Rust binaries.
 - **State:** Ephemeral files in `/state/` (gitignored). Cleared each run.

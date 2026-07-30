@@ -9,7 +9,7 @@ description: >-
 # Harness retro
 
 Hashimoto + Process-Not-Patches: every repeated mistake → fix the process
-that produced it, not only the product file. See `docs/LAYER-STACK.md`.
+that produced it, not only the product file. See `docs/ARCHITECTURE.md`.
 
 ## Workflow
 
@@ -20,7 +20,7 @@ that produced it, not only the product file. See `docs/LAYER-STACK.md`.
 |-------|------------|---------------------|
 | Prompt | One input / format / role wrong | User Rules roof line; companion; skill prompt |
 | Context | Forgot decision / window junk | wiki hot/index/write-back; HANDOFF; curation |
-| Harness | No tools / no verify / gate thrash | TOOLCHAIN; kleos-gate policy; hook |
+| Harness | No tools / no verify / gate thrash | TOOLCHAIN; Bash hooks + policy; fleet_sync |
 | Loop | Stopped mid-task; “done” without goal | ship-loop; Session goal; stop followup |
 | Graph | Clash / orphan notes / no shared state | 0xJeyx steps: nodes/edges/state/reviewer/isolate/orchestration |
 
@@ -32,10 +32,10 @@ TOOLCHAIN/hook → Harness; `AGENTS.md` → Context/map.
    for hard SAFETY / MUST-NEVER/M.
 4. Graph-layer failures: map to 0xJeyx — missing specialty node, missing edge,
    unclear shared state, weak reviewer, unisolated failure, or hand-rolled
-   orchestration theater. Prefer Cursor + kleos-gate + skills + vault.
+   orchestration theater. Prefer Cursor + Bash hooks + skills + vault.
 5. If authorized: apply in **this rules pack**, then
-   `FORCE_SKILLS=1 hooks/bin/kleos-gate install` and `hooks/bin/kleos-gate verify`
-   (Rust-only — never `scan-and-sync.sh`).
+   `FORCE=1 bash hooks/fleet_sync.sh all` (or `install` / `verify`).
+   Never reintroduce Rust kleos-gate or pack Python.
 6. Optionally note keep-rate: did humans revert similar agent commits recently?
 
 ## Anti-patterns

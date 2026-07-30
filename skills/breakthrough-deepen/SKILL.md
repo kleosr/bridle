@@ -23,7 +23,7 @@ Takes a prior chain floor and produces **one** stronger result, or fails closed.
 
 ## Self-target rule (same as sibling skill)
 
-If the target is this pack’s own law (Master Mind / USER-RULES / kleos-gate / always-on companions):
+If the target is this pack’s own law (Master Mind / USER-RULES / Bash hooks / always-on companions):
 
 1. Emit only a Phase-1 sketch.
 2. ASK ONCE for explicit confirm.

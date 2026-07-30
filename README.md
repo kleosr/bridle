@@ -73,7 +73,7 @@ Skill routes: lean → `/ponytail`; dialect → `/vernacular`; vault → `/obsid
 | `user-rules/USER-RULES.paste.txt` | Master Mind V17 paste (Settings User Rules) |
 | `project-rules/*.mdc` | Always-on companions synced into `.cursor/rules` |
 | `hooks/*.sh` | Bash event hooks + `fleet_sync.sh` + `lean_gate.sh` |
-| `hooks/policy/*.json` | Policy messages / ask-deny patterns |
+| `hooks/policy/*.json` | Wired only: `intent.json` + `lean.json` |
 | `hooks/hooks.json` | Pack hook registry |
 | `hooks/hooks.project.json` | Per-repo `.cursor/hooks.json` template |
 | `skills/` | On-demand Cursor skills (`config/skills.txt`) |
@@ -126,7 +126,7 @@ graph LR
 │   ├── session_start.sh / before_submit_prompt.sh / stop_gate.sh
 │   ├── lean_gate.sh     — 700 LOC size roof
 │   ├── fleet_sync.sh    — install + fleet sync + verify
-│   ├── policy/          — JSON messages
+│   ├── policy/          — intent.json + lean.json (wired only)
 │   ├── hooks.json       — pack registry
 │   └── hooks.project.json
 ├── skills/              — personal / pack skills

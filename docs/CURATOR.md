@@ -6,10 +6,9 @@ Layer 2 is mostly about what you throw away.
 
 Local context is volatile. `/state/` holds atomic files for the current run:
 
-- `current_intent.md`: overwritten on every prompt
-- `pending_context.md`: short-lived injected duties
+- `current_intent.md`: overwritten on every prompt by `before_submit_prompt.sh`
 
-Clear `/state/` after a successful loop so old intent does not poison the next one.
+Clear `/state/` after a successful stop accept so old intent does not poison the next run.
 
 ## HANDOFF.md
 

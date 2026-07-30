@@ -1,5 +1,7 @@
 # Unified Counterexample Taxonomy — kleosrules Conjecture
 
+> **RETIRED (V2):** Historical audit of the deleted Rust `kleos-gate`. Not operational law. See `docs/DECISIONS/hooks-architecture.md` and `docs/TOOLCHAIN.md`.
+
 **Date:** 2026-07-29
 **Status:** Complete enumeration of structural gaps found in `kleos-gate` engine + policy JSON
 **Method:** Source-level control-flow tracing of every gate/engine module against `hooks.policy/*.json` + `hooks.json` failClosed flags

@@ -9,7 +9,7 @@ description: >-
 # Eval pass
 
 Generator ≠ evaluator. This skill is the **reviewer node with teeth**
-(0xJeyx step 4 / `docs/LAYER-STACK.md`) — separate from the implementer.
+(0xJeyx step 4 / `docs/ARCHITECTURE.md`) — separate from the implementer.
 Do **not** rubber-stamp your own implement turn on large changes.
 
 ## Inputs

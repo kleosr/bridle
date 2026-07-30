@@ -1,8 +1,0 @@
-{
-  "message": "Blocked tree/mass Delete via native tool. Native Delete cannot ask (preToolUse ask is unenforced). State the exact path list, get user assent, then delete via Shell so beforeShellExecution can ask.",
-  "deny_recursive": true,
-  "deny_multi_path": true,
-  "deny_globs_and_roots": true,
-  "deny_extensionless_basename": true,
-  "tree_basename_suffixes": []
-}

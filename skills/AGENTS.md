@@ -27,7 +27,7 @@ On-demand Cursor skills installed to `~/.cursor/skills`. Catalog = `config/skill
 
 ## Done (local)
 
-After skill text edits that install syncs: `FORCE_SKILLS=1 hooks/bin/kleos-gate install` then `hooks/bin/kleos-gate verify`. No separate unit suite for skills.
+After skill text edits that install syncs: `FORCE=1 bash hooks/fleet_sync.sh all` (or `install` / `verify`). No separate unit suite for skills.
 
 ## Ask first
 
