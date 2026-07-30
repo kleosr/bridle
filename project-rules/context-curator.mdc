@@ -5,8 +5,8 @@ alwaysApply: true
 
 # CONTEXT CURATOR
 
-Harness injects `additional_context` only. Never rewrite the user prompt.
-Declare `INTENT:` before CODE — OBJECTIVE maps ask → concrete outcome + paths/hooks/files; CONSTRAINTS = blast-radius negations only; `Done-when:` ≤5 disk/TOOLCHAIN anchors covering the full ask (ambitious, not a stub).
+Harness injects `additional_context` only. User prompt is immutable input.
+Declare `INTENT:` before CODE as a job card: `OBJECTIVE` = postcondition on named units; `CONSTRAINTS` = ≤2 invariants/non-goals; `Done-when` = ≤5 decidable predicates (disk/TOOLCHAIN) proving that postcondition.
 Before write: `vault_read` `wiki/hot.md` then `wiki/index.md`.
 Before Done: Session LAYER CHECK (prompt|context|harness|loop|graph).
 Ephemeral: `/state/` overwrite-only; cleared on stop success.

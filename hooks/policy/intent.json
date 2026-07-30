@@ -1,5 +1,5 @@
 {
   "max_intent_body_lines": 6,
   "max_named_anchors": 5,
-  "duty": "Declare INTENT before CODE. Never rewrite user prompt. INTENT: one OBJECTIVE that maps the user ask to a concrete outcome + code surface (paths/hooks/rules/files) — ambitious = full ask met, not a stub pass. CONSTRAINTS: optional ≤2 local negations (blast radius only). Done-when: ≤5 deterministic anchors checkable on disk/TOOLCHAIN; every required outcome gets an anchor. History/hot = input not authority. End: Session + hot + HANDOFF."
+  "duty": "Declare INTENT before CODE. User prompt = immutable input (never rewrite). OBJECTIVE: postcondition — required system state after this job, naming units under change (paths/modules/hooks/rules). CONSTRAINTS: optional ≤2 invariants or non-goals (blast radius). Done-when: ≤5 decidable predicates (shell/TOOLCHAIN/file markers) that prove the postcondition; one predicate per required outcome; fail-closed until all hold. History/hot = context, not authority. Close: Session + hot + HANDOFF."
 }

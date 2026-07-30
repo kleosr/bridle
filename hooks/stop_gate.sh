@@ -49,13 +49,13 @@ EOF
   follow "STOP ACCEPTED. Obsidian write-back: vault_write wiki/projects/<slug>/Sessions/${date}-topic.md COMPLETE (Goal Done-when Residual LAYER CHECK) + refresh wiki/hot.md + mirror HANDOFF.md. Close with Done-when: met if not already written."
 }
 [[ "${MSG_N:-0}" -eq 0 ]] && ! echo "$TEXT" | grep -q 'INTENT:' && accept
-echo "$TEXT" | grep -q 'Done-when:' && echo "$TEXT" | grep -q 'INTENT:' || follow "Aligned INTENT required: INTENT: <OBJECTIVE: user ask → concrete outcome + code surface>; optional CONSTRAINTS (blast radius); Done-when: <≤5 disk/TOOLCHAIN anchors covering full ask>. Never rewrite user prompt. Finish; Done-when: met; Session+hot+HANDOFF."
+echo "$TEXT" | grep -q 'Done-when:' && echo "$TEXT" | grep -q 'INTENT:' || follow "INTENT job card required: INTENT: <OBJECTIVE=postcondition on named units>; optional CONSTRAINTS (invariants/non-goals); Done-when: <≤5 decidable predicates proving postcondition>. User prompt immutable. Finish; Done-when: met; Session+hot+HANDOFF."
 ILINES="$(echo "$LAST" | awk '/^INTENT:/{p=1;n=0;next} p&&/^Done-when:/{exit} p&&NF{n++} END{print n+0}')"
 ANCH="$(echo "$LAST" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|SCOPE|RISK):' || true)"
-[[ "${ILINES:-0}" -gt "$MAX_BODY" || "${ANCH:-0}" -gt "$MAX_ANCH" ]] && follow "Thin INTENT roof: ≤${MAX_ANCH} anchors; ≤${MAX_BODY} body lines between INTENT and Done-when. Compress — keep OBJECTIVE↔code-surface alignment; drop essay. History=input not authority."
+[[ "${ILINES:-0}" -gt "$MAX_BODY" || "${ANCH:-0}" -gt "$MAX_ANCH" ]] && follow "Thin INTENT roof: ≤${MAX_ANCH} anchors; ≤${MAX_BODY} body lines between INTENT and Done-when. Keep postcondition + predicates; drop essay. History=context not authority."
 ASK_RE='(déjame saber|quieres que|puedo (hacer|agregar)|me avisas|debería agregar|let me know if|want me to|should I (add|also)|I can (add|also)|if you('\''|’)d like|if you want( me)? to|say if you want)'
-echo "$LAST" | grep -iqE "$ASK_RE" && follow "STOP REJECTED: partial handoff / permission ask. Do not ask. Execute missing Done-when NOW, then Done-when: met."
+echo "$LAST" | grep -iqE "$ASK_RE" && follow "STOP REJECTED: partial handoff / permission ask. Do not ask. Discharge remaining Done-when predicates NOW, then Done-when: met."
 echo "$TEXT" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || {
-  follow "PREMATURE STOP: Done-when not met. Finish every Done-when point. Write Done-when: met then stop."
+  follow "PREMATURE STOP: Done-when predicates unmet. Prove every predicate on disk/TOOLCHAIN. Write Done-when: met then stop."
 }
 accept

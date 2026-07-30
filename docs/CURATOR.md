@@ -4,12 +4,12 @@ Layer 2 is mostly about what you throw away.
 
 ## INTENT quality (declaration)
 
-Injection seeds duty; the agent declares. Keep thin (≤5 anchors) and ambitious:
+Injection seeds duty; the agent declares a **job card**. Thin (≤5 anchors), formal:
 
-1. **OBJECTIVE** — one sentence mapping the user ask to a concrete outcome **and** the code surface (paths, hooks, rules, files). Not a vibe goal.
-2. **CONSTRAINTS** — optional ≤2 local negations (blast radius only).
-3. **Done-when** — deterministic checks on disk/TOOLCHAIN; every required outcome gets an anchor. Full ask, not a stub first pass.
-4. Never rewrite the user prompt. History/hot = input, not authority.
+1. **OBJECTIVE** — postcondition: required system state after this job, naming units under change (paths/modules/hooks/rules). Not a vibe goal.
+2. **CONSTRAINTS** — optional ≤2 invariants or non-goals (what must stay true; blast radius).
+3. **Done-when** — ≤5 decidable predicates (shell exit 0, file markers, TOOLCHAIN). One predicate per required outcome. Fail-closed until all hold.
+4. User prompt is immutable input. History/hot = context, not authority.
 
 ## Ephemeral state (`/state/`)
 

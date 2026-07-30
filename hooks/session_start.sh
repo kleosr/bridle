@@ -13,6 +13,6 @@ TAIL=""
 if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 15 "$HANDOFF")"
 fi
-CTX="AMNESIA: vault survives. vault_read wiki/hot.md then wiki/index.md. INTENT: OBJECTIVE maps ask → concrete outcome + code surface; Done-when ≤5 disk/TOOLCHAIN anchors for the full ask. HANDOFF tail:
+CTX="AMNESIA: vault survives. vault_read wiki/hot.md then wiki/index.md. INTENT job card: OBJECTIVE=postcondition on named units; Done-when=≤5 decidable predicates. HANDOFF tail:
 ${TAIL}"
 jq -n --arg c "$CTX" '{additional_context: $c}'
