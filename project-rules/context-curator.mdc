@@ -6,7 +6,8 @@ alwaysApply: true
 # CONTEXT CURATOR
 
 Harness injects `additional_context` only. User prompt is immutable input.
-Declare `INTENT:` before CODE as a job card: `OBJECTIVE` = postcondition on named units; `CONSTRAINTS` = ≤2 invariants/non-goals; `Done-when` = ≤5 decidable predicates (disk/TOOLCHAIN) proving that postcondition.
+Declare `INTENT:` before CODE as a job card: `OBJECTIVE` = postcondition on named units (tag paths); `CONSTRAINTS` = ≤2 invariants/non-goals; `Done-when` = ≤5 decidable predicates.
+**File map:** ground with Glob/Grep/Read until tagged paths/symbols are in context → StrReplace existing tags → Write only `NEW:path` when reuse is impossible → follow-up re-Read those FILES and re-prove Done-when.
 Before write: `vault_read` `wiki/hot.md` then `wiki/index.md`.
 Before Done: Session LAYER CHECK (prompt|context|harness|loop|graph).
 Ephemeral: `/state/` overwrite-only; cleared on stop success.
