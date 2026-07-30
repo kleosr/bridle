@@ -13,6 +13,6 @@ TAIL=""
 if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 15 "$HANDOFF")"
 fi
-CTX="AMNESIA: vault survives. vault_read wiki/hot.md then wiki/index.md. Thin INTENT: one OBJECTIVE + optional local CONSTRAINTS + deterministic Done-when (≤5 anchors). HANDOFF tail:
+CTX="AMNESIA: vault survives. vault_read wiki/hot.md then wiki/index.md. INTENT job card: OBJECTIVE=postcondition on named units; ground Glob/Grep/Read → tag paths; Done-when=≤5 decidable predicates. HANDOFF tail:
 ${TAIL}"
 jq -n --arg c "$CTX" '{additional_context: $c}'

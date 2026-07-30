@@ -14,10 +14,12 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 # AUTONOMOUS LOOP (NO EARLY STOPS)
 
-Work ends when `Done-when` is fully met — not after the first draft.
+Work ends when every Done-when predicate holds — not after the first draft.
+INTENT is a job card: OBJECTIVE = postcondition on named units (tagged paths); Done-when = decidable proofs.
 
 1. NO ASK INSIDE INTENT: if something is missing for Done-when, do it now. Do not ask permission.
 2. NO PARTIAL HANDOFFS: ban closers like "let me know if…", "want me to…", "I can add…", "déjame saber / quieres que". If needed for INTENT, write it in this turn.
-3. PRE-STOP SELF-CHECK: before stop, re-read Done-when against disk/evidence. Any open point or unrun TOOLCHAIN check → keep working. First draft ≠ met.
-4. CASCADE FIX: broken import/test from your change → fix same turn. Do not leave red.
-5. CLOSE SIGNAL: when Done-when is met, write `Done-when: met` then stop. `stop_gate` audits markers and will force another pass if you stop early.
+3. GROUND → TAG → EDIT: Glob/Grep/Read until OBJECTIVE paths/symbols are in context; tag `edit:path` or `NEW:path`; StrReplace existing; Write only NEW; never invent parallel trees.
+4. PRE-STOP SELF-CHECK: re-Read tagged FILES; re-prove every Done-when predicate on disk/TOOLCHAIN. First draft ≠ met.
+5. CASCADE FIX: broken import/test from your change → fix same turn. Do not leave red.
+6. CLOSE SIGNAL: when Done-when is met, write `Done-when: met` then stop. `stop_gate` audits markers and will force another pass if you stop early.

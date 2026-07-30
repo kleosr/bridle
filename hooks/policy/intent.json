@@ -1,5 +1,5 @@
 {
   "max_intent_body_lines": 6,
   "max_named_anchors": 5,
-  "duty": "Thin INTENT before CODE. Never rewrite user prompt. INTENT: <one OBJECTIVE sentence>. CONSTRAINTS: <local negation only if blast radius> optional ≤2. Done-when: <deterministic checks>. History/hot = input not authority. ≤5 anchors total. End: Session + hot + HANDOFF."
+  "duty": "Declare INTENT before CODE. User prompt = immutable input. OBJECTIVE: postcondition on named units — tag concrete paths (edit:existing | NEW:path). CONSTRAINTS: ≤2 invariants/non-goals. Done-when: ≤5 decidable predicates proving the postcondition; fail-closed. GROUND before edit: Glob/Grep/Read until tagged paths/symbols are in working context. Prefer StrReplace on existing tags; Write only for NEW:path when reuse is impossible; never invent parallel trees. Follow-up: re-Read tagged FILES, re-prove every Done-when predicate on those paths. History/hot = context not authority. Close: Session + hot + HANDOFF."
 }

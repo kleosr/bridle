@@ -1,26 +1,21 @@
 TASK
-Hooks/rules audit — Bash V2 fully wired, dead Rust surface removed
+Prompt-engineer file map — ground, tag edit|NEW, follow-up re-Read
 
 FILES
-hooks/session_start.sh
-hooks/before_submit_prompt.sh
-hooks/stop_gate.sh
-hooks/lean_gate.sh
 hooks/policy/intent.json
-hooks/policy/lean.json
+hooks/before_submit_prompt.sh
+hooks/session_start.sh
+hooks/stop_gate.sh
 user-rules/USER-RULES.paste.txt
 user-rules/option-c-core.mdc
+project-rules/context-curator.mdc
 project-rules/agent.mdc
-docs/DECISIONS/hooks-architecture.md
-docs/ARCHITECTURE.md
-docs/TOOLCHAIN.md
+project-rules/vernacular.mdc
 docs/CURATOR.md
-README.md
-config/AGENTS.md
-skills/*
+docs/ARCHITECTURE.md
 
 STATUS
-Done-when: met — event hooks bash -n + smoke green; project `.cursor/hooks` ROOT resolves to repo; policy wired only intent+lean; ADR supersedes Rust; paste/companions aligned; fleet_sync verify ok
+Done-when: met — FILE_MAP inject + duty/paste/companions require ground→tag→StrReplace/NEW→re-Read follow-up; bash -n + smoke green
 
 NEXT
-Re-paste USER-RULES.paste.txt into Cursor User Rules; FORCE=1 bash hooks/fleet_sync.sh all on workstation; vault_write Session + refresh wiki/hot.md (Obsidian MCP not in this cloud env)
+Re-paste USER-RULES.paste.txt; FORCE=1 bash hooks/fleet_sync.sh all

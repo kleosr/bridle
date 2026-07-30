@@ -17,7 +17,7 @@ Doctrina: Smallest Diff. Cero slop.
 - Markdown system files max 80 LOC. HANDOFF: TASK / FILES / STATUS / NEXT.
 - JSON: no comments; atomic policy files; camelCase hook keys.
 - State: overwrite only; clear on stop success.
-- Chat: thin `INTENT:` (one OBJECTIVE) + optional local `CONSTRAINTS:` + deterministic `Done-when:` (≤5 anchors).
+- Chat: `INTENT:` job card — OBJECTIVE=postcondition + tagged paths (`edit:`|`NEW:`); CONSTRAINTS=≤2 invariants; Done-when=≤5 decidable predicates.
 
 ## PROCEDURE
 Stack style guides (TS/React, Bash templates, Obsidian paths):

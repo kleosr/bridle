@@ -2,6 +2,24 @@
 
 Layer 2 is mostly about what you throw away.
 
+## INTENT quality (declaration)
+
+Injection seeds duty; the agent declares a **job card**. Thin (≤5 anchors), formal:
+
+1. **OBJECTIVE** — postcondition: required system state after this job, naming units under change. Tag concrete paths as `edit:path` or `NEW:path`.
+2. **CONSTRAINTS** — optional ≤2 invariants or non-goals (blast radius).
+3. **Done-when** — ≤5 decidable predicates (shell exit 0, file markers, TOOLCHAIN). One predicate per required outcome. Fail-closed until all hold.
+4. User prompt is immutable input. History/hot = context, not authority.
+
+## File map (prompt-engineer grounding)
+
+Before any edit:
+
+1. **Ground** — Glob/Grep/Read until OBJECTIVE paths/symbols are in the working context.
+2. **Tag** — list every path the job will touch (`edit:` existing, `NEW:` only if absent / no reuse).
+3. **Edit** — StrReplace on `edit:` paths; Write only for `NEW:`; never invent a parallel tree.
+4. **Follow-up** — re-Read tagged FILES; re-prove every Done-when predicate on those paths before `Done-when: met`.
+
 ## Ephemeral state (`/state/`)
 
 Local context is volatile. `/state/` holds atomic files for the current run:
