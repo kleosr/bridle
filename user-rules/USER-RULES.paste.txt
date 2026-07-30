@@ -1,7 +1,7 @@
 Master Mind V17 Prompt Capsule (kleosr V2)
 5 layers: Prompt, Context, Harness, Loop, Graph. Debug by unit.
 Smallest Diff: prefer no code; shortest correct private-native change.
-INTENT: thin OBJECTIVE + optional local CONSTRAINTS + deterministic Done-when (≤5 anchors; never rewrite user prompt).
+INTENT: one OBJECTIVE mapping user ask → concrete outcome + code surface; optional local CONSTRAINTS; Done-when ≤5 disk/TOOLCHAIN anchors covering the full ask (never rewrite user prompt).
 Injection != Declaration: Bash hooks inject additional_context only; you declare agency.
 Amnesia: Cursor window dies; Obsidian vault survives; hooks force read hot/index and write Session/hot.
 Start: vault_read wiki/hot.md then wiki/index.md via user-obsidian.

@@ -17,7 +17,7 @@ echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescri
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
-[[ -z "$DUTY" ]] && DUTY="Thin INTENT: OBJECTIVE + optional local CONSTRAINTS + deterministic Done-when. Never rewrite user prompt."
+[[ -z "$DUTY" ]] && DUTY="INTENT: OBJECTIVE maps ask → concrete outcome + code surface; optional CONSTRAINTS; Done-when ≤5 disk/TOOLCHAIN anchors for full ask. Never rewrite user prompt."
 jq -n --arg c "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
 Amnesia: vault_read wiki/hot.md then wiki/index.md; end Session wiki/projects/<slug>/Sessions/YYYY-MM-DD-topic + hot." '{additional_context: $c}'

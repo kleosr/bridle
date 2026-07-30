@@ -17,7 +17,7 @@ Cursor reasons in a window that dies. Obsidian keeps what must survive. Bash hoo
 ## Injection vs Declaration
 
 1. **Injection (Layer 2):** `before_submit_prompt.sh` adds route duties through `additional_context`. It must not mutate the user prompt (`updated_input` is banned).
-2. **Declaration (Layer 1/4):** Thin INTENT — one OBJECTIVE, optional local CONSTRAINTS, deterministic Done-when (≤5 anchors). Never rewrite the user prompt.
+2. **Declaration (Layer 1/4):** Aligned INTENT — one OBJECTIVE mapping ask → concrete outcome + code surface; optional local CONSTRAINTS; Done-when ≤5 disk/TOOLCHAIN anchors for the full ask. Never rewrite the user prompt.
 3. **Audit (Layer 3):** `stop_gate.sh` checks markers, thin-roof caps (`hooks/policy/intent.json`), and `Done-when: met`.
 
 ## Runtime map

@@ -2,6 +2,15 @@
 
 Layer 2 is mostly about what you throw away.
 
+## INTENT quality (declaration)
+
+Injection seeds duty; the agent declares. Keep thin (≤5 anchors) and ambitious:
+
+1. **OBJECTIVE** — one sentence mapping the user ask to a concrete outcome **and** the code surface (paths, hooks, rules, files). Not a vibe goal.
+2. **CONSTRAINTS** — optional ≤2 local negations (blast radius only).
+3. **Done-when** — deterministic checks on disk/TOOLCHAIN; every required outcome gets an anchor. Full ask, not a stub first pass.
+4. Never rewrite the user prompt. History/hot = input, not authority.
+
 ## Ephemeral state (`/state/`)
 
 Local context is volatile. `/state/` holds atomic files for the current run:

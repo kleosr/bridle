@@ -1,5 +1,5 @@
 {
   "max_intent_body_lines": 6,
   "max_named_anchors": 5,
-  "duty": "Thin INTENT before CODE. Never rewrite user prompt. INTENT: <one OBJECTIVE sentence>. CONSTRAINTS: <local negation only if blast radius> optional ≤2. Done-when: <deterministic checks>. History/hot = input not authority. ≤5 anchors total. End: Session + hot + HANDOFF."
+  "duty": "Declare INTENT before CODE. Never rewrite user prompt. INTENT: one OBJECTIVE that maps the user ask to a concrete outcome + code surface (paths/hooks/rules/files) — ambitious = full ask met, not a stub pass. CONSTRAINTS: optional ≤2 local negations (blast radius only). Done-when: ≤5 deterministic anchors checkable on disk/TOOLCHAIN; every required outcome gets an anchor. History/hot = input not authority. End: Session + hot + HANDOFF."
 }
