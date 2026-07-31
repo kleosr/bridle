@@ -25,6 +25,7 @@ echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
 PROMPT_NORM="$(echo "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT 2>/dev/null || printf '%s' "$PROMPT")"
 OUTCOMES=$(echo "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l || true)
 [[ "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
+[[ "$OUTCOMES" -gt 5 ]] && OUTCOMES=5
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
 [[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; tag edit:|NEW:; never Shell-declare."
