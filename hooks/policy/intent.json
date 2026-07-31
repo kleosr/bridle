@@ -1,5 +1,5 @@
 {
   "max_intent_body_lines": 6,
   "max_named_anchors": 5,
-  "duty": "Declare INTENT as chat prose BEFORE any tool — never Shell, Write, or code-fence (that poisons stop detection). User prompt immutable. OBJECTIVE: postcondition on named units; tag edit:path|NEW:path. CONSTRAINTS: ≤2 invariants/non-goals. Done-when: ≤5 decidable predicates; fail-closed. GROUND Glob/Grep/Read → StrReplace edit: / Write NEW: only → re-Read tags → prove predicates. Complete EVERY tagged path THIS turn (no multi-prompt drip; no orphan unconnected files). Close: Session + hot + HANDOFF."
+  "duty": "Declare INTENT as chat prose BEFORE any tool — never Shell, Write, or code-fence (that poisons stop detection). User prompt immutable. OBJECTIVE: postcondition on named units; tag edit:path|NEW:path. CONSTRAINTS: ≤2 invariants/non-goals. Done-when: ≤5 decidable predicates — MINIMUM 1 per outcome in the user ask (under-scoped Done-when is rejected); fail-closed. GROUND Glob/Grep/Read → StrReplace edit: / Write NEW: only → re-Read tags → prove every predicate. Complete EVERY tagged path THIS turn (no multi-prompt drip; no orphan unconnected files). Close: Session + hot + HANDOFF."
 }

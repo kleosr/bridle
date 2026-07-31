@@ -57,6 +57,10 @@ EOF
 [[ "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && accept
 echo "$PROSE" | grep -qE '^[[:space:]]*INTENT:' && echo "$PROSE" | grep -qE '^[[:space:]]*Done-when:' || follow "INTENT must be chat prose (first, before tools) — never Shell/Write/code-fence. INTENT: <OBJECTIVE=postcondition; tag edit:path|NEW:path>; Done-when: <≤5 decidable predicates>. Finish ALL tagged FILES this turn; Done-when: met; Session+hot+HANDOFF."
 echo "$PROSE" | grep -qE '(edit|NEW):[^[:space:]]+' || follow "FILE_MAP missing in chat INTENT: tag every path as edit:path or NEW:path. Ground Glob/Grep/Read, then complete every tag this turn — no drip across prompts."
+DW_PRED="$(echo "$PROSE" | awk '/^[[:space:]]*Done-when:/{dw=1;next} dw&&/^[[:space:]]*[-•*][[:space:]]/{n++;next} dw&&/^[[:space:]]*[0-9]+[.)][[:space:]]/{n++;next} dw&&/^(INTENT|OBJECTIVE|CONSTRAINTS|FILES|SCOPE|RISK):/{dw=0} END{print n+0}')"
+OUTCOMES="$(cat "$STATE/outcomes.md" 2>/dev/null || echo 1)"
+[[ "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
+[[ "${DW_PRED:-0}" -lt "$OUTCOMES" ]] && follow "UNDER-SCOPE: user ask has $OUTCOMES outcome(s) but INTENT declares only $DW_PRED Done-when predicate(s). Need ≥$OUTCOMES — one predicate per outcome, each on its own line prefixed with '- ' or '1.'. Expand Done-when: what does the ask require beyond what you tagged?"
 ILINES="$(echo "$PROSE" | awk '/^[[:space:]]*INTENT:/{p=1;n=0;next} p&&/^[[:space:]]*Done-when:/{exit} p&&NF{n++} END{print n+0}')"
 ANCH="$(echo "$PROSE" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|FILES|SCOPE|RISK):' || true)"
 [[ "${ILINES:-0}" -gt "$MAX_BODY" || "${ANCH:-0}" -gt "$MAX_ANCH" ]] && follow "Thin INTENT roof: ≤${MAX_ANCH} anchors; ≤${MAX_BODY} body lines. Keep postcondition + tags + predicates; drop essay."
