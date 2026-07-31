@@ -26,10 +26,12 @@ LAST="$(echo "$INPUT" | jq -r '
     end' 2>/dev/null || true)"
 [[ -z "$LAST" || "$LAST" == "null" ]] && LAST=""
 PROSE="$(printf '%s\n' "$LAST" | awk 'BEGIN{f=0} /^```/{f=1-f;next} !f')"
+TAG_RE='(edit|NEW):[A-Za-z0-9_./+=-]+'
+tags() { echo "$PROSE" | grep -oE "$TAG_RE" | sed 's/^[^:]*://' | grep -vx 'path' || true; }
 follow() {
   mkdir -p "$STATE"
   printf '%s\n' "$PROSE" >"$STATE/pending_intent.md"
-  echo "$PROSE" | grep -oE '(edit|NEW):[^[:space:]]+' >"$STATE/pending_files.md" 2>/dev/null || true
+  tags >"$STATE/pending_files.md" 2>/dev/null || true
   jq -n --arg m "$1" '{followup_message: $m}'; exit 0
 }
 quiet() { echo '{}'; exit 0; }
@@ -52,9 +54,9 @@ vault_write Session + refresh hot + mirror HANDOFF.md
 EOF
   quiet
 }
-[[ "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && accept
+[[ "$STATUS" == "completed" && "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && accept
 echo "$PROSE" | grep -qE '^[[:space:]]*INTENT:' && echo "$PROSE" | grep -qE '^[[:space:]]*Done-when:' || follow "INTENT must be chat prose (first, before tools) — never Shell/Write/code-fence. INTENT: <OBJECTIVE=postcondition; tag edit:path|NEW:path>; Done-when: <≤5 decidable predicates>. Finish ALL tagged FILES this turn; Done-when: met; Session+hot+HANDOFF."
-echo "$PROSE" | grep -qE '(edit|NEW):[^[:space:]]+' || follow "FILE_MAP missing in chat INTENT: tag every path as edit:path or NEW:path. Ground Glob/Grep/Read, then complete every tag this turn — no drip across prompts."
+tags | grep -q . || follow "FILE_MAP missing in chat INTENT: tag every path as edit:path or NEW:path. Ground Glob/Grep/Read, then complete every tag this turn — no drip across prompts."
 DW_PRED="$(echo "$PROSE" | awk '/^[[:space:]]*Done-when:/{dw=1;next} dw&&/^[[:space:]]*[-•*][[:space:]]/{n++;next} dw&&/^[[:space:]]*[0-9]+[.)][[:space:]]/{n++;next} dw&&/^(INTENT|OBJECTIVE|CONSTRAINTS|FILES|SCOPE|RISK):/{dw=0} END{print n+0}')"
 OUTCOMES="$(cat "$STATE/outcomes.md" 2>/dev/null || echo 1)"
 [[ "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
@@ -71,7 +73,7 @@ while IFS= read -r p; do [[ -z "$p" ]] && continue
   [[ "$p" = /* ]] && fp="$p" || fp="$(pwd)/$p"
   [[ -f "$fp" ]] || { UNTOUCHED="$UNTOUCHED $p(missing)"; continue; }
   [[ "$SESSION_TS" -eq 0 || "$(stat -c %Y "$fp" 2>/dev/null || echo 0)" -ge "$SESSION_TS" ]] || UNTOUCHED="$UNTOUCHED $p"
-done < <(echo "$PROSE" | grep -oE '(edit|NEW):[^[:space:]]+' | sed 's/^[^:]*://' || true)
+done < <(tags)
 [[ -n "$UNTOUCHED" ]] && follow "FILES NOT TOUCHED:$UNTOUCHED — every tagged edit:|NEW: path must be written to disk this turn. Edit/write each file, then Done-when: met."
 echo "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || follow "PREMATURE STOP: Done-when unmet in chat prose. Re-Read tagged FILES; prove every predicate; finish ALL tags this turn; write Done-when: met."
 accept
