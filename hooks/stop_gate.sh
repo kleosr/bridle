@@ -50,9 +50,7 @@ Done-when: met
 NEXT
 vault_write Session + refresh hot + mirror HANDOFF.md
 EOF
-  [[ "${LOOP:-0}" -ge 1 ]] && quiet
-  jq -n --arg m "STOP ACCEPTED. Obsidian write-back: vault_write wiki/projects/<slug>/Sessions/${date}-topic.md COMPLETE (Goal Done-when Residual LAYER CHECK) + refresh wiki/hot.md + mirror HANDOFF.md. Close with Done-when: met if not already written." '{followup_message: $m}'
-  exit 0
+  quiet
 }
 [[ "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && accept
 echo "$PROSE" | grep -qE '^[[:space:]]*INTENT:' && echo "$PROSE" | grep -qE '^[[:space:]]*Done-when:' || follow "INTENT must be chat prose (first, before tools) — never Shell/Write/code-fence. INTENT: <OBJECTIVE=postcondition; tag edit:path|NEW:path>; Done-when: <≤5 decidable predicates>. Finish ALL tagged FILES this turn; Done-when: met; Session+hot+HANDOFF."
