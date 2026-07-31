@@ -6,9 +6,10 @@ alwaysApply: true
 # CONTEXT CURATOR
 
 Harness injects `additional_context` only. User prompt is immutable input.
-Declare `INTENT:` before CODE as a job card: `OBJECTIVE` = postcondition on named units (tag paths); `CONSTRAINTS` = ≤2 invariants/non-goals; `Done-when` = ≤5 decidable predicates.
-**File map:** ground with Glob/Grep/Read until tagged paths/symbols are in context → StrReplace existing tags → Write only `NEW:path` when reuse is impossible → follow-up re-Read those FILES and re-prove Done-when.
+Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/code-fence — that poisons stop detection).
+Job card: `OBJECTIVE` = postcondition + `edit:path`|`NEW:path` tags; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
+**File map:** ground Glob/Grep/Read → StrReplace `edit:` / Write `NEW:` only → re-Read tags → prove Done-when. Finish every tagged path **this turn** (no drip; no orphan unconnected files).
 Before write: `vault_read` `wiki/hot.md` then `wiki/index.md`.
 Before Done: Session LAYER CHECK (prompt|context|harness|loop|graph).
-Ephemeral: `/state/` overwrite-only; cleared on stop success.
+Ephemeral: `/state/` overwrite-only; `pending_files.md` survives stop followups until accept.
 Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.

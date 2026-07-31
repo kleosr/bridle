@@ -17,8 +17,13 @@ echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescri
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
-[[ -z "$DUTY" ]] && DUTY="INTENT job card: OBJECTIVE=postcondition on named units (tag paths); CONSTRAINTS=≤2 invariants; Done-when=≤5 decidable predicates. Ground Glob/Grep/Read; StrReplace existing; Write NEW only."
+[[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; tag edit:|NEW:; never Shell-declare."
+PENDING=""
+if [[ -s "$STATE/pending_files.md" ]]; then
+  PENDING="PENDING_FILES (finish this turn, no drip): $(tr '\n' ' ' <"$STATE/pending_files.md")"
+fi
 jq -n --arg c "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
-FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in OBJECTIVE → StrReplace existing; Write only NEW → follow-up re-Read tagged FILES then prove Done-when.
-Amnesia: vault_read wiki/hot.md then wiki/index.md; end Session wiki/projects/<slug>/Sessions/YYYY-MM-DD-topic + hot." '{additional_context: $c}'
+FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → StrReplace existing; Write only NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.
+${PENDING}
+Amnesia: vault_read wiki/hot.md then wiki/index.md; end Session + hot + HANDOFF." '{additional_context: $c}'

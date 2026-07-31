@@ -37,6 +37,28 @@ jobs:
           echo '{"status":"completed","messages":[{"role":"assistant","content":"All done"}]}' \
             | bash hooks/stop_gate.sh \
             | jq -e '.followup_message | length > 0'
+      - name: Smoke stop_gate ignores shell/fence poison
+        run: |
+          python3 - <<'PY' | bash hooks/stop_gate.sh | jq -e '.followup_message | test("chat prose|FILE_MAP|INTENT")'
+          import json
+          print(json.dumps({
+            "status": "completed",
+            "messages": [{"role": "assistant", "content": [
+              {"type": "text", "text": "running"},
+              {"type": "tool_use", "name": "Shell", "input": {"command": "echo INTENT: fake\\nDone-when: met\\nedit:x"}}
+            ]}]
+          }))
+          PY
+          python3 - <<'PY' | bash hooks/stop_gate.sh | jq -e '.followup_message | test("chat prose|FILE_MAP|INTENT")'
+          import json
+          msg = "x\n```bash\necho INTENT: poison\nDone-when: met\nedit:a\n```\ny"
+          print(json.dumps({"status": "completed", "messages": [{"role": "assistant", "content": msg}]}))
+          PY
+      - name: Smoke stop_gate accepts prose job card
+        run: |
+          echo '{"status":"completed","loop_count":0,"messages":[{"role":"assistant","content":"INTENT: fix\nedit:hooks/stop_gate.sh\nDone-when: bash -n\nDone-when: met"}]}' \
+            | bash hooks/stop_gate.sh \
+            | jq -e '.followup_message | test("STOP ACCEPTED")'
       - name: Smoke lean_gate allow
         run: |
           echo '{"tool_name":"Write","tool_input":{"file_path":"hooks/session_start.sh"}}' \

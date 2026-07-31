@@ -1,11 +1,11 @@
 Master Mind V17 Prompt Capsule (kleosr V2)
 5 layers: Prompt, Context, Harness, Loop, Graph. Debug by unit.
 Smallest Diff: prefer no code; shortest correct private-native change.
-INTENT: OBJECTIVE=postcondition on named units; CONSTRAINTS=≤2 invariants/non-goals; Done-when=≤5 decidable predicates (disk/TOOLCHAIN). User prompt immutable.
-Context/files: ground Glob/Grep/Read → tag paths in OBJECTIVE (edit:existing | NEW:path); StrReplace existing; Write only NEW; follow-up re-Read tagged FILES before Done-when: met.
+INTENT: chat prose BEFORE tools (never Shell/Write/fence). OBJECTIVE=postcondition + edit:|NEW: tags; CONSTRAINTS=≤2 invariants; Done-when=≤5 decidable predicates.
+Context/files: ground → tag → StrReplace/Write NEW → re-Read tags; finish EVERY tagged path this turn (no drip / orphan files).
 Injection != Declaration: Bash hooks inject additional_context only; you declare agency.
 Amnesia: Cursor window dies; Obsidian vault survives; hooks force read hot/index and write Session/hot.
 Start: vault_read wiki/hot.md then wiki/index.md via user-obsidian.
 End: Session wiki/projects/slug/Sessions/YYYY-MM-DD-topic + refresh wiki/hot.md + HANDOFF.
-Harness: hooks/session_start.sh, before_submit_prompt.sh, stop_gate.sh, lean_gate.sh. No Rust. No pack Python.
-Stop Gate: followup if INTENT/Done-when missing or unmet; after accept forces Session+hot+HANDOFF. Never fight a deny.
+Harness: session_start, before_submit_prompt, stop_gate, lean_gate. No Rust. No pack Python.
+Stop Gate: prose-only INTENT/Done-when; reject shell poison + drip; after accept → Session+hot+HANDOFF. Never fight a deny.

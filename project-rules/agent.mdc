@@ -15,11 +15,12 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 # AUTONOMOUS LOOP (NO EARLY STOPS)
 
 Work ends when every Done-when predicate holds — not after the first draft.
-INTENT is a job card: OBJECTIVE = postcondition on named units (tagged paths); Done-when = decidable proofs.
+INTENT is chat-prose job card before tools: OBJECTIVE + `edit:`|`NEW:` tags; Done-when = decidable proofs.
 
-1. NO ASK INSIDE INTENT: if something is missing for Done-when, do it now. Do not ask permission.
-2. NO PARTIAL HANDOFFS: ban closers like "let me know if…", "want me to…", "I can add…", "déjame saber / quieres que". If needed for INTENT, write it in this turn.
-3. GROUND → TAG → EDIT: Glob/Grep/Read until OBJECTIVE paths/symbols are in context; tag `edit:path` or `NEW:path`; StrReplace existing; Write only NEW; never invent parallel trees.
-4. PRE-STOP SELF-CHECK: re-Read tagged FILES; re-prove every Done-when predicate on disk/TOOLCHAIN. First draft ≠ met.
-5. CASCADE FIX: broken import/test from your change → fix same turn. Do not leave red.
-6. CLOSE SIGNAL: when Done-when is met, write `Done-when: met` then stop. `stop_gate` audits markers and will force another pass if you stop early.
+1. DECLARE FIRST: write INTENT in chat before any tool. Never put INTENT/Done-when into Shell, Write body, or fences (harness ignores those; context poison).
+2. NO ASK INSIDE INTENT: missing Done-when work → do it now. Do not ask permission.
+3. NO PARTIAL HANDOFFS / NO DRIP: ban "let me know…", "next pass", "will continue". Finish every tagged path this turn; no orphan unconnected files.
+4. GROUND → TAG → EDIT: Glob/Grep/Read; tag `edit:path`|`NEW:path`; StrReplace existing; Write only NEW.
+5. PRE-STOP: re-Read every tagged FILE; prove every Done-when predicate on disk/TOOLCHAIN; then `Done-when: met`.
+6. CASCADE FIX: broken import/test from your change → fix same turn.
+7. CLOSE: `Done-when: met` then stop. `stop_gate` reads **assistant prose only** and will followup on poison, drip, or unmet predicates.

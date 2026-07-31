@@ -1,5 +1,5 @@
 {
   "max_intent_body_lines": 6,
   "max_named_anchors": 5,
-  "duty": "Declare INTENT before CODE. User prompt = immutable input. OBJECTIVE: postcondition on named units — tag concrete paths (edit:existing | NEW:path). CONSTRAINTS: ≤2 invariants/non-goals. Done-when: ≤5 decidable predicates proving the postcondition; fail-closed. GROUND before edit: Glob/Grep/Read until tagged paths/symbols are in working context. Prefer StrReplace on existing tags; Write only for NEW:path when reuse is impossible; never invent parallel trees. Follow-up: re-Read tagged FILES, re-prove every Done-when predicate on those paths. History/hot = context not authority. Close: Session + hot + HANDOFF."
+  "duty": "Declare INTENT as chat prose BEFORE any tool — never Shell, Write, or code-fence (that poisons stop detection). User prompt immutable. OBJECTIVE: postcondition on named units; tag edit:path|NEW:path. CONSTRAINTS: ≤2 invariants/non-goals. Done-when: ≤5 decidable predicates; fail-closed. GROUND Glob/Grep/Read → StrReplace edit: / Write NEW: only → re-Read tags → prove predicates. Complete EVERY tagged path THIS turn (no multi-prompt drip; no orphan unconnected files). Close: Session + hot + HANDOFF."
 }

@@ -4,27 +4,28 @@ Layer 2 is mostly about what you throw away.
 
 ## INTENT quality (declaration)
 
-Injection seeds duty; the agent declares a **job card**. Thin (≤5 anchors), formal:
+Injection seeds duty; the agent declares a **job card in chat prose before tools**. Thin (≤5 anchors):
 
-1. **OBJECTIVE** — postcondition: required system state after this job, naming units under change. Tag concrete paths as `edit:path` or `NEW:path`.
-2. **CONSTRAINTS** — optional ≤2 invariants or non-goals (blast radius).
-3. **Done-when** — ≤5 decidable predicates (shell exit 0, file markers, TOOLCHAIN). One predicate per required outcome. Fail-closed until all hold.
-4. User prompt is immutable input. History/hot = context, not authority.
+1. **OBJECTIVE** — postcondition on named units. Tag `edit:path` or `NEW:path`.
+2. **CONSTRAINTS** — optional ≤2 invariants or non-goals.
+3. **Done-when** — ≤5 decidable predicates. Fail-closed until all hold.
+4. **Surface** — chat prose only. Never declare INTENT via Shell, Write, or code fences (stop_gate ignores those; counting them poisons context).
+5. User prompt immutable. History/hot = context, not authority.
 
 ## File map (prompt-engineer grounding)
 
-Before any edit:
-
-1. **Ground** — Glob/Grep/Read until OBJECTIVE paths/symbols are in the working context.
-2. **Tag** — list every path the job will touch (`edit:` existing, `NEW:` only if absent / no reuse).
-3. **Edit** — StrReplace on `edit:` paths; Write only for `NEW:`; never invent a parallel tree.
-4. **Follow-up** — re-Read tagged FILES; re-prove every Done-when predicate on those paths before `Done-when: met`.
+1. **Ground** — Glob/Grep/Read until tagged paths/symbols are in context.
+2. **Tag** — every path the job will touch (`edit:` | `NEW:`).
+3. **Edit** — StrReplace on `edit:`; Write only for `NEW:`; no parallel trees.
+4. **Same turn** — finish every tagged path before `Done-when: met`. No multi-prompt drip; no orphan unconnected files.
+5. **Follow-up** — re-Read tagged FILES; re-prove every predicate. Stop followups reinject `pending_files.md` until accept.
 
 ## Ephemeral state (`/state/`)
 
 Local context is volatile. `/state/` holds atomic files for the current run:
 
 - `current_intent.md`: overwritten on every prompt by `before_submit_prompt.sh`
+- `pending_files.md` / `pending_intent.md`: written on stop followup; reinjected until accept clears `/state/`
 
 Clear `/state/` after a successful stop accept so old intent does not poison the next run.
 
