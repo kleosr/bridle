@@ -13,6 +13,6 @@ TAIL=""
 if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 15 "$HANDOFF")"
 fi
-CTX="AMNESIA: vault survives. vault_read wiki/hot.md then wiki/index.md. INTENT = chat prose before tools (never Shell). Tag edit:|NEW:; finish all tags this turn. HANDOFF tail:
+CTX="Session start. INTENT = chat prose before tools (never Shell). Tag edit:|NEW:; finish all tags this turn. For CODE work: ground in codebase first (AGENTS.md, Glob/Grep, manifest) — vault write-back at session END. HANDOFF tail:
 ${TAIL}"
 jq -n --arg c "$CTX" '{additional_context: $c}'

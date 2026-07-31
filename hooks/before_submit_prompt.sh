@@ -13,7 +13,7 @@ mkdir -p "$STATE"
 INPUT="$(cat)"
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
 ROUTE="other"
-echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test' && ROUTE="code"
+echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|deploy|infra|host|vm|container|deploy|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 # Sandbox seed: extract file paths the user mentions in their prompt and snapshot
@@ -33,9 +33,16 @@ if [[ -s "$STATE/pending_files.md" ]]; then
 fi
 OUTCOMES_CTX=""
 [[ -s "$STATE/outcomes.md" ]] && OUTCOMES_CTX="OUTCOMES_DETECTED: $(cat "$STATE/outcomes.md") user outcome(s) → Done-when MUST list ≥ that many predicates (1 per outcome). Under-scoped Done-when is rejected."
+if [[ "$ROUTE" == "code" ]]; then
+  EPILOGUE="Codebase first: Read AGENTS.md/CLAUDE.md + manifest, Glob/Grep the feature area, THEN edit. Vault write-back at session END (Session+hot+HANDOFF) — NOT before tools."
+elif [[ "$ROUTE" == "memory" ]]; then
+  EPILOGUE="vault_read wiki/hot.md then wiki/index.md; end Session + hot + HANDOFF."
+else
+  EPILOGUE="Task-first. Vault write-back at session end (Session+hot+HANDOFF) if durable."
+fi
 jq -n --arg c "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
 FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → StrReplace existing; Write only NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.
 ${OUTCOMES_CTX}
 ${PENDING}
-Amnesia: vault_read wiki/hot.md then wiki/index.md; end Session + hot + HANDOFF." '{additional_context: $c}'
+${EPILOGUE}" '{additional_context: $c}'
