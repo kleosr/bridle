@@ -16,8 +16,13 @@ ROUTE="other"
 echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test' && ROUTE="code"
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
+# Sandbox seed: extract file paths the user mentions in their prompt and snapshot
+# them as the allowed set for stop_gate's topology check. Patterns: edit:path,
+# NEW:path, bare paths (src/foo.rs, *.ts), or quoted paths. Lines, one per line.
+echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
+  | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
 PROMPT_NORM="$(echo "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT 2>/dev/null || printf '%s' "$PROMPT")"
-OUTCOMES=$(echo "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l)
+OUTCOMES=$(echo "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l || true)
 [[ "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
