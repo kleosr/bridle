@@ -10,11 +10,17 @@ if [[ "$TOOL_NAME" != "Write" && "$TOOL_NAME" != "StrReplace" ]]; then
   echo '{"action":"allow"}'
   exit 0
 fi
-if [[ -z "$FILE_PATH" || ! -f "$FILE_PATH" ]]; then
+if [[ -z "$FILE_PATH" ]]; then
   echo '{"action":"allow"}'
   exit 0
 fi
-LINES=$(wc -l < "$FILE_PATH")
+if [[ "$TOOL_NAME" == "Write" ]]; then
+  LINES="$(echo "$INPUT" | jq -r '(.tool_input.content // empty) | if type=="array" then map((.text // .content // "")) | join("\n") else . end' 2>/dev/null | wc -l || true)"
+  [[ "${LINES:-0}" -eq 0 && -f "$FILE_PATH" ]] && LINES="$(wc -l < "$FILE_PATH")"
+else
+  [[ -f "$FILE_PATH" ]] || { echo '{"action":"allow"}'; exit 0; }
+  LINES="$(wc -l < "$FILE_PATH")"
+fi
 if [[ "$LINES" -gt "$MAX" ]]; then
   jq -n --arg m "MECHANICAL DENY: file exceeds ${MAX} LOC ($LINES). Split." \
     '{action:"deny", user_message:$m}'
