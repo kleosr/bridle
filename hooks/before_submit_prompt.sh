@@ -10,6 +10,7 @@ done
 [[ -z "$ROOT" ]] && ROOT="$(cd "$HERE/.." && pwd)"
 STATE="$ROOT/state"
 mkdir -p "$STATE"
+date +%s >"$STATE/session_ts"
 INPUT="$(cat)"
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
 ROUTE="other"

@@ -67,7 +67,13 @@ ANCH="$(echo "$PROSE" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|FI
 ASK_RE='(déjame saber|quieres que|puedo (hacer|agregar)|me avisas|debería agregar|let me know if|want me to|should I (add|also)|I can (add|also)|if you('\''|’)d like|if you want( me)? to|say if you want)'
 echo "$PROSE" | grep -iqE "$ASK_RE" && follow "STOP REJECTED: permission ask. Complete every tagged FILE this turn, then Done-when: met."
 echo "$PROSE" | grep -iqE '(next pass|will continue|partial(ly)?|remaining files|in a follow-?up|siguiente (pass|turno)|dejar[eé] para)' && follow "DRIP REJECTED: no multi-prompt drip. Connect every edit:|NEW: path now; prove Done-when; then met."
-echo "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || {
-  follow "PREMATURE STOP: Done-when unmet in chat prose. Re-Read tagged FILES; prove every predicate; finish ALL tags this turn; write Done-when: met."
-}
+SESSION_TS=$(cat "$STATE/session_ts" 2>/dev/null || echo 0)
+UNTOUCHED=""
+while IFS= read -r p; do [[ -z "$p" ]] && continue
+  [[ "$p" = /* ]] && fp="$p" || fp="$(pwd)/$p"
+  [[ -f "$fp" ]] || { UNTOUCHED="$UNTOUCHED $p(missing)"; continue; }
+  [[ "$SESSION_TS" -eq 0 || "$(stat -c %Y "$fp" 2>/dev/null || echo 0)" -ge "$SESSION_TS" ]] || UNTOUCHED="$UNTOUCHED $p"
+done < <(echo "$PROSE" | grep -oE '(edit|NEW):[^[:space:]]+' | sed 's/^[^:]*://' || true)
+[[ -n "$UNTOUCHED" ]] && follow "FILES NOT TOUCHED:$UNTOUCHED — every tagged edit:|NEW: path must be written to disk this turn. Edit/write each file, then Done-when: met."
+echo "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || follow "PREMATURE STOP: Done-when unmet in chat prose. Re-Read tagged FILES; prove every predicate; finish ALL tags this turn; write Done-when: met."
 accept
