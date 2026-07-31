@@ -80,6 +80,10 @@ copy_hook_scripts() {
 install_home_hooks() {
   mkdir -p "$HOME_C/hooks/policy" "$HOME_C/state"
   copy_hook_scripts "$HOME_C/hooks"
+  for orphan in ask-gated-shell.sh backlog-on-read.sh block-dangerous-git.sh capture-mistake.sh deny-danger.sh install-user-hooks.sh; do
+    rm -f "$HOME_C/hooks/$orphan"
+  done
+  rm -rf "$HOME_C/hooks/bin" "$HOME_C/hooks/__pycache__" "$HOME_C/hooks/lib"
   cat >"$HOME_C/hooks.json" <<EOF
 {
   "version": 1,
@@ -163,10 +167,13 @@ link_pack_rules() {
 }
 
 sync_repo_hooks() {
-  local repo="$1" label="$2" dest
+  local repo="$1" label="$2" dest orphan
   dest="$repo/.cursor/hooks"
   copy_hook_scripts "$dest"
-  rm -f "$dest/bin/kleos-gate" 2>/dev/null || true
+  for orphan in ask-gated-shell.sh block-dangerous-git.sh deny-danger.sh install-user-hooks.sh; do
+    rm -f "$dest/$orphan"
+  done
+  rm -rf "$dest/bin" "$dest/__pycache__" "$dest/lib"
   cp -f "$PACK/hooks/hooks.project.json" "$repo/.cursor/hooks.json"
   echo "[ok] hooks → $label"
 }
