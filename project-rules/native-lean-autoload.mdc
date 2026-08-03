@@ -16,12 +16,17 @@ Prohibido usar `sed`, `cat`, `echo >`, `tee`, `rg` o `find` en Shell para leer/e
 - **Memoria (Obsidian):** `CallMcpTool` (ej. `MCP:vault_read`)
 
 ## 2. DENY RECOVERY PROTOCOL (Cuando un hook bloquea)
-Si `lean_gate.sh` bloquea tu `Write` o `StrReplace` por tamaño (Ej: >700 LOC), NO intentes editar solo unas líneas. NO uses Shell para bypassear. Ejecuta este protocolo:
+El gate proyecta el LOC post-edit, no el LOC actual. Es decir:
+- `Write` nuevo > 700 LOC → deny.
+- `StrReplace` cuyo resultado proyectado > 700 LOC → deny.
+- `StrReplace` que **reduce** o **splittea** un archivo sobre 700 → **allow** (puedes editar hacia abajo).
+
+Si `lean_gate.sh` bloquea tu `Write` o `StrReplace` porque el resultado proyectado > 700 LOC, NO uses Shell para bypassear. Ejecuta este protocolo:
 
 1. **Stop & Read:** Usa `Read` en el archivo bloqueado.
 2. **Plan Split:** Identifica funciones/clases que puedan extraerse a módulos nuevos.
-3. **Extract & Write:** Usa `Write` para crear los nuevos archivos más pequeños (ej. `utils.ts`, `helpers.ts`). Deben cumplir el techo Lean.
-4. **Update Source:** Usa `StrReplace` en el archivo original para reemplazar el código extraído con un `import`.
+3. **Extract & Write:** Usa `Write` para crear los nuevos archivos más pequeños. Deben cumplir el techo Lean.
+4. **Update Source:** Usa `StrReplace` en el archivo original para reemplazar el código extraído con un `import`. Esto reduce el LOC proyectado y pasa el gate.
 5. **Cascade Fix:** Usa `Grep` para buscar dónde se importaba el código movido. Usa `StrReplace` en esos archivos para actualizar las rutas de importación.
 6. **Retry:** Reintenta tu diff original. Ahora será más pequeño y pasará el gate.
 

@@ -7,5 +7,5 @@ alwaysApply: true
 
 `lean-code` = `ponytail.mdc`. Same ladder. Same Soft Rule.
 
-Hard size roof: `hooks/lean_gate.sh` (700 LOC). Never fight a deny.
+Hard size roof: `hooks/lean_gate.sh` checks projected post-edit LOC (700 max). Edits that reduce or split oversized files always pass. Never fight a deny.
 Off only: stop ponytail / stop lean-code / normal mode.

@@ -176,7 +176,7 @@ Ingest/lint law: vault `instructions/PROCESSING.md` + `instructions/AGENT-MEMORY
 <!-- commands / paths -->
 
 ## Evidence
-<!-- TOOLCHAIN / cargo / tests -->
+<!-- TOOLCHAIN / cargo / tests · frontend: npm run css+build verbatim, visual QA (screenshot / browser / motif state) -->
 
 ## Outcomes
 <!-- what changed -->
