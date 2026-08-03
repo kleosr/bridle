@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# hooks/lean_gate.sh — Ponytail roof + entropy gate (V17.2, all file-write tools).
+#
+# Enforces the ponytail hard roof (projected post-edit LOC <= file_loc_max) and
+# the entropy ceiling (flow-control keyword density <= complexity_max). Runs as
+# PreToolUse on Write|Edit|MultiEdit|StrReplace for BOTH Cursor and Claude Code.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 POLICY="$HERE/policy/lean.json"
@@ -20,9 +25,11 @@ entropy_check() {
   fi
 }
 
-if [[ "$TOOL_NAME" != "Write" && "$TOOL_NAME" != "StrReplace" ]]; then
-  echo '{"action":"allow"}'; exit 0
-fi
+# Only file-write tools hit the roof. Bash/Read/Grep/etc. pass through.
+case "$TOOL_NAME" in
+  Write|Edit|MultiEdit|StrReplace) ;;
+  *) echo '{"action":"allow"}'; exit 0 ;;
+esac
 [[ -z "$FILE_PATH" ]] && { echo '{"action":"allow"}'; exit 0; }
 
 if [[ "$TOOL_NAME" == "Write" ]]; then
@@ -34,10 +41,16 @@ if [[ "$TOOL_NAME" == "Write" ]]; then
   fi
   entropy_check "$CONTENT" "Write ${FILE_PATH##*/}"
 else
+  # Edit / MultiEdit / StrReplace → project post-edit size from the file on disk.
   [[ -f "$FILE_PATH" ]] || { echo '{"action":"allow"}'; exit 0; }
   CUR="$(wc -l < "$FILE_PATH")"
-  OLD_C="$(echo "$INPUT" | jq -r '.tool_input.old_string // ""' | wc -l)"
-  NEW_CONTENT="$(echo "$INPUT" | jq -r '.tool_input.new_string // ""')"
+  if [[ "$TOOL_NAME" == "MultiEdit" ]]; then
+    OLD_C="$(echo "$INPUT" | jq -r '[.tool_input.edits[]?.old_string // ""] | join("\n")' | wc -l)"
+    NEW_CONTENT="$(echo "$INPUT" | jq -r '[.tool_input.edits[]?.new_string // ""] | join("\n")' 2>/dev/null || true)"
+  else
+    OLD_C="$(echo "$INPUT" | jq -r '.tool_input.old_string // ""' | wc -l)"
+    NEW_CONTENT="$(echo "$INPUT" | jq -r '.tool_input.new_string // ""' 2>/dev/null || true)"
+  fi
   NEW_C="$(printf '%s' "$NEW_CONTENT" | wc -l)"
   PROJECTED=$(( CUR - OLD_C + NEW_C ))
   if [[ "$PROJECTED" -gt "$MAX" ]]; then

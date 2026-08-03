@@ -99,7 +99,7 @@ install_home_hooks() {
     ],
     "preToolUse": [
       {
-        "matcher": "Write|StrReplace",
+        "matcher": "Write|Edit|MultiEdit|StrReplace",
         "command": "bash ${HOME_C}/hooks/lean_gate.sh",
         "timeoutSec": 5,
         "failClosed": true
