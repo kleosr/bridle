@@ -6,7 +6,7 @@ FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
 SHARED=(agent types testing debugging native-lean-autoload ponytail lean-code obsidian-memory context-curator vernacular)
 GLOBAL=(native-lean-autoload ponytail lean-code agent obsidian-memory context-curator vernacular testing)
-HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh)
+HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh fleet_dispatch.sh)
 
 load_lines() {
   local f="$1" line
@@ -101,6 +101,12 @@ install_home_hooks() {
       {
         "matcher": "Write|StrReplace",
         "command": "bash ${HOME_C}/hooks/lean_gate.sh",
+        "timeoutSec": 5,
+        "failClosed": true
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|StrReplace|Bash",
+        "command": "bash ${HOME_C}/hooks/pre_tool_use.sh",
         "timeoutSec": 5,
         "failClosed": true
       }
@@ -216,6 +222,8 @@ verify_smoke() {
   bash -n "$PACK/hooks/before_submit_prompt.sh"
   bash -n "$PACK/hooks/stop_gate.sh"
   bash -n "$PACK/hooks/lean_gate.sh"
+  bash -n "$PACK/hooks/pre_tool_use.sh"
+  bash -n "$PACK/hooks/fleet_dispatch.sh"
   bash -n "$PACK/hooks/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
     | bash "$PACK/hooks/before_submit_prompt.sh" | jq -e '.additional_context' >/dev/null
