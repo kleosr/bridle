@@ -134,8 +134,8 @@ fi
 # stop_gate) load from ~/.claude/settings.json and enforce the sandbox.
 PROMPT="INTENT: $TASK
 Tag every file as edit:path or NEW:path. Done-when: ≤5 decidable predicates. Finish all tagged files this turn; proof via build/test where applicable."
-echo "  [dispatch] claude -p --allowedTools ..."
-claude -p --dangerously-skip-permissions=false "$PROMPT" 2>&1 | tail -20
+echo "  [dispatch] claude -p --prompt <task>"
+claude -p "$PROMPT" 2>&1 | tail -20
 echo "  [done] dispatch returned."
 
 # Mark task consumed: comment it out in the backlog.
