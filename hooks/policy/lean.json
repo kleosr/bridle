@@ -1,3 +1,4 @@
 {
-  "file_loc_max": 700
+  "file_loc_max": 700,
+  "complexity_max": 30
 }

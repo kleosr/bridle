@@ -14,7 +14,7 @@ date +%s >"$STATE/session_ts"
 INPUT="$(cat)"
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
 ROUTE="other"
-echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|deploy|infra|host|vm|container|deploy|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"
+echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|infra|host|vm|container|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 # Sandbox seed: extract file paths the user mentions in their prompt and snapshot
@@ -45,6 +45,7 @@ fi
 jq -n --arg c "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
 FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → StrReplace existing; Write only NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.
+SANDBOX: paths detected in your prompt are snapshotted to state/allowed_files.md — stop_gate will reject stops where your INTENT tags touch files outside this set (TOPOLOGY VIOLATION). If you need to expand scope, say so in your INTENT.
 ${OUTCOMES_CTX}
 ${PENDING}
 ${EPILOGUE}" '{additional_context: $c}'
