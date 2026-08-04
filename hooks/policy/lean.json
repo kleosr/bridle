@@ -1,4 +1,5 @@
 {
   "file_loc_max": 700,
-  "complexity_max": 30
+  "complexity_max": 30,
+  "edit_velocity_max": 15
 }

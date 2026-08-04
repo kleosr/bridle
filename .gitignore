@@ -4,6 +4,9 @@
 state/
 !state/.gitkeep
 
+.kleos/
+**/.kleos/
+
 *.log
 .scan-and-sync.log
 *.orig

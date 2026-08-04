@@ -1,48 +1,65 @@
 #!/usr/bin/env bash
-# hooks/lean_gate.sh — Ponytail roof + entropy gate (V17.2, all file-write tools).
-#
-# Enforces the ponytail hard roof (projected post-edit LOC <= file_loc_max) and
-# the entropy ceiling (flow-control keyword density <= complexity_max). Runs as
-# PreToolUse on Write|Edit|MultiEdit|StrReplace for BOTH Cursor and Claude Code.
+# hooks/lean_gate.sh — Ponytail roof + entropy gate + velocity check.
+# PreToolUse on Write|Edit|MultiEdit|StrReplace for Cursor and Claude Code.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
+source "$HERE/lib/common.sh"
 POLICY="$HERE/policy/lean.json"
 MAX="$(jq -r '.file_loc_max // 700' "$POLICY" 2>/dev/null || echo 700)"
 COMPLEXITY_MAX="$(jq -r '.complexity_max // 30' "$POLICY" 2>/dev/null || echo 30)"
-INPUT=$(cat)
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')
+VELOCITY_MAX="$(jq -r '.edit_velocity_max // 15' "$POLICY" 2>/dev/null || echo 15)"
+INPUT="$(cat)"
+TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // empty')"
+FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
+resolve_root
+STATE="$(state_dir)"
+VELOCITY_LOG="$STATE/edit_velocity.log"
 
-# Entropy check: count flow-control keywords in the content being written/edited.
-# High keyword density signals a function/module doing too much — reject before
-# it even hits the LOC roof. Counts: if, for, while, switch, function/def/fn.
+# Velocity: count edits to same file this session — too many = bloated patching.
+velocity_bump() {
+  local fp="$1"
+  mkdir -p "$STATE"
+  local count
+  count="$(grep -cxF "$fp" "$VELOCITY_LOG" 2>/dev/null || echo 0)"
+  count="${count//[!0-9]}"
+  [[ -z "$count" ]] && count=0
+  echo "$fp" >>"$VELOCITY_LOG"
+  if [[ "$count" -ge "$VELOCITY_MAX" ]]; then
+    jq -n --arg m "VELOCITY DENY: '${fp##*/}' edited ${count} times this session (> ${VELOCITY_MAX} roof). This file is being patched repeatedly — extract a module or refactor before retrying." \
+      '{action:"deny", user_message:$m}'; exit 2
+  fi
+}
+
 entropy_check() {
   local content="$1" label="$2"
-  local count; count="$(printf '%s' "$content" | grep -oiE '\b(if|for|while|switch|function|def |fn )\b' | wc -l || echo 0)"
+  local count; count="$(printf '%s' "$content" | { grep -oiE '\b(if|for|while|switch|function|def |fn )\b' || true; } | wc -l)"
+  count="${count//[!0-9]}"
+  [[ -z "$count" ]] && count=0
   if [[ "$count" -gt "$COMPLEXITY_MAX" ]]; then
     jq -n --arg m "ENTROPY DENY: Complejidad estructural demasiado alta (${count} keywords de control de flujo > ${COMPLEXITY_MAX} roof en ${label}). Divide el nodo." \
       '{action:"deny", user_message:$m}'; exit 2
   fi
 }
 
-# Only file-write tools hit the roof. Bash/Read/Grep/etc. pass through.
 case "$TOOL_NAME" in
   Write|Edit|MultiEdit|StrReplace) ;;
-  *) echo '{"action":"allow"}'; exit 0 ;;
+  *) emit_allow; exit 0 ;;
 esac
-[[ -z "$FILE_PATH" ]] && { echo '{"action":"allow"}'; exit 0; }
+[[ -z "$FILE_PATH" ]] && { emit_allow; exit 0; }
+velocity_bump "$FILE_PATH"
 
 if [[ "$TOOL_NAME" == "Write" ]]; then
   CONTENT="$(echo "$INPUT" | jq -r '(.tool_input.content // empty) | if type=="array" then map((.text // .content // "")) | join("\n") else . end' 2>/dev/null || true)"
-  LINES="$(printf '%s' "$CONTENT" | wc -l || true)"
+  LINES="$(printf '%s' "$CONTENT" | wc -l)"
+  LINES="${LINES//[!0-9]}"
+  [[ -z "$LINES" ]] && LINES=0
   if [[ "${LINES:-0}" -gt "$MAX" ]]; then
     jq -n --arg m "MECHANICAL DENY: Write produces ${LINES} LOC > ${MAX} roof. Split into smaller modules." \
       '{action:"deny", user_message:$m}'; exit 2
   fi
   entropy_check "$CONTENT" "Write ${FILE_PATH##*/}"
 else
-  # Edit / MultiEdit / StrReplace → project post-edit size from the file on disk.
-  [[ -f "$FILE_PATH" ]] || { echo '{"action":"allow"}'; exit 0; }
+  [[ -f "$FILE_PATH" ]] || { emit_allow; exit 0; }
   CUR="$(wc -l < "$FILE_PATH")"
   if [[ "$TOOL_NAME" == "MultiEdit" ]]; then
     OLD_C="$(echo "$INPUT" | jq -r '[.tool_input.edits[]?.old_string // ""] | join("\n")' | wc -l)"
@@ -60,5 +77,4 @@ else
   entropy_check "$NEW_CONTENT" "Edit ${FILE_PATH##*/}"
 fi
 
-echo '{"action":"allow"}'
-exit 0
+emit_allow; exit 0

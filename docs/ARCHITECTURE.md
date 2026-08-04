@@ -8,11 +8,11 @@ kleosrules V2 uses the 5 Layers framework. Layers nest; they do not replace each
 | 2 | Context | Window | `HANDOFF.md` (tail 15), `before_submit_prompt.sh` classify. |
 | 3 | Harness | Pass | Cursor + Bash hooks + tools. Without `stop_gate`, you only have an API. |
 | 4 | Loop | Run | `stop_gate.sh` audits `Done-when`. Auto-brakes stop early exits. |
-| 5 | Graph | Job | Obsidian vault (Markdown + wikilinks). Shared durable state. |
+| 5 | Graph | Job | Local Markdown files (`HANDOFF.md`). Optional: Obsidian vault. |
 
 ## Preventive Amnesia
 
-Cursor reasons in a window that dies. Obsidian keeps what must survive. Bash hooks force a read of `hot`/`index` and a write of `Session`/`hot` so the next chat is not blank.
+Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. Bash hooks force a read of HANDOFF tail at start and a seed of HANDOFF on stop-accept so the next chat is not blank. Optional: Obsidian vault for graph-based long-lived memory via MCP.
 
 ## Injection vs Declaration
 
@@ -22,7 +22,7 @@ Cursor reasons in a window that dies. Obsidian keeps what must survive. Bash hoo
 
 ## Runtime map
 
-- **Muscles:** Bash scripts under `/hooks` (event hooks max 80 LOC each; fail-closed where registered).
+- **Muscles:** Bash scripts under `/hooks` (event hooks max 80 LOC each; fail-closed where registered). Core logic in `/hooks/lib/`.
 - **Policy (wired only):** `hooks/policy/intent.json` + `hooks/policy/lean.json`.
-- **Brain:** Obsidian via MCP. No local datasets, no Rust binaries.
+- **Brain:** `HANDOFF.md` (local, always works). Optional: Obsidian via MCP.
 - **State:** Ephemeral files in `/state/` (gitignored). Cleared each run.

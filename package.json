@@ -1,7 +1,13 @@
 {
-  "name": "kleosr",
-  "version": "17.1.0",
+  "name": "kleosrules",
+  "version": "18.0.0",
   "private": true,
-  "description": "kleosr V2 — Bash hooks + Obsidian memory. No Rust.",
-  "license": "MIT"
+  "description": "Cursor harness pack — User Rules, companions, skills, Bash hooks, local HANDOFF memory. No Rust. No MCP core dependency.",
+  "license": "MIT",
+  "scripts": {
+    "doctor": "bash scripts/doctor.sh",
+    "test": "bash tests/run.sh",
+    "sync": "bash scripts/sync.sh",
+    "install:rules": "bash scripts/install.sh"
+  }
 }

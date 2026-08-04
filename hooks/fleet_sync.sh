@@ -66,15 +66,28 @@ symlink_force() {
 
 copy_hook_scripts() {
   local dest="$1" s p
-  mkdir -p "$dest/policy"
+  mkdir -p "$dest/policy" "$dest/lib"
   for s in "${HOOK_SCRIPTS[@]}"; do
     cp -f "$PACK/hooks/$s" "$dest/$s"
     chmod +x "$dest/$s"
+  done
+  for s in "$PACK"/hooks/lib/*.sh; do
+    [[ -f "$s" ]] || continue
+    cp -f "$s" "$dest/lib/$(basename "$s")"
+    chmod +x "$dest/lib/$(basename "$s")"
   done
   for p in "$PACK"/hooks/policy/*.json; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
   done
+}
+
+write_home_hooks_json() {
+  jq '.hooks.preToolUse[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
+    | .hooks.beforeSubmitPrompt[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
+    | .hooks.sessionStart[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
+    | .hooks.stop[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")' \
+    "$PACK/hooks/hooks.json" >"$HOME_C/hooks.json"
 }
 
 install_home_hooks() {
@@ -83,37 +96,8 @@ install_home_hooks() {
   for orphan in ask-gated-shell.sh backlog-on-read.sh block-dangerous-git.sh capture-mistake.sh deny-danger.sh install-user-hooks.sh; do
     rm -f "$HOME_C/hooks/$orphan"
   done
-  rm -rf "$HOME_C/hooks/bin" "$HOME_C/hooks/__pycache__" "$HOME_C/hooks/lib"
-  cat >"$HOME_C/hooks.json" <<EOF
-{
-  "version": 1,
-  "hooks": {
-    "beforeSubmitPrompt": [
-      {"command": "bash ${HOME_C}/hooks/before_submit_prompt.sh", "failClosed": true}
-    ],
-    "sessionStart": [
-      {"command": "bash ${HOME_C}/hooks/session_start.sh", "failClosed": false}
-    ],
-    "stop": [
-      {"command": "bash ${HOME_C}/hooks/stop_gate.sh", "loop_limit": 5, "failClosed": false}
-    ],
-    "preToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|StrReplace",
-        "command": "bash ${HOME_C}/hooks/lean_gate.sh",
-        "timeoutSec": 5,
-        "failClosed": true
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit|StrReplace|Bash",
-        "command": "bash ${HOME_C}/hooks/pre_tool_use.sh",
-        "timeoutSec": 5,
-        "failClosed": true
-      }
-    ]
-  }
-}
-EOF
+  rm -rf "$HOME_C/hooks/bin" "$HOME_C/hooks/__pycache__"
+  write_home_hooks_json
   echo "[ok] ~/.cursor/hooks.json + hooks scripts"
 }
 
@@ -172,6 +156,15 @@ link_pack_rules() {
   echo "[ok] pack .cursor/rules → project-rules"
 }
 
+write_repo_hooks_json() {
+  local out="$1"
+  jq '.hooks.preToolUse[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
+    | .hooks.beforeSubmitPrompt[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
+    | .hooks.sessionStart[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
+    | .hooks.stop[].command |= sub("^\\./hooks/"; ".cursor/hooks/")' \
+    "$PACK/hooks/hooks.json" >"$out"
+}
+
 sync_repo_hooks() {
   local repo="$1" label="$2" dest orphan
   dest="$repo/.cursor/hooks"
@@ -179,8 +172,8 @@ sync_repo_hooks() {
   for orphan in ask-gated-shell.sh block-dangerous-git.sh deny-danger.sh install-user-hooks.sh; do
     rm -f "$dest/$orphan"
   done
-  rm -rf "$dest/bin" "$dest/__pycache__" "$dest/lib"
-  cp -f "$PACK/hooks/hooks.project.json" "$repo/.cursor/hooks.json"
+  rm -rf "$dest/bin" "$dest/__pycache__"
+  write_repo_hooks_json "$repo/.cursor/hooks.json"
   echo "[ok] hooks → $label"
 }
 
