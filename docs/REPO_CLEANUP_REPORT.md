@@ -47,10 +47,10 @@ Auditor: kleosr (lead maintainer pass)
 | `HANDOFF.md` | Expand to bounded state file with compaction protocol |
 | `user-rules/USER-RULES.paste.txt` | Remove vault/MCP as required; local HANDOFF is default memory |
 | `user-rules/option-c-core.mdc` | Remove MCP as required; local HANDOFF is default |
-| `project-rules/obsidian-memory.mdc` | Convert to optional local+MCP memory rule |
-| `project-rules/agent.mdc` | Remove MCP hard reference |
-| `project-rules/context-curator.mdc` | Remove vault_read as required step |
-| `project-rules/native-lean-autoload.mdc` | Replace MCP memory with local HANDOFF |
+| `rules/obsidian-memory.mdc` | Convert to optional local+MCP memory rule |
+| `rules/agent.mdc` | Remove MCP hard reference |
+| `rules/context-curator.mdc` | Remove vault_read as required step |
+| `rules/native-lean-autoload.mdc` | Replace MCP memory with local HANDOFF |
 | `hooks/session_start.sh` | Remove vault references from injected context |
 | `hooks/before_submit_prompt.sh` | Remove vault write-back requirement from injected context |
 | `hooks/stop_gate.sh` | Remove vault write-back from accept handler + HANDOFF template |
@@ -73,7 +73,7 @@ Auditor: kleosr (lead maintainer pass)
 | `hooks/fleet_dispatch.sh` | Backlog dispatcher — keep |
 | `hooks/policy/intent.json` | Wired policy |
 | `hooks/policy/lean.json` | Wired policy |
-| `project-rules/{ponytail,lean-code,debugging,testing,types,vernacular}.mdc` | Core rules — minor MCP scrub |
+| `rules/{ponytail,lean-code,debugging,testing,types,vernacular}.mdc` | Core rules — minor MCP scrub |
 | `skills/*` | On-demand skills — leave as-is |
 | `config/*` | Fleet config — leave as-is |
 | `assets/*` | Brand SVGs — leave as-is |

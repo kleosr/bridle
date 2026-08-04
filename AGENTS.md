@@ -1,7 +1,7 @@
 AGENTS.md map of this pack
 
 LAW vs MAP
-- Law: user-rules paste + project-rules + hooks scripts
+- Law: rules paste + rules + hooks scripts
 - This file: navigation only
 
 Overview
@@ -9,7 +9,7 @@ kleosrules V2 Bash hooks + local HANDOFF memory. Brain equals HANDOFF.md (local)
 Muscle equals hooks scripts. No Rust. No Python pack tooling. No MCP core dependency.
 
 Where to look
-- Paste: user-rules/USER-RULES.paste.txt
+- Paste: rules/USER-RULES.paste.txt
 - Hooks: hooks/session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh
 - Hook lib: hooks/lib/common.sh stop_gate_core.sh pre_tool_use_core.sh
 - Install: hooks/fleet_sync.sh (syncs hooks + rules + skills to ~/.cursor and fleet repos)

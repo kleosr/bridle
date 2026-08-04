@@ -16,7 +16,7 @@ agents-map
 workspace-scope
 system-wiring
 codebase-memory
-obsidian-memory
+memory
 
 # --- Frontend / design ---
 design-taste-frontend

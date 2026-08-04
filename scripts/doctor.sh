@@ -67,7 +67,7 @@ for f in "$PACK"/hooks/session_start.sh "$PACK"/hooks/before_submit_prompt.sh "$
 done
 
 # 11. Required directories exist
-for d in hooks hooks/lib hooks/policy project-rules user-rules skills config docs scripts tests; do
+for d in hooks hooks/lib hooks/policy rules skills config docs scripts tests; do
   if [[ -d "$PACK/$d" ]]; then ok "dir exists: $d/"
   else fail "missing dir: $d/"; fi
 done
@@ -100,11 +100,11 @@ for wrapper in stop_gate pre_tool_use; do
 done
 
 # 17. No duplicate rules/skills (lean-code was merged into ponytail)
-if [[ ! -f "$PACK/project-rules/lean-code.mdc" && ! -d "$PACK/skills/lean-code" ]]; then ok "no lean-code duplicate"
+if [[ ! -f "$PACK/rules/lean-code.mdc" && ! -d "$PACK/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi
 
 # 18. No stale references to deleted lean-code
-if ! grep -Rq 'lean-code' "$PACK/hooks/fleet_sync.sh" "$PACK/config/skills.txt" "$PACK/skills/AGENTS.md" "$PACK/project-rules/AGENTS.md" 2>/dev/null; then ok "no stale lean-code refs"
+if ! grep -Rq 'lean-code' "$PACK/hooks/fleet_sync.sh" "$PACK/config/skills.txt" "$PACK/skills/AGENTS.md" "$PACK/rules/AGENTS.md" 2>/dev/null; then ok "no stale lean-code refs"
 else fail "Stale lean-code reference found in config files"; fi
 
 echo ""
