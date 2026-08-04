@@ -1,9 +1,0 @@
-Rewrite the selected text so it reads like a person explaining something. Plain, specific, slightly uneven. Same facts; do not invent numbers, names, or sources.
-
-Cut: delve, underscore, showcase, pivotal, seamless, robust, foster, leverage, furthermore, it's worth noting, Great question, hope this helps, feel free to reach out, In today's fast-paced, plays a crucial role in shaping, Not X but Y, No X No Y Just Z, poster lines (X is where Y is won or lost), zinger last lines, em dashes (use periods and commas), bold label lists.
-
-Keep: quotes, code, product names, citations, confidence labels, medical/legal warnings.
-
-Break sentence shapes: say what happened instead of claiming importance. Answer first in replies. One flat sentence is fine. Do not sound polished or punchy. Boring and clear beats humanized.
-
-Return only the rewritten text. No preamble.

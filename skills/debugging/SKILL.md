@@ -1,7 +1,7 @@
 ---
-name: bug-hunt
+name: debugging
 description: >-
-  Investigates difficult, intermittent, cross-layer, or regression bugs with
+  Debugs difficult, intermittent, cross-layer, or regression bugs
   evidence before fixes. Use when the cause is unknown, normal debugging
   stalled, or the user asks to hunt, diagnose, or root-cause a bug.
 ---
@@ -36,8 +36,8 @@ Prove the cause; do not change code to generate hypotheses.
 
 - No catch/sleep/retry, mock, assertion, or test weakening to hide failure.
 - No simultaneous fixes for competing hypotheses.
-- Cross-boundary symptoms use `workspace-scope`; communication failures may
-  use `system-wiring`.
+- Cross-boundary symptoms use session-handoff; communication failures may
+  use session-handoff.
 - Preserve logs/artifacts needed to explain the result; never expose secrets.
 
 ## Report

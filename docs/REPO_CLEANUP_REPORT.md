@@ -12,7 +12,7 @@ Auditor: kleosr (lead maintainer pass)
 | Hook configs | 2 | `hooks.json` + `hooks.project.json` — divergent, both miss `pre_tool_use.sh` |
 | Policy files (wired) | 2 | `intent.json`, `lean.json` |
 | Policy files (dead) | 5 | `.cursor/hooks/policy/{ask-scope,context,delete,secrets,shell}.json` — Rust-gate remnants |
-| Project rules | 10 | `agent`, `context-curator`, `debugging`, `lean-code`, `native-lean-autoload`, `obsidian-memory`, `ponytail`, `testing`, `types`, `vernacular` |
+| Project rules | 8 | `agent`, `context-curator`, `debugging`, `native-lean-autoload`, `ponytail`, `testing`, `types`, `vernacular` |
 | User rules | 2 | `USER-RULES.paste.txt`, `option-c-core.mdc` |
 | Skills | 32 | Across architecture, lean, frontend, ship, voice |
 | Docs | 6 | `ARCHITECTURE`, `TOOLCHAIN`, `CURATOR`, ADR, 2 retired evals |
@@ -73,7 +73,7 @@ Auditor: kleosr (lead maintainer pass)
 | `hooks/fleet_dispatch.sh` | Backlog dispatcher — keep |
 | `hooks/policy/intent.json` | Wired policy |
 | `hooks/policy/lean.json` | Wired policy |
-| `rules/{ponytail,lean-code,debugging,testing,types,vernacular}.mdc` | Core rules — minor MCP scrub |
+| `rules/{ponytail,debugging,testing,types,vernacular}.mdc` | Core rules — minor MCP scrub |
 | `skills/*` | On-demand skills — leave as-is |
 | `config/*` | Fleet config — leave as-is |
 | `assets/*` | Brand SVGs — leave as-is |

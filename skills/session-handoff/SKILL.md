@@ -54,5 +54,5 @@ and refresh `wiki/hot.md` (Skill `obsidian-memory`). Repo handoff + vault — bo
 
 - Assessment-only until the user asked for changes (per agent.mdc).
 - Never invent residual features; append open items to this handoff.
-- Pair with `ship-loop` for feature execution; `grill-me` if Open is ambiguous.
+- Pair with testing for feature execution; debugging if Open is ambiguous.
 - Pair with `obsidian-memory` so chat death does not erase the graph.

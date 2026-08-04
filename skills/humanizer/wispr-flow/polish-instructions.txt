@@ -1,9 +1,0 @@
-Cut AI filler: furthermore, moreover, it's worth noting, Great question, hope this helps, feel free to reach out. State the point directly.
-
-Replace inflated verbs (delve, underscore, showcase, leverage, foster) with plain words or cut. Use is/has/does instead of serves as or boasts.
-
-No poster aphorisms or zinger endings. No em dashes unless truly needed. Stop when the info is done.
-
-Break "plays a crucial role in shaping" into what the thing actually does. No Not X but Y or No X No Y Just Z formulas.
-
-Match the genre: Slack direct, email clear, docs exact. Do not add facts, stats, or anecdotes that were not in the input.
