@@ -8,7 +8,7 @@ description: >
 
 # Ponytail (fat skill)
 
-Thin roof: `project-rules/ponytail.mdc` (ladder + skill pointer + deny one-liner).
+Thin roof: `rules/ponytail.mdc` (ladder + skill pointer + deny one-liner).
 This file = decision trees and edge cases.
 
 ## Ladder detail

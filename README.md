@@ -35,7 +35,7 @@ bash scripts/doctor.sh        # verify environment
 FORCE=1 bash hooks/fleet_sync.sh all
 ```
 
-Paste `user-rules/USER-RULES.paste.txt` into Cursor → Settings → Rules → User Rules, start a **new** agent chat, and confirm Hooks loaded the Bash scripts.
+Paste `rules/USER-RULES.paste.txt` into Cursor → Settings → Rules → User Rules, start a **new** agent chat, and confirm Hooks loaded the Bash scripts.
 
 ## Usage
 
@@ -56,7 +56,7 @@ bash tests/run.sh
 
 Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, 700 LOC + entropy + velocity) denies oversized writes — rewrite or stop; do not fight a deny.
 
-Skill routes: lean → `/ponytail`; dialect → `/vernacular`; vault (optional) → `/obsidian-memory`; AST → `/codebase-memory`.
+Skill routes: lean → `/ponytail`; dialect → `/vernacular`; vault (optional) → `/memory`; AST → `/codebase-memory`.
 
 ## Architecture
 
@@ -76,8 +76,8 @@ Skill routes: lean → `/ponytail`; dialect → `/vernacular`; vault (optional) 
 │   │   └── pre_tool_use_core.sh — autonomy gate logic
 │   ├── policy/                — intent.json + lean.json (wired only)
 │   └── hooks.json             — canonical hook registry
-├── project-rules/             — always-on companions (.mdc)
-├── user-rules/                — paste capsule + option-c-core mirror
+├── rules/             — always-on companions (.mdc)
+├── rules/                — paste capsule + option-c-core mirror
 ├── skills/                    — on-demand Cursor skills
 ├── config/                    — skills list + scan roots + retire lists
 ├── scripts/                   — doctor.sh, install.sh, sync.sh

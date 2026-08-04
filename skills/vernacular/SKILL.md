@@ -8,7 +8,7 @@ description: >
 
 # Vernacular (fat skill)
 
-Thin roof: `project-rules/vernacular.mdc` (hard bans). This file = procedure + examples.
+Thin roof: `rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 
 ## Load order
 1. Read `.cursor/rules/vernacular.mdc` (or VERNACULAR.md).

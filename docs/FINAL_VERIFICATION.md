@@ -23,7 +23,7 @@ Session: Repository cleanup + hardening pass
 ### MCP-first → local-first
 - README: Obsidian/MCP is now optional, not required
 - AGENTS.md: "Brain equals HANDOFF.md (local)" — removed Obsidian as core
-- All project-rules: vault_read/vault_write converted from hard requirement to optional
+- All rules: vault_read/vault_write converted from hard requirement to optional
 - user-rules paste: HANDOFF.md is the default brain; Obsidian optional
 - hooks: vault write-back references replaced with HANDOFF update
 - `stop_gate.sh` accept handler: seeds HANDOFF with bounded structure (no vault reference)
@@ -68,7 +68,7 @@ Session: Repository cleanup + hardening pass
 | `hooks/before_submit_prompt.sh` | Uses common.sh, MCP→HANDOFF refs |
 | `hooks/session_start.sh` | Uses common.sh, MCP→HANDOFF refs |
 | `hooks/fleet_sync.sh` | jq-based config generation, copies lib/, removed hooks.project.json ref |
-| All project-rules/*.mdc | MCP hard-dep → optional |
+| All rules/*.mdc | MCP hard-dep → optional |
 | user-rules/* | MCP hard-dep → optional |
 | README.md | Full rewrite, local-first |
 | AGENTS.md | MCP→local HANDOFF |

@@ -4,8 +4,8 @@ PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
-SHARED=(agent types testing debugging native-lean-autoload ponytail obsidian-memory context-curator vernacular)
-GLOBAL=(native-lean-autoload ponytail agent obsidian-memory context-curator vernacular testing)
+SHARED=(agent types testing debugging native-lean-autoload ponytail memory context-curator vernacular)
+GLOBAL=(native-lean-autoload ponytail agent memory context-curator vernacular testing)
 HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh fleet_dispatch.sh)
 
 load_lines() {
@@ -104,9 +104,9 @@ install_home_hooks() {
 install_global_rules() {
   local name
   mkdir -p "$HOME_C/rules"
-  cp -f "$PACK/user-rules/option-c-core.mdc" "$HOME_C/rules/option-c-core.mdc"
+  cp -f "$PACK/rules/option-c-core.mdc" "$HOME_C/rules/option-c-core.mdc"
   for name in "${GLOBAL[@]}"; do
-    cp -f "$PACK/project-rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
+    cp -f "$PACK/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
     echo "[ok] ~/.cursor/rules/${name}.mdc"
   done
 }
@@ -146,14 +146,14 @@ link_pack_rules() {
   local dest="$PACK/.cursor/rules" name orphan
   mkdir -p "$dest"
   for name in "${SHARED[@]}"; do
-    [[ -f "$PACK/project-rules/${name}.mdc" ]] || continue
-    symlink_force "../../project-rules/${name}.mdc" "$dest/${name}.mdc"
+    [[ -f "$PACK/rules/${name}.mdc" ]] || continue
+    symlink_force "../../rules/${name}.mdc" "$dest/${name}.mdc"
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
     [[ -e "$dest/$orphan" || -L "$dest/$orphan" ]] && rm -f "$dest/$orphan" && echo "[rm] pack/$orphan"
   done < <(load_lines "$PACK/config/retired.txt")
-  echo "[ok] pack .cursor/rules → project-rules"
+  echo "[ok] pack .cursor/rules → rules"
 }
 
 write_repo_hooks_json() {
@@ -182,9 +182,9 @@ sync_repo_rules() {
   dest="$repo/.cursor/rules"
   mkdir -p "$dest"
   for name in "${SHARED[@]}"; do
-    [[ -f "$PACK/project-rules/${name}.mdc" ]] || continue
+    [[ -f "$PACK/rules/${name}.mdc" ]] || continue
     rm -f "$dest/${name}.mdc"
-    cp -f "$PACK/project-rules/${name}.mdc" "$dest/${name}.mdc"
+    cp -f "$PACK/rules/${name}.mdc" "$dest/${name}.mdc"
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
@@ -255,7 +255,7 @@ case "$CMD" in
     sync_fleet
     verify_smoke
     echo "[done] fleet_sync all FORCE=$FORCE"
-    echo "Manual: paste $PACK/user-rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
+    echo "Manual: paste $PACK/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
     ;;
   *)
     echo "usage: FORCE=1 $0 {install|sync|verify|all}" >&2
