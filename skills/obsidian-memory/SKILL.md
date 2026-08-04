@@ -50,10 +50,15 @@ Vault path: MCP `user-obsidian` (see companion). No pack-local `context.json` ga
 
 ## Server
 
-MCP: `user-obsidian`. Vault: `/home/kleosr/rootsidian/kleosr`.
+MCP: `user-obsidian` **(OPTIONAL)**. Vault: `/home/kleosr/rootsidian/kleosr`.
 
-Always `GetMcpTools` before `CallMcpTool`. Obsidian app must be **running**.
-Down → say so; fall back to `HANDOFF.md` / `AGENTS.md` — never invent vault state.
+**If MCP configured and Obsidian running:**
+Always `GetMcpTools` before `CallMcpTool`.
+Durable facts → `vault_append`.
+
+**If MCP not available:**
+Fall back to `HANDOFF.md` for all durable facts.
+Never invent vault state or call MCP tools.
 
 ## Graphs + layer stack
 

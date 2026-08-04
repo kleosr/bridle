@@ -92,6 +92,14 @@ for wrapper in stop_gate pre_tool_use; do
   else fail "wrapper missing source: ${wrapper}.sh"; fi
 done
 
+# 17. No duplicate rules/skills (lean-code was merged into ponytail)
+if [[ ! -f "$PACK/project-rules/lean-code.mdc" && ! -d "$PACK/skills/lean-code" ]]; then ok "no lean-code duplicate"
+else fail "Duplicate found: lean-code (use ponytail instead)"; fi
+
+# 18. No stale references to deleted lean-code
+if ! grep -Rq 'lean-code' "$PACK/hooks/fleet_sync.sh" "$PACK/config/skills.txt" "$PACK/skills/AGENTS.md" "$PACK/project-rules/AGENTS.md" 2>/dev/null; then ok "no stale lean-code refs"
+else fail "Stale lean-code reference found in config files"; fi
+
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
   echo "=== ALL CHECKS PASSED ==="
