@@ -24,6 +24,12 @@ emit_deny() {
   jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
 }
 
+# Emit allow with advisory user_message (non-blocking; hook passes but informs agent).
+emit_warn() {
+  local msg="$1"
+  jq -n --arg m "$msg" '{action:"allow", user_message:$m}'
+}
+
 # Emit followup JSON (for stop gate). Takes a message.
 emit_followup() {
   local msg="$1"
