@@ -4,6 +4,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 source "$HERE/lib/metrics.sh"
+source "$HERE/lib/shared_state.sh"
 POLICY="$HERE/policy/lean.json"
 MAX="$(jq -r '.file_loc_max // 700' "$POLICY" 2>/dev/null || echo 700)"
 CC_MAX="$(jq -r '.complexity_max // 50' "$POLICY" 2>/dev/null || echo 50)"
@@ -62,7 +63,8 @@ else
   CONTENT="$NEW_CONTENT"
 fi
 
-coupling_check "$CONTENT" "$COUPLE_MAX" || exit 2
-nesting_check "$CONTENT" "$NEST_MAX" || exit 2
-complexity_check "$CONTENT" "$CC_MAX" "$CC_FUNC" || exit 2
+coupling_check "$CONTENT" "$COUPLE_MAX" || { log_session_event "DENY" "lean_gate: coupling $FILE_PATH"; exit 2; }
+nesting_check "$CONTENT" "$NEST_MAX" || { log_session_event "DENY" "lean_gate: nesting $FILE_PATH"; exit 2; }
+complexity_check "$CONTENT" "$CC_MAX" "$CC_FUNC" || { log_session_event "DENY" "lean_gate: complexity $FILE_PATH"; exit 2; }
+log_session_event "ALLOW" "lean_gate: $FILE_PATH"
 emit_allow; exit 0

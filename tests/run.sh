@@ -130,7 +130,15 @@ else
   FAIL=$((FAIL + 1))
 fi
 
-# 10. Event hooks LOC ≤ 80
+# 13. before_submit_prompt adds constraint reminder on unbound code task
+RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additional_context | test("CONSTRAINTS:")')"
+run_test "before_submit reminds constraints on unbound task" "true" "$RESULT"
+
+# 14. shared_state logs events (debugging only, no behavior change)
+rm -rf "$PACK/state"
+echo '{"tool_name":"Write","tool_input":{"file_path":"x.ts","content":"const a=1;\n"}}' | bash "$PACK/hooks/lean_gate.sh" >/dev/null 2>&1 || true
+RESULT="$([[ -f "$PACK/state/session.log" ]] && grep -q 'lean_gate' "$PACK/state/session.log" && echo "ok" || echo "fail")"
+run_test "shared_state logs lean_gate events" "ok" "$RESULT"
 LOC_OK=1
 for f in "$PACK"/hooks/session_start.sh "$PACK"/hooks/before_submit_prompt.sh "$PACK"/hooks/stop_gate.sh "$PACK"/hooks/lean_gate.sh "$PACK"/hooks/pre_tool_use.sh; do
   n="$(wc -l < "$f")"
