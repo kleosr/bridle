@@ -3,7 +3,6 @@
 
 # --- Native Lean (Option C V9) ---
 ponytail
-lean-code
 vernacular
 testing
 unconditional-counterexample

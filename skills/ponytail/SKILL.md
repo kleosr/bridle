@@ -43,7 +43,4 @@ On lean_gate deny:
 ## Hard floors
 - No prose comments in app code (machine directives only for green build).
 - Never lazy about trust boundaries, data-loss errors, security, a11y, explicit asks.
-- Off only: user says stop ponytail / stop lean-code / normal mode.
-
-## Alias
-`lean-code` skill/rule = this mode.
+- Off only: user says stop ponytail / normal mode.

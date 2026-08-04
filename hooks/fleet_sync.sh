@@ -4,8 +4,8 @@ PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
-SHARED=(agent types testing debugging native-lean-autoload ponytail lean-code obsidian-memory context-curator vernacular)
-GLOBAL=(native-lean-autoload ponytail lean-code agent obsidian-memory context-curator vernacular testing)
+SHARED=(agent types testing debugging native-lean-autoload ponytail obsidian-memory context-curator vernacular)
+GLOBAL=(native-lean-autoload ponytail agent obsidian-memory context-curator vernacular testing)
 HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh fleet_dispatch.sh)
 
 load_lines() {
