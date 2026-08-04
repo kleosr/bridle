@@ -106,6 +106,20 @@ run_test "pre_tool_use allows Read" "pass" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_bash_destructive.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action')"
 run_test "pre_tool_use blocks rm -rf /" "deny" "$RESULT"
 
+# 5b. pre_tool_use warns (allows) on scope expansion, does not deny
+rm -rf "$PACK/state"
+mkdir -p "$PACK/state"
+echo 'src/db.ts' > "$PACK/state/allowed_files.md"
+RESULT="$(cat "$PACK/tests/fixtures/preToolUse_scope_expansion.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "allow"')"
+run_test "pre_tool_use warns on scope expansion (not deny)" "allow" "$RESULT"
+
+# 5c. HANDOFF preservation: accept() keeps prior Archived content
+rm -rf "$PACK/state"
+printf '# HANDOFF — Session State\n\n## Active Objective\n\nold task\n\n## Archived\n\n- Previous session note\n' > "$PACK/HANDOFF.md"
+cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/hooks/stop_gate.sh" >/dev/null 2>&1 || true
+RESULT="$(grep -q 'Previous session note' "$PACK/HANDOFF.md" && echo "ok" || echo "fail")"
+run_test "HANDOFF preserves prior Archived history" "ok" "$RESULT"
+
 # 6. stop_gate followup when no INTENT
 rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/stop_no_intent.json" | bash "$PACK/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"

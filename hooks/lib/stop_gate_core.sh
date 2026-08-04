@@ -40,25 +40,34 @@ echo "$PROSE" | grep -Fq 'STOP ACCEPTED' && { emit_quiet; exit 0; }
 accept() {
   local date; date="$(date +%Y-%m-%d)"
   rm -rf "$STATE"; mkdir -p "$STATE"
-  cat >"$HANDOFF" <<EOF
-# HANDOFF — Session State
-
-## Active Objective
-
-Session complete ${date}
-
-## Current State
-
-Done-when: met. (agent fills details)
-
-## Next Actions
-
-Update HANDOFF with next session objective. Optional: Obsidian vault write-back if configured.
-
-## Archived
-
-(Older context compacted here when active sections exceed ~150 lines.)
-EOF
+  # Preserve prior history: move previous ## Archived section content into new file.
+  local archived=""
+  if [[ -f "$HANDOFF" ]]; then
+    archived="$(sed -n '/^## Archived/,$p' "$HANDOFF" 2>/dev/null | tail -n +2 || true)"
+  fi
+  {
+    echo "# HANDOFF — Session State"
+    echo ""
+    echo "## Active Objective"
+    echo ""
+    echo "Session complete ${date}"
+    echo ""
+    echo "## Current State"
+    echo ""
+    echo "Done-when: met. (agent fills details)"
+    echo ""
+    echo "## Next Actions"
+    echo ""
+    echo "Update HANDOFF with next session objective. Optional: Obsidian vault write-back if configured."
+    echo ""
+    echo "## Archived"
+    echo ""
+    if [[ -n "$archived" ]]; then
+      echo "$archived"
+      echo ""
+    fi
+    echo "(Older context compacted here when active sections exceed ~150 lines.)"
+  } >"$HANDOFF"
   emit_quiet; exit 0
 }
 [[ "$STATUS" == "completed" && "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && accept

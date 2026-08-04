@@ -18,6 +18,15 @@ deny() {
   fi
   exit 0
 }
+warn() {
+  local msg="$1"
+  if is_claude; then
+    jq -n --arg m "$msg" '{decision:"approve", hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",permissionDecisionReason:$m}}'
+  else
+    jq -n --arg m "$msg" '{action:"allow", user_message:$m}'
+  fi
+  exit 0
+}
 case "$TOOL_NAME" in
   Read|Grep|Glob|LS|BashOutput|WebFetch|WebSearch|TodoWrite|Task|TaskOutput) emit_quiet; exit 0 ;;
 esac
@@ -28,7 +37,7 @@ case "$TOOL_NAME" in
     if [[ -s "$ALLOWED" ]]; then
       base="$(basename "$FILE_PATH")"
       if ! grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null && ! grep -qxF "$base" "$ALLOWED" 2>/dev/null; then
-        deny "TOPOLOGY BLOCK: '$FILE_PATH' is outside your declared FILE_MAP. Expand your INTENT or remove the scope restriction before editing it."
+        warn "SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP. If this edit is required, declare it in your INTENT (edit:$FILE_PATH) so stop_gate can audit it. Proceeding."
       fi
     fi
     NEW_CONTENT=""
