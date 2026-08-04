@@ -83,6 +83,21 @@ rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_write_small.json" | bash "$PACK/hooks/lean_gate.sh" | jq -r '.action')"
 run_test "lean_gate allows small write" "allow" "$RESULT"
 
+# 3b. lean_gate denies high coupling (god file)
+if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_coupling_high.json" 2>/dev/null)"; then :; fi
+RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
+run_test "lean_gate denies high coupling" "deny" "$RESULT"
+
+# 3c. lean_gate denies deep nesting
+if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_nesting_deep.json" 2>/dev/null)"; then :; fi
+RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
+run_test "lean_gate denies deep nesting" "deny" "$RESULT"
+
+# 3d. lean_gate denies high complexity
+if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_complexity_high.json" 2>/dev/null)"; then :; fi
+RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
+run_test "lean_gate denies high complexity" "deny" "$RESULT"
+
 # 4. pre_tool_use allows Read
 RESULT="$(echo '{"tool_name":"Read","tool_input":{"file_path":"x"}}' | bash "$PACK/hooks/pre_tool_use.sh" | jq -r 'if . == {} then "pass" else .action end')"
 run_test "pre_tool_use allows Read" "pass" "$RESULT"

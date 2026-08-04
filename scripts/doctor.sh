@@ -31,18 +31,25 @@ done
 if jq empty "$PACK/hooks/hooks.json" 2>/dev/null; then ok "hooks/hooks.json valid JSON"
 else fail "hooks/hooks.json invalid JSON"; fi
 
-# 6. Policy files valid JSON
+# 6b. lean.json has the new metric thresholds
+if jq -e '.complexity_max and .func_complexity_max and .coupling_max and .nesting_max' "$PACK/hooks/policy/lean.json" >/dev/null 2>&1; then ok "lean.json has complexity/coupling/nesting thresholds"
+else fail "lean.json missing new metric thresholds"; fi
+
+# 6c. metrics.sh exists and is sourced by lean_gate
+if [[ -f "$PACK/hooks/lib/metrics.sh" ]] && grep -q 'metrics.sh' "$PACK/hooks/lean_gate.sh"; then ok "metrics.sh wired into lean_gate"
+else fail "metrics.sh missing or not sourced by lean_gate"; fi
+
+# 7. Wired policy count = 2 (intent + lean only)
+POLICY_COUNT="$(find "$PACK/hooks/policy" -name '*.json' 2>/dev/null | wc -l)"
+if [[ "$POLICY_COUNT" -eq 2 ]]; then ok "policy count = 2 (intent + lean only)"
+else fail "policy count = $POLICY_COUNT (expected 2)"; fi
+
+# 8. Policy files valid JSON
 for p in "$PACK"/hooks/policy/*.json; do
   [[ -f "$p" ]] || continue
   if jq empty "$p" 2>/dev/null; then ok "policy valid: ${p#$PACK/}"
   else fail "policy invalid JSON: ${p#$PACK/}"; fi
 done
-
-# 7. Wired policy count = 2 (intent + lean only)
-POLICY_COUNT="$(find "$PACK/hooks/policy" -name '*.json' 2>/dev/null | wc -l)"
-POLICY_COUNT="${POLICY_COUNT//[!0-9]}"
-if [[ "$POLICY_COUNT" -eq 2 ]]; then ok "policy count = 2 (intent + lean only)"
-else fail "expected 2 policy files, found $POLICY_COUNT"; fi
 
 # 8. No Rust gate remnants
 if [[ ! -e "$PACK/hooks/kleos-gate" && ! -e "$PACK/hooks/bin/kleos-gate" ]]; then ok "no Rust kleos-gate"
