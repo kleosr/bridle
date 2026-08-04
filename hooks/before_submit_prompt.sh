@@ -27,6 +27,7 @@ if [[ -s "$STATE/pending_files.md" ]]; then
 fi
 OUTCOMES_CTX=""
 [[ -s "$STATE/outcomes.md" ]] && OUTCOMES_CTX="OUTCOMES_DETECTED: $(cat "$STATE/outcomes.md") user outcome(s) → Done-when MUST list ≥ that many predicates (1 per outcome). Under-scoped Done-when is rejected."
+CONSTRAINT_REM=""
 if [[ "$ROUTE" == "code" ]]; then
   EPILOGUE="Codebase first: Read AGENTS.md/CLAUDE.md + manifest, Glob/Grep the feature area, THEN edit. Update HANDOFF at session END — NOT before tools."
   # Constraint reminder: if a code task lacks explicit bounds, remind of ponytail defaults.
