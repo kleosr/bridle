@@ -56,7 +56,7 @@ bash tests/run.sh
 
 Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, 700 LOC + entropy + velocity) denies oversized writes — rewrite or stop; do not fight a deny.
 
-Skill routes: lean → `/ponytail`; dialect → `/vernacular`; vault (optional) → `/memory`; AST → `/codebase-memory`.
+Skill routes: `/ponytail` (Native Lean), `/memory` (HANDOFF + optional Obsidian), `/debugging`, `/testing`, `/vernacular`, `/session-handoff`
 
 ## Architecture
 

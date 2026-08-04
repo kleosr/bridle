@@ -29,4 +29,4 @@
 ## Notes
 
 - Model / chat: <!-- optional -->
-- Related skills: <!-- ship-loop, eval-pass, bug-hunt, … -->
+- Related skills: <!-- testing, debugging, … -->

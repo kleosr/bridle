@@ -99,13 +99,13 @@ for wrapper in stop_gate pre_tool_use; do
   else fail "wrapper missing source: ${wrapper}.sh"; fi
 done
 
-# 17. No duplicate rules/skills (lean-code was merged into ponytail)
+# 17. No duplicate rules/skills (lean-code removed, ponytail is SSOT)
 if [[ ! -f "$PACK/rules/lean-code.mdc" && ! -d "$PACK/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi
 
-# 18. No stale references to deleted lean-code
-if ! grep -Rq 'lean-code' "$PACK/hooks/fleet_sync.sh" "$PACK/config/skills.txt" "$PACK/skills/AGENTS.md" "$PACK/rules/AGENTS.md" 2>/dev/null; then ok "no stale lean-code refs"
-else fail "Stale lean-code reference found in config files"; fi
+# 18. No stale references to deleted skills
+if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$PACK/hooks/fleet_sync.sh" "$PACK/config/skills.txt" "$PACK/skills/AGENTS.md" "$PACK/rules/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
+else fail "Stale reference to deleted skill found in config files"; fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then

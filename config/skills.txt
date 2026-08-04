@@ -1,43 +1,7 @@
-# Harness-owned personal Skills (one directory name per line).
-# Grouped for humans — install/sync ignore comments and blank lines.
-
-# --- Native Lean (Option C V9) ---
+# Active skills (6 core)
 ponytail
-vernacular
-testing
-unconditional-counterexample
-breakthrough-deepen
-
-# --- Architecture ---
-architecture-fitness
-improve-codebase-architecture
-domain-architecture
-agents-map
-workspace-scope
-system-wiring
-codebase-memory
 memory
-
-# --- Frontend / design ---
-design-taste-frontend
-ui-ux-audit
-frontend-design
-design-tokens
-ui-structure
-no-hardcode
-
-# --- Ship / harness ---
-git-commit
-create-pr
-bug-hunt
-formulary
-ship-loop
+debugging
+testing
+vernacular
 session-handoff
-eval-pass
-harness-retro
-grill-me
-humanizer
-
-# --- Product / voice ---
-cursor-research
-benln-write

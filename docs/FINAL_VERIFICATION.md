@@ -105,7 +105,6 @@ Session: Repository cleanup + hardening pass
 
 1. **Cursor hook API shape**: hooks validate stdin but rely on `messages`/`transcript`/`conversation` array shape for stop_gate. If Cursor changes the payload shape, the jq filters in `stop_gate_core.sh` need updating. The jq filter tries all three field names defensively.
 2. **Shellcheck not installed locally**: CI installs it; local `tests/run.sh` skips if absent.
-3. **Obsidian skills still reference MCP**: `skills/obsidian-memory/`, `skills/codebase-memory/`, `skills/session-handoff/` contain MCP references. These are optional on-demand skills — not core requirements. They work when MCP is configured.
 4. **fleet_dispatch.sh** calls `claude -p` which requires Claude CLI installed. This is an optional tool, not a core hook.
 
 ## Recommended next steps

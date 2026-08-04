@@ -5,7 +5,7 @@ description: >-
   Session continuity via HANDOFF.md. Optional Obsidian vault for long-term memory.
   ALWAYS at session start/end: read wiki/hot.md then wiki/index.md; ingest
   raw/ once; query wiki only. Mid-session durable facts, preCompact
-  write-back (persist INTO vault), handoffs. Complements codebase-memory.
+  write-back (persist INTO vault), handoffs. Complements session-handoff.
 ---
 
 # Obsidian memory (fat skill)
@@ -53,25 +53,25 @@ Vault path: MCP `user-obsidian` (see companion). No pack-local `context.json` ga
 MCP: `user-obsidian` **(OPTIONAL)**. Vault: `/home/kleosr/rootsidian/kleosr`.
 
 **If MCP configured and Obsidian running:**
-Always `GetMcpTools` before `CallMcpTool`.
-Durable facts → `vault_append`.
-
+  Always `GetMcpTools` before `CallMcpTool`.
+  Durable facts → `vault_append`.
+  
 **If MCP not available:**
-Fall back to `HANDOFF.md` for all durable facts.
-Never invent vault state or call MCP tools.
+  Fall back to `HANDOFF.md` for all durable facts.
+  Never invent vault state or call MCP tools.
 
 ## Graphs + layer stack
 
 | Graph | Skill / MCP | Answers |
 |-------|-------------|---------|
-| Code / AST | `codebase-memory` | Callers, symbols, structure |
+| Code / AST | `debugging` | Callers, symbols, structure |
 | Knowledge / intent | this skill / `user-obsidian` | Decisions, concepts, sessions |
 | Work lineage | git / HANDOFF / Sessions | What changed; parent run |
 
 Pack units (prompt→context→harness→loop→graph): `docs/ARCHITECTURE.md`.
 Vault is the **knowledge graph** plane — not Neo4j unless asked.
 Debug: fix the layer whose unit broke (one input / window / pass / run / job).
-Process rule: fix rulebook/judge — not hand-patch agent output (`harness-retro`).
+Process rule: fix rulebook/judge — not hand-patch agent output (`debugging`).
 
 ## Tools
 
@@ -148,7 +148,7 @@ wiki page or Decisions/Learnings/Session (not vibe summaries) + log + hot refres
 If `wiki/projects/<slug>/` is missing for the repo in the workspace, read disk
 README/AGENTS/HANDOFF/DEBT/TOOLCHAIN (skip secrets), upsert Index+Map+Decisions+Learnings,
 update `wiki/catalogs/Fleet.md` + index + log. Never dump full source trees into the wiki
-(AST = `codebase-memory`). Protocol: vault `instructions/MAX-MEMORY.md`.
+(AST = `debugging`). Protocol: vault `instructions/MAX-MEMORY.md`
 
 ### Lint (daily light / weekly full)
 
@@ -222,5 +222,5 @@ Never delete or empty wiki pages as “flush.” Never flush as a thin stub.
 
 ## Fleet
 
-`session-handoff` · `ship-loop` · `codebase-memory` · companion `obsidian-memory.mdc`
+`session-handoff` · `debugging` · companion `memory.mdc`
 · Bash `session_start` / `before_submit_prompt` / `stop_gate` memory roofs.
