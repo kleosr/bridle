@@ -1,0 +1,7 @@
+{
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "src/branching.ts",
+    "content": "function f() {\n  if (a && b || c) {\n    for (const x of xs) {\n      while (y) {\n        switch (z) {\n          case 1: break;\n          case 2: break;\n        }\n      }\n    }\n  }\n  if (p) {}\n  if (q) {}\n  if (r) {}\n  if (s) {}\n  if (t) {}\n}\n"
+  }
+}

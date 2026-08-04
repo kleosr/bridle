@@ -1,0 +1,7 @@
+{
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "src/deep.ts",
+    "content": "function f() {\n  if (a) {\n    for (const x of xs) {\n      while (y) {\n        try {\n          if (z) {\n            console.log('deep');\n          }\n        } catch (e) {}\n      }\n    }\n  }\n}\n"
+  }
+}
