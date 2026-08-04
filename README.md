@@ -45,7 +45,7 @@ FORCE=1 bash hooks/fleet_sync.sh all
 
 # Sync only / verify only
 FORCE=1 bash hooks/fleet_sync.sh sync
-FORCE=1 bash/hooks/fleet_sync.sh verify
+FORCE=1 bash hooks/fleet_sync.sh verify
 
 # Doctor (environment + repo health check)
 bash scripts/doctor.sh

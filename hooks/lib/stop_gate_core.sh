@@ -90,4 +90,11 @@ while IFS= read -r p; do [[ -z "$p" ]] && continue
 done < <(tags)
 [[ -n "$UNTOUCHED" ]] && follow "FILES NOT TOUCHED:$UNTOUCHED — every tagged edit:|NEW: path must be written to disk this turn. Edit/write each file, then Done-when: met."
 echo "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || follow "PREMATURE STOP: Done-when unmet in chat prose. Re-Read tagged FILES; prove every predicate; finish ALL tags this turn; write Done-when: met."
+# Compaction gate: if HANDOFF.md > 180 lines, force compaction before accept.
+HANDOFF_LINES="$(wc -l < "$HANDOFF" 2>/dev/null || echo 0)"
+HANDOFF_LINES="${HANDOFF_LINES//[!0-9]}"
+[[ -z "$HANDOFF_LINES" ]] && HANDOFF_LINES=0
+if [[ "$HANDOFF_LINES" -gt 180 ]]; then
+  follow "HANDOFF.md is ${HANDOFF_LINES} lines (>180 roof). Compact: move older Recent Changes into Archived, compress Failed Attempts to one-liners. Keep active sections under 150 lines, then Done-when: met."
+fi
 accept

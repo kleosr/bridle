@@ -53,6 +53,17 @@ No orphan ask/deny JSON from the retired gate. Secrets stay out of paste, hooks,
 
 Single source: `hooks/hooks.json`. `fleet_sync.sh` generates per-repo `.cursor/hooks.json` and `~/.cursor/hooks.json` from it (path rewriting only).
 
+### preToolUse matcher overlap (intentional)
+
+Two preToolUse hooks fire for `Write|Edit|MultiEdit|StrReplace`:
+
+| Hook | Matcher | Responsibility |
+|------|---------|----------------|
+| `lean_gate.sh` | `Write\|Edit\|MultiEdit\|StrReplace` | Size roof (700 LOC), entropy, velocity |
+| `pre_tool_use.sh` | `Write\|Edit\|MultiEdit\|StrReplace\|Bash` | Topology sandbox, destructive content, destructive Bash |
+
+This is intentional: `lean_gate` enforces complexity discipline; `pre_tool_use` enforces autonomy/safety. Both run independently — a write must pass both gates. For `Bash`, only `pre_tool_use` fires (no size check on shell commands).
+
 ## Residual (class J)
 
 - Semantic Done-when quality: agent judgment + `agent.mdc` autonomous loop

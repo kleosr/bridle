@@ -38,3 +38,18 @@ emit_context() {
   local ctx="$1"
   jq -n --arg c "$ctx" '{additional_context: $c}'
 }
+
+# File locking for shared state (Cursor runs hooks in parallel).
+# Usage: acquire_lock; ...write state...; release_lock
+_LOCK_FD=""
+acquire_lock() {
+  local lockfile="$(state_dir)/gate.lock"
+  mkdir -p "$(state_dir)"
+  exec 200>"$lockfile"
+  _LOCK_FD=200
+  flock -n 200 || { emit_deny "State busy (parallel hook collision), retry."; exit 2; }
+}
+
+release_lock() {
+  [[ -n "$_LOCK_FD" ]] && flock -u "$_LOCK_FD" 2>/dev/null || true
+}

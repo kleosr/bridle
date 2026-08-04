@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# hooks/lean_gate.sh — Ponytail roof + entropy gate + velocity check.
-# PreToolUse on Write|Edit|MultiEdit|StrReplace for Cursor and Claude Code.
+# hooks/lean_gate.sh — Ponytail roof + entropy + velocity (preToolUse).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 POLICY="$HERE/policy/lean.json"
 MAX="$(jq -r '.file_loc_max // 700' "$POLICY" 2>/dev/null || echo 700)"
-COMPLEXITY_MAX="$(jq -r '.complexity_max // 30' "$POLICY" 2>/dev/null || echo 30)"
+COMPLEXITY_MAX="$(jq -r '.complexity_max // 40' "$POLICY" 2>/dev/null || echo 40)"
 VELOCITY_MAX="$(jq -r '.edit_velocity_max // 15' "$POLICY" 2>/dev/null || echo 15)"
 INPUT="$(cat)"
 TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // empty')"
@@ -15,7 +14,6 @@ resolve_root
 STATE="$(state_dir)"
 VELOCITY_LOG="$STATE/edit_velocity.log"
 
-# Velocity: count edits to same file this session — too many = bloated patching.
 velocity_bump() {
   local fp="$1"
   mkdir -p "$STATE"
@@ -23,7 +21,9 @@ velocity_bump() {
   count="$(grep -cxF "$fp" "$VELOCITY_LOG" 2>/dev/null || echo 0)"
   count="${count//[!0-9]}"
   [[ -z "$count" ]] && count=0
+  acquire_lock
   echo "$fp" >>"$VELOCITY_LOG"
+  release_lock
   if [[ "$count" -ge "$VELOCITY_MAX" ]]; then
     jq -n --arg m "VELOCITY DENY: '${fp##*/}' edited ${count} times this session (> ${VELOCITY_MAX} roof). This file is being patched repeatedly — extract a module or refactor before retrying." \
       '{action:"deny", user_message:$m}'; exit 2

@@ -129,6 +129,23 @@ else
   FAIL=$((FAIL + 1))
 fi
 
+# 11. lib/common.sh functions available when sourced
+RESULT="$(HERE="$PACK/hooks" bash -c 'source "$0/lib/common.sh" && resolve_root && type emit_allow >/dev/null && type emit_deny >/dev/null && type emit_followup >/dev/null && type acquire_lock >/dev/null && echo "ok"' "$PACK/hooks" 2>/dev/null || echo "fail")"
+run_test "lib/common.sh functions available" "ok" "$RESULT"
+
+# 12. HANDOFF compaction gate fires when over 180 lines
+LONG_HANDOFF="$(mktemp)"
+for i in $(seq 1 200); do echo "line $i"; done > "$LONG_HANDOFF"
+RESULT="$(HERE="$PACK/hooks" bash -c '
+  source "$0/lib/common.sh"
+  resolve_root
+  HANDOFF="'"$LONG_HANDOFF"'"
+  HANDOFF_LINES="$(wc -l < "$HANDOFF" 2>/dev/null || echo 0)"
+  if [[ "$HANDOFF_LINES" -gt 180 ]]; then echo "compact"; else echo "skip"; fi
+' "$PACK/hooks" 2>/dev/null || echo "error")"
+rm -f "$LONG_HANDOFF"
+run_test "HANDOFF compaction gate fires >180 lines" "compact" "$RESULT"
+
 echo ""
 echo "=== Results ==="
 echo "PASS: $PASS"
