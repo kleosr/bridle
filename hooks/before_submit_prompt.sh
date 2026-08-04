@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ROOT=""
-for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
-  if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then
-    ROOT="$(cd "$d" && pwd)"; break
-  fi
-done
-[[ -z "$ROOT" ]] && ROOT="$(cd "$HERE/.." && pwd)"
-STATE="$ROOT/state"
+source "$HERE/lib/common.sh"
+resolve_root
+STATE="$(state_dir)"
 mkdir -p "$STATE"
 date +%s >"$STATE/session_ts"
 INPUT="$(cat)"
@@ -17,9 +12,6 @@ ROUTE="other"
 echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|infra|host|vm|container|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"
 echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
-# Sandbox seed: extract file paths the user mentions in their prompt and snapshot
-# them as the allowed set for stop_gate's topology check. Patterns: edit:path,
-# NEW:path, bare paths (src/foo.rs, *.ts), or quoted paths. Lines, one per line.
 echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
 PROMPT_NORM="$(echo "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT 2>/dev/null || printf '%s' "$PROMPT")"
@@ -36,16 +28,16 @@ fi
 OUTCOMES_CTX=""
 [[ -s "$STATE/outcomes.md" ]] && OUTCOMES_CTX="OUTCOMES_DETECTED: $(cat "$STATE/outcomes.md") user outcome(s) → Done-when MUST list ≥ that many predicates (1 per outcome). Under-scoped Done-when is rejected."
 if [[ "$ROUTE" == "code" ]]; then
-  EPILOGUE="Codebase first: Read AGENTS.md/CLAUDE.md + manifest, Glob/Grep the feature area, THEN edit. Vault write-back at session END (Session+hot+HANDOFF) — NOT before tools."
+  EPILOGUE="Codebase first: Read AGENTS.md/CLAUDE.md + manifest, Glob/Grep the feature area, THEN edit. Update HANDOFF at session END — NOT before tools."
 elif [[ "$ROUTE" == "memory" ]]; then
-  EPILOGUE="vault_read wiki/hot.md then wiki/index.md; end Session + hot + HANDOFF."
+  EPILOGUE="Read HANDOFF.md for current state; if Obsidian MCP is configured, vault_read wiki/hot.md then wiki/index.md."
 else
-  EPILOGUE="Task-first. Vault write-back at session end (Session+hot+HANDOFF) if durable."
+  EPILOGUE="Task-first. Update HANDOFF at session end if durable."
 fi
-jq -n --arg c "ROUTE_CLASSIFY: ${ROUTE}
+emit_context "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
 FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → StrReplace existing; Write only NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.
 SANDBOX: paths detected in your prompt are snapshotted to state/allowed_files.md — stop_gate will reject stops where your INTENT tags touch files outside this set (TOPOLOGY VIOLATION). If you need to expand scope, say so in your INTENT.
 ${OUTCOMES_CTX}
 ${PENDING}
-${EPILOGUE}" '{additional_context: $c}'
+${EPILOGUE}"

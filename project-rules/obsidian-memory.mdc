@@ -1,18 +1,23 @@
 ---
-description: "Obsidian amnesia roofs (Thin Rule). Points to obsidian-memory skill."
+description: "Local + optional Obsidian memory (Thin Rule). Points to obsidian-memory skill."
 alwaysApply: true
 ---
 
-# OBSIDIAN MEMORY (THIN)
+# MEMORY (THIN)
 
-Chat dies. Vault = durable memory. MCP `user-obsidian` → `/home/kleosr/rootsidian/kleosr`.
+Chat dies. `HANDOFF.md` = durable session state. Optional: Obsidian vault via MCP for long-lived graph memory.
 
-## HARD PATHS
+## LOCAL (default — always works)
+- Start: read `HANDOFF.md` tail for current objective + state.
+- During: durable fact → update `HANDOFF.md` or a local `.md` note.
+- End: update `HANDOFF.md` with Goal/Done-when/Residual; compact if >150 lines.
+
+## OPTIONAL OBSIDIAN (if MCP `user-obsidian` is configured)
 - Start: `vault_read` `wiki/hot.md` then `wiki/index.md` then project Index + Sessions.
-- During: durable fact → COMPLETE `vault_append` (not stubs).
-- End: Session Goal/Done-when/Residual + LAYER CHECK; refresh `wiki/hot.md`; mirror `HANDOFF.md`.
+- During: durable fact → `vault_append` (not stubs).
+- End: Session Goal/Done-when/Residual; refresh `wiki/hot.md`; mirror `HANDOFF.md`.
 - Never edit `raw/`.
 
 ## PROCEDURE
-CallMcpTool workflows, ingest/query/lint, COMPLETE CAPTURE:
+Obsidian workflows, ingest/query/lint:
 **Read `~/.cursor/skills/obsidian-memory/SKILL.md`** when memory work is non-trivial.

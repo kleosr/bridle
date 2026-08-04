@@ -13,7 +13,6 @@ Prohibido usar `sed`, `cat`, `echo >`, `tee`, `rg` o `find` en Shell para leer/e
 - **Buscar Código:** `Grep`
 - **Buscar Archivos:** `Glob`
 - **Editar:** `StrReplace` (cirugía) o `Write` (crear/sobrescribir)
-- **Memoria (Obsidian):** `CallMcpTool` (ej. `MCP:vault_read`)
 
 ## 2. DENY RECOVERY PROTOCOL (Cuando un hook bloquea)
 El gate proyecta el LOC post-edit, no el LOC actual. Es decir:
@@ -36,4 +35,4 @@ Justifica en 1 línea si saltas un escalón.
 
 ## 4. MEMORY (Amnesia Preventiva)
 - **Efímero:** `HANDOFF.md` (leer al inicio, escribir al final).
-- **Durable:** Obsidian via `CallMcpTool`.
+- **Durable (opcional):** Obsidian via MCP si está configurado, o archivos Markdown locales.

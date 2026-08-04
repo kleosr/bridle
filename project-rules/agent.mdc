@@ -5,9 +5,9 @@ alwaysApply: true
 
 # AGENT CAPSULE
 
-Bash hooks + Obsidian. One model per conversation.
+Bash hooks + local HANDOFF memory. One model per conversation.
 Read `HANDOFF.md` for multi-session work. Prefer NO CODE. Smallest Diff.
-Start: hot then index. Stop with tools: Session + hot + HANDOFF.
+Start: read HANDOFF.md tail. Stop with tools: update HANDOFF.
 Git only when asked. Secrets never in code or chat.
 Done = `docs/TOOLCHAIN.md` green with evidence.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
