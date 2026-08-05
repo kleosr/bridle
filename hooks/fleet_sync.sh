@@ -208,6 +208,24 @@ sync_fleet() {
   done
 }
 
+# Regression: stop_gate must reject Done-when with fewer predicates than
+# OUTCOMES (before_submit_prompt promises this; the gate used to accept).
+verify_stop_gate() {
+  local st="$PACK/state" snap rc=0
+  mkdir -p "$st"
+  snap="$(mktemp -d)"
+  [[ -d "$st" ]] && cp -a "$st/." "$snap/" 2>/dev/null
+  echo "2" >"$st/outcomes.md"
+  rm -f "$st/allowed_files.md" "$st/session_ts"
+  echo '{"status":"completed","transcript":[{"role":"user","content":"fix the bug and wire the api"},{"role":"assistant","content":"INTENT: fix bug, tag edit:x\nDone-when:\n- compiles\nDone-when: met"}]}' \
+    | bash "$PACK/hooks/lib/stop_gate_core.sh" 2>/dev/null \
+    | grep -q 'UNDER-SCOPE' || { echo "[fail] stop_gate accepts under-scoped Done-when (2 outcomes, 1 predicate)"; rc=1; }
+  rm -rf "$st"
+  cp -a "$snap/." "$st/" 2>/dev/null || rm -rf "$st"
+  rm -rf "$snap"
+  return $rc
+}
+
 verify_smoke() {
   local skill bad=0
   chmod +x "$PACK"/hooks/*.sh
@@ -220,6 +238,7 @@ verify_smoke() {
   bash -n "$PACK/hooks/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
     | bash "$PACK/hooks/before_submit_prompt.sh" | jq -e '.additional_context' >/dev/null
+  verify_stop_gate || bad=1
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
     if [[ ! -L "$HOME_C/skills/$skill" ]]; then

@@ -92,7 +92,7 @@ DW_PRED="$(echo "$PROSE" | awk 'tolower($0)~/^[[:space:]]*done-when:/{dw=1;next}
 OUTCOMES="$(cat "$STATE/outcomes.md" 2>/dev/null || echo 1)"
 OUTCOMES="${OUTCOMES//[!0-9]}"
 [[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
-[[ "${DW_PRED:-0}" -eq 0 ]] && follow "UNDER-SCOPE: INTENT must list at least one Done-when predicate (on its own line prefixed with '- ' or '1.'). What must hold on disk/tools for this task to be done?"
+[[ "${DW_PRED:-0}" -lt "$OUTCOMES" ]] && follow "UNDER-SCOPE: ${OUTCOMES} outcome(s) detected in your prompt but Done-when lists only ${DW_PRED:-0} predicate(s) — 1 decidable predicate per outcome (see OUTCOMES_DETECTED). Re-Read tagged FILES; list ≥ ${OUTCOMES} predicates under Done-when ('- ' or '1.' each), prove them, then Done-when: met."
 ILINES="$(echo "$PROSE" | awk 'tolower($0)~/^[[:space:]]*intent:/{p=1;n=0;next} p&&tolower($0)~/^[[:space:]]*done-when:/{exit} p&&NF{n++} END{print n+0}')"
 ANCH="$(echo "$PROSE" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|FILES|SCOPE|RISK):' || true)"
 [[ "${ILINES:-0}" -gt "$MAX_BODY" || "${ANCH:-0}" -gt "$MAX_ANCH" ]] && follow "Thin INTENT roof: ≤${MAX_ANCH} anchors; ≤${MAX_BODY} body lines. Keep postcondition + tags + predicates; drop essay."
