@@ -208,8 +208,6 @@ sync_fleet() {
   done
 }
 
-# Regression: stop_gate must reject Done-when with fewer predicates than
-# OUTCOMES (before_submit_prompt promises this; the gate used to accept).
 verify_stop_gate() {
   local st="$PACK/state" snap rc=0
   mkdir -p "$st"

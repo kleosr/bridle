@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# tests/run.sh — run hook fixture tests + validation checks.
 set -euo pipefail
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
@@ -19,7 +18,6 @@ run_test() {
   fi
 }
 
-# Clean state before tests
 rm -rf "$PACK/state"
 
 echo "=== Syntax checks ==="
@@ -64,78 +62,63 @@ done
 echo ""
 echo "=== Hook fixture tests ==="
 
-# Save HANDOFF.md (stop_gate accept overwrites it)
 HANDOFF_BACKUP=""
 if [[ -f "$PACK/HANDOFF.md" ]]; then
   HANDOFF_BACKUP="$(cat "$PACK/HANDOFF.md")"
 fi
 
-# 1. before_submit_prompt emits additional_context
 RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_code.json" | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additional_context | length > 0')"
 run_test "before_submit_prompt emits context" "true" "$RESULT"
 
-# 2. session_start emits additional_context
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/hooks/session_start.sh" | jq -r '.additional_context | length > 0')"
 run_test "session_start emits context" "true" "$RESULT"
 
-# 3. lean_gate allows small write
 rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_write_small.json" | bash "$PACK/hooks/lean_gate.sh" | jq -r '.action')"
 run_test "lean_gate allows small write" "allow" "$RESULT"
 
-# 3b. lean_gate denies high coupling (god file)
 if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_coupling_high.json" 2>/dev/null)"; then :; fi
 RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
 run_test "lean_gate denies high coupling" "deny" "$RESULT"
 
-# 3c. lean_gate denies deep nesting
 if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_nesting_deep.json" 2>/dev/null)"; then :; fi
 RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
 run_test "lean_gate denies deep nesting" "deny" "$RESULT"
 
-# 3d. lean_gate denies high complexity
 if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_complexity_high.json" 2>/dev/null)"; then :; fi
 RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
 run_test "lean_gate denies high complexity" "deny" "$RESULT"
 
-# 4. pre_tool_use allows Read
 RESULT="$(echo '{"tool_name":"Read","tool_input":{"file_path":"x"}}' | bash "$PACK/hooks/pre_tool_use.sh" | jq -r 'if . == {} then "pass" else .action end')"
 run_test "pre_tool_use allows Read" "pass" "$RESULT"
 
-# 5. pre_tool_use blocks destructive Bash
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_bash_destructive.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action')"
 run_test "pre_tool_use blocks rm -rf /" "deny" "$RESULT"
 
-# 5b. pre_tool_use warns (allows) on scope expansion, does not deny
 rm -rf "$PACK/state"
 mkdir -p "$PACK/state"
 echo 'src/db.ts' > "$PACK/state/allowed_files.md"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_scope_expansion.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "allow"')"
 run_test "pre_tool_use warns on scope expansion (not deny)" "allow" "$RESULT"
 
-# 5c. HANDOFF preservation: accept() keeps prior Archived content
 rm -rf "$PACK/state"
 printf '# HANDOFF — Session State\n\n## Active Objective\n\nold task\n\n## Archived\n\n- Previous session note\n' > "$PACK/HANDOFF.md"
 cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/hooks/stop_gate.sh" >/dev/null 2>&1 || true
 RESULT="$(grep -q 'Previous session note' "$PACK/HANDOFF.md" && echo "ok" || echo "fail")"
 run_test "HANDOFF preserves prior Archived history" "ok" "$RESULT"
 
-# 6. stop_gate followup when no INTENT
 rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/stop_no_intent.json" | bash "$PACK/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate followup on missing INTENT" "followup" "$RESULT"
 
-# 7. stop_gate accepts valid INTENT with Done-when: met
 rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate accepts valid INTENT" "accept" "$RESULT"
 
-# 8. stop_gate rejects shell/fence poison
 rm -rf "$PACK/state"
 RESULT="$(echo '{"status":"completed","messages":[{"role":"assistant","content":"```bash\necho INTENT: poison\nDone-when: met\nedit:a\n```"}]}' | bash "$PACK/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate ignores code-fence poison" "followup" "$RESULT"
 
-# 9. No Rust gate / updated_input in hooks
 if ! grep -Rq --include='*.sh' 'updated_input' "$PACK/hooks/" 2>/dev/null && [[ ! -e "$PACK/hooks/kleos-gate" ]]; then
   echo "[pass] no updated_input / Rust gate"
   PASS=$((PASS + 1))
@@ -144,11 +127,9 @@ else
   FAIL=$((FAIL + 1))
 fi
 
-# 13. before_submit_prompt adds constraint reminder on unbound code task
 RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additional_context | test("CONSTRAINTS:")')"
 run_test "before_submit reminds constraints on unbound task" "true" "$RESULT"
 
-# 14. shared_state logs events (debugging only, no behavior change)
 rm -rf "$PACK/state"
 echo '{"tool_name":"Write","tool_input":{"file_path":"x.ts","content":"const a=1;\n"}}' | bash "$PACK/hooks/lean_gate.sh" >/dev/null 2>&1 || true
 RESULT="$([[ -f "$PACK/state/session.log" ]] && grep -q 'lean_gate' "$PACK/state/session.log" && echo "ok" || echo "fail")"
@@ -166,11 +147,9 @@ else
   FAIL=$((FAIL + 1))
 fi
 
-# 11. lib/common.sh functions available when sourced
 RESULT="$(HERE="$PACK/hooks" bash -c 'source "$0/lib/common.sh" && resolve_root && type emit_allow >/dev/null && type emit_deny >/dev/null && type emit_followup >/dev/null && type acquire_lock >/dev/null && echo "ok"' "$PACK/hooks" 2>/dev/null || echo "fail")"
 run_test "lib/common.sh functions available" "ok" "$RESULT"
 
-# 12. HANDOFF compaction gate fires when over 180 lines
 LONG_HANDOFF="$(mktemp)"
 for i in $(seq 1 200); do echo "line $i"; done > "$LONG_HANDOFF"
 RESULT="$(HERE="$PACK/hooks" bash -c '
@@ -186,11 +165,6 @@ run_test "HANDOFF compaction gate fires >180 lines" "compact" "$RESULT"
 echo ""
 echo "=== Regression tests (bug fixes) ==="
 
-# R1. HANDOFF accept does NOT duplicate the COMPACTION PROTOCOL block.
-# Bug: sed captured from ## Archived to EOF, copying the placeholder line on
-# every accept cycle → progressive HANDOFF bloat.
-# NOTE: this test overwrites HANDOFF.md, so save/restore it locally to avoid
-# corrupting the outer backup chain.
 R1_HANDOFF_BAK="$(cat "$PACK/HANDOFF.md" 2>/dev/null || true)"
 rm -rf "$PACK/state"
 printf '# HANDOFF — Session State\n\n## Active Objective\n\nold\n\n## Archived\n\n- old note\n\n<!-- COMPACTION PROTOCOL\nsome rules\n-->\n\n(Older context compacted here when active sections exceed ~150 lines.)\n' > "$PACK/HANDOFF.md"
@@ -208,23 +182,17 @@ else
 fi
 [[ -n "$R1_HANDOFF_BAK" ]] && printf '%s' "$R1_HANDOFF_BAK" >"$PACK/HANDOFF.md"
 
-# R2. stop_gate does not crash on corrupt/empty outcomes.md (set -e + [[ -lt ]])
-# Bug: [[ "$OUTCOMES" -lt 1 ]] crashed when outcomes.md contained non-numeric.
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'GARBAGE\n' > "$PACK/state/outcomes.md"
 RESULT="$(cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/hooks/stop_gate.sh" 2>/dev/null | jq -r 'if .followup_message then "followup" else "accept" end' 2>/dev/null || echo "crash")"
 run_test "stop_gate tolerates corrupt outcomes.md" "accept" "$RESULT"
 
-# R3. stop_gate does not crash on empty session_ts (set -e + [[ -eq ]])
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf '' > "$PACK/state/session_ts"
 printf '1\n' > "$PACK/state/outcomes.md"
 RESULT="$(cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/hooks/stop_gate.sh" 2>/dev/null | jq -r 'if .followup_message then "followup" else "accept" end' 2>/dev/null || echo "crash")"
 run_test "stop_gate tolerates empty session_ts" "accept" "$RESULT"
 
-# R4. lean_gate velocity read+write is atomic under lock.
-# Bug: grep count was read BEFORE acquire_lock → TOCTOU race. Verify the read
-# now happens while the lock is held (grep line appears after acquire_lock).
 VELOCITY_SRC="$(sed -n '/velocity_bump/,/^}/p' "$PACK/hooks/lean_gate.sh")"
 ACQUIRE_LINE="$(printf '%s\n' "$VELOCITY_SRC" | grep -n 'acquire_lock' | head -1 | cut -d: -f1)"
 GREP_LINE="$(printf '%s\n' "$VELOCITY_SRC" | grep -n 'grep -cxF' | head -1 | cut -d: -f1)"
@@ -236,8 +204,6 @@ else
   FAIL=$((FAIL + 1))
 fi
 
-# R5. lean_gate LOC counting is consistent (count_lines helper).
-# Bug: printf '%s' | wc -l undercounted no-trailing-newline content by 1.
 RESULT="$(HERE="$PACK/hooks" bash -c '
   count_lines() { printf "%s\n" "$1" | wc -l; }
   echo "$(count_lines "single-line")"
@@ -250,7 +216,6 @@ echo "PASS: $PASS"
 echo "FAIL: $FAIL"
 rm -rf "$PACK/state"
 
-# Restore HANDOFF.md if tests overwrote it
 if [[ -n "$HANDOFF_BACKUP" ]]; then
   printf '%s' "$HANDOFF_BACKUP" >"$PACK/HANDOFF.md"
 fi

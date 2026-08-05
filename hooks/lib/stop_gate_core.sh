@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# hooks/lib/stop_gate_core.sh — stop gate logic (sourced by hooks/stop_gate.sh).
-# Receives INPUT on stdin, emits followup_message or {} on stdout.
 set -euo pipefail
 HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"
@@ -42,14 +40,8 @@ echo "$PROSE" | grep -Fq 'STOP ACCEPTED' && { emit_quiet; exit 0; }
 accept() {
   local date; date="$(date +%Y-%m-%d)"
   rm -rf "$STATE"; mkdir -p "$STATE"
-  # Preserve prior history: carry previous ## Archived section content forward.
-  # Strip any prior placeholder line — the template below always emits a fresh
-  # one, so keeping the old one caused the placeholder to accumulate on every
-  # accept cycle. The COMPACTION PROTOCOL comment is legitimate content; keep it.
   local archived=""
   if [[ -f "$HANDOFF" ]]; then
-    # Dedupe: the placeholder line is always re-emitted by the template below,
-    # so strip any prior copy from the archived content to avoid accumulation.
     archived="$(sed -n '/^## Archived/,$p' "$HANDOFF" 2>/dev/null | tail -n +2 \
       | grep -vxF '(Older context compacted here when active sections exceed ~150 lines.)' || true)"
   fi
@@ -113,7 +105,6 @@ while IFS= read -r p; do [[ -z "$p" ]] && continue
 done < <(tags)
 [[ -n "$UNTOUCHED" ]] && follow "FILES NOT TOUCHED:$UNTOUCHED — every tagged edit:|NEW: path must be written to disk this turn. Edit/write each file, then Done-when: met."
 echo "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' || follow "PREMATURE STOP: Done-when unmet in chat prose. Re-Read tagged FILES; prove every predicate; finish ALL tags this turn; write Done-when: met."
-# Compaction gate: if HANDOFF.md > 180 lines, force compaction before accept.
 HANDOFF_LINES="$(wc -l < "$HANDOFF" 2>/dev/null || echo 0)"
 HANDOFF_LINES="${HANDOFF_LINES//[!0-9]}"
 [[ -z "$HANDOFF_LINES" ]] && HANDOFF_LINES=0

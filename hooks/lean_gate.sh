@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# hooks/lean_gate.sh — Ponytail roof: LOC + complexity + coupling + nesting + velocity.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
@@ -23,7 +22,6 @@ velocity_bump() {
   local fp="$1"
   mkdir -p "$STATE"
   acquire_lock
-  # Read+write under lock: previously count was read outside the lock (TOCTOU).
   local count
   count="$(grep -cxF "$fp" "$VELOCITY_LOG" 2>/dev/null || echo 0)"
   count="${count//[!0-9]}"
@@ -42,7 +40,6 @@ esac
 [[ -z "$FILE_PATH" ]] && { emit_allow; exit 0; }
 velocity_bump "$FILE_PATH"
 
-# Count lines consistently: printf '%s\n' "$X" | wc -l = exact line count.
 count_lines() { printf '%s\n' "$1" | wc -l; }
 
 if [[ "$TOOL_NAME" == "Write" ]]; then
