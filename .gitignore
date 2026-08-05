@@ -1,6 +1,9 @@
 .cursor/
 **/.cursor/
 
+.hermes/
+**/.hermes/
+
 state/
 !state/.gitkeep
 
