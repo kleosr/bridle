@@ -22,11 +22,12 @@ VELOCITY_LOG="$STATE/edit_velocity.log"
 velocity_bump() {
   local fp="$1"
   mkdir -p "$STATE"
+  acquire_lock
+  # Read+write under lock: previously count was read outside the lock (TOCTOU).
   local count
   count="$(grep -cxF "$fp" "$VELOCITY_LOG" 2>/dev/null || echo 0)"
   count="${count//[!0-9]}"
   [[ -z "$count" ]] && count=0
-  acquire_lock
   echo "$fp" >>"$VELOCITY_LOG"
   release_lock
   if [[ "$count" -ge "$VMAX" ]]; then
@@ -41,23 +42,29 @@ esac
 [[ -z "$FILE_PATH" ]] && { emit_allow; exit 0; }
 velocity_bump "$FILE_PATH"
 
+# Count lines consistently: printf '%s\n' "$X" | wc -l = exact line count.
+count_lines() { printf '%s\n' "$1" | wc -l; }
+
 if [[ "$TOOL_NAME" == "Write" ]]; then
-  CONTENT="$(echo "$INPUT" | jq -r '(.tool_input.content // empty) | if type=="array" then map((.text // .content // "")) | join("\n") else . end' 2>/dev/null || true)"
-  LINES="$(printf '%s' "$CONTENT" | wc -l)"
+  CONTENT="$(printf '%s' "$INPUT" | jq -r '(.tool_input.content // empty) | if type=="array" then map((.text // .content // "")) | join("\n") else . end' 2>/dev/null || true)"
+  LINES="$(count_lines "$CONTENT")"
   LINES="${LINES//[!0-9]}"
   [[ -z "$LINES" ]] && LINES=0
   [[ "${LINES:-0}" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: Write ${LINES} LOC > ${MAX} roof. Split into smaller modules." '{action:"deny",user_message:$m}'; exit 2; }
 else
   [[ -f "$FILE_PATH" ]] || { emit_allow; exit 0; }
   CUR="$(wc -l < "$FILE_PATH")"
+  CUR="${CUR//[!0-9]}"; [[ -z "$CUR" ]] && CUR=0
   if [[ "$TOOL_NAME" == "MultiEdit" ]]; then
-    OLD_C="$(echo "$INPUT" | jq -r '[.tool_input.edits[]?.old_string // ""] | join("\n")' | wc -l)"
-    NEW_CONTENT="$(echo "$INPUT" | jq -r '[.tool_input.edits[]?.new_string // ""] | join("\n")' 2>/dev/null || true)"
+    OLD_C="$(printf '%s' "$INPUT" | jq -r '[.tool_input.edits[]?.old_string // ""] | join("\n")' | wc -l)"
+    NEW_CONTENT="$(printf '%s' "$INPUT" | jq -r '[.tool_input.edits[]?.new_string // ""] | join("\n")' 2>/dev/null || true)"
   else
-    OLD_C="$(echo "$INPUT" | jq -r '.tool_input.old_string // ""' | wc -l)"
-    NEW_CONTENT="$(echo "$INPUT" | jq -r '.tool_input.new_string // ""' 2>/dev/null || true)"
+    OLD_C="$(printf '%s' "$INPUT" | jq -r '.tool_input.old_string // ""' | wc -l)"
+    NEW_CONTENT="$(printf '%s' "$INPUT" | jq -r '.tool_input.new_string // ""' 2>/dev/null || true)"
   fi
-  NEW_C="$(printf '%s' "$NEW_CONTENT" | wc -l)"
+  OLD_C="${OLD_C//[!0-9]}"; [[ -z "$OLD_C" ]] && OLD_C=0
+  NEW_C="$(count_lines "$NEW_CONTENT")"
+  NEW_C="${NEW_C//[!0-9]}"; [[ -z "$NEW_C" ]] && NEW_C=0
   PROJECTED=$(( CUR - OLD_C + NEW_C ))
   [[ "$PROJECTED" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: projected ${PROJECTED} LOC > ${MAX} roof (current ${CUR}). Split." '{action:"deny",user_message:$m}'; exit 2; }
   CONTENT="$NEW_CONTENT"

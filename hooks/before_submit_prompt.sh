@@ -14,9 +14,14 @@ echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && 
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
-PROMPT_NORM="$(echo "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT 2>/dev/null || printf '%s' "$PROMPT")"
-OUTCOMES=$(echo "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l || true)
-[[ "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
+# Normalize for outcome counting. Use //IGNORE so stray bytes don't truncate
+# the prompt (iconv stops at the first illegal sequence without it, yielding a
+# partial PROMPT_NORM and an undercounted OUTCOMES). The //TRANSLIT still
+# accents-strip for the accented Spanish keywords below.
+PROMPT_NORM="$(printf '%s' "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null || printf '%s' "$PROMPT")"
+OUTCOMES=$(printf '%s' "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l || true)
+OUTCOMES="${OUTCOMES//[!0-9]}"
+[[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
 [[ "$OUTCOMES" -gt 5 ]] && OUTCOMES=5
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"

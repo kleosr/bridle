@@ -18,7 +18,7 @@ _code_lines() {
 complexity_check() {
   local content="$1" max_file="$2" max_func="$3"
   local code; code="$(_code_lines "$content")"
-  local points; points="$(printf '%s' "$code" | grep -oiE '\b(if|for|while|switch|case|catch|elif)\b|\?\s*[^:]|&&|\|\|' | wc -l)"
+  local points; points="$(printf '%s' "$code" | grep -oiE '\b(if|for|while|switch|case|catch|elif)\b|\?\s*[^:]|&&|\|\|' | wc -l || true)"
   points="${points//[!0-9]}"
   [[ -z "$points" ]] && points=0
   # Base complexity 1 + decision points.
