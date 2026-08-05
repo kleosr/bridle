@@ -1,0 +1,4 @@
+# Local runtime state (session logs, velocity counter, intent snapshots)
+state/
+# Fleet-installed hook/rules copies
+.cursor/
