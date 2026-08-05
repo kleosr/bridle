@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# hooks/lib/pre_tool_use_core.sh — Selective Autonomy gate logic (sourced by hooks/pre_tool_use.sh).
 set -uo pipefail
 HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"

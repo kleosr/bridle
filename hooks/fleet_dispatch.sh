@@ -1,29 +1,31 @@
 #!/usr/bin/env bash
-# hooks/fleet_dispatch.sh — Selective-Autonomy backlog dispatcher (V17.2)
-#
-# Reads a prioritized backlog (state/backlog.md), picks the top P0 task, and
-# dispatches it to the agent (claude -p, headless) under the SAME hook guardrails
-# as interactive sessions: pre_tool_use.sh (topology + destructive blocks) and
-# stop_gate.sh (INTENT/Done-when) still run because claude loads ~/.claude hooks.
-#
-# Safety model (matches pre_tool_use.sh):
-#   - SAFE tasks   (docs / todos / stubs / READMEs): auto-dispatched.
-#   - CODE tasks   (src edits, refactors, migrations): proposed only, need <=HUMAN=1.
-#   - Any task touching a path outside its declared FILE_MAP is blocked by the
-#     hook chain at runtime — this script only scopes the FILE_MAP seed.
-#
-# Backlog format (one task per line, prefix = priority):
-#   [P0] fix auth logout bug in src/auth.rs
-#   [P1] write README for ponytail skill
-#   [P2] add TODO stub for billing module
-# Lines starting with # are comments. Blank lines ignored.
-#
-# Usage:
-#   fleet_dispatch.sh              # dispatch top P0 (auto if safe, else propose)
-#   fleet_dispatch.sh --human      # require explicit approval even for safe tasks
-#   fleet_dispatch.sh --peek       # print top task + classification, do nothing
-#   fleet_dispatch.sh --init       # create empty backlog.md template
 set -uo pipefail
+
+show_help() {
+  printf '%s\n' \
+    "fleet_dispatch.sh — Selective-Autonomy backlog dispatcher" \
+    "" \
+    "Reads a prioritized backlog (state/backlog.md), picks the top task, and" \
+    "dispatches it to the agent (claude -p, headless) under the same hook" \
+    "guardrails as interactive sessions." \
+    "" \
+    "Safety model:" \
+    "  SAFE tasks (docs / todos / stubs / READMEs): auto-dispatched." \
+    "  CODE tasks (src edits, refactors, migrations): proposed only, need --human." \
+    "  Runtime hook chain still enforces FILE_MAP scope per task." \
+    "" \
+    "Backlog format (one task per line, prefix = priority):" \
+    "  [P0] fix auth logout bug in src/auth.rs" \
+    "  [P1] write README for ponytail skill" \
+    "  [P2] add TODO stub for billing module" \
+    "Lines starting with # are comments. Blank lines ignored." \
+    "" \
+    "Usage:" \
+    "  fleet_dispatch.sh              dispatch top task (auto if safe, else propose)" \
+    "  fleet_dispatch.sh --human      require explicit approval even for safe tasks" \
+    "  fleet_dispatch.sh --peek       print top task + classification, do nothing" \
+    "  fleet_dispatch.sh --init       create empty backlog.md template"
+}
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PACK="$(cd "$HERE/.." && pwd)"
@@ -43,26 +45,17 @@ for a in "$@"; do
     --human) HUMAN=1 ;;
     --peek) PEEK=1 ;;
     --init) INIT=1 ;;
-    -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
+    -h|--help) show_help; exit 0 ;;
   esac
 done
 
 init_backlog() {
   [[ -f "$BACKLOG" ]] && { echo "[skip] backlog already exists: $BACKLOG"; return 0; }
   cat > "$BACKLOG" <<'EOF'
-# Fleet backlog — one task per line. Prefix priority: [P0] > [P1] > [P2]...
-# SAFE (auto-dispatched): docs, todos, stubs, READMEs, *.md updates.
-# CODE (proposed, needs human): src edits, refactors, migrations, config.
-# Example:
-# [P0] write README for ponytail skill
-# [P1] add TODO stub for billing module
-# [P0] fix auth logout bug in src/session.rs
 EOF
   echo "[ok] created backlog template: $BACKLOG"
 }
 
-# Extract top task (first non-comment, non-blank line with a [Pn] tag),
-# honoring priority order P0 < P1 < P2.
 top_task() {
   local best="" best_p=99 line p text
   while IFS= read -r line || [[ -n "$line" ]]; do
@@ -78,7 +71,6 @@ top_task() {
 }
 
 classify() {
-  # SAFE if the task mentions only doc/todo/stub patterns and no src/code tokens.
   local t="$1"
   if echo "$t" | grep -qiE '(write|update|add|create|document|doc|readme|todo|stub|comment|note|memory|vault|wiki|frontmatter)'; then
     if ! echo "$t" | grep -qiE '(src/|refactor|migrat|implement|fix|bug|auth|config|\.rs|\.ts|\.tsx|\.py|\.go|\.js|database|schema|api|endpoint|component)'; then
@@ -108,7 +100,6 @@ if [[ "$PEEK" -eq 1 ]]; then
   exit 0
 fi
 
-# Seed FILE_MAP from task: extract any explicit path tokens (edit:/NEW: or bare src/... paths)
 FILEMAP="$(echo "$TASK" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' | grep -vx 'path'; echo "$TASK" | grep -oE '(src|tests|docs)/[A-Za-z0-9_./-]+\.[A-Za-z0-9]+')"
 if [[ -n "$FILEMAP" ]]; then
   printf '%s\n' "$FILEMAP" > "$STATE/allowed_files.md"
@@ -130,15 +121,12 @@ if [[ "$HUMAN" -eq 1 && "$CLASS" == "SAFE" ]]; then
   echo "  [HUMAN=1] dispatching SAFE task with explicit approval..."
 fi
 
-# Dispatch via claude headless. --print runs one shot; hooks (pre_tool_use,
-# stop_gate) load from ~/.claude/settings.json and enforce the sandbox.
 PROMPT="INTENT: $TASK
 Tag every file as edit:path or NEW:path. Done-when: ≤5 decidable predicates. Finish all tagged files this turn; proof via build/test where applicable."
 echo "  [dispatch] claude -p --prompt <task>"
 claude -p "$PROMPT" 2>&1 | tail -20
 echo "  [done] dispatch returned."
 
-# Mark task consumed: comment it out in the backlog.
 if [[ -t 1 ]]; then
   tmp="$(mktemp)"
   while IFS= read -r line || [[ -n "$line" ]]; do
