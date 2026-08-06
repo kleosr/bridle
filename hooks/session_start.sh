@@ -3,6 +3,15 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 resolve_root
+STATE="$(state_dir)"
+mkdir -p "$STATE"
+INPUT="$(cat)"
+MODE="$(echo "$INPUT" | jq -r '.composer_mode // empty' 2>/dev/null || true)"
+[[ -z "$MODE" ]] && MODE="agent"
+printf '%s\n' "$MODE" >"$STATE/mode"
+if [[ "$MODE" != "agent" ]]; then
+  emit_quiet; exit 0
+fi
 HANDOFF="$ROOT/HANDOFF.md"
 TAIL=""
 if [[ -f "$HANDOFF" ]]; then

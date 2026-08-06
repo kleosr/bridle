@@ -7,6 +7,12 @@ STATE="$(state_dir)"
 mkdir -p "$STATE"
 date +%s >"$STATE/session_ts"
 INPUT="$(cat)"
+MODE="$(echo "$INPUT" | jq -r '.composer_mode // empty' 2>/dev/null || true)"
+[[ -z "$MODE" ]] && MODE="agent"
+printf '%s\n' "$MODE" >"$STATE/mode"
+if [[ "$MODE" != "agent" ]]; then
+  emit_quiet; exit 0
+fi
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
 ROUTE="other"
 echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|infra|host|vm|container|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"

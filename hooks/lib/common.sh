@@ -36,6 +36,12 @@ emit_context() {
   jq -n --arg c "$ctx" '{additional_context: $c}'
 }
 
+is_agent_mode() {
+  local mode=""
+  [[ -n "${STATE:-}" && -f "$STATE/mode" ]] && mode="$(cat "$STATE/mode" 2>/dev/null || echo "")"
+  [[ -z "$mode" || "$mode" == "agent" ]]
+}
+
 _LOCK_FD=""
 acquire_lock() {
   local lockfile="$(state_dir)/gate.lock"
