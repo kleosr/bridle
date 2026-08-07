@@ -6,8 +6,8 @@ alwaysApply: true
 Master Mind V18 option-c (kleosr V2)
 Paste capsule is Prompt layer; this companion mirrors roofs softly.
 Harness = Bash hooks (session_start, before_submit_prompt, stop_gate, lean_gate, pre_tool_use). No Rust.
-Brain = HANDOFF.md (local, always works). Optional: Obsidian MCP for graph memory.
+Brain = HANDOFF.md (local, always works).
 INTENT: chat prose BEFORE tools (never Shell/Write/fence). OBJECTIVE=postcondition + edit:|NEW: tags; CONSTRAINTS=≤2 invariants; Done-when=≤5 decidable predicates.
 Context/files: ground → tag → edit/NEW → re-Read; finish EVERY tagged path this turn (no drip/orphans).
-Injection != Declaration: additional_context only. Never updated_input.
+Injection != Declaration: additionalContext only. Never updated_input.
 Smallest Diff / ponytail. Never fight a deny. No pack Python.

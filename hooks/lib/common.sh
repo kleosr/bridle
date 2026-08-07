@@ -19,11 +19,6 @@ emit_deny() {
   jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
 }
 
-emit_warn() {
-  local msg="$1"
-  jq -n --arg m "$msg" '{action:"allow", user_message:$m}'
-}
-
 emit_followup() {
   local msg="$1"
   jq -n --arg m "$msg" '{followup_message: $m}'
@@ -33,7 +28,7 @@ emit_quiet() { echo '{}'; }
 
 emit_context() {
   local ctx="$1"
-  jq -n --arg c "$ctx" '{additional_context: $c}'
+  jq -n --arg c "$ctx" '{additionalContext: $c}'
 }
 
 is_agent_mode() {
@@ -48,7 +43,7 @@ acquire_lock() {
   mkdir -p "$(state_dir)"
   exec 200>"$lockfile"
   _LOCK_FD=200
-  flock -n 200 || { emit_deny "State busy (parallel hook collision), retry."; exit 2; }
+  flock -n 200 || { emit_deny "State busy (parallel hook collision), retry."; exit 0; }
 }
 
 release_lock() {

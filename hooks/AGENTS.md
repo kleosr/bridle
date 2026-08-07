@@ -5,4 +5,4 @@ Install: fleet_sync.sh (not an event hook; LOC roof does not apply). Backlog: fl
 Policy wired: policy/intent.json , policy/lean.json
 Registry: hooks.json (canonical source — fleet_sync generates per-repo and home configs from this)
 Done: chmod +x then bash -n on hook scripts
-Hard stops: never updated_input ; never Rust or Python gate ; each event hook max 80 lines
+Hard stops: never updated_input ; never Rust or Python gate ; each event hook max 80 lines ; Cursor-only hook output (action/additionalContext JSON — no Claude hookSpecificOutput branches)

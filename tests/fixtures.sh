@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Sourced by run.sh. Hook fixture tests (agent-mode behavior).
 
-RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_code.json" | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additional_context | length > 0')"
+RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_code.json" | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | length > 0')"
 run_test "before_submit_prompt emits context" "true" "$RESULT"
 
-RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/hooks/session_start.sh" | jq -r '.additional_context | length > 0')"
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/hooks/session_start.sh" | jq -r '.additionalContext | length > 0')"
 run_test "session_start emits context" "true" "$RESULT"
 
 rm -rf "$PACK/state"
@@ -29,13 +29,16 @@ run_test "pre_tool_use allows Read" "pass" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_bash_destructive.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action')"
 run_test "pre_tool_use blocks destructive root-delete" "deny" "$RESULT"
 
+RESULT="$(echo '{"tool_name":"Bash","hook_event_name":"preToolUse","tool_input":{"command":"rm -rf /"}}' | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "none"')"
+run_test "pre_tool_use Cursor-only deny even with hook_event_name" "deny" "$RESULT"
+
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 echo 'src/db.ts' > "$PACK/state/allowed_files.md"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_scope_expansion.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "allow"')"
-run_test "pre_tool_use warns on scope expansion (not deny)" "allow" "$RESULT"
+run_test "pre_tool_use warns on scope expansion (warn action)" "warn" "$RESULT"
 
 rm -rf "$PACK/state"
-RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additional_context | test("CONSTRAINTS:")')"
+RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | test("CONSTRAINTS:")')"
 run_test "before_submit reminds constraints on unbound task" "true" "$RESULT"
 
 rm -rf "$PACK/state"

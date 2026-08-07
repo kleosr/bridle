@@ -70,3 +70,23 @@ RESULT="$(HERE="$PACK/hooks" bash -c '
   echo "$(count_lines "single-line")"
 ' 2>/dev/null | tr -d '[:space:]')"
 run_test "count_lines counts single-line as 1" "1" "$RESULT"
+
+printf '# HANDOFF — Session State\n\n## Active Objective\n\nreal task\n\n## Archived\n\n- real note\n\n<!-- COMPACTION PROTOCOL\nprotocol boilerplate line\n-->\n' > "$PACK/HANDOFF.md"
+RESULT="$(echo '{}' | bash "$PACK/hooks/session_start.sh" | jq -r '.additionalContext | test("real note") and (test("COMPACTION PROTOCOL") | not)')"
+run_test "session_start tail excludes COMPACTION PROTOCOL block" "true" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\n' > /tmp/vel_target.ts
+for i in $(seq 1 15); do echo '/tmp/vel_target.ts' >> "$PACK/state/edit_velocity.log"; done
+RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n","new_string":"l1"}}' | bash "$PACK/hooks/lean_gate.sh" | jq -r '.action // "none"')"
+run_test "lean_gate skips velocity deny on LOC-reducing edit" "allow" "$RESULT"
+RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1","new_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n"}}' | bash "$PACK/hooks/lean_gate.sh" | jq -r '.action // "none"')"
+run_test "lean_gate enforces velocity on non-reducing edit" "deny" "$RESULT"
+rm -f /tmp/vel_target.ts
+
+FS_HOME="$(mktemp -d)"
+RESULT="$(HOME="$FS_HOME" FORCE=1 bash "$PACK/hooks/fleet_sync.sh" install >/dev/null 2>&1; echo $?)"
+SKILLS_OK="$(test -L "$FS_HOME/.cursor/skills/ponytail" && echo yes || echo no)"
+rm -rf "$FS_HOME"
+run_test "fleet_sync install completes on fresh HOME (orphan-loop set -e regression)" "0" "$RESULT"
+run_test "fleet_sync install actually installs skills on fresh HOME" "yes" "$SKILLS_OK"

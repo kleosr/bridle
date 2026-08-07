@@ -25,23 +25,28 @@ Thin roof: `rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 - Exports: named only.
 
 ## Bash hooks (`hooks/*.sh`)
-Template:
+Cursor-only output. Template:
 
     #!/bin/bash
     set -euo pipefail
     INPUT=$(cat)
-    # parse with jq; fail-closed
+    # parse with jq; emit Cursor JSON on stdout
     echo '{"action":"allow"}'
     exit 0
 
 Banned: updated_input, Python, Node, external APIs, cd in hooks.
-Required: jq; exit non-zero on parse failure; max 80 LOC.
+Required: jq; max 80 LOC (the five event-hook entrypoints: session_start,
+before_submit_prompt, stop_gate, lean_gate, pre_tool_use); never emit Claude
+shapes (`hookSpecificOutput`).
+Deny = `{"action":"deny","user_message":"..."}` on stdout + **exit 0**
+(Cursor parses stdout JSON on exit 0; a non-zero exit also denies via
+failClosed but drops the message). Unparseable input: exit non-zero so
+failClosed blocks.
 
-## Markdown & memory
+## Markdown & HANDOFF
 - Bullets/tables. No fluff.
 - System docs max 80 lines (HANDOFF, ARCHITECTURE).
 - HANDOFF: TASK / FILES / STATUS / NEXT.
-- Sessions: `wiki/projects/<project>/Sessions/<YYYY-MM-DD>-<topic>.md`
 - Summaries not chat dumps.
 
 ## JSON

@@ -1,4 +1,5 @@
 # Retired personal Skill names that must remain absent.
+memory
 monorepo
 package-scope
 spec-kit
