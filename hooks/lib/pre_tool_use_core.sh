@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"
 resolve_root
@@ -7,23 +7,14 @@ STATE="$(state_dir)"
 ALLOWED="$STATE/allowed_files.md"
 INPUT="$(cat)"
 TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // .name // empty')"
-is_claude() { echo "$INPUT" | jq -e '.hook_event_name // empty' >/dev/null 2>&1; }
 deny() {
   local msg="$1"
-  if is_claude; then
-    jq -n --arg m "$msg" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$m}}'
-  else
-    jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
-  fi
+  jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
   exit 0
 }
 warn() {
   local msg="$1"
-  if is_claude; then
-    jq -n --arg m "$msg" '{decision:"approve", hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",permissionDecisionReason:$m}}'
-  else
-    jq -n --arg m "$msg" '{action:"allow", user_message:$m}'
-  fi
+  jq -n --arg m "$msg" '{action:"warn", user_message:$m}'
   exit 0
 }
 case "$TOOL_NAME" in
@@ -36,7 +27,9 @@ case "$TOOL_NAME" in
     if [[ -s "$ALLOWED" ]]; then
       base="$(basename "$FILE_PATH")"
       if ! grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null && ! grep -qxF "$base" "$ALLOWED" 2>/dev/null; then
-        warn "SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP. If this edit is required, declare it in your INTENT (edit:$FILE_PATH) so stop_gate can audit it. Proceeding."
+        mkdir -p "$STATE"
+        grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null || echo "$FILE_PATH" >>"$ALLOWED"
+        warn "SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP — registered in the sandbox. Declare it in your INTENT (edit:$FILE_PATH) so stop_gate audits completion. Proceeding."
       fi
     fi
     NEW_CONTENT=""
@@ -45,7 +38,7 @@ case "$TOOL_NAME" in
       Edit|MultiEdit) NEW_CONTENT="$(echo "$INPUT" | jq -r '[.tool_input.new_string // "", (.tool_input.edits[]?.new_string // "")] | join("\n")' 2>/dev/null || true)" ;;
       StrReplace) NEW_CONTENT="$(echo "$INPUT" | jq -r '.tool_input.new_string // ""' 2>/dev/null || true)" ;;
     esac
-    DESTRUCTIVE_RE='(DROP TABLE|DELETE FROM .* WHERE 1=1|rm -rf /|password[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"']+["'"'"'"]|API_KEY[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"']+["'"'"'"]|secret[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"']+["'"'"'"])'
+    DESTRUCTIVE_RE='(DROP TABLE|DELETE FROM .* WHERE 1=1|rm -rf /|password[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"]|API_KEY[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"]|secret[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"])'
     if echo "$NEW_CONTENT" | grep -qiE "$DESTRUCTIVE_RE"; then
       deny "AUTONOMY BLOCK: edit contains a destructive/credential pattern (drop/delete-all/secret write). Human approval required."
     fi

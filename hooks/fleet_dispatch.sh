@@ -6,7 +6,7 @@ show_help() {
     "fleet_dispatch.sh — Selective-Autonomy backlog dispatcher" \
     "" \
     "Reads a prioritized backlog (state/backlog.md), picks the top task, and" \
-    "dispatches it to the agent (claude -p, headless) under the same hook" \
+    "dispatches it to the agent (cursor-agent, headless) under the same hook" \
     "guardrails as interactive sessions." \
     "" \
     "Safety model:" \
@@ -72,7 +72,7 @@ top_task() {
 
 classify() {
   local t="$1"
-  if echo "$t" | grep -qiE '(write|update|add|create|document|doc|readme|todo|stub|comment|note|memory|vault|wiki|frontmatter)'; then
+  if echo "$t" | grep -qiE '(write|update|add|create|document|doc|readme|todo|stub|comment|note|frontmatter)'; then
     if ! echo "$t" | grep -qiE '(src/|refactor|migrat|implement|fix|bug|auth|config|\.rs|\.ts|\.tsx|\.py|\.go|\.js|database|schema|api|endpoint|component)'; then
       echo "SAFE"; return
     fi
@@ -123,19 +123,35 @@ fi
 
 PROMPT="INTENT: $TASK
 Tag every file as edit:path or NEW:path. Done-when: ≤5 decidable predicates. Finish all tagged files this turn; proof via build/test where applicable."
-echo "  [dispatch] claude -p --prompt <task>"
-claude -p "$PROMPT" 2>&1 | tail -20
-echo "  [done] dispatch returned."
+CURSOR_CLI="${CURSOR_CLI:-}"
+if [[ -z "$CURSOR_CLI" ]]; then
+  command -v cursor-agent >/dev/null 2>&1 && CURSOR_CLI="cursor-agent"
+fi
+if [[ -z "$CURSOR_CLI" ]]; then
+  command -v cursor >/dev/null 2>&1 && CURSOR_CLI="cursor"
+fi
+if [[ -z "$CURSOR_CLI" ]]; then
+  echo "  [fail] no Cursor CLI on PATH (cursor-agent/cursor) — install Cursor or set CURSOR_CLI."
+  exit 1
+fi
+echo "  [dispatch] $CURSOR_CLI <task>"
+out="$("$CURSOR_CLI" "$PROMPT" 2>&1)"
+rc=$?
+printf '%s\n' "$out" | tail -20
+echo "  [done] dispatch returned (exit $rc)."
 
-if [[ -t 1 ]]; then
-  tmp="$(mktemp)"
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ "$line" == "[P${PRI}] $TASK" || "$line" == "[P0$PRI] $TASK" ]]; then
-      echo "# DONE $(date +%F): $line" >> "$tmp"
-    else
-      echo "$line" >> "$tmp"
-    fi
-  done < "$BACKLOG"
+tmp="$(mktemp)"
+while IFS= read -r line || [[ -n "$line" ]]; do
+  if [[ "$line" == "[P${PRI}] $TASK" || "$line" == "[P0$PRI] $TASK" ]]; then
+    echo "# DONE $(date +%F): $line" >> "$tmp"
+  else
+    echo "$line" >> "$tmp"
+  fi
+done < "$BACKLOG"
+if [[ "$rc" -eq 0 ]]; then
   mv "$tmp" "$BACKLOG"
+else
+  rm -f "$tmp"
+  echo "  [keep] backlog kept — dispatch failed."
 fi
 exit 0

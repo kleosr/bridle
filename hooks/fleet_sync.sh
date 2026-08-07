@@ -4,8 +4,8 @@ PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
-SHARED=(agent types testing debugging native-lean-autoload ponytail memory context-curator vernacular)
-GLOBAL=(native-lean-autoload ponytail agent memory context-curator vernacular testing)
+SHARED=(agent types testing debugging native-lean-autoload ponytail context-curator vernacular)
+GLOBAL=(native-lean-autoload ponytail agent context-curator vernacular testing)
 HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh fleet_dispatch.sh)
 
 load_lines() {
@@ -25,7 +25,9 @@ is_ignored() {
   while IFS= read -r pat; do
     [[ -z "$pat" ]] && continue
     [[ "$base" == "$pat" ]] && return 0
-    [[ "$base" == "$pat"/* ]] && return 0
+    [[ "$path" == *"/$pat/"* ]] && return 0
+    [[ "$path" == */"$pat" ]] && return 0
+    [[ "$path" == "$pat"* ]] && return 0
   done < <(load_lines "$PACK/config/scan.ignore")
   return 1
 }
@@ -102,13 +104,17 @@ install_home_hooks() {
 }
 
 install_global_rules() {
-  local name
+  local name orphan
   mkdir -p "$HOME_C/rules"
   cp -f "$PACK/rules/option-c-core.mdc" "$HOME_C/rules/option-c-core.mdc"
   for name in "${GLOBAL[@]}"; do
     cp -f "$PACK/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
     echo "[ok] ~/.cursor/rules/${name}.mdc"
   done
+  while IFS= read -r orphan; do
+    [[ -z "$orphan" ]] && continue
+    [[ -e "$HOME_C/rules/$orphan" || -L "$HOME_C/rules/$orphan" ]] && rm -f "$HOME_C/rules/$orphan" && echo "[rm] ~/.cursor/rules/$orphan"
+  done < <(load_lines "$PACK/config/retired.txt")
 }
 
 install_skills() {
@@ -165,6 +171,12 @@ write_repo_hooks_json() {
     "$PACK/hooks/hooks.json" >"$out"
 }
 
+gitignore_state() {
+  local repo="$1" gi="$repo/.gitignore"
+  [[ -f "$gi" ]] || touch "$gi"
+  grep -qxF 'state/' "$gi" || printf '\n# kleosrules runtime state (velocity log, intent snapshots)\nstate/\n' >>"$gi"
+}
+
 sync_repo_hooks() {
   local repo="$1" label="$2" dest orphan
   dest="$repo/.cursor/hooks"
@@ -174,6 +186,7 @@ sync_repo_hooks() {
   done
   rm -rf "$dest/bin" "$dest/__pycache__"
   write_repo_hooks_json "$repo/.cursor/hooks.json"
+  gitignore_state "$repo"
   echo "[ok] hooks → $label"
 }
 
@@ -235,7 +248,7 @@ verify_smoke() {
   bash -n "$PACK/hooks/fleet_dispatch.sh"
   bash -n "$PACK/hooks/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
-    | bash "$PACK/hooks/before_submit_prompt.sh" | jq -e '.additional_context' >/dev/null
+    | bash "$PACK/hooks/before_submit_prompt.sh" | jq -e '.additionalContext' >/dev/null
   verify_stop_gate || bad=1
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue

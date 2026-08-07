@@ -1,4 +1,4 @@
-# Context Curation & Memory Management
+# Context Curation
 
 Layer 2 is mostly about what you throw away.
 
@@ -39,13 +39,8 @@ Structured state at the repo root.
 - **Update:** `stop_gate.sh` seeds HANDOFF on accept; agent rewrites it COMPLETE before Done-when: met
 - **Compaction:** if active sections exceed ~150 lines, compress older context into Archived. Keep active state small.
 
-## Durable memory (optional)
+## Durable memory
 
-Local `HANDOFF.md` is the default brain — no external tools required.
+Local `HANDOFF.md` is the brain — no external tools required.
 
-Optional: Obsidian vault via MCP for graph-based long-lived memory.
-
-- **Read:** at session start (or when you need history), query `hot.md` or `index.md` via MCP
-- **Write:** when `Done-when` is met, write `wiki/projects/<project>/Sessions/<YYYY-MM-DD>-<topic>` and refresh `hot.md`
-
-Do not mix ephemeral scratch with durable memory. If it must outlive the chat, put it in HANDOFF or the vault.
+Do not mix ephemeral scratch with durable state. If it must outlive the chat, put it in HANDOFF.

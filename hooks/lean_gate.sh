@@ -19,7 +19,7 @@ STATE="$(state_dir)"
 VELOCITY_LOG="$STATE/edit_velocity.log"
 
 velocity_bump() {
-  local fp="$1"
+  local fp="$1" skip="${2:-0}"
   mkdir -p "$STATE"
   acquire_lock
   local count
@@ -28,8 +28,10 @@ velocity_bump() {
   [[ -z "$count" ]] && count=0
   echo "$fp" >>"$VELOCITY_LOG"
   release_lock
+  [[ "$skip" -eq 1 ]] && return 0
   if [[ "$count" -ge "$VMAX" ]]; then
-    jq -n --arg m "VELOCITY DENY: '${fp##*/}' edited ${count}x this session (> ${VMAX} roof). Extract a module or refactor before retrying." '{action:"deny",user_message:$m}'; exit 2
+    jq -n --arg m "VELOCITY DENY: '${fp##*/}' edited ${count}x this session (roof ${VMAX}). Extract a module or refactor before retrying." '{action:"deny",user_message:$m}'
+    exit 0
   fi
 }
 
@@ -38,16 +40,16 @@ case "$TOOL_NAME" in
   *) emit_allow; exit 0 ;;
 esac
 [[ -z "$FILE_PATH" ]] && { emit_allow; exit 0; }
-velocity_bump "$FILE_PATH"
 
 count_lines() { printf '%s\n' "$1" | wc -l; }
 
+REDUCE=0
 if [[ "$TOOL_NAME" == "Write" ]]; then
   CONTENT="$(printf '%s' "$INPUT" | jq -r '(.tool_input.content // empty) | if type=="array" then map((.text // .content // "")) | join("\n") else . end' 2>/dev/null || true)"
   LINES="$(count_lines "$CONTENT")"
   LINES="${LINES//[!0-9]}"
   [[ -z "$LINES" ]] && LINES=0
-  [[ "${LINES:-0}" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: Write ${LINES} LOC > ${MAX} roof. Split into smaller modules." '{action:"deny",user_message:$m}'; exit 2; }
+  [[ "${LINES:-0}" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: Write ${LINES} LOC > ${MAX} roof. Split into smaller modules." '{action:"deny",user_message:$m}'; exit 0; }
 else
   [[ -f "$FILE_PATH" ]] || { emit_allow; exit 0; }
   CUR="$(wc -l < "$FILE_PATH")"
@@ -63,12 +65,15 @@ else
   NEW_C="$(count_lines "$NEW_CONTENT")"
   NEW_C="${NEW_C//[!0-9]}"; [[ -z "$NEW_C" ]] && NEW_C=0
   PROJECTED=$(( CUR - OLD_C + NEW_C ))
-  [[ "$PROJECTED" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: projected ${PROJECTED} LOC > ${MAX} roof (current ${CUR}). Split." '{action:"deny",user_message:$m}'; exit 2; }
+  [[ "$PROJECTED" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: projected ${PROJECTED} LOC > ${MAX} roof (current ${CUR}). Split." '{action:"deny",user_message:$m}'; exit 0; }
+  [[ "$PROJECTED" -lt "$CUR" ]] && REDUCE=1
   CONTENT="$NEW_CONTENT"
 fi
 
-coupling_check "$CONTENT" "$COUPLE_MAX" || { log_session_event "DENY" "lean_gate: coupling $FILE_PATH"; exit 2; }
-nesting_check "$CONTENT" "$NEST_MAX" || { log_session_event "DENY" "lean_gate: nesting $FILE_PATH"; exit 2; }
-complexity_check "$CONTENT" "$CC_MAX" "$CC_FUNC" || { log_session_event "DENY" "lean_gate: complexity $FILE_PATH"; exit 2; }
+velocity_bump "$FILE_PATH" "$REDUCE"
+
+coupling_check "$CONTENT" "$COUPLE_MAX" || { log_session_event "DENY" "lean_gate: coupling $FILE_PATH"; exit 0; }
+nesting_check "$CONTENT" "$NEST_MAX" || { log_session_event "DENY" "lean_gate: nesting $FILE_PATH"; exit 0; }
+complexity_check "$CONTENT" "$CC_MAX" "$CC_FUNC" || { log_session_event "DENY" "lean_gate: complexity $FILE_PATH"; exit 0; }
 log_session_event "ALLOW" "lean_gate: $FILE_PATH"
 emit_allow; exit 0

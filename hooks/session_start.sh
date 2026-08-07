@@ -15,7 +15,7 @@ fi
 HANDOFF="$ROOT/HANDOFF.md"
 TAIL=""
 if [[ -f "$HANDOFF" ]]; then
-  TAIL="$(tail -n 15 "$HANDOFF")"
+  TAIL="$(tail -n 40 "$HANDOFF" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15)"
 fi
 CTX="Session start. INTENT = chat prose before tools (never Shell). Tag edit:|NEW:; finish all tags this turn. For CODE work: ground in codebase first (AGENTS.md, Glob/Grep, manifest) — update HANDOFF at session END. HANDOFF tail:
 ${TAIL}"

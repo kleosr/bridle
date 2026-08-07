@@ -9,12 +9,12 @@ Doctrina: Smallest Diff. Cero bloat.
 
 ## THE LADDER (Hard Roof Concept)
 1. No Code
-2. Reuse (Grep codebase or Obsidian)
+2. Reuse (Grep codebase)
 3. Stdlib
 4. Platform (React/Node native)
 5. Installed Dep
 6. 1-Liner
-7. Minimum (Max 80 LOC per file)
+7. Minimum (soft 80 LOC per file; hard 700 via lean_gate)
 
 ## PROCEDURE
 Si el problema es complejo o necesitas criterio de arquitectura para elegir un escalón:
