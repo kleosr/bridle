@@ -5,7 +5,7 @@ alwaysApply: true
 
 # CONTEXT CURATOR
 
-Harness injects `additional_context` only. User prompt is immutable input.
+Harness injects `additionalContext` only. User prompt is immutable input.
 Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/code-fence — that poisons stop detection).
 Job card: `OBJECTIVE` = postcondition + `edit:path`|`NEW:path` tags; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
 **File map:** ground Glob/Grep/Read → StrReplace `edit:` / Write `NEW:` only → re-Read tags → prove Done-when. Finish every tagged path **this turn** (no drip; no orphan unconnected files).

@@ -14,7 +14,7 @@ This file = decision trees and edge cases.
 ## Ladder detail
 Stop at first rung that holds after reading the ask + touched code:
 1. NO CODE — config, delete, existing API.
-2. Reuse — Grep codebase; Obsidian MCP for prior decisions.
+2. Reuse — Grep codebase.
 3. Stdlib of the language.
 4. Framework native (React/Node/platform).
 5. Already-installed dependency (no new package without Soft Rule why).

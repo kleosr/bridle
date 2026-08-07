@@ -34,5 +34,4 @@ Sigue la escalera: No code → Reuse → Stdlib → Platform → Installed Dep �
 Justifica en 1 línea si saltas un escalón.
 
 ## 4. MEMORY (Amnesia Preventiva)
-- **Efímero:** `HANDOFF.md` (leer al inicio, escribir al final).
-- **Durable (opcional):** Obsidian via MCP si está configurado, o archivos Markdown locales.
+- `HANDOFF.md` (leer al inicio, escribir al final).

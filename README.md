@@ -23,7 +23,7 @@
 
 Platform: **Linux or WSL**. Requires `bash` (v4+) and `jq`. No Rust. No Cargo. No Python pack tooling. No MCP dependency for core operation.
 
-How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. Hooks inject context at start and audit completion. Obsidian MCP is **optional** — wire it only if you want graph-based durable memory.
+How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. Hooks inject context at start and audit completion. No Obsidian/vault — `HANDOFF.md` is the only memory.
 
 ## Setup
 
@@ -54,9 +54,9 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, 700 LOC + entropy + velocity) denies oversized writes — rewrite or stop; do not fight a deny.
+Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, 700 LOC + complexity + coupling + nesting + velocity) denies oversized writes — rewrite or stop; do not fight a deny.
 
-Skill routes: `/ponytail` (Native Lean), `/memory` (HANDOFF + optional Obsidian), `/debugging`, `/testing`, `/vernacular`, `/session-handoff`
+Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`, `/session-handoff`
 
 ## Architecture
 
@@ -93,19 +93,21 @@ Single pack topology — not an app monorepo. Live `.cursor/` copies are sync de
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `before_submit_prompt.sh` adds duties with `additional_context`. It does not mutate the user prompt.
+2. **Inject (Layer 2)** — `before_submit_prompt.sh` adds duties with `additionalContext`. It does not mutate the user prompt.
 3. **Declare (Layer 1)** — the agent writes `INTENT:` and `Done-when:` in chat before tools run.
 4. **Audit (Layer 3/4)** — `stop_gate.sh` checks Done-when. If unmet, another pass. If met, clears `/state` and seeds HANDOFF.
 
 ## Ponytail / Lean Gate
 
-The lean gate (`lean_gate.sh`) enforces three dimensions on every `Write|Edit|MultiEdit|StrReplace`:
+The lean gate (`lean_gate.sh`) enforces five roofs on every `Write|Edit|MultiEdit|StrReplace`:
 
 | Check | Roof | Action |
 |-------|------|--------|
-| Projected LOC | 700 (hard) | Deny if post-edit file exceeds |
-| Entropy (flow-control keywords) | 30 per edit | Deny if complexity too high |
-| Edit velocity (same file per session) | 15 edits | Deny if repeated patching of bloated file |
+| Projected LOC | 700 | Deny if post-edit file exceeds |
+| Complexity (decision points) | 50 file / 4+ branch keywords per line | Deny if branching is too dense |
+| Coupling (import/include lines) | 10 | Deny if the file knows too much |
+| Nesting (brace depth) | 4 | Deny if blocks nest too deep |
+| Edit velocity (same file per session) | 15 edits | Deny repeated patching (LOC-reducing edits exempt) |
 
 Deny recovery: `Read` the blocked file → plan split → `Write` new modules → `StrReplace` imports → retry. Never use Shell to bypass.
 
