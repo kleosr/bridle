@@ -113,7 +113,10 @@ install_global_rules() {
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
-    [[ -e "$HOME_C/rules/$orphan" || -L "$HOME_C/rules/$orphan" ]] && rm -f "$HOME_C/rules/$orphan" && echo "[rm] ~/.cursor/rules/$orphan"
+    if [[ -e "$HOME_C/rules/$orphan" || -L "$HOME_C/rules/$orphan" ]]; then
+      rm -f "$HOME_C/rules/$orphan"
+      echo "[rm] ~/.cursor/rules/$orphan"
+    fi
   done < <(load_lines "$PACK/config/retired.txt")
 }
 
@@ -157,7 +160,10 @@ link_pack_rules() {
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
-    [[ -e "$dest/$orphan" || -L "$dest/$orphan" ]] && rm -f "$dest/$orphan" && echo "[rm] pack/$orphan"
+    if [[ -e "$dest/$orphan" || -L "$dest/$orphan" ]]; then
+      rm -f "$dest/$orphan"
+      echo "[rm] pack/$orphan"
+    fi
   done < <(load_lines "$PACK/config/retired.txt")
   echo "[ok] pack .cursor/rules → rules"
 }
@@ -201,7 +207,10 @@ sync_repo_rules() {
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
-    [[ -e "$dest/$orphan" || -L "$dest/$orphan" ]] && rm -f "$dest/$orphan" && echo "[rm] $label/$orphan"
+    if [[ -e "$dest/$orphan" || -L "$dest/$orphan" ]]; then
+      rm -f "$dest/$orphan"
+      echo "[rm] $label/$orphan"
+    fi
   done < <(load_lines "$PACK/config/retired.txt")
   echo "[ok] rules → $label"
 }
