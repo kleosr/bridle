@@ -46,13 +46,8 @@ NEXT
 For richer multi-session pauses, use the template (`Goal` / `Done` / `Open` / `Next`) under
 `skills/session-handoff/references/handoff-template.md`. Always English labels.
 
-When MCP `user-obsidian` is ready: **also** write/append a Session note under
-`wiki/projects/<slug>/Sessions/` with `[[wikilinks]]` to Index/Decisions/Learnings
-and refresh `wiki/hot.md` (Skill `obsidian-memory`). Repo handoff + vault — both.
-
 ## Rules
 
 - Assessment-only until the user asked for changes (per agent.mdc).
 - Never invent residual features; append open items to this handoff.
 - Pair with testing for feature execution; debugging if Open is ambiguous.
-- Pair with `obsidian-memory` so chat death does not erase the graph.

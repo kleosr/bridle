@@ -1,6 +1,5 @@
-# Active skills (6 core)
+# Active skills (5 core)
 ponytail
-memory
 debugging
 testing
 vernacular

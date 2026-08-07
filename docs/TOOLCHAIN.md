@@ -7,7 +7,6 @@ No Rust. No Cargo. No Python. Mechanical checks are Bash.
 - `bash` (v4+)
 - `jq` (JSON parsing in hooks)
 - Cursor IDE (runs the hooks)
-- Optional: Obsidian MCP configured locally for graph memory
 
 ## Syntax check
 
@@ -29,13 +28,13 @@ echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
   | bash hooks/before_submit_prompt.sh
 ```
 
-Expect JSON with `additional_context` (and, on stop fixtures, `followup_message` when INTENT is missing).
+Expect JSON with `additionalContext` (and, on stop fixtures, `followup_message` when INTENT is missing).
 
 ## Doctor + Tests
 
 ```bash
-bash scripts/doctor.sh    # 16 environment + repo health checks
-bash tests/run.sh         # syntax + JSON + hook fixtures (24 tests)
+bash scripts/doctor.sh    # environment + repo health checks
+bash tests/run.sh         # syntax + JSON + hook fixtures (44 tests)
 ```
 
 ## Fleet install / sync
@@ -51,4 +50,4 @@ Installs `~/.cursor` hooks+rules+skills, syncs `.cursor/rules` + Bash hooks to e
 
 Keep each **event** hook under 80 LOC (`session_start`, `before_submit_prompt`, `stop_gate`, `lean_gate`, `pre_tool_use`). Core logic lives in `hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. Fail closed: bad parse or failed exec should block or return deny JSON.
 
-Wired policy only: `hooks/policy/intent.json` (INTENT roofs) and `hooks/policy/lean.json` (`file_loc_max`, `complexity_max`, `edit_velocity_max`).
+Wired policy only: `hooks/policy/intent.json` (INTENT roofs) and `hooks/policy/lean.json` (`file_loc_max`, `complexity_max`, `func_complexity_max`, `coupling_max`, `nesting_max`, `edit_velocity_max`).

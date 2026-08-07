@@ -20,5 +20,5 @@ Doctrina: Smallest Diff. Cero slop.
 - Chat: `INTENT:` chat prose before tools (never Shell/fence). OBJECTIVE=postcondition + `edit:`|`NEW:` tags; Done-when=≤5 decidable predicates; finish all tags same turn.
 
 ## PROCEDURE
-Stack style guides (TS/React, Bash templates, Obsidian paths):
+Stack style guides (TS/React, Bash templates, Markdown paths):
 **Read `~/.cursor/skills/vernacular/SKILL.md`** before writing matched files.

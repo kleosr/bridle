@@ -16,7 +16,6 @@ fi
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
 ROUTE="other"
 echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|infra|host|vm|container|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"
-echo "$PROMPT" | grep -qiE 'remember|vault|obsidian|handoff|amnesia|session' && ROUTE="memory"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
@@ -40,15 +39,13 @@ if [[ "$ROUTE" == "code" ]]; then
   if ! echo "$PROMPT" | grep -qiE '(líneas|loc|archivos|módulos|modules|files|max|límit|roof|menos de|under)'; then
     CONSTRAINT_REM="CONSTRAINTS: no explicit bounds given — ponytail defaults apply (700 LOC roof, 15 edits/file, one responsibility per file). State your own if tighter."
   fi
-elif [[ "$ROUTE" == "memory" ]]; then
-  EPILOGUE="Read HANDOFF.md for current state; if Obsidian MCP is configured, vault_read wiki/hot.md then wiki/index.md."
 else
   EPILOGUE="Task-first. Update HANDOFF at session end if durable."
 fi
 emit_context "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
 FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → StrReplace existing; Write only NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.
-SANDBOX: paths detected in your prompt are snapshotted to state/allowed_files.md — stop_gate will reject stops where your INTENT tags touch files outside this set (TOPOLOGY VIOLATION). If you need to expand scope, say so in your INTENT.
+SANDBOX: paths detected in your prompt are snapshotted to state/allowed_files.md. Writes outside this set warn at edit time and register in the sandbox; stop_gate audits that every tagged file is finished. Declare every edit:|NEW: path in your INTENT.
 ${OUTCOMES_CTX}
 ${PENDING}
 ${CONSTRAINT_REM}

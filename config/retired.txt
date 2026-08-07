@@ -1,4 +1,5 @@
 # Orphan .mdc names to remove from destinations on sync/verify
+memory.mdc
 naming.mdc
 backend.mdc
 frontend.mdc

@@ -25,7 +25,7 @@ rules_accept() {
     echo "# HANDOFF — Session State"; echo ""; echo "## Active Objective"; echo ""
     echo "Session complete ${date}"; echo ""; echo "## Current State"; echo ""
     echo "Done-when: met. (agent fills details)"; echo ""; echo "## Next Actions"; echo ""
-    echo "Update HANDOFF with next session objective. Optional: Obsidian vault write-back if configured."
+    echo "Update HANDOFF with next session objective."
     echo ""; echo "## Archived"; echo ""
     if [[ -n "$archived" ]]; then echo "$archived"; echo ""; fi
     echo "(Older context compacted here when active sections exceed ~150 lines.)"
