@@ -17,7 +17,7 @@ Thin roof: `rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 4. If no contract: private-match siblings only. Do not invent dialect.
 
 ## TypeScript / React / Node
-- Comments: ban obvious what-comments; why-only if non-obvious.
+- Comments: no prose comments in app code; machine directives only (shebang, pragma, license header, build guard, ts-expect-error). The comment-ratio gate in `lean_gate.sh` enforces this mechanically.
 - State: `if (!data) return <Loading/>` — no redundant isLoading when data starts null.
 - Returns: early-return; max nesting depth 2.
 - Types: strict; no any; prefer type; infer when clear.

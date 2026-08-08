@@ -15,8 +15,7 @@ if [[ "$MODE" != "agent" ]]; then
   emit_quiet; exit 0
 fi
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
-ROUTE="other"
-echo "$PROMPT" | grep -qiE 'implement|fix|refactor|bug|code|patch|cargo|typescript|rust|bash|connect|conecta|wire|api|frontend|backend|component|hook|render|data|fetch|endpoint|función|pantalla|página|landing|database|query|mutation|state|effect|deploy|despliega|build|construye|configura|integra|test|ssh|server|servidor|inventory|inventario|docker|nginx|systemd|service|servicio|infra|host|vm|container|rollback|migrate|pipeline|ci\b|cd\b' && ROUTE="code"
+ROUTE="code"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
@@ -28,6 +27,7 @@ OUTCOMES="${OUTCOMES//[!0-9]}"
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
 [[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; tag edit:|NEW:; never Shell-declare."
+PONYTAIL="$(jq -r '.ponytail_ladder // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
 PENDING=""
 if [[ -s "$STATE/pending_files.md" ]]; then
   PENDING="PENDING_FILES (finish this turn, no drip): $(tr '\n' ' ' <"$STATE/pending_files.md")"
@@ -35,14 +35,11 @@ fi
 OUTCOMES_CTX=""
 [[ -s "$STATE/outcomes.md" ]] && OUTCOMES_CTX="OUTCOMES_DETECTED: $(cat "$STATE/outcomes.md") user outcome(s) → Done-when MUST list ≥ that many predicates (1 per outcome). Under-scoped Done-when is rejected."
 CONSTRAINT_REM=""
-if [[ "$ROUTE" == "code" ]]; then
-  EPILOGUE="Codebase first: Read AGENTS.md/CLAUDE.md + manifest, Glob/Grep the feature area, THEN edit. Update HANDOFF at session END — NOT before tools."
-  if ! echo "$PROMPT" | grep -qiE '(líneas|loc|archivos|módulos|modules|files|max|límit|roof|menos de|under)'; then
-    CONSTRAINT_REM="CONSTRAINTS: no explicit bounds given — ponytail defaults apply (700 LOC roof, 15 edits/file, one responsibility per file). State your own if tighter."
-  fi
-else
-  EPILOGUE="Task-first. Update HANDOFF at session end if durable."
+EPILOGUE="Codebase first: Read AGENTS.md/CLAUDE.md + manifest, Glob/Grep the feature area, THEN edit. Update HANDOFF at session END — NOT before tools."
+if ! echo "$PROMPT" | grep -qiE '(líneas|loc|archivos|módulos|modules|files|max|límit|roof|menos de|under)'; then
+  CONSTRAINT_REM="CONSTRAINTS: no explicit bounds given — ponytail defaults apply (700 LOC roof, 15 edits/file, one responsibility per file). State your own if tighter."
 fi
+[[ -n "$PONYTAIL" ]] && CONSTRAINT_REM="${CONSTRAINT_REM}${CONSTRAINT_REM:+ }${PONYTAIL}"
 emit_context "ROUTE_CLASSIFY: ${ROUTE}
 DEBERES: ${DUTY}
 FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → StrReplace existing; Write only NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.

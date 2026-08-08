@@ -56,7 +56,7 @@ printf '1\n' > "$PACK/state/outcomes.md"
 RESULT="$(cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/hooks/stop_gate.sh" 2>/dev/null | jq -r 'if .followup_message then "followup" else "accept" end' 2>/dev/null || echo "crash")"
 run_test "stop_gate tolerates empty session_ts" "accept" "$RESULT"
 
-VELOCITY_SRC="$(sed -n '/velocity_bump/,/^}/p' "$PACK/hooks/lean_gate.sh")"
+VELOCITY_SRC="$(sed -n '/velocity_bump/,/^}/p' "$PACK/hooks/lib/shared_state.sh")"
 ACQUIRE_LINE="$(printf '%s\n' "$VELOCITY_SRC" | grep -n 'acquire_lock' | head -1 | cut -d: -f1)"
 GREP_LINE="$(printf '%s\n' "$VELOCITY_SRC" | grep -n 'grep -cxF' | head -1 | cut -d: -f1)"
 if [[ -n "$ACQUIRE_LINE" && -n "$GREP_LINE" && "$GREP_LINE" -gt "$ACQUIRE_LINE" ]]; then

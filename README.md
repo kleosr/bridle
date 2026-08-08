@@ -77,7 +77,7 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 │   ├── policy/                — intent.json + lean.json (wired only)
 │   └── hooks.json             — canonical hook registry
 ├── rules/             — always-on companions (.mdc)
-├── rules/                — paste capsule + option-c-core mirror
+├── rules/                — paste capsule + agent.mdc mirror
 ├── skills/                    — on-demand Cursor skills
 ├── config/                    — skills list + scan roots + retire lists
 ├── scripts/                   — doctor.sh, install.sh, sync.sh

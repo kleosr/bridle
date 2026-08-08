@@ -50,6 +50,13 @@ is_agent_mode() {
   [[ -z "$mode" || "$mode" == "agent" ]]
 }
 
+is_executable_src() {
+  case "$1" in
+    *.sh|*.bash|*.zsh|*.py|*.rb|*.pl|*.js|*.mjs|*.cjs|*.ts|*.tsx|*.go|*.rs|*.c|*.cpp|*.cc|*.h|*.hpp|*.java|*.kt|*.swift|*.scala|*.php|*.lua|*.r|*.jl|*.ex|*.exs) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 _LOCK_FD=""
 acquire_lock() {
   local lockfile="$(state_dir)/gate.lock"
