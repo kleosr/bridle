@@ -3,19 +3,26 @@ set -euo pipefail
 HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"
 resolve_root
+INPUT="$(cat)"
+CONV_ID="$(extract_conv_id "$INPUT")"
 STATE="$(state_dir)"
 ALLOWED="$STATE/allowed_files.md"
-INPUT="$(cat)"
 TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // .name // empty')"
 deny() {
   local msg="$1"
   jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
   exit 0
 }
-warn() {
+warn_allow() {
   local msg="$1"
-  jq -n --arg m "$msg" '{action:"warn", user_message:$m}'
+  jq -n --arg m "$msg" '{action:"allow", user_message:$m}'
   exit 0
+}
+is_executable_path() {
+  case "$1" in
+    *.sh|*.bash|*.zsh|*.py|*.rb|*.pl|*.js|*.mjs|*.cjs|*.ts|*.go|*.rs|*.c|*.cpp|*.cc|*.h|*.hpp|*.java|*.kt|*.swift|*.scala|*.php|*.lua|*.r|*.jl|*.ex|*.exs|*.ps1|*.bat|*.cmd|*.psm1) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 case "$TOOL_NAME" in
   Read|Grep|Glob|LS|BashOutput|WebFetch|WebSearch|TodoWrite|Task|TaskOutput) emit_quiet; exit 0 ;;
@@ -29,7 +36,7 @@ case "$TOOL_NAME" in
       if ! grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null && ! grep -qxF "$base" "$ALLOWED" 2>/dev/null; then
         mkdir -p "$STATE"
         grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null || echo "$FILE_PATH" >>"$ALLOWED"
-        warn "SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP — registered in the sandbox. Declare it in your INTENT (edit:$FILE_PATH) so stop_gate audits completion. Proceeding."
+        warn_allow "SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP — registered in the sandbox. Declare it in your INTENT (edit:$FILE_PATH) so stop_gate audits completion. Proceeding."
       fi
     fi
     NEW_CONTENT=""
@@ -38,9 +45,11 @@ case "$TOOL_NAME" in
       Edit|MultiEdit) NEW_CONTENT="$(echo "$INPUT" | jq -r '[.tool_input.new_string // "", (.tool_input.edits[]?.new_string // "")] | join("\n")' 2>/dev/null || true)" ;;
       StrReplace) NEW_CONTENT="$(echo "$INPUT" | jq -r '.tool_input.new_string // ""' 2>/dev/null || true)" ;;
     esac
-    DESTRUCTIVE_RE='(DROP TABLE|DELETE FROM .* WHERE 1=1|rm -rf /|password[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"]|API_KEY[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"]|secret[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"])'
-    if echo "$NEW_CONTENT" | grep -qiE "$DESTRUCTIVE_RE"; then
-      deny "AUTONOMY BLOCK: edit contains a destructive/credential pattern (drop/delete-all/secret write). Human approval required."
+    if is_executable_path "$FILE_PATH"; then
+      DESTRUCTIVE_RE='(DROP TABLE|DELETE FROM .* WHERE 1=1|rm -rf /|password[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"]|API_KEY[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"]|secret[[:space:]]*=[[:space:]]*["'"'"'"][^"'"'"'"]+["'"'"'"])'
+      if echo "$NEW_CONTENT" | grep -qiE "$DESTRUCTIVE_RE"; then
+        deny "AUTONOMY BLOCK: executable file edit contains a destructive/credential pattern (drop/delete-all/secret write). Human approval required."
+      fi
     fi
     emit_quiet; exit 0
     ;;

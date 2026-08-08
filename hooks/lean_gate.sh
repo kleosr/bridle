@@ -15,6 +15,7 @@ INPUT="$(cat)"
 TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // empty')"
 FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
 resolve_root
+CONV_ID="$(extract_conv_id "$INPUT")"
 STATE="$(state_dir)"
 VELOCITY_LOG="$STATE/edit_velocity.log"
 

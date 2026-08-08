@@ -3,10 +3,11 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 resolve_root
+INPUT="$(cat)"
+CONV_ID="$(extract_conv_id "$INPUT")"
 STATE="$(state_dir)"
 mkdir -p "$STATE"
 date +%s >"$STATE/session_ts"
-INPUT="$(cat)"
 MODE="$(echo "$INPUT" | jq -r '.composer_mode // empty' 2>/dev/null || true)"
 [[ -z "$MODE" ]] && MODE="agent"
 printf '%s\n' "$MODE" >"$STATE/mode"

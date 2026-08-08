@@ -35,7 +35,7 @@ run_test "pre_tool_use Cursor-only deny even with hook_event_name" "deny" "$RESU
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 echo 'src/db.ts' > "$PACK/state/allowed_files.md"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_scope_expansion.json" | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "allow"')"
-run_test "pre_tool_use warns on scope expansion (warn action)" "warn" "$RESULT"
+run_test "pre_tool_use scope expansion uses allow action (was warn)" "allow" "$RESULT"
 
 rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | test("CONSTRAINTS:")')"
@@ -53,7 +53,7 @@ else
 fi
 
 LOC_OK=1
-for f in "$PACK"/hooks/session_start.sh "$PACK"/hooks/before_submit_prompt.sh "$PACK"/hooks/stop_gate.sh "$PACK"/hooks/lean_gate.sh "$PACK"/hooks/pre_tool_use.sh; do
+for f in "$PACK"/hooks/session_start.sh "$PACK"/hooks/session_end.sh "$PACK"/hooks/before_submit_prompt.sh "$PACK"/hooks/stop_gate.sh "$PACK"/hooks/lean_gate.sh "$PACK"/hooks/pre_tool_use.sh "$PACK"/hooks/subagent_start.sh "$PACK"/hooks/subagent_stop.sh "$PACK"/hooks/after_shell.sh "$PACK"/hooks/before_read_file.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done
@@ -63,5 +63,15 @@ else
   echo "[fail] event hook exceeds 80 LOC: ${f#$PACK/} ($n)"; FAIL=$((FAIL + 1))
 fi
 
-RESULT="$(HERE="$PACK/hooks" bash -c 'source "$0/lib/common.sh" && resolve_root && type emit_allow >/dev/null && type emit_deny >/dev/null && type emit_followup >/dev/null && type acquire_lock >/dev/null && type is_agent_mode >/dev/null && echo "ok"' "$PACK/hooks" 2>/dev/null || echo "fail")"
-run_test "lib/common.sh functions available (incl. is_agent_mode)" "ok" "$RESULT"
+RESULT="$(HERE="$PACK/hooks" bash -c 'source "$0/lib/common.sh" && resolve_root && type emit_allow >/dev/null && type emit_deny >/dev/null && type emit_followup >/dev/null && type acquire_lock >/dev/null && type is_agent_mode >/dev/null && type extract_conv_id >/dev/null && type state_dir >/dev/null && echo "ok"' "$PACK/hooks" 2>/dev/null || echo "fail")"
+run_test "lib/common.sh functions available (incl. conv_id + state_dir)" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Write","tool_input":{"file_path":"docs/security.md","content":"# blocks rm -rf / literally\n"}}' | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "allow"' > /tmp/_exec_test_out 2>/dev/null || true
+RESULT="$(cat /tmp/_exec_test_out 2>/dev/null || echo allow)"
+run_test "pre_tool_use skips destructive scan for non-executable (.md)" "allow" "$RESULT"
+rm -f /tmp/_exec_test_out
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"evil.sh","content":"rm -rf /\n"}}' | bash "$PACK/hooks/pre_tool_use.sh" | jq -r '.action // "allow"')"
+run_test "pre_tool_use still scans executable files (.sh)" "deny" "$RESULT"
