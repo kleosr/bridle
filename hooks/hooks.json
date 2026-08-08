@@ -27,6 +27,37 @@
         "failClosed": false
       }
     ],
+    "sessionEnd": [
+      {
+        "command": "./hooks/session_end.sh",
+        "failClosed": false
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": "./hooks/subagent_start.sh",
+        "failClosed": false
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "./hooks/subagent_stop.sh",
+        "loop_limit": 3,
+        "failClosed": false
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "./hooks/after_shell.sh",
+        "failClosed": false
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "./hooks/before_read_file.sh",
+        "failClosed": false
+      }
+    ],
     "stop": [
       {
         "command": "./hooks/stop_gate.sh",

@@ -107,6 +107,9 @@ if [[ -n "$FILEMAP" ]]; then
 else
   : > "$STATE/allowed_files.md"
 fi
+printf 'agent\n' > "$STATE/mode"
+date +%s > "$STATE/session_ts"
+mkdir -p "$STATE"
 
 if [[ "$CLASS" == "CODE" ]]; then
   echo "  [PROPOSE] CODE task — requires human approval (pre_tool_use guards apply at runtime)."
