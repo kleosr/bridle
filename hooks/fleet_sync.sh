@@ -4,8 +4,8 @@ PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
-SHARED=(agent types testing debugging native-lean-autoload ponytail context-curator vernacular)
-GLOBAL=(native-lean-autoload ponytail agent context-curator vernacular testing)
+SHARED=(agent types testing debugging native-lean-autoload ponytail vernacular)
+GLOBAL=(native-lean-autoload ponytail agent vernacular testing)
 HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
 
 load_lines() {
@@ -106,7 +106,6 @@ install_home_hooks() {
 install_global_rules() {
   local name orphan
   mkdir -p "$HOME_C/rules"
-  cp -f "$PACK/rules/option-c-core.mdc" "$HOME_C/rules/option-c-core.mdc"
   for name in "${GLOBAL[@]}"; do
     cp -f "$PACK/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
     echo "[ok] ~/.cursor/rules/${name}.mdc"

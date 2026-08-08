@@ -7,3 +7,5 @@ docs.mdc
 compile.mdc
 types-v2.mdc
 prompt.mdc
+option-c-core.mdc
+context-curator.mdc
