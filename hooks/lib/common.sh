@@ -10,7 +10,20 @@ resolve_root() {
   ROOT="$(cd "$HERE/.." && pwd)"
 }
 
-state_dir() { printf '%s' "$ROOT/state"; }
+state_dir() {
+  if [[ -n "${CONV_ID:-}" && "${CONV_ID:-}" != "default" ]]; then
+    printf '%s/state/%s\n' "$ROOT" "$CONV_ID"
+  else
+    printf '%s/state\n' "$ROOT"
+  fi
+}
+
+extract_conv_id() {
+  local id
+  id="$(printf '%s' "$1" | jq -r '.conversation_id // .session_id // empty' 2>/dev/null || true)"
+  [[ -z "$id" || "$id" == "null" ]] && id="default"
+  printf '%s' "$id"
+}
 
 emit_allow() { echo '{"action":"allow"}'; }
 

@@ -1,1 +1,1 @@
-{"hook_event_name":"sessionStart","composer_mode":"agent","session_id":"test-session-1"}
+{"hook_event_name":"sessionStart","composer_mode":"agent","session_id":"agent-test","conversation_id":"agent-test"}

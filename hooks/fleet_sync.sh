@@ -6,7 +6,7 @@ FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
 SHARED=(agent types testing debugging native-lean-autoload ponytail context-curator vernacular)
 GLOBAL=(native-lean-autoload ponytail agent context-curator vernacular testing)
-HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh fleet_dispatch.sh)
+HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
 
 load_lines() {
   local f="$1" line
@@ -250,10 +250,15 @@ verify_smoke() {
   local skill bad=0
   chmod +x "$PACK"/hooks/*.sh
   bash -n "$PACK/hooks/session_start.sh"
+  bash -n "$PACK/hooks/session_end.sh"
   bash -n "$PACK/hooks/before_submit_prompt.sh"
   bash -n "$PACK/hooks/stop_gate.sh"
   bash -n "$PACK/hooks/lean_gate.sh"
   bash -n "$PACK/hooks/pre_tool_use.sh"
+  bash -n "$PACK/hooks/subagent_start.sh"
+  bash -n "$PACK/hooks/subagent_stop.sh"
+  bash -n "$PACK/hooks/after_shell.sh"
+  bash -n "$PACK/hooks/before_read_file.sh"
   bash -n "$PACK/hooks/fleet_dispatch.sh"
   bash -n "$PACK/hooks/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
