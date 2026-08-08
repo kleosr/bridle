@@ -11,6 +11,7 @@ CC_FUNC="$(jq -r '.func_complexity_max // 15' "$POLICY" 2>/dev/null || echo 15)"
 COUPLE_MAX="$(jq -r '.coupling_max // 10' "$POLICY" 2>/dev/null || echo 10)"
 NEST_MAX="$(jq -r '.nesting_max // 4' "$POLICY" 2>/dev/null || echo 4)"
 VMAX="$(jq -r '.edit_velocity_max // 15' "$POLICY" 2>/dev/null || echo 15)"
+COMMENT_MAX="$(jq -r '.comment_ratio_max // 25' "$POLICY" 2>/dev/null || echo 25)"
 INPUT="$(cat)"
 TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // empty')"
 FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
@@ -18,23 +19,6 @@ resolve_root
 CONV_ID="$(extract_conv_id "$INPUT")"
 STATE="$(state_dir)"
 VELOCITY_LOG="$STATE/edit_velocity.log"
-
-velocity_bump() {
-  local fp="$1" skip="${2:-0}"
-  mkdir -p "$STATE"
-  acquire_lock
-  local count
-  count="$(grep -cxF "$fp" "$VELOCITY_LOG" 2>/dev/null || echo 0)"
-  count="${count//[!0-9]}"
-  [[ -z "$count" ]] && count=0
-  echo "$fp" >>"$VELOCITY_LOG"
-  release_lock
-  [[ "$skip" -eq 1 ]] && return 0
-  if [[ "$count" -ge "$VMAX" ]]; then
-    jq -n --arg m "VELOCITY DENY: '${fp##*/}' edited ${count}x this session (roof ${VMAX}). Extract a module or refactor before retrying." '{action:"deny",user_message:$m}'
-    exit 0
-  fi
-}
 
 case "$TOOL_NAME" in
   Write|Edit|MultiEdit|StrReplace) ;;
@@ -73,6 +57,9 @@ fi
 
 velocity_bump "$FILE_PATH" "$REDUCE"
 
+if is_executable_src "$FILE_PATH"; then
+  comment_ratio_check "$CONTENT" "$COMMENT_MAX" || { log_session_event "DENY" "lean_gate: comments $FILE_PATH"; exit 0; }
+fi
 coupling_check "$CONTENT" "$COUPLE_MAX" || { log_session_event "DENY" "lean_gate: coupling $FILE_PATH"; exit 0; }
 nesting_check "$CONTENT" "$NEST_MAX" || { log_session_event "DENY" "lean_gate: nesting $FILE_PATH"; exit 0; }
 complexity_check "$CONTENT" "$CC_MAX" "$CC_FUNC" || { log_session_event "DENY" "lean_gate: complexity $FILE_PATH"; exit 0; }

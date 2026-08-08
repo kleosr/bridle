@@ -1,5 +1,6 @@
 {
   "max_intent_body_lines": 6,
   "max_named_anchors": 5,
-  "duty": "INTENT = chat prose before tools (never Shell/Write/fence). OBJECTIVE=postcondition; tag edit:path|NEW:path; Done-when ≤5 decidable predicates; finish every tag this turn; no drip; then Session+hot+HANDOFF."
+  "duty": "INTENT = chat prose before tools (never Shell/Write/fence). OBJECTIVE=postcondition; tag edit:path|NEW:path; Done-when ≤5 decidable predicates; finish every tag this turn; no drip; then Session+hot+HANDOFF.",
+  "ponytail_ladder": "PONYTAIL LADDER (stop at first rung that holds; skip a rung → justify in 1 line): 1.No-code 2.Reuse(Grep codebase) 3.Stdlib 4.Platform-native 5.Installed-dep 6.One-line 7.Minimum(<80 LOC/file). ANTI-BLOAT: no prose comments in app code — self-documenting names only, machine directives (shebang/pragma/license/build-guard) ok. Third real repetition → extract; before that, duplicate is cheaper. Prefer deletion over wrappers. No monorepo/Clean-Architecture theater."
 }
