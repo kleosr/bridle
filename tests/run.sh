@@ -35,6 +35,14 @@ echo "=== Plan-mode regression (hooks must not enforce or continue) ==="
 source "$PACK/tests/plan_mode.sh"
 
 echo ""
+echo "=== Conversation-scoped state (multitask isolation) ==="
+source "$PACK/tests/conversation_state.sh"
+
+echo ""
+echo "=== Subagent lifecycle + read/shell hooks ==="
+source "$PACK/tests/subagent.sh"
+
+echo ""
 echo "=== Regression tests (bug fixes) ==="
 source "$PACK/tests/regressions.sh"
 
