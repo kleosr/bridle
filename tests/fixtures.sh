@@ -23,6 +23,18 @@ if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtu
 RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
 run_test "lean_gate denies high complexity" "deny" "$RESULT"
 
+if OUT="$(set +eo pipefail; bash "$PACK/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_comments_high.json" 2>/dev/null)"; then :; fi
+RESULT="$(echo "$OUT" | jq -r '.action // "allow"')"
+run_test "lean_gate denies high comment ratio on executable source" "deny" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"docs/guide.md","content":"# Title\n\nThis is a long prose doc.\n\nMore prose here.\n"}}' | bash "$PACK/hooks/lean_gate.sh" | jq -r '.action // "allow"')"
+run_test "lean_gate skips comment gate on markdown docs" "allow" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/clean.ts","content":"export const authenticate = (token: string) => Boolean(token);\nexport const refresh = (token: string) => token;\n"}}' | bash "$PACK/hooks/lean_gate.sh" | jq -r '.action // "allow"')"
+run_test "lean_gate allows self-documenting source (low comment ratio)" "allow" "$RESULT"
+
 RESULT="$(echo '{"tool_name":"Read","tool_input":{"file_path":"x"}}' | bash "$PACK/hooks/pre_tool_use.sh" | jq -r 'if . == {} then "pass" else .action end')"
 run_test "pre_tool_use allows Read" "pass" "$RESULT"
 
@@ -40,6 +52,18 @@ run_test "pre_tool_use scope expansion uses allow action (was warn)" "allow" "$R
 rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | test("CONSTRAINTS:")')"
 run_test "before_submit reminds constraints on unbound task" "true" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_code_ponytail.json" | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | test("PONYTAIL LADDER")')"
+run_test "before_submit injects ponytail ladder on code route" "true" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"the form breaks on submit"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | test("PONYTAIL LADDER")')"
+run_test "before_submit injects ponytail even with no code keywords (always-code routing)" "true" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"the form breaks on submit"}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.additionalContext | test("ROUTE_CLASSIFY: code")')"
+run_test "before_submit always routes to code (no regex false negatives)" "true" "$RESULT"
 
 rm -rf "$PACK/state"
 echo '{"tool_name":"Write","tool_input":{"file_path":"x.ts","content":"const a=1;\n"}}' | bash "$PACK/hooks/lean_gate.sh" >/dev/null 2>&1 || true

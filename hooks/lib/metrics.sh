@@ -60,3 +60,22 @@ nesting_check() {
   fi
   return 0
 }
+
+comment_ratio_check() {
+  local content="$1" max_pct="$2"
+  [[ "$max_pct" -le 0 ]] && return 0
+  local total comment_lines code_lines pct
+  total="$(printf '%s\ns' "$content" | grep -cE '[[:alnum:]]' || true)"
+  total="${total//[!0-9]}"; [[ -z "$total" ]] && total=0
+  [[ "$total" -lt 8 ]] && return 0
+  comment_lines="$(printf '%s\ns' "$content" | grep -cE '^[[:space:]]*(//|/\*|\*|#|<!--|--)' || true)"
+  comment_lines="${comment_lines//[!0-9]}"; [[ -z "$comment_lines" ]] && comment_lines=0
+  code_lines=$(( total - comment_lines ))
+  [[ "$code_lines" -le 0 ]] && return 0
+  pct=$(( (comment_lines * 100) / total ))
+  if [[ "$pct" -gt "$max_pct" ]]; then
+    emit_deny "COMMENT DENY: prose-comment ratio ~${pct}% > ${max_pct}% roof (${comment_lines} comment lines / ${total} meaningful). Code must be self-documenting — drop narration; keep only machine directives (shebangs, pragmas, license headers, build guards)."
+    return 1
+  fi
+  return 0
+}

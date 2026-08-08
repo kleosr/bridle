@@ -4,5 +4,6 @@
   "func_complexity_max": 15,
   "coupling_max": 10,
   "nesting_max": 4,
-  "edit_velocity_max": 15
+  "edit_velocity_max": 15,
+  "comment_ratio_max": 25
 }
