@@ -17,7 +17,7 @@ jobs:
       - name: Tests
         run: bash tests/run.sh
       - name: Fleet install + verify
-        run: FORCE=1 bash MacOS/hooks/fleet_sync.sh all
+        run: FORCE=1 bash shared/hooks/fleet_sync.sh all
 
   gauntlet-macos:
     runs-on: macos-latest
@@ -30,4 +30,4 @@ jobs:
       - name: Tests (stock macOS bash + BSD userland)
         run: /bin/bash tests/run.sh
       - name: Fleet install + verify
-        run: FORCE=1 /bin/bash MacOS/hooks/fleet_sync.sh all
+        run: FORCE=1 /bin/bash shared/hooks/fleet_sync.sh all

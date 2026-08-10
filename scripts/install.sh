@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
-exec bash "$PACK/MacOS/hooks/fleet_sync.sh" install
+exec bash "$PACK/shared/hooks/fleet_sync.sh" install

@@ -22,7 +22,7 @@ Context: V2 harness — Bash hooks + local HANDOFF brain. No Rust kleos-gate. No
 
 ### Architecture (V18 refactor)
 
-Event hook entrypoints are **thin wrappers** (≤80 LOC) that source core logic from `MacOS/hooks/lib/`:
+Event hook entrypoints are **thin wrappers** (≤80 LOC) that source core logic from `shared/hooks/lib/`:
 
 | Wrapper | Lib | LOC (wrapper) |
 |---------|-----|---------------|
@@ -44,14 +44,16 @@ The prior ADR preferred a typed Rust binary. V2 rejects that pack: install entro
 
 | File | Consumer |
 |------|----------|
-| `MacOS/hooks/policy/intent.json` | `before_submit_prompt.sh`, `stop_gate.sh` |
-| `MacOS/hooks/policy/lean.json` | `lean_gate.sh` |
+| `shared/hooks/policy/intent.json` | `before_submit_prompt.sh`, `stop_gate.sh` |
+| `shared/hooks/policy/lean.json` | `lean_gate.sh` |
 
 No orphan ask/deny JSON from the retired gate. Secrets stay out of paste, hooks, and chat.
 
 ## Hook config (canonical)
 
-Single source: `MacOS/hooks/hooks.json`. `fleet_sync.sh` generates per-repo `.cursor/hooks.json` and `~/.cursor/hooks.json` from it (path rewriting only).
+Single source: `shared/hooks/hooks.json`. `fleet_sync.sh` generates the global `~/.cursor/hooks.json` from it (path rewriting only); `Windows/install.ps1` generates the Windows equivalent with PowerShell→WSL shim commands.
+
+**2026-08-10 — single registration layer, GLOBAL.** Registration lives only in `~/.cursor/hooks.json`; per-repo `.cursor/hooks.json` is actively removed on sync. Cursor fires user-level AND repo-level hooks when both exist, so every `beforeSubmitPrompt`/`sessionStart` injection arrived twice per prompt and both copies persisted in the transcript — the incremental token burn (measured 2× DEBERES). Global chosen over repo-level because hooks spawn with cwd = workspace root: `resolve_root` keeps HANDOFF/state per-project without any per-repo files, and coverage extends to every Cursor window, not just fleet repos. Guarded by `doctor.sh` (global registration present + no repo-level hooks) and `fleet_sync.sh verify`.
 
 ### preToolUse matcher overlap (intentional)
 

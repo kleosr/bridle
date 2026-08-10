@@ -12,4 +12,4 @@
 
 ## Retired skills
 
-Retired skill names are kept absent by `config/retired-skills.txt` (fleet_sync removes them on install). No archived directory — retired means gone.
+Retired skill names are kept absent by `shared/config/retired-skills.txt` (fleet_sync removes them on install). No archived directory — retired means gone.

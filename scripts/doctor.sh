@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
-HOOKS_DIR="$PACK/MacOS/hooks"
+HOOKS_DIR="$PACK/shared/hooks"
 FAIL=0
 
 ok() { echo "[ok] $1"; }
@@ -17,14 +17,14 @@ else fail "jq not found — required for JSON parsing in hooks (brew install jq)
 if command -v shellcheck >/dev/null 2>&1; then ok "shellcheck available"
 else echo "[warn] shellcheck not found (optional, recommended for CI)"; fi
 
-for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/MacOS/install.sh; do
+for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/MacOS/install.sh "$PACK"/Linux/install.sh; do
   [[ -f "$f" ]] || continue
   if [[ -x "$f" ]]; then ok "executable: ${f#$PACK/}"
   else fail "not executable: ${f#$PACK/}"; fi
 done
 
-if jq empty "$HOOKS_DIR/hooks.json" 2>/dev/null; then ok "hooks/hooks.json valid JSON"
-else fail "hooks/hooks.json invalid JSON"; fi
+if jq empty "$HOOKS_DIR/hooks.json" 2>/dev/null; then ok "shared/hooks/hooks.json valid JSON"
+else fail "shared/hooks/hooks.json invalid JSON"; fi
 
 if jq -e '.complexity_max and .func_complexity_max and .coupling_max and .nesting_max' "$HOOKS_DIR/policy/lean.json" >/dev/null 2>&1; then ok "lean.json has complexity/coupling/nesting thresholds"
 else fail "lean.json missing new metric thresholds"; fi
@@ -60,7 +60,7 @@ for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HO
   else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
 done
 
-for d in MacOS/hooks MacOS/hooks/lib MacOS/hooks/policy rules skills config docs scripts tests; do
+for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/config MacOS Linux Windows docs scripts tests; do
   if [[ -d "$PACK/$d" ]]; then ok "dir exists: $d/"
   else fail "missing dir: $d/"; fi
 done
@@ -76,6 +76,14 @@ done < <(jq -r '.hooks | to_entries[] | .value[]? | .command // empty' "$HOOKS_D
 if grep -q '^state/' "$PACK/.gitignore" && grep -q '\.cursor/' "$PACK/.gitignore"; then ok ".gitignore covers state/ and .cursor/"
 else fail ".gitignore missing state/ or .cursor/ coverage"; fi
 
+if grep -q 'hooks/before_submit_prompt.sh' "$HOME/.cursor/hooks.json" 2>/dev/null; then
+  ok "global hook registration (~/.cursor single layer)"
+else fail "~/.cursor/hooks.json missing beforeSubmitPrompt (run: bash shared/hooks/fleet_sync.sh install)"; fi
+
+if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
+  fail "pack has repo-level hooks — double injection (run: bash shared/hooks/fleet_sync.sh sync)"
+else ok "no repo-level hooks in pack (no double injection)"; fi
+
 if ! grep -RqiE 'CallMcpTool|user-obsidian' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
 else fail "MCP core dependency found in hooks (should be optional, not core)"; fi
 
@@ -87,10 +95,10 @@ for wrapper in stop_gate pre_tool_use; do
   else fail "wrapper missing source: ${wrapper}.sh"; fi
 done
 
-if [[ ! -f "$PACK/rules/lean-code.mdc" && ! -d "$PACK/skills/lean-code" ]]; then ok "no lean-code duplicate"
+if [[ ! -f "$PACK/shared/rules/lean-code.mdc" && ! -d "$PACK/shared/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi
 
-if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/config/skills.txt" "$PACK/skills/AGENTS.md" "$PACK/rules/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
+if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/shared/config/skills.txt" "$PACK/shared/skills/AGENTS.md" "$PACK/shared/rules/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
 else fail "Stale reference to deleted skill found in config files"; fi
 
 echo ""

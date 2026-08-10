@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/../.." && pwd)"
-HOOKS_DIR="$PACK/MacOS/hooks"
+HOOKS_DIR="$PACK/shared/hooks"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
@@ -29,7 +29,7 @@ is_ignored() {
     [[ "$path" == *"/$pat/"* ]] && return 0
     [[ "$path" == */"$pat" ]] && return 0
     [[ "$path" == "$pat"* ]] && return 0
-  done < <(load_lines "$PACK/config/scan.ignore")
+  done < <(load_lines "$PACK/shared/config/scan.ignore")
   return 1
 }
 
@@ -42,7 +42,7 @@ is_project() {
 
 discover() {
   local roots=() root child
-  while IFS= read -r line; do roots+=("$line"); done < <(load_lines "$PACK/config/scan.roots")
+  while IFS= read -r line; do roots+=("$line"); done < <(load_lines "$PACK/shared/config/scan.roots")
   if [[ ${#roots[@]} -eq 0 ]]; then
     roots=("$(dirname "$PACK")")
   fi
@@ -89,13 +89,14 @@ copy_hook_scripts() {
 }
 
 write_home_hooks_json() {
-  jq '.hooks.preToolUse[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
-    | .hooks.beforeSubmitPrompt[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
-    | .hooks.sessionStart[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
-    | .hooks.stop[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")' \
+  jq '(.hooks[]?[]?.command) |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")' \
     "$HOOKS_DIR/hooks.json" >"$HOME_C/hooks.json"
 }
 
+# Single registration layer: global ~/.cursor/hooks.json only.
+# A repo-level .cursor/hooks.json fires ALONGSIDE the global one (double injection
+# per prompt — measured 2× DEBERES 2026-08-10). Hooks spawn with cwd = workspace
+# root, so resolve_root keeps HANDOFF/state per-project under the global layer.
 install_home_hooks() {
   mkdir -p "$HOME_C/hooks/policy" "$HOME_C/state"
   copy_hook_scripts "$HOME_C/hooks"
@@ -104,14 +105,14 @@ install_home_hooks() {
   done
   rm -rf "$HOME_C/hooks/bin" "$HOME_C/hooks/__pycache__"
   write_home_hooks_json
-  echo "[ok] ~/.cursor/hooks.json + hooks scripts"
+  echo "[ok] ~/.cursor/hooks.json + hooks scripts (global single layer)"
 }
 
 install_global_rules() {
   local name orphan
   mkdir -p "$HOME_C/rules"
   for name in "${GLOBAL[@]}"; do
-    cp -f "$PACK/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
+    cp -f "$PACK/shared/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
     echo "[ok] ~/.cursor/rules/${name}.mdc"
   done
   while IFS= read -r orphan; do
@@ -120,7 +121,7 @@ install_global_rules() {
       rm -f "$HOME_C/rules/$orphan"
       echo "[rm] ~/.cursor/rules/$orphan"
     fi
-  done < <(load_lines "$PACK/config/retired.txt")
+  done < <(load_lines "$PACK/shared/config/retired.txt")
 }
 
 install_skills() {
@@ -128,7 +129,7 @@ install_skills() {
   mkdir -p "$HOME_C/skills"
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
-    src="$PACK/skills/$skill"
+    src="$PACK/shared/skills/$skill"
     [[ -f "$src/SKILL.md" ]] || { echo "[fail] missing $src/SKILL.md"; return 1; }
     dst="$HOME_C/skills/$skill"
     if [[ -e "$dst" && ! -L "$dst" ]]; then
@@ -142,7 +143,7 @@ install_skills() {
     fi
     symlink_force "$src" "$dst"
     echo "[ok] skill $skill"
-  done < <(load_lines "$PACK/config/skills.txt")
+  done < <(load_lines "$PACK/shared/config/skills.txt")
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
     dst="$HOME_C/skills/$skill"
@@ -150,7 +151,7 @@ install_skills() {
       rm -f "$dst"
       echo "[rm] retired skill $skill"
     fi
-  done < <(load_lines "$PACK/config/retired-skills.txt")
+  done < <(load_lines "$PACK/shared/config/retired-skills.txt")
   return 0
 }
 
@@ -158,8 +159,8 @@ link_pack_rules() {
   local dest="$PACK/.cursor/rules" name orphan
   mkdir -p "$dest"
   for name in "${SHARED[@]}"; do
-    [[ -f "$PACK/rules/${name}.mdc" ]] || continue
-    symlink_force "../../rules/${name}.mdc" "$dest/${name}.mdc"
+    [[ -f "$PACK/shared/rules/${name}.mdc" ]] || continue
+    symlink_force "../../shared/rules/${name}.mdc" "$dest/${name}.mdc"
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
@@ -167,17 +168,8 @@ link_pack_rules() {
       rm -f "$dest/$orphan"
       echo "[rm] pack/$orphan"
     fi
-  done < <(load_lines "$PACK/config/retired.txt")
-  echo "[ok] pack .cursor/rules → rules"
-}
-
-write_repo_hooks_json() {
-  local out="$1"
-  jq '.hooks.preToolUse[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
-    | .hooks.beforeSubmitPrompt[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
-    | .hooks.sessionStart[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
-    | .hooks.stop[].command |= sub("^\\./hooks/"; ".cursor/hooks/")' \
-    "$HOOKS_DIR/hooks.json" >"$out"
+  done < <(load_lines "$PACK/shared/config/retired.txt")
+  echo "[ok] pack .cursor/rules → shared/rules"
 }
 
 gitignore_state() {
@@ -187,16 +179,13 @@ gitignore_state() {
 }
 
 sync_repo_hooks() {
-  local repo="$1" label="$2" dest orphan
-  dest="$repo/.cursor/hooks"
-  copy_hook_scripts "$dest"
-  for orphan in ask-gated-shell.sh block-dangerous-git.sh deny-danger.sh install-user-hooks.sh; do
-    rm -f "$dest/$orphan"
-  done
-  rm -rf "$dest/bin" "$dest/__pycache__"
-  write_repo_hooks_json "$repo/.cursor/hooks.json"
+  local repo="$1" label="$2"
+  if [[ -e "$repo/.cursor/hooks.json" || -d "$repo/.cursor/hooks" ]]; then
+    rm -f "$repo/.cursor/hooks.json"
+    rm -rf "$repo/.cursor/hooks"
+    echo "[rm] repo-level hooks → $label (global ~/.cursor layer owns registration)"
+  fi
   gitignore_state "$repo"
-  echo "[ok] hooks → $label"
 }
 
 sync_repo_rules() {
@@ -204,9 +193,9 @@ sync_repo_rules() {
   dest="$repo/.cursor/rules"
   mkdir -p "$dest"
   for name in "${SHARED[@]}"; do
-    [[ -f "$PACK/rules/${name}.mdc" ]] || continue
+    [[ -f "$PACK/shared/rules/${name}.mdc" ]] || continue
     rm -f "$dest/${name}.mdc"
-    cp -f "$PACK/rules/${name}.mdc" "$dest/${name}.mdc"
+    cp -f "$PACK/shared/rules/${name}.mdc" "$dest/${name}.mdc"
   done
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
@@ -214,7 +203,7 @@ sync_repo_rules() {
       rm -f "$dest/$orphan"
       echo "[rm] $label/$orphan"
     fi
-  done < <(load_lines "$PACK/config/retired.txt")
+  done < <(load_lines "$PACK/shared/config/retired.txt")
   echo "[ok] rules → $label"
 }
 
@@ -261,13 +250,18 @@ verify_smoke() {
     [[ -z "$skill" ]] && continue
     if [[ ! -L "$HOME_C/skills/$skill" ]]; then
       echo "[fail] skill not symlink: $skill"; bad=1
-    elif [[ "$(canon "$HOME_C/skills/$skill")" != "$(canon "$PACK/skills/$skill")" ]]; then
+    elif [[ "$(canon "$HOME_C/skills/$skill")" != "$(canon "$PACK/shared/skills/$skill")" ]]; then
       echo "[fail] skill wrong target: $skill -> $(readlink "$HOME_C/skills/$skill")"; bad=1
     fi
-  done < <(load_lines "$PACK/config/skills.txt")
-  [[ -f "$HOME_C/hooks.json" ]] || { echo "[fail] missing ~/.cursor/hooks.json"; bad=1; }
-  if grep -q 'kleos-gate' "$HOME_C/hooks.json"; then
+  done < <(load_lines "$PACK/shared/config/skills.txt")
+  if ! grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json" 2>/dev/null; then
+    echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1
+  fi
+  if grep -q 'kleos-gate' "$HOME_C/hooks.json" 2>/dev/null; then
     echo "[fail] home hooks still kleos-gate"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
+    echo "[fail] pack has repo-level hooks (double injection risk)"; bad=1
   fi
   [[ "$bad" -eq 0 ]] || return 1
   echo "[ok] verify smoke"
@@ -292,7 +286,7 @@ case "$CMD" in
     sync_fleet
     verify_smoke
     echo "[done] fleet_sync all FORCE=$FORCE"
-    echo "Manual: paste $PACK/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
+    echo "Manual: paste $PACK/shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
     ;;
   *)
     echo "usage: FORCE=1 $0 {install|sync|verify|all}" >&2

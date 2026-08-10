@@ -8,7 +8,7 @@ description: >
 
 # Vernacular (fat skill)
 
-Thin roof: `rules/vernacular.mdc` (hard bans). This file = procedure + examples.
+Thin roof: `shared/rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 
 ## Load order
 1. Read `.cursor/rules/vernacular.mdc` (or VERNACULAR.md).
@@ -24,7 +24,7 @@ Thin roof: `rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 - Async: async/await or chains; no try/catch that only logs.
 - Exports: named only.
 
-## Bash hooks (`MacOS/hooks/*.sh`)
+## Bash hooks (`shared/hooks/*.sh`)
 Cursor-only output. Template:
 
     #!/bin/bash

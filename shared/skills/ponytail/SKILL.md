@@ -8,7 +8,7 @@ description: >
 
 # Ponytail (fat skill)
 
-Thin roof: `rules/ponytail.mdc` (ladder + skill pointer + deny one-liner).
+Thin roof: `shared/rules/ponytail.mdc` (ladder + skill pointer + deny one-liner).
 This file = decision trees and edge cases.
 
 ## Ladder detail
@@ -20,7 +20,7 @@ Stop at first rung that holds after reading the ask + touched code:
 5. Already-installed dependency (no new package without Soft Rule why).
 6. One clear line.
 7. Minimum — shortest correct private-native diff. Prefer files under soft 80 LOC;
-   hard roof `MacOS/hooks/lean_gate.sh` denies writes/edits whose projected post-edit size exceeds 700 LOC.
+   hard roof `shared/hooks/lean_gate.sh` denies writes/edits whose projected post-edit size exceeds 700 LOC.
 
 Soft Rule: skipping a rung needs one chat line naming why lower rungs fail.
 
