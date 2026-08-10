@@ -57,15 +57,28 @@ is_executable_src() {
   esac
 }
 
-_LOCK_FD=""
+if stat -f %m / >/dev/null 2>&1; then
+  file_mtime() { stat -f %m "$1" 2>/dev/null; }
+else
+  file_mtime() { stat -c %Y "$1" 2>/dev/null; }
+fi
+
+# flock(1) is util-linux only; mkdir is the portable atomic lock primitive.
+_LOCK_DIR=""
 acquire_lock() {
-  local lockfile="$(state_dir)/gate.lock"
+  local lockdir; lockdir="$(state_dir)/gate.lock.d"
   mkdir -p "$(state_dir)"
-  exec 200>"$lockfile"
-  _LOCK_FD=200
-  flock -n 200 || { emit_deny "State busy (parallel hook collision), retry."; exit 0; }
+  local tries=0 age
+  until mkdir "$lockdir" 2>/dev/null; do
+    tries=$((tries + 1))
+    age=$(( $(date +%s) - $(file_mtime "$lockdir" || echo 0) ))
+    [[ "$age" -gt 10 ]] && { rmdir "$lockdir" 2>/dev/null || true; continue; }
+    [[ "$tries" -ge 20 ]] && { emit_deny "State busy (parallel hook collision), retry."; exit 0; }
+    sleep 0.05
+  done
+  _LOCK_DIR="$lockdir"
 }
 
 release_lock() {
-  [[ -n "$_LOCK_FD" ]] && flock -u "$_LOCK_FD" 2>/dev/null || true
+  [[ -n "$_LOCK_DIR" ]] && rmdir "$_LOCK_DIR" 2>/dev/null || true
 }
