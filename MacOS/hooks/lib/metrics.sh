@@ -18,7 +18,12 @@ complexity_check() {
     emit_deny "COMPLEXITY DENY: file cyclomatic complexity ~${cc} > ${max_file} roof (decision points: ${points}). Extract functions to reduce decision paths."
     return 1
   fi
-  local hot; hot="$(printf '%s' "$code" | awk '{ n=gsub(/\<(if|for|while|switch|case|catch|elif)\>/,"&"); if (n>=4) c++ } END{print c+0}')"
+  local hot; hot="$(printf '%s' "$code" | awk '{
+    n = split($0, tok, /[^A-Za-z0-9_]+/)
+    hits = 0
+    for (i = 1; i <= n; i++) if (tok[i] ~ /^(if|for|while|switch|case|catch|elif)$/) hits++
+    if (hits >= 4) c++
+  } END { print c + 0 }')"
   if [[ "${hot:-0}" -gt 0 && "$max_func" -gt 0 ]]; then
     emit_deny "COMPLEXITY DENY: a line packs 4+ branching keywords (exceeds func roof ${max_func}). Split the condition or extract a helper."
     return 1

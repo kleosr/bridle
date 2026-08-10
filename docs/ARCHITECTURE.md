@@ -22,7 +22,7 @@ Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. Bash
 
 ## Runtime map
 
-- **Muscles:** Bash scripts under `/hooks` (event hooks max 80 LOC each; fail-closed where registered). Core logic in `/hooks/lib/`.
-- **Policy (wired only):** `hooks/policy/intent.json` + `hooks/policy/lean.json`.
+- **Muscles:** Bash scripts under `/MacOS/hooks` (event hooks max 80 LOC each; fail-closed where registered; macOS + Linux userland). Core logic in `/MacOS/hooks/lib/`.
+- **Policy (wired only):** `MacOS/hooks/policy/intent.json` + `MacOS/hooks/policy/lean.json`.
 - **Brain:** `HANDOFF.md` (local, always works).
 - **State:** Ephemeral files in `/state/` (gitignored). Cleared each run.
