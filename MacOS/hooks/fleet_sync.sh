@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-PACK="$(cd "$(dirname "$0")/.." && pwd)"
+PACK="$(cd "$(dirname "$0")/../.." && pwd)"
+HOOKS_DIR="$PACK/MacOS/hooks"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
@@ -41,21 +42,21 @@ is_project() {
 
 discover() {
   local roots=() root child
-  mapfile -t roots < <(load_lines "$PACK/config/scan.roots")
+  while IFS= read -r line; do roots+=("$line"); done < <(load_lines "$PACK/config/scan.roots")
   if [[ ${#roots[@]} -eq 0 ]]; then
     roots=("$(dirname "$PACK")")
   fi
   for root in "${roots[@]}"; do
     [[ -d "$root" ]] || continue
     if is_project "$root" && ! is_ignored "$root"; then
-      realpath "$root"
+      canon "$root"
     fi
     for child in "$root"/*/; do
       [[ -d "$child" ]] || continue
       child="${child%/}"
       is_ignored "$child" && continue
       is_project "$child" || continue
-      realpath "$child"
+      canon "$child"
     done
   done | sort -u
 }
@@ -66,19 +67,22 @@ symlink_force() {
   ln -sfn "$src" "$dst"
 }
 
+# realpath(1)/readlink -f are not on older macOS; pwd -P resolves symlinks portably.
+canon() { (cd "$1" 2>/dev/null && pwd -P) || printf '%s\n' "$1"; }
+
 copy_hook_scripts() {
   local dest="$1" s p
   mkdir -p "$dest/policy" "$dest/lib"
   for s in "${HOOK_SCRIPTS[@]}"; do
-    cp -f "$PACK/hooks/$s" "$dest/$s"
+    cp -f "$HOOKS_DIR/$s" "$dest/$s"
     chmod +x "$dest/$s"
   done
-  for s in "$PACK"/hooks/lib/*.sh; do
+  for s in "$HOOKS_DIR"/lib/*.sh; do
     [[ -f "$s" ]] || continue
     cp -f "$s" "$dest/lib/$(basename "$s")"
     chmod +x "$dest/lib/$(basename "$s")"
   done
-  for p in "$PACK"/hooks/policy/*.json; do
+  for p in "$HOOKS_DIR"/policy/*.json; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
   done
@@ -89,7 +93,7 @@ write_home_hooks_json() {
     | .hooks.beforeSubmitPrompt[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
     | .hooks.sessionStart[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")
     | .hooks.stop[].command |= sub("^\\./hooks/"; "bash '"${HOME_C}"'/hooks/")' \
-    "$PACK/hooks/hooks.json" >"$HOME_C/hooks.json"
+    "$HOOKS_DIR/hooks.json" >"$HOME_C/hooks.json"
 }
 
 install_home_hooks() {
@@ -173,7 +177,7 @@ write_repo_hooks_json() {
     | .hooks.beforeSubmitPrompt[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
     | .hooks.sessionStart[].command |= sub("^\\./hooks/"; ".cursor/hooks/")
     | .hooks.stop[].command |= sub("^\\./hooks/"; ".cursor/hooks/")' \
-    "$PACK/hooks/hooks.json" >"$out"
+    "$HOOKS_DIR/hooks.json" >"$out"
 }
 
 gitignore_state() {
@@ -215,13 +219,13 @@ sync_repo_rules() {
 }
 
 sync_fleet() {
-  local pack_c repos repo label
-  pack_c="$(realpath "$PACK")"
-  mapfile -t repos < <(discover)
+  local pack_c repos=() repo label line
+  pack_c="$(canon "$PACK")"
+  while IFS= read -r line; do repos+=("$line"); done < <(discover)
   echo "[scan] ${#repos[@]} project(s)"
   link_pack_rules
   sync_repo_hooks "$PACK" "pack"
-  for repo in "${repos[@]}"; do
+  for repo in ${repos[@]+"${repos[@]}"}; do
     [[ "$repo" == "$pack_c" ]] && continue
     label="$(basename "$repo")"
     sync_repo_rules "$repo" "$label"
@@ -237,7 +241,7 @@ verify_stop_gate() {
   echo "2" >"$st/outcomes.md"
   rm -f "$st/allowed_files.md" "$st/session_ts"
   echo '{"status":"completed","transcript":[{"role":"user","content":"fix the bug and wire the api"},{"role":"assistant","content":"INTENT: fix bug, tag edit:x\nDone-when:\n- compiles\nDone-when: met"}]}' \
-    | bash "$PACK/hooks/lib/stop_gate_core.sh" 2>/dev/null \
+    | bash "$HOOKS_DIR/lib/stop_gate_core.sh" 2>/dev/null \
     | grep -q 'UNDER-SCOPE' || { echo "[fail] stop_gate accepts under-scoped Done-when (2 outcomes, 1 predicate)"; rc=1; }
   rm -rf "$st"
   cp -a "$snap/." "$st/" 2>/dev/null || rm -rf "$st"
@@ -247,27 +251,17 @@ verify_stop_gate() {
 
 verify_smoke() {
   local skill bad=0
-  chmod +x "$PACK"/hooks/*.sh
-  bash -n "$PACK/hooks/session_start.sh"
-  bash -n "$PACK/hooks/session_end.sh"
-  bash -n "$PACK/hooks/before_submit_prompt.sh"
-  bash -n "$PACK/hooks/stop_gate.sh"
-  bash -n "$PACK/hooks/lean_gate.sh"
-  bash -n "$PACK/hooks/pre_tool_use.sh"
-  bash -n "$PACK/hooks/subagent_start.sh"
-  bash -n "$PACK/hooks/subagent_stop.sh"
-  bash -n "$PACK/hooks/after_shell.sh"
-  bash -n "$PACK/hooks/before_read_file.sh"
-  bash -n "$PACK/hooks/fleet_dispatch.sh"
-  bash -n "$PACK/hooks/fleet_sync.sh"
+  chmod +x "$HOOKS_DIR"/*.sh
+  for s in "${HOOK_SCRIPTS[@]}"; do bash -n "$HOOKS_DIR/$s"; done
+  bash -n "$HOOKS_DIR/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
-    | bash "$PACK/hooks/before_submit_prompt.sh" | jq -e '.additionalContext' >/dev/null
+    | bash "$HOOKS_DIR/before_submit_prompt.sh" | jq -e '.additionalContext' >/dev/null
   verify_stop_gate || bad=1
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
     if [[ ! -L "$HOME_C/skills/$skill" ]]; then
       echo "[fail] skill not symlink: $skill"; bad=1
-    elif [[ "$(readlink -f "$HOME_C/skills/$skill")" != "$(realpath "$PACK/skills/$skill")" ]]; then
+    elif [[ "$(canon "$HOME_C/skills/$skill")" != "$(canon "$PACK/skills/$skill")" ]]; then
       echo "[fail] skill wrong target: $skill -> $(readlink "$HOME_C/skills/$skill")"; bad=1
     fi
   done < <(load_lines "$PACK/config/skills.txt")

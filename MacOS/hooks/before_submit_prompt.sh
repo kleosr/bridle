@@ -19,7 +19,9 @@ ROUTE="code"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 echo "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
-PROMPT_NORM="$(printf '%s' "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null || printf '%s' "$PROMPT")"
+# BSD iconv transliterates but exits 1 and marks approximations ('e ~n); strip the markers.
+PROMPT_NORM="$(printf '%s' "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null | tr -d "'\`~^" || true)"
+[[ -z "$PROMPT_NORM" ]] && PROMPT_NORM="$PROMPT"
 OUTCOMES=$(printf '%s' "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l || true)
 OUTCOMES="${OUTCOMES//[!0-9]}"
 [[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1

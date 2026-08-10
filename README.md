@@ -21,18 +21,28 @@
 
 ---
 
-Platform: **Linux or WSL**. Requires `bash` (v4+) and `jq`. No Rust. No Cargo. No Python pack tooling. No MCP dependency for core operation.
+Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported) and **Linux**. Requires `bash` (v3.2+) and `jq` (`brew install jq`). No Rust. No Cargo. No Python pack tooling. No MCP dependency for core operation. macOS hooks live in [`MacOS/hooks/`](MacOS/hooks/).
 
 How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. Hooks inject context at start and audit completion. No Obsidian/vault — `HANDOFF.md` is the only memory.
 
 ## Setup
 
+macOS — one command (preflights `jq`, fixes permissions, installs hooks + rules + skills, syncs fleet, verifies):
+
 ```bash
 git clone https://github.com/kleosr/kleosrules.git
 cd kleosrules
-chmod +x hooks/*.sh hooks/lib/*.sh scripts/*.sh
+bash MacOS/install.sh
+```
+
+Only prerequisite: `jq` (`brew install jq`). Stock macOS bash 3.2 is fully supported — no coreutils, no brew bash.
+
+Manual equivalent (also the Linux path):
+
+```bash
+chmod +x MacOS/hooks/*.sh MacOS/hooks/lib/*.sh scripts/*.sh
 bash scripts/doctor.sh        # verify environment
-FORCE=1 bash hooks/fleet_sync.sh all
+FORCE=1 bash MacOS/hooks/fleet_sync.sh all
 ```
 
 Paste `rules/USER-RULES.paste.txt` into Cursor → Settings → Rules → User Rules, start a **new** agent chat, and confirm Hooks loaded the Bash scripts.
@@ -41,11 +51,11 @@ Paste `rules/USER-RULES.paste.txt` into Cursor → Settings → Rules → User R
 
 ```bash
 # Install / refresh ~/.cursor hooks, rules, skills + fleet projects
-FORCE=1 bash hooks/fleet_sync.sh all
+FORCE=1 bash MacOS/hooks/fleet_sync.sh all
 
 # Sync only / verify only
-FORCE=1 bash hooks/fleet_sync.sh sync
-FORCE=1 bash hooks/fleet_sync.sh verify
+FORCE=1 bash MacOS/hooks/fleet_sync.sh sync
+FORCE=1 bash MacOS/hooks/fleet_sync.sh verify
 
 # Doctor (environment + repo health check)
 bash scripts/doctor.sh
@@ -62,22 +72,23 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 
 ```
 .
-├── hooks/
-│   ├── session_start.sh      — inject HANDOFF tail + duties
-│   ├── before_submit_prompt.sh — route classify + INTENT duty
-│   ├── stop_gate.sh           — audit INTENT / Done-when (thin wrapper)
-│   ├── lean_gate.sh           — ponytail roof + entropy + velocity (preToolUse)
-│   ├── pre_tool_use.sh        — selective autonomy gate (thin wrapper)
-│   ├── fleet_sync.sh          — install + fleet sync + verify
-│   ├── fleet_dispatch.sh      — backlog dispatcher
-│   ├── lib/
-│   │   ├── common.sh          — shared utilities (root, deny, allow, follow)
-│   │   ├── stop_gate_core.sh  — stop gate logic
-│   │   └── pre_tool_use_core.sh — autonomy gate logic
-│   ├── policy/                — intent.json + lean.json (wired only)
-│   └── hooks.json             — canonical hook registry
-├── rules/             — always-on companions (.mdc)
-├── rules/                — paste capsule + agent.mdc mirror
+├── MacOS/
+│   ├── install.sh             — one-command macOS installer (jq preflight + fleet_sync all)
+│   └── hooks/                 — Bash hooks, macOS + Linux userland safe
+│       ├── session_start.sh      — inject HANDOFF tail + duties
+│       ├── before_submit_prompt.sh — route classify + INTENT duty
+│       ├── stop_gate.sh           — audit INTENT / Done-when (thin wrapper)
+│       ├── lean_gate.sh           — ponytail roof + entropy + velocity (preToolUse)
+│       ├── pre_tool_use.sh        — selective autonomy gate (thin wrapper)
+│       ├── fleet_sync.sh          — install + fleet sync + verify
+│       ├── fleet_dispatch.sh      — backlog dispatcher
+│       ├── lib/
+│       │   ├── common.sh          — shared utilities (root, deny, allow, follow, portable lock)
+│       │   ├── stop_gate_core.sh  — stop gate logic
+│       │   └── pre_tool_use_core.sh — autonomy gate logic
+│       ├── policy/                — intent.json + lean.json (wired only)
+│       └── hooks.json             — canonical hook registry
+├── rules/                — paste capsule + always-on companions (.mdc)
 ├── skills/                    — on-demand Cursor skills
 ├── config/                    — skills list + scan roots + retire lists
 ├── scripts/                   — doctor.sh, install.sh, sync.sh
@@ -88,7 +99,7 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 └── LICENSE                    — MIT
 ```
 
-Single pack topology — not an app monorepo. Live `.cursor/` copies are sync destinations; edit this pack and re-run `FORCE=1 bash hooks/fleet_sync.sh all`.
+Single pack topology — not an app monorepo. Live `.cursor/` copies are sync destinations; edit this pack and re-run `FORCE=1 bash MacOS/hooks/fleet_sync.sh all`.
 
 ## The loop (injection vs declaration)
 
@@ -120,7 +131,7 @@ bash scripts/doctor.sh  # environment + repo health (16 checks)
 
 ## What is not supported
 
-- Native Windows (PowerShell port welcome).
+- Native Windows (PowerShell port welcome; would live in a sibling `Windows/` folder).
 - MCP as a hard dependency (optional only; core works with local HANDOFF).
 - Rust gate or pack Python.
 - Prompt rewriting via hooks (`updated_input` is banned).

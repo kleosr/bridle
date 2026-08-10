@@ -22,7 +22,7 @@ Context: V2 harness — Bash hooks + local HANDOFF brain. No Rust kleos-gate. No
 
 ### Architecture (V18 refactor)
 
-Event hook entrypoints are **thin wrappers** (≤80 LOC) that source core logic from `hooks/lib/`:
+Event hook entrypoints are **thin wrappers** (≤80 LOC) that source core logic from `MacOS/hooks/lib/`:
 
 | Wrapper | Lib | LOC (wrapper) |
 |---------|-----|---------------|
@@ -34,7 +34,7 @@ Event hook entrypoints are **thin wrappers** (≤80 LOC) that source core logic 
 
 Shared utilities in `lib/common.sh`: root resolution, state dir, deny/allow/followup/context emitters.
 
-Hard bans: never `updated_input`; never reintroduce `hooks/bin/kleos-gate` or pack Python; each event hook ≤80 LOC; fail-closed where registered; no MCP core dependency. **Cursor-only**: hook stdout is Cursor JSON (`action`/`user_message`, `additionalContext`, `followup_message`) — never emit Claude Code shapes (`hookSpecificOutput`/`permissionDecision`).
+Hard bans: never `updated_input`; never reintroduce `hooks/bin/kleos-gate` or pack Python; each event hook ≤80 LOC; fail-closed where registered; no MCP core dependency; no GNU-only utils (`flock`, `mapfile`, `realpath`, `stat -c`, awk `\<` boundaries) — hooks must run on stock macOS bash 3.2 + BSD userland. **Cursor-only**: hook stdout is Cursor JSON (`action`/`user_message`, `additionalContext`, `followup_message`) — never emit Claude Code shapes (`hookSpecificOutput`/`permissionDecision`).
 
 ## Why not Rust
 
@@ -44,14 +44,14 @@ The prior ADR preferred a typed Rust binary. V2 rejects that pack: install entro
 
 | File | Consumer |
 |------|----------|
-| `hooks/policy/intent.json` | `before_submit_prompt.sh`, `stop_gate.sh` |
-| `hooks/policy/lean.json` | `lean_gate.sh` |
+| `MacOS/hooks/policy/intent.json` | `before_submit_prompt.sh`, `stop_gate.sh` |
+| `MacOS/hooks/policy/lean.json` | `lean_gate.sh` |
 
 No orphan ask/deny JSON from the retired gate. Secrets stay out of paste, hooks, and chat.
 
 ## Hook config (canonical)
 
-Single source: `hooks/hooks.json`. `fleet_sync.sh` generates per-repo `.cursor/hooks.json` and `~/.cursor/hooks.json` from it (path rewriting only).
+Single source: `MacOS/hooks/hooks.json`. `fleet_sync.sh` generates per-repo `.cursor/hooks.json` and `~/.cursor/hooks.json` from it (path rewriting only).
 
 ### preToolUse matcher overlap (intentional)
 

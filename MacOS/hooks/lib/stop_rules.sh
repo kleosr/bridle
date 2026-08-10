@@ -53,7 +53,7 @@ rules_untouched() {
     [[ -z "$p" ]] && continue
     [[ "$p" = /* ]] && fp="$p" || fp="$(pwd)/$p"
     [[ -f "$fp" ]] || { untouched="$untouched $p(missing)"; continue; }
-    local m; m="$(stat -c %Y "$fp" 2>/dev/null || echo 0)"
+    local m; m="$(file_mtime "$fp" || echo 0)"
     m="${m//[!0-9]}"; [[ -z "$m" ]] && m=0
     [[ "$session_ts" -eq 0 || "$m" -ge "$session_ts" ]] || untouched="$untouched $p"
   done < <(rules_tags)
