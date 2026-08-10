@@ -28,7 +28,7 @@ show_help() {
 }
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-PACK="$(cd "$HERE/.." && pwd)"
+PACK="$(cd "$HERE/../.." && pwd)"
 ROOT=""
 for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
   if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then ROOT="$(cd "$d" && pwd)"; break; fi

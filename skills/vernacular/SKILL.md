@@ -24,7 +24,7 @@ Thin roof: `rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 - Async: async/await or chains; no try/catch that only logs.
 - Exports: named only.
 
-## Bash hooks (`hooks/*.sh`)
+## Bash hooks (`MacOS/hooks/*.sh`)
 Cursor-only output. Template:
 
     #!/bin/bash
