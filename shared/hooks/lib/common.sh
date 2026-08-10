@@ -2,6 +2,12 @@
 
 resolve_root() {
   local d
+  # Hooks spawn with cwd = workspace root (proven by relative repo-level
+  # commands); prefer it so the global ~/.cursor layer keeps per-project
+  # HANDOFF/state. Fall back to walking up from the script location.
+  if [[ -f "$PWD/HANDOFF.md" || -f "$PWD/AGENTS.md" ]]; then
+    ROOT="$(cd "$PWD" && pwd)"; return 0
+  fi
   for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
     if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then
       ROOT="$(cd "$d" && pwd)"; return 0

@@ -18,7 +18,7 @@ Prefer one active handoff:
 1. `HANDOFF.md` at repo root (default), or
 2. `.cursor/handoff/<slug>.md` when several features run in parallel
 
-Template: `skills/session-handoff/references/handoff-template.md`
+Template: `shared/skills/session-handoff/references/handoff-template.md`
 (SSOT under this rules pack).
 
 ## Resume
@@ -44,7 +44,7 @@ NEXT
 ```
 
 For richer multi-session pauses, use the template (`Goal` / `Done` / `Open` / `Next`) under
-`skills/session-handoff/references/handoff-template.md`. Always English labels.
+`shared/skills/session-handoff/references/handoff-template.md`. Always English labels.
 
 ## Rules
 

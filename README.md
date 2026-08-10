@@ -21,41 +21,49 @@
 
 ---
 
-Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported) and **Linux**. Requires `bash` (v3.2+) and `jq` (`brew install jq`). No Rust. No Cargo. No Python pack tooling. No MCP dependency for core operation. macOS hooks live in [`MacOS/hooks/`](MacOS/hooks/).
+Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported), **Linux**, and **Windows** (PowerShell installer + WSL shim — hooks execute as bash inside WSL). Requires `bash` (v3.2+) and `jq`. No Rust. No Cargo. No Python pack tooling. No MCP dependency for core operation. Canonical hooks live in [`shared/hooks/`](shared/hooks/); platform installers in `MacOS/`, `Linux/`, `Windows/`.
+
+Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer — they spawn with cwd = workspace root, so `HANDOFF.md` and `state/` stay per-project. No per-repo `.cursor/hooks.json` (it fires alongside the global one and doubles every prompt injection).
 
 How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. Hooks inject context at start and audit completion. No Obsidian/vault — `HANDOFF.md` is the only memory.
 
 ## Setup
 
-macOS — one command (preflights `jq`, fixes permissions, installs hooks + rules + skills, syncs fleet, verifies):
+macOS — one command (preflights `jq`, fixes permissions, installs rules + skills, registers repo hooks, syncs fleet, verifies):
 
 ```bash
 git clone https://github.com/kleosr/kleosrules.git
 cd kleosrules
-bash MacOS/install.sh
+bash MacOS/install.sh     # macOS
+bash Linux/install.sh     # Linux
 ```
 
-Only prerequisite: `jq` (`brew install jq`). Stock macOS bash 3.2 is fully supported — no coreutils, no brew bash.
+```powershell
+# Windows (PowerShell — hooks run inside WSL via shim; requires wsl + jq inside WSL)
+.\Windows\install.ps1
+```
 
-Manual equivalent (also the Linux path):
+Only prerequisite: `jq` (`brew install jq` / `apt-get install jq`; on Windows, inside WSL). Stock macOS bash 3.2 is fully supported — no coreutils, no brew bash.
+
+Manual equivalent:
 
 ```bash
-chmod +x MacOS/hooks/*.sh MacOS/hooks/lib/*.sh scripts/*.sh
+chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh
 bash scripts/doctor.sh        # verify environment
-FORCE=1 bash MacOS/hooks/fleet_sync.sh all
+FORCE=1 bash shared/hooks/fleet_sync.sh all
 ```
 
-Paste `rules/USER-RULES.paste.txt` into Cursor → Settings → Rules → User Rules, start a **new** agent chat, and confirm Hooks loaded the Bash scripts.
+Paste `shared/rules/USER-RULES.paste.txt` into Cursor → Settings → Rules → User Rules, start a **new** agent chat, and confirm Hooks loaded the Bash scripts.
 
 ## Usage
 
 ```bash
-# Install / refresh ~/.cursor hooks, rules, skills + fleet projects
-FORCE=1 bash MacOS/hooks/fleet_sync.sh all
+# Install / refresh global ~/.cursor hooks, rules, skills + fleet projects
+FORCE=1 bash shared/hooks/fleet_sync.sh all
 
 # Sync only / verify only
-FORCE=1 bash MacOS/hooks/fleet_sync.sh sync
-FORCE=1 bash MacOS/hooks/fleet_sync.sh verify
+FORCE=1 bash shared/hooks/fleet_sync.sh sync
+FORCE=1 bash shared/hooks/fleet_sync.sh verify
 
 # Doctor (environment + repo health check)
 bash scripts/doctor.sh
@@ -66,6 +74,8 @@ bash tests/run.sh
 
 Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, 700 LOC + complexity + coupling + nesting + velocity) denies oversized writes — rewrite or stop; do not fight a deny.
 
+Live `.cursor/` copies were retired: registration is global (`~/.cursor/hooks.json`); edit this pack and re-run `FORCE=1 bash shared/hooks/fleet_sync.sh all`.
+
 Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`, `/session-handoff`
 
 ## Architecture
@@ -73,24 +83,31 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 ```
 .
 ├── MacOS/
-│   ├── install.sh             — one-command macOS installer (jq preflight + fleet_sync all)
-│   └── hooks/                 — Bash hooks, macOS + Linux userland safe
-│       ├── session_start.sh      — inject HANDOFF tail + duties
-│       ├── before_submit_prompt.sh — route classify + INTENT duty
-│       ├── stop_gate.sh           — audit INTENT / Done-when (thin wrapper)
-│       ├── lean_gate.sh           — ponytail roof + entropy + velocity (preToolUse)
-│       ├── pre_tool_use.sh        — selective autonomy gate (thin wrapper)
-│       ├── fleet_sync.sh          — install + fleet sync + verify
-│       ├── fleet_dispatch.sh      — backlog dispatcher
-│       ├── lib/
-│       │   ├── common.sh          — shared utilities (root, deny, allow, follow, portable lock)
-│       │   ├── stop_gate_core.sh  — stop gate logic
-│       │   └── pre_tool_use_core.sh — autonomy gate logic
-│       ├── policy/                — intent.json + lean.json (wired only)
-│       └── hooks.json             — canonical hook registry
-├── rules/                — paste capsule + always-on companions (.mdc)
-├── skills/                    — on-demand Cursor skills
-├── config/                    — skills list + scan roots + retire lists
+│   └── install.sh             — macOS installer (brew jq preflight + fleet_sync all)
+├── Linux/
+│   └── install.sh             — Linux installer (apt/dnf/pacman jq preflight + fleet_sync all)
+├── Windows/
+│   ├── install.ps1            — PowerShell installer (wsl + jq preflight, copies hooks/rules, writes global hooks.json)
+│   └── hooks/
+│       └── wsl-shim.ps1       — per-event PowerShell→WSL shim (stdin/stdout passthrough)
+├── shared/
+│   ├── hooks/                 — canonical Bash hooks, macOS + Linux + WSL safe
+│   │   ├── session_start.sh      — inject HANDOFF tail + duties
+│   │   ├── before_submit_prompt.sh — route classify + INTENT duty
+│   │   ├── stop_gate.sh           — audit INTENT / Done-when (thin wrapper)
+│   │   ├── lean_gate.sh           — ponytail roof + entropy + velocity (preToolUse)
+│   │   ├── pre_tool_use.sh        — selective autonomy gate (thin wrapper)
+│   │   ├── fleet_sync.sh          — install + fleet sync + verify
+│   │   ├── fleet_dispatch.sh      — backlog dispatcher
+│   │   ├── lib/
+│   │   │   ├── common.sh          — shared utilities (root, deny, allow, follow, portable lock)
+│   │   │   ├── stop_gate_core.sh  — stop gate logic
+│   │   │   └── pre_tool_use_core.sh — autonomy gate logic
+│   │   ├── policy/                — intent.json + lean.json (wired only)
+│   │   └── hooks.json             — canonical hook registry
+│   ├── rules/                 — paste capsule + always-on companions (.mdc)
+│   ├── skills/                — on-demand Cursor skills
+│   └── config/                — skills list + scan roots + retire lists
 ├── scripts/                   — doctor.sh, install.sh, sync.sh
 ├── tests/                     — run.sh + fixtures/
 ├── docs/                      — ARCHITECTURE, TOOLCHAIN, CURATOR, ADR
@@ -99,7 +116,7 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 └── LICENSE                    — MIT
 ```
 
-Single pack topology — not an app monorepo. Live `.cursor/` copies are sync destinations; edit this pack and re-run `FORCE=1 bash MacOS/hooks/fleet_sync.sh all`.
+Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1 bash shared/hooks/fleet_sync.sh all`.
 
 ## The loop (injection vs declaration)
 
@@ -131,7 +148,7 @@ bash scripts/doctor.sh  # environment + repo health (16 checks)
 
 ## What is not supported
 
-- Native Windows (PowerShell port welcome; would live in a sibling `Windows/` folder).
+- Native Windows without WSL (hooks are Bash; `Windows/install.ps1` + `wsl-shim.ps1` bridge through WSL — untested on this machine, correct-by-construction).
 - MCP as a hard dependency (optional only; core works with local HANDOFF).
 - Rust gate or pack Python.
 - Prompt rewriting via hooks (`updated_input` is banned).

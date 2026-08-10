@@ -18,7 +18,7 @@ Install/sync inputs: which skills ship, which repos get scanned, retire lists.
 
 ## Done (local)
 
-After edits: `FORCE=1 bash MacOS/hooks/fleet_sync.sh all` (or `sync` / `verify`).
+After edits: `FORCE=1 bash shared/hooks/fleet_sync.sh all` (or `sync` / `verify`).
 
 ## Ask first
 

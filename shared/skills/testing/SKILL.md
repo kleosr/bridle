@@ -8,7 +8,7 @@ description: >
 
 # Testing (fat skill)
 
-Thin roof: `rules/testing.mdc`. This file = how to run the loop.
+Thin roof: `shared/rules/testing.mdc`. This file = how to run the loop.
 
 ## Order (TDD-ish)
 1. Business logic pure paths.
