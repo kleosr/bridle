@@ -28,7 +28,7 @@ echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
   | bash shared/hooks/before_submit_prompt.sh
 ```
 
-Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from deny/allow gates, `followup_message` from stop when INTENT is missing.
+Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from deny/allow gates, `followup_message` from stop when INTENT is missing. Lean roofs live in `shared/hooks/policy/lean.json` (`comment_ratio_max=2`, soft LOC 150, hard 700). Cloud: `CLOUD=1 bash shared/hooks/fleet_sync.sh project-hooks`.
 
 ## Doctor + Tests
 

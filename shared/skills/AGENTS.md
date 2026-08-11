@@ -4,12 +4,15 @@
 
 | Skill | Purpose |
 |-------|---------|
-| `ponytail` | Native Lean: no-code → reuse → stdlib → platform → dep → 1-liner → minimum |
+| `ponytail` | Native Lean ladder + deny recovery (Write/Grep; zero comments; soft 150 / hard 700) |
 | `debugging` | Reproduce → hypothesis → evidence → fix |
-| `testing` | Test-first, red-green-refactor |
-| `vernacular` | Clean code style: no `any`, named exports, early-return |
+| `testing` | Test-first, red-green-refactor; cite TOOLCHAIN before Done |
+| `vernacular` | Anti-slop procedure: zero comments, types, INTENT, Cursor-native emit |
 | `session-handoff` | Structured handoff between sessions |
+
+Thin rules in `shared/rules/` steer; hooks + `lean.json`/`intent.json` are steel.
+Cursor tools in examples: Write, Shell, Read, Grep, Delete, Task.
 
 ## Retired skills
 
-Retired skill names are kept absent by `shared/config/retired-skills.txt` (fleet_sync removes them on install). No archived directory — retired means gone.
+Retired names in `shared/config/retired-skills.txt` (fleet_sync removes on install).

@@ -30,13 +30,50 @@ if OUT="$(set +eo pipefail; bash "$PACK/shared/hooks/lean_gate.sh" < "$PACK/test
 RESULT="$(echo "$OUT" | jq -r '.permission // "allow"')"
 run_test "lean_gate denies high comment ratio on executable source" "deny" "$RESULT"
 
+if OUT="$(set +eo pipefail; bash "$PACK/shared/hooks/lean_gate.sh" < "$PACK/tests/fixtures/lean_comments_jsdoc_deny.json" 2>/dev/null)"; then :; fi
+RESULT="$(echo "$OUT" | jq -r '.permission // "allow"')"
+run_test "lean_gate denies JSDoc/block prose comments" "deny" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(cat "$PACK/tests/fixtures/lean_comments_machine_ok.json" | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
+run_test "lean_gate allows machine-directive-only comments" "allow" "$RESULT"
+
+rm -rf "$PACK/state"
+# Projected whole-file: fragment is clean but on-disk file still has prose comments → deny
+printf '%s\n' '// Narrating prose comment that must be scored on projected file.' 'export const x = 1;' 'export const y = 2;' 'export const z = 3;' 'export const w = 4;' 'export const a = 5;' 'export const b = 6;' 'export const c = 7;' 'export const d = 8;' > /tmp/lean_proj_comments.ts
+RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/lean_proj_comments.ts","old_string":"export const x = 1;","new_string":"export const x = 99;"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
+run_test "lean_gate scores projected whole file comments (not fragment only)" "deny" "$RESULT"
+rm -f /tmp/lean_proj_comments.ts
+
+rm -rf "$PACK/state"
+SOFT_BODY="$(python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(160)]))')"
+RESULT="$(jq -n --arg c "$SOFT_BODY" '{tool_name:"Write",tool_input:{file_path:"src/soft.ts",content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r 'if .permission=="allow" and (.agent_message|test("SOFT LOC")) then "warn" else "no" end')"
+run_test "lean_gate soft LOC allow+agent_message (>150)" "warn" "$RESULT"
+
 rm -rf "$PACK/state"
 RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"docs/guide.md","content":"# Title\n\nThis is a long prose doc.\n\nMore prose here.\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
 run_test "lean_gate skips comment gate on markdown docs" "allow" "$RESULT"
 
 rm -rf "$PACK/state"
 RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/clean.ts","content":"export const authenticate = (token: string) => Boolean(token);\nexport const refresh = (token: string) => token;\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
-run_test "lean_gate allows self-documenting source (low comment ratio)" "allow" "$RESULT"
+run_test "lean_gate allows self-documenting source (near-zero comments)" "allow" "$RESULT"
+
+RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_secret.json" | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r '.continue')"
+run_test "before_submit blocks secret/token patterns" "false" "$RESULT"
+
+RESULT="$(echo '{"tool_name":"db_admin","tool_input":"drop database production"}' | bash "$PACK/shared/hooks/before_mcp.sh" | jq -r '.permission')"
+run_test "before_mcp denies dangerous MCP patterns" "deny" "$RESULT"
+
+RESULT="$(echo '{"tool_name":"search_docs","tool_input":"{\"q\":\"auth\"}"}' | bash "$PACK/shared/hooks/before_mcp.sh" | jq -r '.permission // "allow"')"
+run_test "before_mcp allows benign MCP tool" "allow" "$RESULT"
+
+if jq -e '.hooks.beforeTabFileRead and .hooks.beforeMCPExecution' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
+  && jq -e '.hooks.preToolUse|length >= 1' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null; then
+  echo "[pass] hooks.json has tab+mcp; hooks.cloud.json omits sessionStart"; PASS=$((PASS + 1))
+else
+  echo "[fail] cloud/tab/mcp hooks.json shape wrong"; FAIL=$((FAIL + 1))
+fi
 
 RESULT="$(echo '{"tool_name":"Read","tool_input":{"file_path":"x"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r 'if . == {} then "pass" else .permission end')"
 run_test "pre_tool_use allows Read" "pass" "$RESULT"
@@ -110,8 +147,13 @@ else
   echo "[fail] hooks.json missing Shell/beforeShellExecution"; FAIL=$((FAIL + 1))
 fi
 
+COMMENT_MAX="$(jq -r '.comment_ratio_max' "$PACK/shared/hooks/policy/lean.json")"
+SOFT_MAX="$(jq -r '.file_loc_soft' "$PACK/shared/hooks/policy/lean.json")"
+run_test "lean.json comment_ratio_max is 2 (zero-comment)" "2" "$COMMENT_MAX"
+run_test "lean.json file_loc_soft is 150" "150" "$SOFT_MAX"
+
 LOC_OK=1
-for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
+for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_mcp.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done

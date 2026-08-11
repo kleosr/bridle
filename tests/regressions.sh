@@ -133,6 +133,18 @@ run_test "fleet_sync install completes on fresh HOME (orphan-loop set -e regress
 run_test "fleet_sync install actually installs skills on fresh HOME" "yes" "$SKILLS_OK"
 run_test "fleet_sync installs beforeShellExecution hook" "1" "$HAS_BEFORE_SHELL"
 
+FS_HOME2="$(mktemp -d)"
+RESULT="$(HOME="$FS_HOME2" FORCE=1 CLOUD=1 bash "$PACK/shared/hooks/fleet_sync.sh" project-hooks >/dev/null 2>&1; echo $?)"
+CLOUD_OK="$(test -f "$PACK/.cursor/hooks.json" && jq -e '.hooks|has("sessionStart")|not' "$PACK/.cursor/hooks.json" >/dev/null && echo yes || echo no)"
+CLOUD_LEAN="$(grep -c lean_gate "$PACK/.cursor/hooks.json" 2>/dev/null || echo 0)"
+CLOUD_LEAN="${CLOUD_LEAN//[!0-9]}"; [[ -z "$CLOUD_LEAN" ]] && CLOUD_LEAN=0
+rm -rf "$FS_HOME2"
+# Clean pack project hooks after test so default doctor mode stays green unless CLOUD=1
+rm -f "$PACK/.cursor/hooks.json"; rm -rf "$PACK/.cursor/hooks"
+run_test "fleet_sync project-hooks completes" "0" "$RESULT"
+run_test "project-hooks omits sessionStart (no double DUTY)" "yes" "$CLOUD_OK"
+run_test "project-hooks includes lean_gate" "1" "$CLOUD_LEAN"
+
 rm -rf "$PACK/state"
 CHAT_OUT="$(printf '%s' '{"prompt":"gracias por la explicacion de arquitectura","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-chat-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
 RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.continue')"

@@ -80,9 +80,15 @@ if grep -q 'hooks/before_submit_prompt.sh' "$HOME/.cursor/hooks.json" 2>/dev/nul
   ok "global hook registration (~/.cursor single layer)"
 else fail "~/.cursor/hooks.json missing beforeSubmitPrompt (run: bash shared/hooks/fleet_sync.sh install)"; fi
 
-if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
-  fail "pack has repo-level hooks — double injection (run: bash shared/hooks/fleet_sync.sh sync)"
-else ok "no repo-level hooks in pack (no double injection)"; fi
+if [[ -f "$PACK/.cursor/hooks.json" ]] && jq -e '.hooks.sessionStart' "$PACK/.cursor/hooks.json" >/dev/null 2>&1; then
+  fail "pack project hooks register sessionStart — double DUTY (use hooks.cloud.json / project-hooks)"
+elif [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
+  if jq -e '.hooks.preToolUse' "$PACK/.cursor/hooks.json" >/dev/null 2>&1; then
+    ok "pack has thin Lane-A project hooks (no sessionStart; cloud-safe)"
+  else
+    fail "pack has unexpected repo-level hooks"
+  fi
+else ok "no repo-level hooks in pack (local global-only mode)"; fi
 
 if ! grep -RqiE 'CallMcpTool|user-obsidian' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
 else fail "MCP core dependency found in hooks (should be optional, not core)"; fi

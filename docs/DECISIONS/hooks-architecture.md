@@ -19,7 +19,9 @@ Context: V2 harness — Bash hooks + local HANDOFF brain. No Rust kleos-gate. No
 | `lean_gate.sh` | preToolUse (Write\|Edit\|…) | Deny files over roof; complexity + coupling + nesting + velocity (`permission`) |
 | `pre_tool_use.sh` | preToolUse (Write\|…\|Shell\|Bash) | Selective autonomy: topology + destructive blocks |
 | `before_shell.sh` | beforeShellExecution | Destructive shell gating (`permission`) |
-| `fleet_sync.sh` | install/sync/verify | Home + fleet wiring |
+| `before_mcp.sh` | beforeMCPExecution | Dangerous MCP pattern deny (`permission`) |
+| `before_read_file.sh` | beforeReadFile + beforeTabFileRead | Secret path deny |
+| `fleet_sync.sh` | install/sync/project-hooks/verify | Home + fleet + optional cloud Lane-A |
 
 ### Architecture (V18 refactor)
 
@@ -54,7 +56,9 @@ No orphan ask/deny JSON from the retired gate. Secrets stay out of paste, hooks,
 
 Single source: `shared/hooks/hooks.json`. `fleet_sync.sh` generates the global `~/.cursor/hooks.json` from it (path rewriting only); `Windows/install.ps1` generates the Windows equivalent with PowerShell→WSL shim commands.
 
-**2026-08-10 — single registration layer, GLOBAL.** Registration lives only in `~/.cursor/hooks.json`; per-repo `.cursor/hooks.json` is actively removed on sync. Cursor fires user-level AND repo-level hooks when both exist, so every `beforeSubmitPrompt`/`sessionStart` injection arrived twice per prompt and both copies persisted in the transcript — the incremental token burn (measured 2× DEBERES). Global chosen over repo-level because hooks spawn with cwd = workspace root: `resolve_root` keeps HANDOFF/state per-project without any per-repo files, and coverage extends to every Cursor window, not just fleet repos. Guarded by `doctor.sh` (global registration present + no repo-level hooks) and `fleet_sync.sh verify`.
+**2026-08-10 — single registration layer, GLOBAL.** Local IDE: registration lives in `~/.cursor/hooks.json`; default sync removes per-repo hooks so `sessionStart` DUTY is not doubled.
+
+**2026-08-11 — cloud Lane-A.** Cloud agents ignore `~/.cursor`. `CLOUD=1 bash shared/hooks/fleet_sync.sh project-hooks` installs `hooks.cloud.json` (lean/shell/read/tab/mcp/submit/stop) with **no sessionStart**. Local+project coexistence: steel gates may double-fire (idempotent); DUTY injection stays global-only.
 
 ### preToolUse matcher overlap (intentional)
 

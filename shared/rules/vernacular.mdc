@@ -6,19 +6,18 @@ alwaysApply: false
 
 # V2 VERNACULAR (THIN)
 
-Doctrina: Smallest Diff. Cero slop.
+Doctrina: Smallest Diff. Cero slop. Zero prose comments.
 
 ## HARD BANS
-- No `any`. Prefer `type` over `interface` unless extending.
-- Named exports only. No default exports.
-- Early-return only. Nesting >2 levels banned.
+- No prose comments in app code (lean_gate `comment_ratio_max=2`). Machine directives only.
+- Self-documenting names. No narrating comments. No `any` / blind casts; prefer `type`.
+- Named exports only. Early-return. Nesting >2 levels banned.
+- No dead code. No TODO without ticket ref. No stub theater (`// implement later`, empty catch, leftover `console.log`).
+- No unused imports. Match neighbor import style. One responsibility per function; extract before soft LOC (150).
 - Infer loading from data. No redundant `isLoading` when data starts null.
-- Hooks Bash: max 80 LOC; `set -euo pipefail`; `jq`; fail-closed. No Python/Node/`cd`/`updated_input`.
-- Markdown system files max 80 LOC. HANDOFF: TASK / FILES / STATUS / NEXT.
-- JSON: no comments; atomic policy files; camelCase hook keys.
-- State: overwrite only; clear on stop success.
-- Chat: `INTENT:` chat prose before tools (never Shell/fence). OBJECTIVE=postcondition + `edit:`|`NEW:` tags; Done-when=≤5 decidable predicates; finish all tags same turn.
+- Hooks Bash: max 80 LOC entrypoints; `jq`; emit `permission` / `additional_context` / `continue` / `followup_message`. No Python/Node/`cd`/`updated_input`.
+- Cursor tools: `Write` `Shell` `Read` `Grep` `Delete` `Task` (primary). Claude aliases only in hook matchers.
+- INTENT: chat prose before tools; `edit:`|`NEW:` tags; Done-when decidable. Never Shell-declare INTENT.
 
 ## PROCEDURE
-Stack style guides (TS/React, Bash templates, Markdown paths):
 **Read `~/.cursor/skills/vernacular/SKILL.md`** before writing matched files.

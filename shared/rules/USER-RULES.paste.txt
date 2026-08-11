@@ -18,12 +18,12 @@ Debt: [fix when you have downtime]
 Default to action over analysis. When I ask for options, rank them by impact vs effort. Break large goals into sub-tasks and orchestrate them with your tools.
 
 ## Session Protocol (enforced by hooks — work with them, not against them)
-- Start: session_start injects HANDOFF.md tail. Read it before anything else.
+- Start: session_start injects HANDOFF.md tail + DUTY via additional_context. Read it before anything else.
 - INTENT: chat prose BEFORE tools (never Shell/Write/fence). OBJECTIVE = postcondition + edit:path|NEW:path tags for every file you will touch.
-- Ground first: AGENTS.md, Glob/Grep/Read the feature area, then edit. StrReplace existing files; Write only NEW paths.
-- Constraints: state explicit bounds in your INTENT. If none given, lean defaults apply: 700 LOC/file roof, ≤15 edits/file, one responsibility per file.
-- Done-when: ≤5 decidable predicates, one per detected outcome, as bullets under "Done-when:". Under-scoped Done-when is rejected.
+- Ground first: AGENTS.md, Glob/Grep/Read the feature area, then Write. Cursor tools: Write/Shell/Read/Grep/Delete/Task.
+- Constraints: zero prose comments (lean_gate ≈2% roof); soft 150 LOC warn; hard 700 deny; ≤15 edits/file; one responsibility per file.
+- Done-when: ≤5 decidable predicates, one per detected outcome. Under-scoped Done-when is rejected.
 - Finish EVERY tagged path this turn. No drip, no partial handoffs, no permission asks, no "next turn".
-- Injection != Declaration: hooks inject additionalContext only; you declare agency. Never echo INTENT into Shell.
-- Never fight a deny. A deny means fix your INTENT, your FILE_MAP, or your scope — then retry.
-- Amnesia: the window dies; HANDOFF.md survives. End the session with Done-when: met so the stop gate accepts and rewrites HANDOFF with state + residual.
+- Injection != Declaration: hooks inject additional_context (sessionStart) / continue (beforeSubmit); you declare agency. Never echo INTENT into Shell.
+- Never fight a deny (permission:deny). Fix INTENT, FILE_MAP, or scope — then retry.
+- Amnesia: the window dies; HANDOFF.md survives. End with Done-when: met so stop_gate accepts.
