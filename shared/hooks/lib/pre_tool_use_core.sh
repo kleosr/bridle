@@ -34,13 +34,15 @@ case "$TOOL_NAME" in
     FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
     [[ -z "$FILE_PATH" ]] && { emit_quiet; exit 0; }
     printf '%s\n' "$FILE_PATH" >>"$STATE/writes" 2>/dev/null || true
-    if [[ -s "$ALLOWED" ]]; then
-      base="$(basename "$FILE_PATH")"
-      if ! grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null && ! grep -qxF "$base" "$ALLOWED" 2>/dev/null; then
-        mkdir -p "$STATE"
-        grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null || echo "$FILE_PATH" >>"$ALLOWED"
-        warn_allow "SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP — registered in the sandbox. Declare it in your INTENT (edit:$FILE_PATH) so stop_gate audits completion. Proceeding."
-      fi
+    mkdir -p "$STATE"
+    base="$(basename "$FILE_PATH")"
+    NUDGE=""
+    if [[ ! -s "$ALLOWED" ]]; then
+      echo "$FILE_PATH" >>"$ALLOWED"
+      NUDGE="FILE_MAP nudge: Write '$FILE_PATH' with no edit:|NEW: tags in INTENT yet — registered in sandbox. Declare edit:$FILE_PATH (or NEW:) in chat INTENT. Proceeding."
+    elif ! grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null && ! grep -qxF "$base" "$ALLOWED" 2>/dev/null; then
+      echo "$FILE_PATH" >>"$ALLOWED"
+      NUDGE="SCOPE EXPANSION: '$FILE_PATH' is outside your declared FILE_MAP — registered in the sandbox. Declare it in your INTENT (edit:$FILE_PATH) so stop_gate audits completion. Proceeding."
     fi
     NEW_CONTENT=""
     case "$TOOL_NAME" in
@@ -54,6 +56,7 @@ case "$TOOL_NAME" in
         deny "AUTONOMY BLOCK: executable file edit contains a destructive/credential pattern (drop/delete-all/secret write). Human approval required."
       fi
     fi
+    if [[ -n "$NUDGE" ]]; then warn_allow "$NUDGE"; fi
     emit_quiet; exit 0
     ;;
 esac

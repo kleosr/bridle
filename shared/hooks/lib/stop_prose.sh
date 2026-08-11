@@ -32,3 +32,16 @@ pe_semantic_hit() {
   [[ -z "$hit" ]] && return 0
   if printf '%s' "$hit" | grep -iqE "$SEM_ASK_RE"; then echo ask; else echo drip; fi
 }
+
+# 1 = has TOOLCHAIN/test green signal in prose or session.log; 0 = none; empty/ambiguous handled by caller.
+pe_has_verify_evidence() {
+  if printf '%s\n' "$PROSE" | grep -qiE '(TOOLCHAIN|tests/run\.sh|scripts/doctor|npm test|pnpm test|pytest|cargo test).{0,60}(pass|green|ok|✓|FAIL: 0)|ALL CHECKS PASSED|PASS:[[:space:]]*[0-9]+'; then
+    echo 1; return 0
+  fi
+  if [[ -n "${STATE:-}" && -f "$STATE/session.log" ]]; then
+    if grep -qiE 'SHELL.*(VERIFY|GREEN)|(tests/run\.sh|scripts/doctor|npm test|pnpm test).*(PASS|GREEN|FAIL: 0)|ALL CHECKS PASSED' "$STATE/session.log" 2>/dev/null; then
+      echo 1; return 0
+    fi
+  fi
+  echo 0
+}

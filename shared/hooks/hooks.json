@@ -78,6 +78,12 @@
         "failClosed": true
       }
     ],
+    "preCompact": [
+      {
+        "command": "./hooks/pre_compact.sh",
+        "failClosed": false
+      }
+    ],
     "stop": [
       {
         "command": "./hooks/stop_gate.sh",

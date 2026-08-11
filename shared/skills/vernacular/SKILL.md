@@ -16,6 +16,9 @@ Thin roof: `shared/rules/vernacular.mdc` (hard bans). This file = procedure + ex
 3. Use sections below for stack-specific shape.
 4. If no contract: private-match siblings only. Do not invent dialect.
 
+## Match neighbors (before Write)
+Before `Write` in a directory: `Read` 1–2 sibling files. Match their import grouping, naming, and error/result idiom. Do not invent a parallel dialect in the same folder.
+
 ## TypeScript / React / Node
 - Comments: **zero prose**. Machine directives only (`#!`, pragma, license, build-guard, `@ts-expect-error`, eslint/prettier directives). Enforced by `lean_gate` on **projected whole file** (`comment_ratio_max=2`).
 - Names: self-documenting; never narrate what the next line does.

@@ -170,6 +170,44 @@ RESULT="$(printf '%s' '{"status":"completed","conversation_id":"conv-slang-001",
 run_test "chat route with writes this turn still enforces INTENT" "followup" "$RESULT"
 rm -rf "$PACK/state"
 
+# Done-when evidence: code + writes + met + shell activity without verify → one soft followup
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'code\n' > "$PACK/state/route"
+printf '1\n' > "$PACK/state/outcomes.md"
+printf 'src/x.ts\n' > "$PACK/state/writes"
+printf 'src/x.ts\n' > "$PACK/state/allowed_files.md"
+date +%s > "$PACK/state/session_ts"
+printf '%s | SHELL | duration=1 sandbox=false out_len=10 | ls -la\n' "$(date +%Y-%m-%d\ %H:%M:%S)" > "$PACK/state/session.log"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EVIDENCE") then "evidence" else "other" end')"
+run_test "stop_gate soft evidence followup when Done-when met without verify cite" "evidence" "$RESULT"
+
+# Second stop after nudge → fail open (accept), not loop
+printf '1\n' > "$PACK/state/evidence_nudge"
+printf 'src/x.ts\n' > "$PACK/state/writes"
+printf 'src/x.ts\n' > "$PACK/state/allowed_files.md"
+printf 'code\n' > "$PACK/state/route"
+printf '1\n' > "$PACK/state/outcomes.md"
+date +%s > "$PACK/state/session_ts"
+# Touch tagged file so rules_untouched passes
+touch src/x.ts 2>/dev/null || mkdir -p src && touch src/x.ts
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+run_test "stop_gate evidence nudge fail-open on second pass" "accept" "$RESULT"
+rm -f src/x.ts
+
+# With GREEN shell log → accept
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'code\n' > "$PACK/state/route"
+printf '1\n' > "$PACK/state/outcomes.md"
+printf 'src/y.ts\n' > "$PACK/state/writes"
+printf 'src/y.ts\n' > "$PACK/state/allowed_files.md"
+date +%s > "$PACK/state/session_ts"
+printf '%s | SHELL VERIFY GREEN | duration=2 sandbox=false out_len=40 | bash tests/run.sh\n' "$(date +%Y-%m-%d\ %H:%M:%S)" > "$PACK/state/session.log"
+mkdir -p src; touch src/y.ts
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix y"},{"role":"assistant","content":"INTENT: fix\nedit:src/y.ts\nDone-when:\n- file updated\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+run_test "stop_gate accepts Done-when met with verify evidence" "accept" "$RESULT"
+rm -f src/y.ts
+rm -rf "$PACK/state"
+
 mkdir -p "$PACK/state/conv-old-999" "$PACK/state/conv-fresh-1"
 OLD_TS="$(date -v-3d +%Y%m%d%H%M 2>/dev/null || date -d '3 days ago' +%Y%m%d%H%M)"
 touch -t "$OLD_TS" "$PACK/state/conv-old-999"

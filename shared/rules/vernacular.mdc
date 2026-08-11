@@ -13,7 +13,7 @@ Doctrina: Smallest Diff. Cero slop. Zero prose comments.
 - Self-documenting names. No narrating comments. No `any` / blind casts; prefer `type`.
 - Named exports only. Early-return. Nesting >2 levels banned.
 - No dead code. No TODO without ticket ref. No stub theater (`// implement later`, empty catch, leftover `console.log`).
-- No unused imports. Match neighbor import style. One responsibility per function; extract before soft LOC (150).
+- No unused imports. Match neighbors: before Write in a directory, Read 1–2 sibling files and match imports/naming/error idiom. One responsibility per function; extract before soft LOC (150).
 - Infer loading from data. No redundant `isLoading` when data starts null.
 - Hooks Bash: max 80 LOC entrypoints; `jq`; emit `permission` / `additional_context` / `continue` / `followup_message`. No Python/Node/`cd`/`updated_input`.
 - Cursor tools: `Write` `Shell` `Read` `Grep` `Delete` `Task` (primary). Claude aliases only in hook matchers.

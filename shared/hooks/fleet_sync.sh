@@ -10,8 +10,8 @@ PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 CMD="${1:-all}"
 SHARED=(agent types testing debugging native-lean-autoload ponytail vernacular)
 GLOBAL=(native-lean-autoload ponytail agent vernacular testing)
-HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh before_shell.sh before_mcp.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
-CLOUD_HOOK_SCRIPTS=(lean_gate.sh pre_tool_use.sh before_shell.sh before_read_file.sh before_mcp.sh before_submit_prompt.sh stop_gate.sh)
+HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh before_shell.sh before_mcp.sh pre_compact.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
+CLOUD_HOOK_SCRIPTS=(lean_gate.sh pre_tool_use.sh before_shell.sh before_read_file.sh before_mcp.sh before_submit_prompt.sh pre_compact.sh stop_gate.sh)
 
 load_lines() {
   local f="$1" line
