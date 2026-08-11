@@ -35,5 +35,26 @@ OUTCOMES="${OUTCOMES//[!0-9]}"
 [[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
 [[ "$OUTCOMES" -gt 5 ]] && OUTCOMES=5
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
-# Cursor beforeSubmitPrompt: continue/block only. DUTY → sessionStart additional_context.
-emit_continue true
+# Soft FILE_MAP nudge: path-like tokens without edit:|NEW: tags → continue:true + user_message (never block).
+NUDGE=""
+if [[ "$ROUTE" == "code" ]]; then
+  PATH_HITS="$(printf '%s' "$PROMPT" | grep -oE '\b(src|tests?|docs|shared|scripts|lib|app|hooks)/[A-Za-z0-9_./+=-]+\.[A-Za-z0-9]+|\b[A-Za-z0-9_.-]+\.(ts|tsx|js|jsx|sh|py|go|rs|md|json)\b' 2>/dev/null | head -n 8 || true)"
+  UNTAGGED=""
+  while IFS= read -r p; do
+    [[ -z "$p" ]] && continue
+    grep -qxF "$p" "$STATE/allowed_files.md" 2>/dev/null && continue
+    base="$(basename "$p")"
+    grep -qxF "$base" "$STATE/allowed_files.md" 2>/dev/null && continue
+    UNTAGGED="${UNTAGGED}${UNTAGGED:+ }$p"
+  done <<EOF
+$PATH_HITS
+EOF
+  if [[ -n "$UNTAGGED" ]]; then
+    NUDGE="FILE_MAP nudge: prompt mentions paths without edit:|NEW: tags (${UNTAGGED}). Declare them in INTENT chat prose — not a block, proceeding."
+  fi
+fi
+if [[ -n "$NUDGE" ]]; then
+  emit_continue true "$NUDGE"
+else
+  emit_continue true
+fi

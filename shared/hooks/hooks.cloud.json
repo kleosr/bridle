@@ -47,6 +47,12 @@
         "failClosed": true
       }
     ],
+    "preCompact": [
+      {
+        "command": ".cursor/hooks/pre_compact.sh",
+        "failClosed": false
+      }
+    ],
     "stop": [
       {
         "command": ".cursor/hooks/stop_gate.sh",

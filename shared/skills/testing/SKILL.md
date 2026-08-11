@@ -29,10 +29,11 @@ Bug fix ships a test named or described `regression: <symptom>` that fails on ol
 
 ## House gauntlet (Martin)
 1. Prefer `docs/TOOLCHAIN.md` / package test scripts already wired.
-2. ACT NOW — run them yourself; cite green evidence before Done.
+2. ACT NOW — run them yourself; cite green evidence before Done (`Done-when: met` should reference PASS/green from `bash tests/run.sh`, `scripts/doctor.sh`, or package test).
 3. Fail closed on red.
 4. No house gauntlet: run closest real verify; name residual; never ask accept-no-gauntlet-risk.
 5. Do not invent mutation theater or Clean Architecture test trees.
+6. stop_gate may soft-followup once on code turns with writes if Done-when:met lacks a verify cite — not a hard deny; run TOOLCHAIN and restate.
 
 ## Coverage
 Smoke detector, not a trophy. Prefer one hostile path over metric theater.

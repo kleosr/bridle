@@ -10,6 +10,28 @@ run_test "session_start emits additional_context" "true" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("DEBERES:")')"
 run_test "session_start injects DEBERES duty" "true" "$RESULT"
 
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("GROUNDING") and test("HANDOFF.md") and test("AGENTS.md")')"
+run_test "session_start injects grounding checklist" "true" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"please fix src/auth.ts login bug"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("FILE_MAP nudge")) then "nudge" else "no" end')"
+run_test "before_submit soft FILE_MAP nudge (continue:true)" "nudge" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and ((.user_message // "")|length)==0 then "clean" else "other" end')"
+run_test "before_submit no nudge when no path tokens" "clean" "$RESULT"
+
+RESULT="$(echo '{"trigger":"auto","context_usage_percent":88}' | bash "$PACK/shared/hooks/pre_compact.sh" | jq -r 'if .user_message|test("HANDOFF") then "ok" else "no" end')"
+run_test "preCompact emits user_message re-Read reminder" "ok" "$RESULT"
+
+if jq -e '.hooks.preCompact' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '.hooks.preCompact' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
+  && jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null; then
+  echo "[pass] preCompact registered globally + cloud (no sessionStart in cloud)"; PASS=$((PASS + 1))
+else
+  echo "[fail] preCompact registration wrong"; FAIL=$((FAIL + 1))
+fi
+
 rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_write_small.json" | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission')"
 run_test "lean_gate allows small write" "allow" "$RESULT"
@@ -153,7 +175,7 @@ run_test "lean.json comment_ratio_max is 2 (zero-comment)" "2" "$COMMENT_MAX"
 run_test "lean.json file_loc_soft is 150" "150" "$SOFT_MAX"
 
 LOC_OK=1
-for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_mcp.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
+for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_mcp.sh "$PACK"/shared/hooks/pre_compact.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done

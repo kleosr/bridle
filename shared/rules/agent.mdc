@@ -28,7 +28,7 @@ Job card: `OBJECTIVE` = postcondition + `edit:path`|`NEW:path` tags; `CONSTRAINT
 Ground → tag → edit/NEW → re-Read → prove Done-when.
 Glob/Grep/Read first; `Write` for create/overwrite (Cursor primary write tool).
 Finish EVERY tagged path this turn — no drip, no orphan unconnected files.
-Before Done: verify all Done-when predicates with TOOLCHAIN evidence.
+Before Done: verify all Done-when predicates with TOOLCHAIN evidence — cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test in chat (stop_gate may soft-followup once if missing).
 
 ## State
 
@@ -42,5 +42,5 @@ Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
 2. NO ASK INSIDE INTENT: missing Done-when work → do it now.
 3. NO PARTIAL HANDOFFS / NO DRIP.
 4. GROUND → TAG → WRITE: Glob/Grep/Read; tag paths; Write; cascade-fix.
-5. PRE-STOP: re-Read tagged FILES; prove Done-when; then `Done-when: met`.
-6. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates.
+5. PRE-STOP: re-Read tagged FILES; run TOOLCHAIN verify; cite green; prove Done-when; then `Done-when: met`.
+6. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates / missing verify cite (fail-open after one nudge).

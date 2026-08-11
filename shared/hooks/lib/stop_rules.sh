@@ -111,6 +111,23 @@ tier2_semantic() {
   fi
 }
 
+# Soft: code route + writes + Done-when:met without verify cite → one followup; else fail open.
+tier2_evidence() {
+  local route; route="$(cat "$STATE/route" 2>/dev/null || echo code)"
+  [[ "$route" == "code" ]] || return 0
+  [[ -s "$STATE/writes" ]] || return 0
+  [[ $(pe_dw_met) -eq 1 ]] || return 0
+  [[ $(pe_has_verify_evidence) -eq 1 ]] && return 0
+  # No Shell activity logged → ambiguous (may have verified outside) → fail open.
+  if [[ ! -f "$STATE/session.log" ]] || ! grep -q 'SHELL' "$STATE/session.log" 2>/dev/null; then
+    return 0
+  fi
+  # Already nudged once this session → fail open (avoid loop_limit thrash).
+  [[ -f "$STATE/evidence_nudge" ]] && return 0
+  printf '1\n' >"$STATE/evidence_nudge"
+  rules_follow "EVIDENCE: Done-when: met claimed but no green TOOLCHAIN/test cite this turn. Run docs/TOOLCHAIN.md verify (e.g. bash tests/run.sh or package test), cite PASS/green in chat, then Done-when: met."
+}
+
 tier3_fs() {
   rules_untouched
   local hl; hl="$(wc -l < "$HANDOFF" 2>/dev/null || echo 0)"; hl="${hl//[!0-9]}"; [[ -z "$hl" ]] && hl=0
@@ -119,4 +136,4 @@ tier3_fs() {
   fi
 }
 
-rules_run() { tier0_accept; tier1_structure; tier2_semantic; tier3_fs; rules_accept; }
+rules_run() { tier0_accept; tier1_structure; tier2_semantic; tier2_evidence; tier3_fs; rules_accept; }
