@@ -30,7 +30,8 @@ foreach ($event in $json.hooks.PSObject.Properties) {
     $entry.command = "powershell -NoProfile -ExecutionPolicy Bypass -File `"$HooksD\wsl-shim.ps1`" $script"
   }
 }
-$json | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $HomeC 'hooks.json') -Encoding UTF8
+# PS 5.1 Set-Content -Encoding UTF8 writes a BOM, which breaks strict JSON parsers.
+[IO.File]::WriteAllText((Join-Path $HomeC 'hooks.json'), ($json | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))
 
 Write-Host '[done] kleosrules installed (Windows via WSL shim)'
 Write-Host 'Next: paste shared/rules/USER-RULES.paste.txt into Cursor Settings -> User Rules, then start a NEW agent chat.'

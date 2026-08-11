@@ -26,7 +26,7 @@ case "$TOOL_NAME" in
 esac
 [[ -z "$FILE_PATH" ]] && { emit_allow; exit 0; }
 
-count_lines() { printf '%s\n' "$1" | wc -l; }
+count_lines() { [[ -z "$1" ]] && { echo 0; return; }; printf '%s\n' "$1" | wc -l; }
 
 REDUCE=0
 if [[ "$TOOL_NAME" == "Write" ]]; then

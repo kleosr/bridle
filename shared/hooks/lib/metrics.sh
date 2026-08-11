@@ -25,7 +25,7 @@ complexity_check() {
     if (hits >= 4) c++
   } END { print c + 0 }')"
   if [[ "${hot:-0}" -gt 0 && "$max_func" -gt 0 ]]; then
-    emit_deny "COMPLEXITY DENY: a line packs 4+ branching keywords (exceeds func roof ${max_func}). Split the condition or extract a helper."
+    emit_deny "COMPLEXITY DENY: a line packs 4+ branching keywords. Split the condition or extract a helper."
     return 1
   fi
   return 0
@@ -70,10 +70,10 @@ comment_ratio_check() {
   local content="$1" max_pct="$2"
   [[ "$max_pct" -le 0 ]] && return 0
   local total comment_lines code_lines pct
-  total="$(printf '%s\ns' "$content" | grep -cE '[[:alnum:]]' || true)"
+  total="$(printf '%s\n' "$content" | grep -cE '[[:alnum:]]' || true)"
   total="${total//[!0-9]}"; [[ -z "$total" ]] && total=0
   [[ "$total" -lt 8 ]] && return 0
-  comment_lines="$(printf '%s\ns' "$content" | grep -cE '^[[:space:]]*(//|/\*|\*|#|<!--|--)' || true)"
+  comment_lines="$(printf '%s\n' "$content" | grep -cE '^[[:space:]]*(//|/\*|\*|#|<!--|--)' || true)"
   comment_lines="${comment_lines//[!0-9]}"; [[ -z "$comment_lines" ]] && comment_lines=0
   code_lines=$(( total - comment_lines ))
   [[ "$code_lines" -le 0 ]] && return 0
