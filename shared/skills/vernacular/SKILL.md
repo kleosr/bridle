@@ -11,56 +11,53 @@ description: >
 Thin roof: `shared/rules/vernacular.mdc` (hard bans). This file = procedure + examples.
 
 ## Load order
-1. Read `.cursor/rules/vernacular.mdc` (or VERNACULAR.md).
-2. Follow hard bans from the thin rule first.
+1. Read thin vernacular rule first.
+2. Follow hard bans.
 3. Use sections below for stack-specific shape.
 4. If no contract: private-match siblings only. Do not invent dialect.
 
 ## TypeScript / React / Node
-- Comments: no prose comments in app code; machine directives only (shebang, pragma, license header, build guard, ts-expect-error). The comment-ratio gate in `lean_gate.sh` enforces this mechanically.
+- Comments: **zero prose**. Machine directives only (`#!`, pragma, license, build-guard, `@ts-expect-error`, eslint/prettier directives). Enforced by `lean_gate` on **projected whole file** (`comment_ratio_max=2`).
+- Names: self-documenting; never narrate what the next line does.
 - State: `if (!data) return <Loading/>` — no redundant isLoading when data starts null.
 - Returns: early-return; max nesting depth 2.
-- Types: strict; no any; prefer type; infer when clear.
-- Async: async/await or chains; no try/catch that only logs.
-- Exports: named only.
+- Types: strict; no `any`; prefer `type`; no blind casts.
+- Async: async/await; no try/catch that only logs/swallows — match repo error idiom.
+- Exports: named only. No default exports.
+- Dead code / TODOs: delete or ticket-ref (`TODO(AUTH-12):`). No `// implement later`, empty `catch {}`, debug `console.log` left behind.
+- Imports: no unused; group/stable style matching neighbors.
+- Functions: one responsibility; extract before soft LOC 150 (`file_loc_soft`); hard deny at 700.
+- Tests: behavior changes need tests when testing skill applies; cite `docs/TOOLCHAIN.md` evidence before Done.
+
+## Cursor tools (primary vocabulary)
+Use: `Write`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`.
+Do not prefer Claude-only names (`Bash`, `StrReplace`, `MultiEdit`, `Edit`) in chat/examples — hooks may still accept those as aliases.
+
+## INTENT
+- Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/fence).
+- Tag every path `edit:path`|`NEW:path`. Done-when ≤5 decidable predicates. Finish all tags this turn.
+- stop_gate audits assistant prose from `transcript_path`.
 
 ## Bash hooks (`shared/hooks/*.sh`)
-Cursor-native output. Template:
+Cursor-native emit (exit 0 so messages survive; non-zero only for failClosed parse failures):
 
-    #!/bin/bash
-    set -euo pipefail
-    INPUT=$(cat)
-    # parse with jq; emit Cursor JSON on stdout
     echo '{"permission":"allow"}'
-    exit 0
+    # deny: {"permission":"deny","user_message":"..."}
+    # sessionStart: {"additional_context":"..."}
+    # beforeSubmitPrompt: {"continue":true|false}
+    # stop: {"followup_message":"..."}
 
-Banned: updated_input, Python, Node, external APIs, cd in hooks.
-Required: jq; max 80 LOC (event-hook entrypoints); never emit Claude
-shapes (`hookSpecificOutput`). Emit shapes: `permission` (deny/allow),
-`additional_context` (sessionStart), `continue` (beforeSubmitPrompt),
-`followup_message` (stop).
-Deny = `{"permission":"deny","user_message":"..."}` on stdout + **exit 0**
-(Cursor parses stdout JSON on exit 0; a non-zero exit also denies via
-failClosed but drops the message). Unparseable input: exit non-zero so
-failClosed blocks.
+Banned: `updated_input`, Python/Node gates, external APIs, `cd` in hooks.
+Required: jq; event-hook entrypoints ≤80 LOC.
 
 ## Markdown & HANDOFF
-- Bullets/tables. No fluff.
-- System docs max 80 lines (HANDOFF, ARCHITECTURE).
+- Bullets/tables. No fluff. System docs max 80 lines.
 - HANDOFF: TASK / FILES / STATUS / NEXT.
-- Summaries not chat dumps.
 
 ## JSON
-- Strict JSON (no comments).
-- One roof per policy file.
-- hooks.json: flat; camelCase event keys.
-
-## Ephemeral state
-- `/state/` atomic overwrite.
-- `current_intent.md` = raw intent only.
-- Clear on stop_gate success.
+- Strict JSON (no comments). One roof per policy file (`lean.json`, `intent.json`).
 
 ## Anti-patterns
 - Foreign UseCase/Repository theater.
-- Shell bypass of Write/StrReplace.
+- Shell bypass of `Write`/`Read`/`Grep`.
 - Claiming gates enforce ungated prose essays.

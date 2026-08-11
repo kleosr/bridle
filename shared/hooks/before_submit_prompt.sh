@@ -16,11 +16,15 @@ if [[ "$MODE" != "agent" ]]; then
   emit_continue true; exit 0
 fi
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
+# Sensitive-prompt guard (continue:false). Keep patterns lean.
+if printf '%s' "$PROMPT" | grep -qE '(ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN ([A-Z]+ )?PRIVATE KEY-----)'; then
+  emit_continue false "Blocked: prompt looks like it contains a secret/token (ghp_/sk-/AKIA/private key). Remove credentials and resubmit."
+  exit 0
+fi
 ROUTE="code"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 printf '%s' "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
-# BSD iconv transliterates but exits 1 and marks approximations ('e ~n); strip the markers.
 PROMPT_NORM="$(printf '%s' "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null | tr -d "'\`~^" || true)"
 [[ -z "$PROMPT_NORM" ]] && PROMPT_NORM="$PROMPT"
 CODE_RE='(edit:|NEW:|\.(sh|bash|zsh|py|rb|js|mjs|cjs|ts|tsx|jsx|go|rs|c|cc|cpp|h|hpp|java|kt|swift|php|lua|sql|json|ya?ml|toml|md|ps1)|src/|tests?/|docs/|fix|corrige|corrije|bug|error|falla|break|rompe|implement|refactor|crea|create|edita|edit|agrega|add|delete|elimin|test|commit|push|merge|deploy|instal|actualiza|update|hook|archiv|file|script)'
@@ -31,5 +35,5 @@ OUTCOMES="${OUTCOMES//[!0-9]}"
 [[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
 [[ "$OUTCOMES" -gt 5 ]] && OUTCOMES=5
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
-# Cursor beforeSubmitPrompt: continue/block only. DUTY context → sessionStart.
+# Cursor beforeSubmitPrompt: continue/block only. DUTY → sessionStart additional_context.
 emit_continue true

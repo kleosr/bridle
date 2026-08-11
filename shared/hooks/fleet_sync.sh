@@ -4,10 +4,14 @@ PACK="$(cd "$(dirname "$0")/../.." && pwd)"
 HOOKS_DIR="$PACK/shared/hooks"
 HOME_C="${HOME}/.cursor"
 FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
+# CLOUD=1 or PROJECT_HOOKS=1 → install thin Lane-A project hooks (no sessionStart).
+CLOUD="${CLOUD:-0}"
+PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 CMD="${1:-all}"
 SHARED=(agent types testing debugging native-lean-autoload ponytail vernacular)
 GLOBAL=(native-lean-autoload ponytail agent vernacular testing)
-HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh before_shell.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
+HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh before_shell.sh before_mcp.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
+CLOUD_HOOK_SCRIPTS=(lean_gate.sh pre_tool_use.sh before_shell.sh before_read_file.sh before_mcp.sh before_submit_prompt.sh stop_gate.sh)
 
 load_lines() {
   local f="$1" line
@@ -177,12 +181,44 @@ gitignore_state() {
   grep -qxF 'state/' "$gi" || printf '\n# kleosrules runtime state (velocity log, intent snapshots)\nstate/\n' >>"$gi"
 }
 
-sync_repo_hooks() {
+# Thin project hooks for cloud agents (no sessionStart → no double DUTY with global).
+# Paths are .cursor/hooks/... (project-root relative per Cursor docs).
+install_project_hooks() {
+  local repo="$1" label="$2" dest s p
+  dest="$repo/.cursor/hooks"
+  mkdir -p "$dest/policy" "$dest/lib"
+  for s in "${CLOUD_HOOK_SCRIPTS[@]}"; do
+    cp -f "$HOOKS_DIR/$s" "$dest/$s"
+    chmod +x "$dest/$s"
+  done
+  for s in "$HOOKS_DIR"/lib/*.sh; do
+    [[ -f "$s" ]] || continue
+    cp -f "$s" "$dest/lib/$(basename "$s")"
+    chmod +x "$dest/lib/$(basename "$s")"
+  done
+  for p in "$HOOKS_DIR"/policy/*.json; do
+    [[ -f "$p" ]] || continue
+    cp -f "$p" "$dest/policy/$(basename "$p")"
+  done
+  cp -f "$HOOKS_DIR/hooks.cloud.json" "$repo/.cursor/hooks.json"
+  echo "[ok] project Lane-A hooks → $label (no sessionStart; cloud-safe)"
+}
+
+remove_project_hooks() {
   local repo="$1" label="$2"
   if [[ -e "$repo/.cursor/hooks.json" || -d "$repo/.cursor/hooks" ]]; then
     rm -f "$repo/.cursor/hooks.json"
     rm -rf "$repo/.cursor/hooks"
     echo "[rm] repo-level hooks → $label (global ~/.cursor layer owns registration)"
+  fi
+}
+
+sync_repo_hooks() {
+  local repo="$1" label="$2"
+  if [[ "$PROJECT_HOOKS" == "1" ]]; then
+    install_project_hooks "$repo" "$label"
+  else
+    remove_project_hooks "$repo" "$label"
   fi
   gitignore_state "$repo"
 }
@@ -265,8 +301,17 @@ verify_smoke() {
   if grep -q 'kleos-gate' "$HOME_C/hooks.json" 2>/dev/null; then
     echo "[fail] home hooks still kleos-gate"; bad=1
   fi
-  if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
-    echo "[fail] pack has repo-level hooks (double injection risk)"; bad=1
+  if [[ -f "$PACK/.cursor/hooks.json" ]] && jq -e '.hooks.sessionStart' "$PACK/.cursor/hooks.json" >/dev/null 2>&1; then
+    echo "[fail] pack project hooks must NOT register sessionStart (double DUTY)"; bad=1
+  elif [[ "$PROJECT_HOOKS" == "1" ]]; then
+    if [[ ! -f "$PACK/.cursor/hooks.json" ]] || ! grep -q 'lean_gate' "$PACK/.cursor/hooks.json" 2>/dev/null; then
+      echo "[fail] PROJECT_HOOKS=1 but pack missing thin lean_gate project hooks"; bad=1
+    fi
+  elif [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
+    echo "[fail] pack has repo-level hooks (double injection risk; use CLOUD=1 project-hooks for cloud)"; bad=1
+  fi
+  if ! grep -q 'beforeMCPExecution\|before_mcp' "$HOME_C/hooks.json" 2>/dev/null; then
+    echo "[fail] ~/.cursor/hooks.json missing beforeMCPExecution"; bad=1
   fi
   [[ "$bad" -eq 0 ]] || return 1
   echo "[ok] verify smoke"
@@ -281,6 +326,13 @@ case "$CMD" in
   sync)
     sync_fleet
     ;;
+  project-hooks)
+    PROJECT_HOOKS=1
+    sync_fleet
+    # Always install thin hooks on the pack itself for cloud agents working this repo.
+    install_project_hooks "$PACK" "pack"
+    echo "[done] project-hooks (Lane-A; no sessionStart). Global still owns DUTY injection locally."
+    ;;
   verify)
     verify_smoke
     ;;
@@ -289,12 +341,15 @@ case "$CMD" in
     install_global_rules
     install_skills
     sync_fleet
+    if [[ "$PROJECT_HOOKS" == "1" ]]; then
+      install_project_hooks "$PACK" "pack"
+    fi
     verify_smoke
-    echo "[done] fleet_sync all FORCE=$FORCE"
+    echo "[done] fleet_sync all FORCE=$FORCE PROJECT_HOOKS=$PROJECT_HOOKS"
     echo "Manual: paste $PACK/shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
     ;;
   *)
-    echo "usage: FORCE=1 $0 {install|sync|verify|all}" >&2
+    echo "usage: FORCE=1 [CLOUD=1|PROJECT_HOOKS=1] $0 {install|sync|project-hooks|verify|all}" >&2
     exit 2
     ;;
 esac

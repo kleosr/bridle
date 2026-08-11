@@ -6,7 +6,7 @@ alwaysApply: true
 # AGENT CAPSULE
 
 Bash hooks + local HANDOFF memory. One model per conversation.
-Read `HANDOFF.md` for multi-session work. Prefer NO CODE. Smallest Diff.
+Read `HANDOFF.md` for multi-session work. Prefer NO CODE. Smallest Diff. Zero prose comments.
 Start: read HANDOFF.md tail. Stop with tools: update HANDOFF.
 Git only when asked. Secrets never in code or chat.
 Done = `docs/TOOLCHAIN.md` green with evidence.
@@ -14,9 +14,9 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 ## Harness
 
-Bash hooks: `session_start`, `before_submit_prompt`, `stop_gate`, `lean_gate`, `pre_tool_use` (+ `subagent_*`, `after_shell`, `before_read_file`, `session_end`). No Rust.
-Brain = `HANDOFF.md` (local, always works).
-Injection != Declaration: harness injects `additionalContext` only; user prompt is immutable. Never `updated_input`.
+Bash hooks: `session_start` (`additional_context`), `before_submit_prompt` (`continue`), `stop_gate` (`followup_message`), `lean_gate`/`pre_tool_use`/`before_shell`/`before_read_file`/`before_mcp` (`permission`). No Rust.
+Brain = `HANDOFF.md` (local). Cloud agents: thin project hooks via `fleet_sync.sh project-hooks` (no sessionStart — avoids double DUTY).
+Injection != Declaration: `sessionStart` injects `additional_context` only; `beforeSubmitPrompt` is continue/block. Never `updated_input`.
 
 ## INTENT protocol
 
@@ -26,10 +26,9 @@ Job card: `OBJECTIVE` = postcondition + `edit:path`|`NEW:path` tags; `CONSTRAINT
 ## File map
 
 Ground → tag → edit/NEW → re-Read → prove Done-when.
-Glob/Grep/Read first; `StrReplace` existing; `Write` only NEW paths.
+Glob/Grep/Read first; `Write` for create/overwrite (Cursor primary write tool).
 Finish EVERY tagged path this turn — no drip, no orphan unconnected files.
-Before write: read `HANDOFF.md` for current session state.
-Before Done: verify all Done-when predicates hold with evidence (build/test/curl/read).
+Before Done: verify all Done-when predicates with TOOLCHAIN evidence.
 
 ## State
 
@@ -39,12 +38,9 @@ Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
 
 ## Autonomous loop (no early stops)
 
-Work ends when every Done-when predicate holds — not after the first draft.
-
-1. DECLARE FIRST: write INTENT in chat before any tool.
-2. NO ASK INSIDE INTENT: missing Done-when work → do it now. Do not ask permission.
-3. NO PARTIAL HANDOFFS / NO DRIP: ban "let me know…", "next pass", "will continue". Finish every tagged path this turn.
-4. GROUND → TAG → EDIT: Glob/Grep/Read; tag `edit:path`|`NEW:path`; StrReplace existing; Write only NEW.
-5. PRE-STOP: re-Read every tagged FILE; prove every Done-when predicate on disk/TOOLCHAIN; then `Done-when: met`.
-6. CASCADE FIX: broken import/test from your change → fix same turn.
-7. CLOSE: `Done-when: met` then stop. `stop_gate` reads **assistant prose only** and will followup on poison, drip, or unmet predicates.
+1. DECLARE FIRST: INTENT in chat before any tool.
+2. NO ASK INSIDE INTENT: missing Done-when work → do it now.
+3. NO PARTIAL HANDOFFS / NO DRIP.
+4. GROUND → TAG → WRITE: Glob/Grep/Read; tag paths; Write; cascade-fix.
+5. PRE-STOP: re-Read tagged FILES; prove Done-when; then `Done-when: met`.
+6. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates.

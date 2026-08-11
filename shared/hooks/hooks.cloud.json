@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|StrReplace",
+        "command": ".cursor/hooks/lean_gate.sh",
+        "timeout": 5,
+        "failClosed": true
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|StrReplace|Shell|Bash",
+        "command": ".cursor/hooks/pre_tool_use.sh",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/before_shell.sh",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": ".cursor/hooks/before_read_file.sh",
+        "failClosed": true
+      }
+    ],
+    "beforeTabFileRead": [
+      {
+        "command": ".cursor/hooks/before_read_file.sh",
+        "failClosed": true
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": ".cursor/hooks/before_mcp.sh",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": ".cursor/hooks/before_submit_prompt.sh",
+        "failClosed": true
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/stop_gate.sh",
+        "loop_limit": 5,
+        "failClosed": false
+      }
+    ]
+  }
+}

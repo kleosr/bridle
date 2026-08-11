@@ -65,6 +65,19 @@
         "failClosed": true
       }
     ],
+    "beforeTabFileRead": [
+      {
+        "command": "./hooks/before_read_file.sh",
+        "failClosed": true
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "./hooks/before_mcp.sh",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
     "stop": [
       {
         "command": "./hooks/stop_gate.sh",

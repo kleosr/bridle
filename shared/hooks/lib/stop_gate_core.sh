@@ -30,13 +30,21 @@ load_transcript_msgs() {
     return 0
   fi
   # JSONL (Cursor / Claude-compat transcript lines)
+  # Cursor 3.x: {"role":"user","message":{"content":[{"type":"text","text":"..."}]}}
+  # Flat / Claude-compat: {"role"|"type", "content"|"text"} or nested .message.role
   jq -s -c '
+    def to_text:
+      if type == "array"
+      then map(select((.type // "text") == "text") | (.text // .content // "")) | join("\n")
+      elif type == "string" then .
+      else tostring end;
     map(
       if .message then
-        {role: (.message.role // .type // "unknown"), content: (.message.content // .message.text // "")}
+        {role: (.message.role // .role // .type // "unknown"), content: (.message.content // .message.text // "")}
       else
         {role: (.role // .type // "unknown"), content: (.content // .text // "")}
       end
+      | .content |= to_text
     )
   ' "$path" 2>/dev/null || return 1
 }
