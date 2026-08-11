@@ -11,8 +11,13 @@ run_test "session_start writes state/mode=plan" "plan" "$PLAN_MODE_WRITTEN"
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'plan\n' > "$PACK/state/mode"
 RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_plan_mode.json" | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
-RESULT_IS_EMPTY="$(printf '%s' "$RESULT" | jq -r 'if . == {} then "quiet" else "scaffold" end')"
-run_test "before_submit_prompt quiet in plan mode" "quiet" "$RESULT_IS_EMPTY"
+RESULT_CONTINUE="$(printf '%s' "$RESULT" | jq -r '.continue // empty')"
+# Plan mode: continue:true (or legacy quiet {}). Either is non-blocking.
+if [[ "$RESULT_CONTINUE" == "true" ]] || [[ "$(printf '%s' "$RESULT" | jq -r 'if . == {} then "quiet" else "other" end')" == "quiet" ]]; then
+  echo "[pass] before_submit_prompt non-blocking in plan mode"; PASS=$((PASS + 1))
+else
+  echo "[fail] before_submit_prompt blocked or injected in plan mode: $RESULT"; FAIL=$((FAIL + 1))
+fi
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'plan\n' > "$PACK/state/mode"

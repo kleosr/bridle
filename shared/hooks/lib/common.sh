@@ -31,11 +31,23 @@ extract_conv_id() {
   printf '%s' "$id"
 }
 
-emit_allow() { echo '{"action":"allow"}'; }
+# Cursor deny/allow schema: permission + optional user_message / agent_message.
+emit_allow() {
+  local msg="${1:-}"
+  if [[ -n "$msg" ]]; then
+    jq -n --arg m "$msg" '{permission:"allow", agent_message:$m}'
+  else
+    echo '{"permission":"allow"}'
+  fi
+}
 
 emit_deny() {
-  local msg="$1"
-  jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
+  local msg="$1" agent="${2:-}"
+  if [[ -n "$agent" ]]; then
+    jq -n --arg m "$msg" --arg a "$agent" '{permission:"deny", user_message:$m, agent_message:$a}'
+  else
+    jq -n --arg m "$msg" '{permission:"deny", user_message:$m}'
+  fi
 }
 
 emit_followup() {
@@ -45,9 +57,28 @@ emit_followup() {
 
 emit_quiet() { echo '{}'; }
 
+# sessionStart (and postToolUse) context injection — snake_case per Cursor docs.
 emit_context() {
   local ctx="$1"
-  jq -n --arg c "$ctx" '{additionalContext: $c}'
+  jq -n --arg c "$ctx" '{additional_context: $c}'
+}
+
+# beforeSubmitPrompt is block/allow only — not a context injection point.
+emit_continue() {
+  local cont="${1:-true}" msg="${2:-}"
+  if [[ "$cont" == "false" ]]; then
+    if [[ -n "$msg" ]]; then
+      jq -n --arg m "$msg" '{continue:false, user_message:$m}'
+    else
+      echo '{"continue":false}'
+    fi
+  else
+    if [[ -n "$msg" ]]; then
+      jq -n --arg m "$msg" '{continue:true, user_message:$m}'
+    else
+      echo '{"continue":true}'
+    fi
+  fi
 }
 
 is_agent_mode() {

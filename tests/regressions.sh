@@ -15,6 +15,39 @@ rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate accepts valid INTENT" "accept" "$RESULT"
 
+# Cursor-native stop: transcript_path JSONL, no messages array
+rm -rf "$PACK/state"
+TP="$(mktemp)"
+printf '%s\n' \
+  '{"role":"user","content":"fix the bug"}' \
+  '{"role":"assistant","content":"All done without INTENT."}' > "$TP"
+RESULT="$(echo "{\"status\":\"completed\",\"loop_count\":0,\"transcript_path\":\"$TP\"}" | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+run_test "stop_gate audits from transcript_path JSONL" "followup" "$RESULT"
+rm -f "$TP"
+
+rm -rf "$PACK/state"
+TP="$(mktemp)"
+printf '%s\n' \
+  '{"role":"user","content":"fix the bug"}' \
+  '{"role":"assistant","content":"INTENT: fix docs\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}' > "$TP"
+RESULT="$(echo "{\"status\":\"completed\",\"loop_count\":0,\"transcript_path\":\"$TP\"}" | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+run_test "stop_gate accepts valid INTENT via transcript_path" "accept" "$RESULT"
+rm -f "$TP"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"status":"completed","loop_count":0}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if . == {} then "quiet" else "other" end')"
+run_test "stop_gate fail-open quiet when transcript_path absent" "quiet" "$RESULT"
+RESULT="$(grep -c 'no messages array and no transcript_path' "$PACK/state/session.log" 2>/dev/null || echo 0)"
+RESULT="${RESULT//[!0-9]}"; [[ -z "$RESULT" ]] && RESULT=0
+run_test "stop_gate logs loud ERROR when transcript missing" "1" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"status":"completed","transcript_path":"/nonexistent/path/transcript.jsonl"}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if . == {} then "quiet" else "other" end')"
+run_test "stop_gate fail-open on unreadable transcript_path" "quiet" "$RESULT"
+RESULT="$(grep -c 'transcript missing/unreadable' "$PACK/state/session.log" 2>/dev/null || echo 0)"
+RESULT="${RESULT//[!0-9]}"; [[ -z "$RESULT" ]] && RESULT=0
+run_test "stop_gate logs loud ERROR on unreadable transcript" "1" "$RESULT"
+
 rm -rf "$PACK/state"
 RESULT="$(echo '{"status":"completed","messages":[{"role":"assistant","content":"```bash\necho INTENT: poison\nDone-when: met\nedit:a\n```"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate ignores code-fence poison" "followup" "$RESULT"
@@ -72,15 +105,15 @@ RESULT="$(HERE="$PACK/shared/hooks" bash -c '
 run_test "count_lines counts single-line as 1" "1" "$RESULT"
 
 printf '# HANDOFF — Session State\n\n## Active Objective\n\nreal task\n\n## Archived\n\n- real note\n\n<!-- COMPACTION PROTOCOL\nprotocol boilerplate line\n-->\n' > "$PACK/HANDOFF.md"
-RESULT="$(echo '{}' | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additionalContext | test("real note") and (test("COMPACTION PROTOCOL") | not)')"
+RESULT="$(echo '{}' | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("real note") and (test("COMPACTION PROTOCOL") | not)')"
 run_test "session_start tail excludes COMPACTION PROTOCOL block" "true" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\n' > /tmp/vel_target.ts
 for i in $(seq 1 15); do echo '/tmp/vel_target.ts' >> "$PACK/state/edit_velocity.log"; done
-RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n","new_string":"l1"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.action // "none"')"
+RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n","new_string":"l1"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
 run_test "lean_gate skips velocity deny on LOC-reducing edit" "allow" "$RESULT"
-RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1","new_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.action // "none"')"
+RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1","new_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
 run_test "lean_gate enforces velocity on non-reducing edit" "deny" "$RESULT"
 rm -f /tmp/vel_target.ts
 
@@ -93,19 +126,27 @@ run_test "rules_accept preserves real HANDOFF content (no template wipe)" "ok" "
 FS_HOME="$(mktemp -d)"
 RESULT="$(HOME="$FS_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1; echo $?)"
 SKILLS_OK="$(test -L "$FS_HOME/.cursor/skills/ponytail" && echo yes || echo no)"
+HAS_BEFORE_SHELL="$(grep -c 'before_shell.sh' "$FS_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
+HAS_BEFORE_SHELL="${HAS_BEFORE_SHELL//[!0-9]}"; [[ -z "$HAS_BEFORE_SHELL" ]] && HAS_BEFORE_SHELL=0
 rm -rf "$FS_HOME"
 run_test "fleet_sync install completes on fresh HOME (orphan-loop set -e regression)" "0" "$RESULT"
 run_test "fleet_sync install actually installs skills on fresh HOME" "yes" "$SKILLS_OK"
+run_test "fleet_sync installs beforeShellExecution hook" "1" "$HAS_BEFORE_SHELL"
 
 rm -rf "$PACK/state"
 CHAT_OUT="$(printf '%s' '{"prompt":"gracias por la explicacion de arquitectura","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-chat-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
-RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.additionalContext // empty' | grep -c 'ROUTE_CLASSIFY: chat' || true)"
-run_test "chat route injects light context" "1" "$RESULT"
-RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.additionalContext // empty' | grep -c 'FILE_MAP' || true)"
-run_test "chat route skips FILE_MAP block (token saving)" "0" "$RESULT"
+RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.continue')"
+run_test "chat route before_submit continues" "true" "$RESULT"
+RESULT="$(cat "$PACK/state/conv-chat-001/route" 2>/dev/null || echo missing)"
+run_test "chat route writes route=chat" "chat" "$RESULT"
+# DUTY injection moved to sessionStart — chat must not get FILE_MAP via beforeSubmit
+RESULT="$(printf '%s' "$CHAT_OUT" | jq -r 'has("additional_context") or has("additionalContext")')"
+run_test "before_submit does not inject context (Cursor contract)" "false" "$RESULT"
 CODE_OUT="$(printf '%s' '{"prompt":"corrige el bug en src/auth.ts","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-code-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
-RESULT="$(printf '%s' "$CODE_OUT" | jq -r '.additionalContext // empty' | grep -c 'FILE_MAP' || true)"
-run_test "code route keeps full DEBERES block" "1" "$RESULT"
+RESULT="$(printf '%s' "$CODE_OUT" | jq -r '.continue')"
+run_test "code route before_submit continues" "true" "$RESULT"
+RESULT="$(cat "$PACK/state/conv-code-001/route" 2>/dev/null || echo missing)"
+run_test "code route writes route=code" "code" "$RESULT"
 STOP_OUT="$(printf '%s' '{"status":"completed","conversation_id":"conv-chat-001","messages":[{"role":"user","content":"gracias"},{"role":"assistant","content":"De nada, aqui estoy."}]}' | bash "$PACK/shared/hooks/stop_gate.sh")"
 RESULT="$(printf '%s' "$STOP_OUT" | jq -r 'if . == {} then "quiet" else "followup" end')"
 run_test "chat route stop accepted without INTENT" "quiet" "$RESULT"

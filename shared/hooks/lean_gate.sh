@@ -20,6 +20,7 @@ CONV_ID="$(extract_conv_id "$INPUT")"
 STATE="$(state_dir)"
 VELOCITY_LOG="$STATE/edit_velocity.log"
 
+# Cursor primary: Write. Claude-compat: Edit|MultiEdit|StrReplace.
 case "$TOOL_NAME" in
   Write|Edit|MultiEdit|StrReplace) ;;
   *) emit_allow; exit 0 ;;
@@ -34,7 +35,7 @@ if [[ "$TOOL_NAME" == "Write" ]]; then
   LINES="$(count_lines "$CONTENT")"
   LINES="${LINES//[!0-9]}"
   [[ -z "$LINES" ]] && LINES=0
-  [[ "${LINES:-0}" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: Write ${LINES} LOC > ${MAX} roof. Split into smaller modules." '{action:"deny",user_message:$m}'; exit 0; }
+  [[ "${LINES:-0}" -gt "$MAX" ]] && { emit_deny "MECHANICAL DENY: Write ${LINES} LOC > ${MAX} roof. Split into smaller modules."; exit 0; }
 else
   [[ -f "$FILE_PATH" ]] || { emit_allow; exit 0; }
   CUR="$(wc -l < "$FILE_PATH")"
@@ -50,7 +51,7 @@ else
   NEW_C="$(count_lines "$NEW_CONTENT")"
   NEW_C="${NEW_C//[!0-9]}"; [[ -z "$NEW_C" ]] && NEW_C=0
   PROJECTED=$(( CUR - OLD_C + NEW_C ))
-  [[ "$PROJECTED" -gt "$MAX" ]] && { jq -n --arg m "MECHANICAL DENY: projected ${PROJECTED} LOC > ${MAX} roof (current ${CUR}). Split." '{action:"deny",user_message:$m}'; exit 0; }
+  [[ "$PROJECTED" -gt "$MAX" ]] && { emit_deny "MECHANICAL DENY: projected ${PROJECTED} LOC > ${MAX} roof (current ${CUR}). Split."; exit 0; }
   [[ "$PROJECTED" -lt "$CUR" ]] && REDUCE=1
   CONTENT="$NEW_CONTENT"
 fi

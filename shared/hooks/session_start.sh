@@ -18,6 +18,16 @@ TAIL=""
 if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 40 "$HANDOFF" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15)"
 fi
-CTX="Session start. INTENT = chat prose before tools (never Shell). Tag edit:|NEW:; finish all tags this turn. For CODE work: ground in codebase first (AGENTS.md, Glob/Grep, manifest) — update HANDOFF at session END. HANDOFF tail:
+DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
+[[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; tag edit:|NEW:; never Shell-declare."
+PONYTAIL="$(jq -r '.ponytail_ladder // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
+# beforeSubmitPrompt cannot inject context (continue only). Sticky duties live here.
+CTX="Session start. DEBERES: ${DUTY}
+FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → Write existing or NEW → re-Read tags → prove Done-when. Never echo INTENT into Shell.
+SANDBOX: paths in your prompt snapshot to state/allowed_files.md. Writes outside warn at edit time; stop_gate audits every tagged file. Declare every edit:|NEW: path in INTENT.
+CONSTRAINTS: no explicit bounds → ponytail defaults (700 LOC roof, 15 edits/file, one responsibility per file).
+${PONYTAIL}
+Codebase first: Read AGENTS.md + manifest, Glob/Grep the feature area, THEN edit. Update HANDOFF at session END — NOT before tools.
+HANDOFF tail:
 ${TAIL}"
 emit_context "$CTX"
