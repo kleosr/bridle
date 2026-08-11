@@ -31,6 +31,7 @@ case "$TOOL_NAME" in
   Write|Edit|MultiEdit|StrReplace)
     FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
     [[ -z "$FILE_PATH" ]] && { emit_quiet; exit 0; }
+    printf '%s\n' "$FILE_PATH" >>"$STATE/writes" 2>/dev/null || true
     if [[ -s "$ALLOWED" ]]; then
       base="$(basename "$FILE_PATH")"
       if ! grep -qxF "$FILE_PATH" "$ALLOWED" 2>/dev/null && ! grep -qxF "$base" "$ALLOWED" 2>/dev/null; then

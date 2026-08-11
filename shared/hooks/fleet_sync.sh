@@ -28,7 +28,6 @@ is_ignored() {
     [[ "$base" == "$pat" ]] && return 0
     [[ "$path" == *"/$pat/"* ]] && return 0
     [[ "$path" == */"$pat" ]] && return 0
-    [[ "$path" == "$pat"* ]] && return 0
   done < <(load_lines "$PACK/shared/config/scan.ignore")
   return 1
 }

@@ -4,7 +4,7 @@
 source "$HERE/lib/stop_prose.sh"
 
 TAG_RE='(edit|NEW):[A-Za-z0-9_./+=-]+'
-rules_tags() { echo "$PROSE" | grep -oE "$TAG_RE" | sed 's/^[^:]*://' | grep -vx 'path' || true; }
+rules_tags() { printf '%s\n' "$PROSE" | grep -oE "$TAG_RE" | sed 's/^[^:]*://' | grep -vx 'path' || true; }
 
 rules_follow() {
   mkdir -p "$STATE"
@@ -16,6 +16,12 @@ rules_follow() {
 rules_accept() {
   local date; date="$(date +%Y-%m-%d)"
   rm -rf "$STATE"; mkdir -p "$STATE"
+  # Preserve an agent-written HANDOFF; only (re)seed the stub template when
+  # the file is missing or still carries the placeholder. Wiping real content
+  # on every accepted stop destroyed the session-end HANDOFF the rules require.
+  if [[ -f "$HANDOFF" ]] && ! grep -qF '(agent fills details)' "$HANDOFF"; then
+    emit_quiet; exit 0
+  fi
   local archived=""
   if [[ -f "$HANDOFF" ]]; then
     archived="$(sed -n '/^## Archived/,$p' "$HANDOFF" 2>/dev/null | tail -n +2 \
@@ -63,9 +69,13 @@ rules_untouched() {
   return 0
 }
 
-rules_run() {
-  if [[ $(pe_stop_accepted) -eq 1 ]]; then emit_quiet; exit 0; fi
+tier0_accept() {
+  [[ $(pe_stop_accepted) -eq 1 ]] && { emit_quiet; exit 0; }
   [[ "$STATUS" == "completed" && "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && rules_accept
+  return 0
+}
+
+tier1_structure() {
   if [[ $(pe_has_intent) -eq 0 || $(pe_has_done_when) -eq 0 ]]; then
     rules_follow "INTENT must be chat prose (first, before tools) — never Shell/Write/code-fence. INTENT: <OBJECTIVE=postcondition; tag edit:path|NEW:path>; Done-when: <≤5 decidable predicates>. Finish ALL tagged FILES this turn; Done-when: met; update HANDOFF."
   fi
@@ -84,19 +94,23 @@ rules_run() {
   if [[ "${ilines:-0}" -gt "$MAX_BODY" || "${anch:-0}" -gt "$MAX_ANCH" ]]; then
     rules_follow "Thin INTENT roof: ≤${MAX_ANCH} anchors; ≤${MAX_BODY} body lines. Keep postcondition + tags + predicates; drop essay."
   fi
-  if [[ $(pe_permission_ask) -eq 1 ]]; then
-    rules_follow "STOP REJECTED: permission ask. Complete every tagged FILE this turn, then Done-when: met."
-  fi
-  if [[ $(pe_drip) -eq 1 ]]; then
-    rules_follow "DRIP REJECTED: no multi-prompt drip. Connect every edit:|NEW: path now; prove Done-when; then met."
-  fi
-  rules_untouched
+}
+
+tier2_semantic() {
+  local hit; hit="$(pe_semantic_hit)"
+  [[ "$hit" == "ask" ]] && rules_follow "STOP REJECTED: permission ask. Complete every tagged FILE this turn, then Done-when: met."
+  [[ "$hit" == "drip" ]] && rules_follow "DRIP REJECTED: no multi-prompt drip. Connect every edit:|NEW: path now; prove Done-when; then met."
   if [[ $(pe_dw_met) -eq 0 ]]; then
     rules_follow "PREMATURE STOP: Done-when unmet in chat prose. Re-Read tagged FILES; prove every predicate; finish ALL tags this turn; write Done-when: met."
   fi
+}
+
+tier3_fs() {
+  rules_untouched
   local hl; hl="$(wc -l < "$HANDOFF" 2>/dev/null || echo 0)"; hl="${hl//[!0-9]}"; [[ -z "$hl" ]] && hl=0
   if [[ "$hl" -gt 180 ]]; then
     rules_follow "HANDOFF.md is ${hl} lines (>180 roof). Compact: move older Recent Changes into Archived, compress Failed Attempts to one-liners. Keep active sections under 150 lines, then Done-when: met."
   fi
-  rules_accept
 }
+
+rules_run() { tier0_accept; tier1_structure; tier2_semantic; tier3_fs; rules_accept; }

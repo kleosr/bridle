@@ -4,7 +4,7 @@ HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"
 resolve_root
 
-STATE="$(state_dir)"; HANDOFF="$ROOT/HANDOFF.md"; POLICY="$HERE/policy/intent.json"
+HANDOFF="$ROOT/HANDOFF.md"; POLICY="$HERE/policy/intent.json"
 MAX_BODY="$(jq -r '.max_intent_body_lines // 6' "$POLICY" 2>/dev/null || echo 6)"
 MAX_ANCH="$(jq -r '.max_named_anchors // 5' "$POLICY" 2>/dev/null || echo 5)"
 INPUT="$(cat)"
@@ -14,6 +14,9 @@ STATUS="$(echo "$INPUT" | jq -r 'if .status == null then "" else .status end' 2>
 [[ -n "$STATUS" && "$STATUS" != "completed" ]] && { emit_quiet; exit 0; }
 if ! is_agent_mode; then
   rm -rf "$STATE"; mkdir -p "$STATE"
+  emit_quiet; exit 0
+fi
+if [[ "$(cat "$STATE/route" 2>/dev/null || echo code)" == "chat" && ! -s "$STATE/writes" ]]; then
   emit_quiet; exit 0
 fi
 MSG_N="$(echo "$INPUT" | jq -r '((.messages // .transcript // .conversation // []) | if type=="array" then length else 0 end)' 2>/dev/null || echo 0)"

@@ -84,9 +84,45 @@ RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.t
 run_test "lean_gate enforces velocity on non-reducing edit" "deny" "$RESULT"
 rm -f /tmp/vel_target.ts
 
+rm -rf "$PACK/state"
+printf '# HANDOFF — Session State\n\n## Current State\n\nReal session content worth keeping.\n\n## Next Actions\n\n- ship it\n' > "$PACK/HANDOFF.md"
+cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/shared/hooks/stop_gate.sh" >/dev/null 2>&1 || true
+RESULT="$(grep -q 'Real session content worth keeping' "$PACK/HANDOFF.md" && echo "ok" || echo "fail")"
+run_test "rules_accept preserves real HANDOFF content (no template wipe)" "ok" "$RESULT"
+
 FS_HOME="$(mktemp -d)"
 RESULT="$(HOME="$FS_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1; echo $?)"
 SKILLS_OK="$(test -L "$FS_HOME/.cursor/skills/ponytail" && echo yes || echo no)"
 rm -rf "$FS_HOME"
 run_test "fleet_sync install completes on fresh HOME (orphan-loop set -e regression)" "0" "$RESULT"
 run_test "fleet_sync install actually installs skills on fresh HOME" "yes" "$SKILLS_OK"
+
+rm -rf "$PACK/state"
+CHAT_OUT="$(printf '%s' '{"prompt":"gracias por la explicacion de arquitectura","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-chat-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
+RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.additionalContext // empty' | grep -c 'ROUTE_CLASSIFY: chat' || true)"
+run_test "chat route injects light context" "1" "$RESULT"
+RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.additionalContext // empty' | grep -c 'FILE_MAP' || true)"
+run_test "chat route skips FILE_MAP block (token saving)" "0" "$RESULT"
+CODE_OUT="$(printf '%s' '{"prompt":"corrige el bug en src/auth.ts","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-code-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
+RESULT="$(printf '%s' "$CODE_OUT" | jq -r '.additionalContext // empty' | grep -c 'FILE_MAP' || true)"
+run_test "code route keeps full DEBERES block" "1" "$RESULT"
+STOP_OUT="$(printf '%s' '{"status":"completed","conversation_id":"conv-chat-001","messages":[{"role":"user","content":"gracias"},{"role":"assistant","content":"De nada, aqui estoy."}]}' | bash "$PACK/shared/hooks/stop_gate.sh")"
+RESULT="$(printf '%s' "$STOP_OUT" | jq -r 'if . == {} then "quiet" else "followup" end')"
+run_test "chat route stop accepted without INTENT" "quiet" "$RESULT"
+rm -rf "$PACK/state"
+
+printf '%s' '{"prompt":"dale nomas a eso","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-slang-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" >/dev/null 2>&1
+printf 'src/x.ts\n' >>"$PACK/state/conv-slang-001/writes"
+RESULT="$(printf '%s' '{"status":"completed","conversation_id":"conv-slang-001","messages":[{"role":"user","content":"dale nomas a eso"},{"role":"assistant","content":"Listo."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+run_test "chat route with writes this turn still enforces INTENT" "followup" "$RESULT"
+rm -rf "$PACK/state"
+
+mkdir -p "$PACK/state/conv-old-999" "$PACK/state/conv-fresh-1"
+OLD_TS="$(date -v-3d +%Y%m%d%H%M 2>/dev/null || date -d '3 days ago' +%Y%m%d%H%M)"
+touch -t "$OLD_TS" "$PACK/state/conv-old-999"
+bash "$PACK/shared/hooks/fleet_dispatch.sh" --sweep >/dev/null 2>&1 || true
+OLD_GONE="$(test -d "$PACK/state/conv-old-999" && echo no || echo yes)"
+FRESH_KEPT="$(test -d "$PACK/state/conv-fresh-1" && echo yes || echo no)"
+run_test "fleet_dispatch --sweep removes >2d conversation state" "yes" "$OLD_GONE"
+run_test "fleet_dispatch --sweep keeps fresh conversation state" "yes" "$FRESH_KEPT"
+rm -rf "$PACK/state"

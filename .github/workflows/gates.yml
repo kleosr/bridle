@@ -12,12 +12,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install jq + shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq jq shellcheck
+      - name: Fleet install + verify
+        run: FORCE=1 bash shared/hooks/fleet_sync.sh all
       - name: Doctor
         run: bash scripts/doctor.sh
       - name: Tests
         run: bash tests/run.sh
-      - name: Fleet install + verify
-        run: FORCE=1 bash shared/hooks/fleet_sync.sh all
 
   gauntlet-macos:
     runs-on: macos-latest
@@ -25,9 +25,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install jq + shellcheck
         run: brew install jq shellcheck
+      - name: Fleet install + verify
+        run: FORCE=1 /bin/bash shared/hooks/fleet_sync.sh all
       - name: Doctor (stock macOS bash + BSD userland)
         run: /bin/bash scripts/doctor.sh
       - name: Tests (stock macOS bash + BSD userland)
         run: /bin/bash tests/run.sh
-      - name: Fleet install + verify
-        run: FORCE=1 /bin/bash shared/hooks/fleet_sync.sh all

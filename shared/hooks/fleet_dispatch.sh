@@ -24,36 +24,42 @@ show_help() {
     "  fleet_dispatch.sh              dispatch top task (auto if safe, else propose)" \
     "  fleet_dispatch.sh --human      require explicit approval even for safe tasks" \
     "  fleet_dispatch.sh --peek       print top task + classification, do nothing" \
-    "  fleet_dispatch.sh --init       create empty backlog.md template"
+    "  fleet_dispatch.sh --init       create empty backlog.md template" \
+    "  fleet_dispatch.sh --sweep      remove conversation state dirs idle >2d (orphan janitor)"
 }
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-PACK="$(cd "$HERE/../.." && pwd)"
-ROOT=""
-for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
-  if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then ROOT="$(cd "$d" && pwd)"; break; fi
-done
-[[ -z "$ROOT" ]] && ROOT="$PACK"
+source "$HERE/lib/common.sh"
+resolve_root
 STATE="$ROOT/state"
 BACKLOG="$STATE/backlog.md"
 mkdir -p "$STATE"
 HUMAN=0
 PEEK=0
 INIT=0
+SWEEP=0
 for a in "$@"; do
   case "$a" in
     --human) HUMAN=1 ;;
     --peek) PEEK=1 ;;
     --init) INIT=1 ;;
+    --sweep) SWEEP=1 ;;
     -h|--help) show_help; exit 0 ;;
   esac
 done
 
 init_backlog() {
   [[ -f "$BACKLOG" ]] && { echo "[skip] backlog already exists: $BACKLOG"; return 0; }
-  cat > "$BACKLOG" <<'EOF'
-EOF
+  : >"$BACKLOG"
   echo "[ok] created backlog template: $BACKLOG"
+}
+
+sweep_state() {
+  local n=0 d
+  while IFS= read -r d; do
+    rm -rf "$d"; n=$((n + 1))
+  done < <(find "$STATE" -maxdepth 1 -mindepth 1 -type d -mtime +2 2>/dev/null)
+  echo "[sweep] removed $n stale conversation state dir(s) (>2d) under $STATE"
 }
 
 top_task() {
@@ -80,6 +86,7 @@ classify() {
   echo "CODE"
 }
 
+[[ "$SWEEP" -eq 1 ]] && { sweep_state; exit 0; }
 [[ "$INIT" -eq 1 ]] && { init_backlog; exit 0; }
 [[ -f "$BACKLOG" ]] || init_backlog
 
@@ -109,7 +116,6 @@ else
 fi
 printf 'agent\n' > "$STATE/mode"
 date +%s > "$STATE/session_ts"
-mkdir -p "$STATE"
 
 if [[ "$CLASS" == "CODE" ]]; then
   echo "  [PROPOSE] CODE task — requires human approval (pre_tool_use guards apply at runtime)."
