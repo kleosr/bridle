@@ -121,7 +121,7 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `before_submit_prompt.sh` adds duties with `additionalContext`. It does not mutate the user prompt.
+2. **Inject (Layer 2)** — `session_start.sh` adds duties with `additional_context`. `before_submit_prompt.sh` classifies route/state and returns `continue` (block/allow only). Never mutates the user prompt.
 3. **Declare (Layer 1)** — the agent writes `INTENT:` and `Done-when:` in chat before tools run.
 4. **Audit (Layer 3/4)** — `stop_gate.sh` checks Done-when. If unmet, another pass. If met, clears `/state` and seeds HANDOFF.
 

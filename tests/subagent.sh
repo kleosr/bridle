@@ -18,16 +18,16 @@ run_test "subagentStop merged modified_file src/utils.ts" "1" "$HAS_UTILS"
 
 rm -rf "$PACK/state"
 
-RESULT="$(echo '{"file_path":"/home/user/.env","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.action // .permission // "allow"')"
+RESULT="$(echo '{"file_path":"/home/user/.env","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "allow"')"
 run_test "before_read_file blocks .env from model context" "deny" "$RESULT"
 
-RESULT="$(echo '{"file_path":"/home/user/src/app.ts","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r 'if . == {} then "allow" else (.action // .permission // "allow") end')"
+RESULT="$(echo '{"file_path":"/home/user/src/app.ts","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r 'if . == {} then "allow" else (.permission // "allow") end')"
 run_test "before_read_file allows normal source" "allow" "$RESULT"
 
 rm -rf "$PACK/state"
 mkdir -p "$PACK/state"
-RESULT="$(echo '{"command":"npm test","exit_code":0,"conversation_id":"conv-shell-001"}' | bash "$PACK/shared/hooks/after_shell.sh" | jq -r 'if . == {} then "quiet" else "noisy" end')"
+RESULT="$(echo '{"command":"npm test","duration":42,"sandbox":false,"output":"ok","conversation_id":"conv-shell-001"}' | bash "$PACK/shared/hooks/after_shell.sh" | jq -r 'if . == {} then "quiet" else "noisy" end')"
 run_test "after_shell emits quiet (audit side-effect)" "quiet" "$RESULT"
-SHELL_LOG_LINE="$(grep -c 'SHELL | exit=0' "$PACK/state/conv-shell-001/session.log" 2>/dev/null || echo 0)"
-run_test "after_shell logged to conversation session.log" "1" "$SHELL_LOG_LINE"
+SHELL_LOG_LINE="$(grep -c 'SHELL | duration=42' "$PACK/state/conv-shell-001/session.log" 2>/dev/null || echo 0)"
+run_test "after_shell logged duration/sandbox (no exit_code)" "1" "$SHELL_LOG_LINE"
 rm -rf "$PACK/state"

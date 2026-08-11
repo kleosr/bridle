@@ -45,7 +45,7 @@ When the active sections above (before this line) exceed ~150 lines:
 4. Delete Archived entries older than the last 2 sessions.
 5. The active section must stay under ~150 lines after compaction.
 
-session_start.sh injects the last 15 actionable lines of this file as additionalContext
+session_start.sh injects the last 15 actionable lines of this file as additional_context
 (the COMPACTION PROTOCOL block at the bottom is excluded).
 Keep the bottom of this file as the most actionable context.
 

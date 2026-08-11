@@ -28,7 +28,7 @@ echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
   | bash shared/hooks/before_submit_prompt.sh
 ```
 
-Expect JSON with `additionalContext` (and, on stop fixtures, `followup_message` when INTENT is missing).
+Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from deny/allow gates, `followup_message` from stop when INTENT is missing.
 
 ## Doctor + Tests
 

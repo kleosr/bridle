@@ -2,6 +2,7 @@
 set -euo pipefail
 HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"
+source "$HERE/lib/shell_gate.sh"
 resolve_root
 INPUT="$(cat)"
 CONV_ID="$(extract_conv_id "$INPUT")"
@@ -10,12 +11,12 @@ ALLOWED="$STATE/allowed_files.md"
 TOOL_NAME="$(echo "$INPUT" | jq -r '.tool_name // .name // empty')"
 deny() {
   local msg="$1"
-  jq -n --arg m "$msg" '{action:"deny", user_message:$m}'
+  emit_deny "$msg"
   exit 0
 }
 warn_allow() {
   local msg="$1"
-  jq -n --arg m "$msg" '{action:"allow", user_message:$m}'
+  emit_allow "$msg"
   exit 0
 }
 is_executable_path() {
@@ -25,8 +26,9 @@ is_executable_path() {
   esac
 }
 case "$TOOL_NAME" in
-  Read|Grep|Glob|LS|BashOutput|WebFetch|WebSearch|TodoWrite|Task|TaskOutput) emit_quiet; exit 0 ;;
+  Read|Grep|Glob|LS|Delete|BashOutput|WebFetch|WebSearch|TodoWrite|Task|TaskOutput) emit_quiet; exit 0 ;;
 esac
+# Cursor primary: Write. Claude-compat aliases: Edit|MultiEdit|StrReplace.
 case "$TOOL_NAME" in
   Write|Edit|MultiEdit|StrReplace)
     FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
@@ -55,16 +57,16 @@ case "$TOOL_NAME" in
     emit_quiet; exit 0
     ;;
 esac
-if [[ "$TOOL_NAME" == "Bash" || "$TOOL_NAME" == "bash" ]]; then
-  CMD="$(echo "$INPUT" | jq -r '.tool_input.command // .tool_input.cmd // .command // empty')"
-  [[ -z "$CMD" ]] && { emit_quiet; exit 0; }
-  if echo "$CMD" | grep -qiE '(rm -rf? /|rm -rf? ~|mkfs|dd if=|git push --force|git push -f|drop database|truncate table|>:.*\/dev\/sd|shred )'; then
-    deny "AUTONOMY BLOCK: command matches a destructive pattern. Human approval required. CMD: ${CMD:0:120}"
-  fi
-  if echo "$CMD" | grep -qiE '(psql|mysql|mongosh|supabase db|terraform apply|kubectl delete|docker rm -f|systemctl stop)'; then
-    deny "AUTONOMY BLOCK: command mutates infra/DB. Human approval required. CMD: ${CMD:0:120}"
-  fi
-  emit_quiet; exit 0
-fi
+# Cursor primary: Shell. Claude-compat alias: Bash.
+case "$TOOL_NAME" in
+  Shell|Bash|shell|bash)
+    CMD="$(echo "$INPUT" | jq -r '.tool_input.command // .tool_input.cmd // .command // empty')"
+    [[ -z "$CMD" ]] && { emit_quiet; exit 0; }
+    if ! gate_shell_command "$CMD"; then
+      exit 0
+    fi
+    emit_quiet; exit 0
+    ;;
+esac
 emit_quiet
 exit 0

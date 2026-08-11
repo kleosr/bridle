@@ -71,7 +71,13 @@ rules_untouched() {
 
 tier0_accept() {
   [[ $(pe_stop_accepted) -eq 1 ]] && { emit_quiet; exit 0; }
-  [[ "$STATUS" == "completed" && "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]] && rules_accept
+  # Empty turn with no prose: fail open (quiet) — never treat as valid rules_accept.
+  if [[ "$STATUS" == "completed" && "${MSG_N:-0}" -eq 0 && -z "$PROSE" ]]; then
+    mkdir -p "$STATE"
+    printf '%s | WARN | stop_gate empty turn (MSG_N=0, no PROSE) — fail open\n' \
+      "$(date +%Y-%m-%d\ %H:%M:%S)" >>"$STATE/session.log" 2>/dev/null || true
+    emit_quiet; exit 0
+  fi
   return 0
 }
 

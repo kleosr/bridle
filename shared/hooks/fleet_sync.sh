@@ -7,7 +7,7 @@ FORCE="${FORCE:-${FORCE_SKILLS:-0}}"
 CMD="${1:-all}"
 SHARED=(agent types testing debugging native-lean-autoload ponytail vernacular)
 GLOBAL=(native-lean-autoload ponytail agent vernacular testing)
-HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
+HOOK_SCRIPTS=(session_start.sh session_end.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh before_shell.sh subagent_start.sh subagent_stop.sh after_shell.sh before_read_file.sh fleet_dispatch.sh)
 
 load_lines() {
   local f="$1" line
@@ -243,7 +243,13 @@ verify_smoke() {
   for s in "${HOOK_SCRIPTS[@]}"; do bash -n "$HOOKS_DIR/$s"; done
   bash -n "$HOOKS_DIR/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
-    | bash "$HOOKS_DIR/before_submit_prompt.sh" | jq -e '.additionalContext' >/dev/null
+    | bash "$HOOKS_DIR/before_submit_prompt.sh" | jq -e '.continue == true' >/dev/null
+  echo '{"session_id":"verify","composer_mode":"agent"}' \
+    | bash "$HOOKS_DIR/session_start.sh" | jq -e '.additional_context' >/dev/null
+  echo '{"tool_name":"Shell","tool_input":{"command":"rm -rf /"}}' \
+    | bash "$HOOKS_DIR/pre_tool_use.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"command":"rm -rf /"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
   verify_stop_gate || bad=1
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue

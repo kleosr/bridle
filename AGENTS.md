@@ -26,6 +26,6 @@ chmod +x shared/hooks scripts then bash -n on hook scripts + bash scripts/doctor
 
 Hard stops
 - Never reintroduce Rust kleos-gate or pack Python
-- Never use updated_input in hooks only additionalContext
+- Never use updated_input in hooks; inject via additional_context (sessionStart) or continue (beforeSubmitPrompt)
 - Secrets never in paste hooks or chat
 - Never make MCP a core dependency (optional only)

@@ -20,7 +20,7 @@ velocity_bump() {
   release_lock
   [[ "$skip" -eq 1 ]] && return 0
   if [[ "$count" -ge "$vmax" ]]; then
-    jq -n --arg m "VELOCITY DENY: '${fp##*/}' edited ${count}x this session (roof ${vmax}). Extract a module or refactor before retrying." '{action:"deny",user_message:$m}'
+    emit_deny "VELOCITY DENY: '${fp##*/}' edited ${count}x this session (roof ${vmax}). Extract a module or refactor before retrying."
     exit 0
   fi
 }

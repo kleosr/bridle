@@ -5,13 +5,20 @@
       {
         "matcher": "Write|Edit|MultiEdit|StrReplace",
         "command": "./hooks/lean_gate.sh",
-        "timeoutSec": 5,
+        "timeout": 5,
         "failClosed": true
       },
       {
-        "matcher": "Write|Edit|MultiEdit|StrReplace|Bash",
+        "matcher": "Write|Edit|MultiEdit|StrReplace|Shell|Bash",
         "command": "./hooks/pre_tool_use.sh",
-        "timeoutSec": 5,
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "./hooks/before_shell.sh",
+        "timeout": 5,
         "failClosed": true
       }
     ],
@@ -55,7 +62,7 @@
     "beforeReadFile": [
       {
         "command": "./hooks/before_read_file.sh",
-        "failClosed": false
+        "failClosed": true
       }
     ],
     "stop": [

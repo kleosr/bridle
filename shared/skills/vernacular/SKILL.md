@@ -25,20 +25,21 @@ Thin roof: `shared/rules/vernacular.mdc` (hard bans). This file = procedure + ex
 - Exports: named only.
 
 ## Bash hooks (`shared/hooks/*.sh`)
-Cursor-only output. Template:
+Cursor-native output. Template:
 
     #!/bin/bash
     set -euo pipefail
     INPUT=$(cat)
     # parse with jq; emit Cursor JSON on stdout
-    echo '{"action":"allow"}'
+    echo '{"permission":"allow"}'
     exit 0
 
 Banned: updated_input, Python, Node, external APIs, cd in hooks.
-Required: jq; max 80 LOC (the five event-hook entrypoints: session_start,
-before_submit_prompt, stop_gate, lean_gate, pre_tool_use); never emit Claude
-shapes (`hookSpecificOutput`).
-Deny = `{"action":"deny","user_message":"..."}` on stdout + **exit 0**
+Required: jq; max 80 LOC (event-hook entrypoints); never emit Claude
+shapes (`hookSpecificOutput`). Emit shapes: `permission` (deny/allow),
+`additional_context` (sessionStart), `continue` (beforeSubmitPrompt),
+`followup_message` (stop).
+Deny = `{"permission":"deny","user_message":"..."}` on stdout + **exit 0**
 (Cursor parses stdout JSON on exit 0; a non-zero exit also denies via
 failClosed but drops the message). Unparseable input: exit non-zero so
 failClosed blocks.
