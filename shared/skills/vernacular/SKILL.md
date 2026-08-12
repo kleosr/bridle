@@ -38,8 +38,8 @@ Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`, `
 Matchers: Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob.
 
 ## INTENT
-- Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/fence).
-- Tag every path `edit:path`|`NEW:path`. Done-when ≤5 decidable predicates. Finish all tags this turn.
+- GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then declare `INTENT:` as chat prose before Write (never Shell/fence).
+- Tag every path `edit:path`|`NEW:path` from those hits. Done-when ≤5 decidable predicates. Finish all tags this turn.
 - stop_gate audits assistant prose from `transcript_path`.
 
 ## Bash hooks (`shared/hooks/*.sh`)

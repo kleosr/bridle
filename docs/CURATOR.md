@@ -4,7 +4,7 @@ Layer 2 is mostly about what you throw away.
 
 ## INTENT quality (declaration)
 
-Injection seeds duty; the agent declares a **job card in chat prose before tools**. Thin (≤5 anchors):
+Injection seeds duty; the agent **grounds first**, then declares a **job card in chat prose before Write**. Thin (≤5 anchors):
 
 1. **OBJECTIVE** — postcondition on named units (what is true when done). Not a task ("implement X"). Tag `edit:path` or `NEW:path`. stop_gate rejects weak (`done`/`fixed`) and task-shaped OBJECTIVEs.
 2. **CONSTRAINTS** — optional ≤2 invariants or non-goals.
@@ -14,7 +14,7 @@ Injection seeds duty; the agent declares a **job card in chat prose before tools
 
 ## File map (prompt-engineer grounding)
 
-1. **Ground** — Glob/Grep/Read until tagged paths/symbols are in context.
+1. **Ground** — Glob/Grep/Read THIS codebase for the user's request. Do not invent paths. Read every file you will tag.
 2. **Tag** — every path the job will touch (`edit:` | `NEW:`).
 3. **Edit** — StrReplace on `edit:`; Write only for `NEW:`; no parallel trees.
 4. **Same turn** — finish every tagged path before `Done-when: met`. No multi-prompt drip; no orphan unconnected files.

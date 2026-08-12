@@ -125,8 +125,8 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `session_start.sh` adds HANDOFF + JOB CARD template (INTENT / OBJECTIVE / tags). `before_submit_prompt.sh` classifies route and may JOB CARD + GROUNDING nudge. `post_tool_use.sh` injects a SCORECARD after dirty writes. Never mutates the user prompt.
-3. **Declare (Layer 1)** — the agent writes `INTENT:` with `OBJECTIVE=<postcondition>` and `Done-when:` in chat before tools run.
+2. **Inject (Layer 2)** — `session_start.sh` adds HANDOFF + JOB CARD template (INTENT / OBJECTIVE / tags). `before_submit_prompt.sh` classifies route and may GROUNDING-then-JOB-CARD nudge. `post_tool_use.sh` injects a SCORECARD after dirty writes. Never mutates the user prompt.
+3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then the agent writes `INTENT:` with `OBJECTIVE=<postcondition>` and `edit:`/`NEW:` tags from those hits, before Write.
 4. **Audit (Layer 3/4)** — `stop_gate.sh` checks OBJECTIVE quality and Done-when. Files still >700 keep followup until rewrite. If met, clears `/state` and seeds HANDOFF.
 
 ## Ponytail / Lean Gate
