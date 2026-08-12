@@ -29,7 +29,7 @@ rm -rf "$PACK/state"
 TP="$(mktemp)"
 printf '%s\n' \
   '{"role":"user","content":"fix the bug"}' \
-  '{"role":"assistant","content":"INTENT: fix docs\nOBJECTIVE=README updated\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}' > "$TP"
+  '{"role":"assistant","content":"INTENT: fix docs\nOBJECTIVE=README.md documents install with no broken links\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}' > "$TP"
 RESULT="$(echo "{\"status\":\"completed\",\"loop_count\":0,\"transcript_path\":\"$TP\"}" | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate accepts valid INTENT via transcript_path" "accept" "$RESULT"
 rm -f "$TP"
@@ -143,11 +143,14 @@ RESULT="$(HOME="$FS_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" instal
 SKILLS_OK="$(test -L "$FS_HOME/.cursor/skills/ponytail" && echo yes || echo no)"
 HAS_BEFORE_SHELL="$(grep -c 'before_shell.sh' "$FS_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 HAS_BEFORE_SHELL="${HAS_BEFORE_SHELL//[!0-9]}"; [[ -z "$HAS_BEFORE_SHELL" ]] && HAS_BEFORE_SHELL=0
+HAS_POST="$(grep -c 'post_tool_use.sh' "$FS_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
+HAS_POST="${HAS_POST//[!0-9]}"; [[ -z "$HAS_POST" ]] && HAS_POST=0
 HAS_VERN_BANS="$(test -f "$FS_HOME/.cursor/hooks/policy/vernacular_bans.txt" && echo yes || echo no)"
 rm -rf "$FS_HOME"
 run_test "fleet_sync install completes on fresh HOME (orphan-loop set -e regression)" "0" "$RESULT"
 run_test "fleet_sync install actually installs skills on fresh HOME" "yes" "$SKILLS_OK"
 run_test "fleet_sync installs beforeShellExecution hook" "1" "$HAS_BEFORE_SHELL"
+run_test "fleet_sync installs postToolUse hook" "1" "$HAS_POST"
 run_test "fleet_sync install copies vernacular_bans.txt" "yes" "$HAS_VERN_BANS"
 
 FS_HOME2="$(mktemp -d)"
@@ -195,11 +198,11 @@ RESULT="$(echo '{"prompt":"please leverage best practices for src/auth.ts","conv
 run_test "before_submit vernacular jargon soft nudge" "nudge" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
-# legacy monster reduce path: allow with EMERGENCY SUBATOMIC message
+# legacy monster reduce path: allow with EMERGENCY REWRITE message
 python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(720)]))' > /tmp/legacy_monster.ts
 REDUCED="$(python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(500)]))')"
-RESULT="$(jq -n --arg c "$REDUCED" --arg p "/tmp/legacy_monster.ts" '{tool_name:"Write",tool_input:{file_path:$p,content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r 'if .permission=="allow" and (.agent_message|test("EMERGENCY SUBATOMIC")) then "ok" else "no" end')"
-run_test "lean_gate allows legacy>700 reduce with emergency split steer" "ok" "$RESULT"
+RESULT="$(jq -n --arg c "$REDUCED" --arg p "/tmp/legacy_monster.ts" '{tool_name:"Write",tool_input:{file_path:$p,content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r 'if .permission=="allow" and (.agent_message|test("EMERGENCY REWRITE")) then "ok" else "no" end')"
+run_test "lean_gate allows legacy>700 reduce with emergency rewrite steer" "ok" "$RESULT"
 rm -f /tmp/legacy_monster.ts
 rm -rf "$PACK/state"
 CHAT_OUT="$(printf '%s' '{"prompt":"gracias por la explicacion de arquitectura","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-chat-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
@@ -234,7 +237,7 @@ printf 'src/x.ts\n' > "$PACK/state/writes"
 printf 'src/x.ts\n' > "$PACK/state/allowed_files.md"
 date +%s > "$PACK/state/session_ts"
 printf '%s | SHELL | duration=1 sandbox=false out_len=10 | ls -la\n' "$(date +%Y-%m-%d\ %H:%M:%S)" > "$PACK/state/session.log"
-RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=x fixed\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EVIDENCE") then "evidence" else "other" end')"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=src/x.ts is on disk and the tagged edit landed\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EVIDENCE") then "evidence" else "other" end')"
 run_test "stop_gate soft evidence followup when Done-when met without verify cite" "evidence" "$RESULT"
 
 # Second stop after nudge → fail open (accept), not loop
@@ -246,7 +249,7 @@ printf '1\n' > "$PACK/state/outcomes.md"
 date +%s > "$PACK/state/session_ts"
 # Touch tagged file so rules_untouched passes
 touch src/x.ts 2>/dev/null || mkdir -p src && touch src/x.ts
-RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=x fixed\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=src/x.ts is on disk and the tagged edit landed\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate evidence nudge fail-open on second pass" "accept" "$RESULT"
 rm -f src/x.ts
 
@@ -259,7 +262,7 @@ printf 'src/y.ts\n' > "$PACK/state/allowed_files.md"
 date +%s > "$PACK/state/session_ts"
 printf '%s | SHELL VERIFY GREEN | duration=2 sandbox=false out_len=40 | bash tests/run.sh\n' "$(date +%Y-%m-%d\ %H:%M:%S)" > "$PACK/state/session.log"
 mkdir -p src; touch src/y.ts
-RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix y"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=y fixed\nedit:src/y.ts\nDone-when:\n- file updated\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix y"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=src/y.ts compiles and tests/run.sh is green\nedit:src/y.ts\nDone-when:\n- file updated\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate accepts Done-when met with verify evidence" "accept" "$RESULT"
 rm -f src/y.ts
 rm -rf "$PACK/state"
@@ -272,4 +275,60 @@ OLD_GONE="$(test -d "$PACK/state/conv-old-999" && echo no || echo yes)"
 FRESH_KEPT="$(test -d "$PACK/state/conv-fresh-1" && echo yes || echo no)"
 run_test "fleet_dispatch --sweep removes >2d conversation state" "yes" "$OLD_GONE"
 run_test "fleet_dispatch --sweep keeps fresh conversation state" "yes" "$FRESH_KEPT"
+rm -rf "$PACK/state"
+
+rm -rf "$PACK/state"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=done\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("OBJECTIVE too weak") then "weak" else "other" end')"
+run_test "stop_gate rejects weak OBJECTIVE=done" "weak" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=implement login on the form\nedit:src/auth.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("task-shaped") then "task" else "other" end')"
+run_test "stop_gate rejects task-shaped OBJECTIVE" "task" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'code\n' > "$PACK/state/route"
+printf '1\n' > "$PACK/state/outcomes.md"
+printf 'src/gone.ts\n' > "$PACK/state/writes"
+printf 'src/gone.ts\n' > "$PACK/state/allowed_files.md"
+date +%s > "$PACK/state/session_ts"
+printf '1\n' > "$PACK/state/culture_nudge"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"delete dead file"},{"role":"assistant","content":"INTENT: remove dead module\nOBJECTIVE=src/gone.ts is deleted from the tree\nedit:src/gone.ts\nDone-when:\n- file gone\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+run_test "stop_gate treats deleted tagged file in writes as touched" "accept" "$RESULT"
+rm -rf "$PACK/state"
+
+python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(720)]))' > /tmp/legacy_keep.ts
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'code\n' > "$PACK/state/route"
+printf '1\n' > "$PACK/state/outcomes.md"
+printf '/tmp/legacy_keep.ts\n' > "$PACK/state/writes"
+printf '/tmp/legacy_keep.ts\n' > "$PACK/state/allowed_files.md"
+date +%s > "$PACK/state/session_ts"
+printf '1\n' > "$PACK/state/culture_nudge"
+printf '1\n' > "$PACK/state/evidence_nudge"
+touch -r /tmp/legacy_keep.ts /tmp/legacy_keep.ts
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"split monster"},{"role":"assistant","content":"INTENT: split\nOBJECTIVE=/tmp/legacy_keep.ts is split into modules under 300 LOC\nedit:/tmp/legacy_keep.ts\nDone-when:\n- file split\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EMERGENCY REWRITE") then "rewrite" else "other" end')"
+run_test "stop_gate keeps followup while written file still >700" "rewrite" "$RESULT"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"split monster"},{"role":"assistant","content":"INTENT: split\nOBJECTIVE=/tmp/legacy_keep.ts is split into modules under 300 LOC\nedit:/tmp/legacy_keep.ts\nDone-when:\n- file split\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EMERGENCY REWRITE") then "rewrite" else "other" end')"
+run_test "stop_gate second pass still followups while file >700" "rewrite" "$RESULT"
+rm -f /tmp/legacy_keep.ts
+rm -rf "$PACK/state"
+
+python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(720)]))' > /tmp/score_monster.ts
+rm -rf "$PACK/state"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/score_monster.ts","content":"x"}}' | bash "$PACK/shared/hooks/post_tool_use.sh" | jq -r 'if .additional_context|test("REWRITE") then "ok" else "no" end')"
+run_test "post_tool_use injects REWRITE scorecard for >700 LOC file" "ok" "$RESULT"
+rm -f /tmp/score_monster.ts
+rm -rf "$PACK/state"
+
+CLEAN_TS="$(mktemp /tmp/score_cleanXXXXXX.ts)"
+printf 'export const authenticate = (token: string) => Boolean(token);\nexport const refresh = (token: string) => token;\n' > "$CLEAN_TS"
+RESULT="$(jq -n --arg p "$CLEAN_TS" '{tool_name:"Write",tool_input:{file_path:$p,content:"x"}}' | bash "$PACK/shared/hooks/post_tool_use.sh" | jq -r 'if . == {} then "quiet" else "noisy" end')"
+run_test "post_tool_use quiet on small clean source" "quiet" "$RESULT"
+rm -f "$CLEAN_TS"
+rm -rf "$PACK/state"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"file_path":"src/after.ts"}' | bash "$PACK/shared/hooks/after_file_edit.sh" >/dev/null
+RESULT="$(grep -qxF 'src/after.ts' "$PACK/state/writes" && echo ok || echo fail)"
+run_test "after_file_edit stamps file_path onto writes" "ok" "$RESULT"
 rm -rf "$PACK/state"

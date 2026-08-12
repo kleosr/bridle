@@ -3,6 +3,11 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PACK="$(cd "$HERE/.." && pwd)"
 
+if [[ "${BASH_VERSINFO[0]:-0}" -lt 3 ]]; then
+  echo "[fail] bash 3.2+ required (stock macOS bash is 3.2 — that is enough)" >&2
+  exit 1
+fi
+
 if ! command -v jq >/dev/null 2>&1; then
   echo "[fail] jq not found — install it first: brew install jq" >&2
   exit 1
@@ -11,5 +16,5 @@ fi
 chmod +x "$PACK/shared/hooks"/*.sh "$PACK/shared/hooks/lib"/*.sh "$PACK/scripts"/*.sh
 FORCE="${FORCE:-0}" bash "$PACK/shared/hooks/fleet_sync.sh" all
 
-echo "[done] kleosrules installed (macOS)"
+echo "[done] kleosrules installed (macOS — stock bash 3.2 + BSD grep)"
 echo "Next: paste shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules, then start a NEW agent chat."

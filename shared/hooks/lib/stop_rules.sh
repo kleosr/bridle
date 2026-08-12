@@ -27,10 +27,17 @@ tier0_accept() {
 
 tier1_structure() {
   if [[ $(pe_has_intent) -eq 0 || $(pe_has_done_when) -eq 0 ]]; then
-    rules_follow "INTENT must be chat prose before tools (never fenced, never Shell). INTENT: OBJECTIVE=postcondition; tag edit:path|NEW:path; Done-when: ≤5 decidable predicates. Edits via Write|StrReplace only. Finish ALL tags this turn; Done-when: met; update HANDOFF."
+    rules_follow "GROUND first (Grep/Glob/Read this codebase — do not invent paths), then INTENT in chat before Write (never fenced, never Shell). INTENT: OBJECTIVE=postcondition; tag edit:path|NEW:path from hits; Done-when: ≤5 decidable predicates. Edits via Write|StrReplace only. Finish ALL tags this turn; Done-when: met; update HANDOFF."
   fi
   if ! printf '%s\n' "$PROSE" | grep -iqE 'OBJECTIVE[[:space:]]*[=:]'; then
-    rules_follow "OBJECTIVE missing: state OBJECTIVE=postcondition in chat INTENT (what true when done), plus edit:|NEW: tags and Done-when predicates."
+    rules_follow "OBJECTIVE missing: state OBJECTIVE=<postcondition on named units> in chat INTENT (what is true when done), plus edit:|NEW: tags and Done-when predicates."
+  fi
+  local oq; oq="$(pe_objective_ok)"
+  if [[ "$oq" == "weak" ]]; then
+    rules_follow "OBJECTIVE too weak: must be a postcondition (≥20 chars) on named units — what is true when done. Not 'done'/'fixed'. Example: OBJECTIVE=src/auth.ts exports parseToken and tests/run.sh is green."
+  fi
+  if [[ "$oq" == "task" ]]; then
+    rules_follow "OBJECTIVE is task-shaped (implement/add/fix the…). Rewrite as a postcondition: what is true when done, on named units."
   fi
   if ! rules_tags | grep -q .; then
     rules_follow "FILE_MAP missing in chat INTENT: tag every path as edit:path or NEW:path. Ground Glob/Grep/Read, then complete every tag this turn — no drip."

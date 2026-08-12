@@ -13,23 +13,33 @@ run_test "session_start injects DEBERES duty" "true" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("GROUNDING") and test("HANDOFF.md") and test("AGENTS.md")')"
 run_test "session_start injects grounding checklist" "true" "$RESULT"
 
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("JOB CARD") and test("INTENT:") and test("OBJECTIVE=")')"
+run_test "session_start injects JOB CARD template (INTENT/OBJECTIVE/tags)" "true" "$RESULT"
+
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("PONYTAIL LADDER")')"
+run_test "session_start does not dump ponytail ladder (law stays in mdc)" "false" "$RESULT"
+
 rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"please fix src/auth.ts login bug"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("FILE_MAP nudge")) then "nudge" else "no" end')"
 run_test "before_submit soft FILE_MAP nudge (continue:true)" "nudge" "$RESULT"
 
 rm -rf "$PACK/state"
-RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and ((.user_message // "")|length)==0 then "clean" else "other" end')"
-run_test "before_submit no nudge when no path tokens" "clean" "$RESULT"
+RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("JOB CARD")) then "job" else "other" end')"
+run_test "before_submit JOB CARD nudge when code prompt has no OBJECTIVE/tags" "job" "$RESULT"
 
 RESULT="$(echo '{"trigger":"auto","context_usage_percent":88}' | bash "$PACK/shared/hooks/pre_compact.sh" | jq -r 'if .user_message|test("HANDOFF") then "ok" else "no" end')"
 run_test "preCompact emits user_message re-Read reminder" "ok" "$RESULT"
 
 if jq -e '.hooks.preCompact' "$PACK/shared/hooks/hooks.json" >/dev/null \
   && jq -e '.hooks.preCompact' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
+  && jq -e '.hooks.postToolUse' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '.hooks.postToolUse' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
+  && jq -e '.hooks.afterFileEdit' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '.hooks.afterFileEdit' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
   && jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null; then
-  echo "[pass] preCompact registered globally + cloud (no sessionStart in cloud)"; PASS=$((PASS + 1))
+  echo "[pass] preCompact+postToolUse+afterFileEdit registered globally + cloud (no sessionStart in cloud)"; PASS=$((PASS + 1))
 else
-  echo "[fail] preCompact registration wrong"; FAIL=$((FAIL + 1))
+  echo "[fail] preCompact/postToolUse/afterFileEdit registration wrong"; FAIL=$((FAIL + 1))
 fi
 
 rm -rf "$PACK/state"
@@ -133,6 +143,7 @@ run_test "beforeShellExecution allows rg read-only" "allow" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 echo 'src/db.ts' > "$PACK/state/allowed_files.md"
+printf 'src/config.ts\n' > "$PACK/state/reads"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_scope_expansion.json" | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
 run_test "pre_tool_use scope expansion uses allow permission" "allow" "$RESULT"
 
@@ -165,7 +176,7 @@ else
   echo "[fail] updated_input or Rust gate found"; FAIL=$((FAIL + 1))
 fi
 
-# Emitters must not use Claude/legacy Cursor shapes
+# Emitters must not use non-Cursor / legacy shapes
 if ! grep -RE --include='*.sh' '\{action:|"action":|additionalContext' "$PACK/shared/hooks/" 2>/dev/null | grep -v 'AGENTS.md' >/dev/null; then
   echo "[pass] no legacy action/additionalContext emitters"; PASS=$((PASS + 1))
 else
@@ -198,24 +209,24 @@ run_test "lean.json file_loc_soft is 120" "120" "$SOFT_MAX"
 run_test "lean.json file_loc_max is 300" "300" "$HARD_MAX"
 run_test "lean.json file_loc_legacy_emergency is 700" "700" "$LEGACY_MAX"
 
-MATCHERS="$(jq -r '.hooks.preToolUse[].matcher' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" 2>/dev/null | tr '|' '\n' | sort -u | tr '\n' ' ')"
+MATCHERS="$(jq -r '.hooks.preToolUse[]?.matcher, .hooks.postToolUse[]?.matcher' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" 2>/dev/null | tr '|' '\n' | sort -u | tr '\n' ' ')"
 MATCHERS="$(echo "$MATCHERS" | xargs)"
 BAD_MATCH=0
 for m in $MATCHERS; do
   case "$m" in
-    Write|StrReplace|Shell) ;;
+    Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob) ;;
     *) BAD_MATCH=1; break ;;
   esac
 done
-run_test "hooks matchers ⊆ {Write,StrReplace,Shell}" "0" "$BAD_MATCH"
-if ! grep -E 'Bash|MultiEdit|(^|[^a-zA-Z])Edit([^a-zA-Z]|$)' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" >/dev/null 2>&1; then
-  echo "[pass] hooks.json/hooks.cloud.json have zero Bash/Edit/MultiEdit matchers"; PASS=$((PASS + 1))
+run_test "hooks matchers ⊆ {Write,StrReplace,Shell,Delete,EditNotebook,Read,Grep,Glob}" "0" "$BAD_MATCH"
+if ! grep -E 'MultiEdit|(^|[^a-zA-Z])Bash([^a-zA-Z]|$)' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" >/dev/null 2>&1; then
+  echo "[pass] hooks.json/hooks.cloud.json have zero non-Cursor Bash/MultiEdit matchers"; PASS=$((PASS + 1))
 else
-  echo "[fail] Claude tool names still in hook matchers"; FAIL=$((FAIL + 1))
+  echo "[fail] non-Cursor tool names still in hook matchers"; FAIL=$((FAIL + 1))
 fi
 
 LOC_OK=1
-for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_mcp.sh "$PACK"/shared/hooks/pre_compact.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
+for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_mcp.sh "$PACK"/shared/hooks/pre_compact.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/post_tool_use.sh "$PACK"/shared/hooks/after_file_edit.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done
@@ -234,11 +245,62 @@ RESULT="$(HERE="$PACK/shared/hooks" bash -c 'source "$0/lib/common.sh" && emit_c
 run_test "emit_context uses additional_context key" "true" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'docs/security.md\n' > "$PACK/state/reads"
 echo '{"tool_name":"Write","tool_input":{"file_path":"docs/security.md","content":"# blocks rm -rf / literally\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"' > /tmp/_exec_test_out 2>/dev/null || true
 RESULT="$(cat /tmp/_exec_test_out 2>/dev/null || echo allow)"
 run_test "pre_tool_use skips destructive scan for non-executable (.md)" "allow" "$RESULT"
 rm -f /tmp/_exec_test_out
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'evil.sh\n' > "$PACK/state/reads"
 RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"evil.sh","content":"rm -rf /\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
 run_test "pre_tool_use still scans executable files (.sh)" "deny" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'evil.tsx\n' > "$PACK/state/reads"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"evil.tsx","content":"rm -rf /\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
+run_test "pre_tool_use scans executable .tsx" "deny" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'src/gone.ts\n' > "$PACK/state/reads"
+echo '{"tool_name":"Delete","tool_input":{"file_path":"src/gone.ts"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(grep -qxF 'src/gone.ts' "$PACK/state/writes" && echo ok || echo fail)"
+run_test "pre_tool_use stamps Delete onto writes" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'notes/demo.ipynb\n' > "$PACK/state/reads"
+echo '{"tool_name":"EditNotebook","tool_input":{"target_notebook":"notes/demo.ipynb","new_string":"x=1"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(grep -qxF 'notes/demo.ipynb' "$PACK/state/writes" && echo ok || echo fail)"
+run_test "pre_tool_use stamps EditNotebook target_notebook onto writes" "ok" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"fix the button on the header on the frontend"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("GROUNDING")) and (.user_message|test("JOB CARD")) and (.user_message|test("button")) and (.user_message|test("header")) then "ok" else "no" end')"
+run_test "before_submit GROUNDING+JOB CARD on any code ask (not a product allowlist)" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/Header.tsx","content":"export const Header = () => null;\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r 'if .permission=="deny" and (.user_message|test("GROUNDING")) then "ok" else "no" end')"
+run_test "pre_tool_use denies Write without prior Read/Grep" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'src/Header.tsx\n' > "$PACK/state/reads"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/Header.tsx","content":"export const Header = () => null;\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
+run_test "pre_tool_use allows Write after Read of that path" "allow" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"Header"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/does_not_exist_zz.ts","content":"export const x = 1;\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
+run_test "pre_tool_use allows NEW Write after Grep" "allow" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"Header"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"HANDOFF.md","content":"# x\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r 'if .permission=="deny" and (.user_message|test("GROUNDING")) then "ok" else "no" end')"
+run_test "pre_tool_use denies Write of existing file after Grep without Read" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"Header"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(grep -q 'GREP' "$PACK/state/session.log" 2>/dev/null && echo ok || echo fail)"
+run_test "pre_tool_use logs Grep to session.log for ponytail reuse" "ok" "$RESULT"
+
+B_HITS="$(grep -Rn --include='*.sh' --include='*.txt' -F '\b' "$PACK/shared/hooks" 2>/dev/null | grep -vE ':[0-9]+:[[:space:]]*#' || true)"
+RESULT="$([[ -z "$B_HITS" ]] && echo ok || echo fail)"
+run_test "hooks have zero GNU grep \\\\b (macOS BSD-safe)" "ok" "$RESULT"

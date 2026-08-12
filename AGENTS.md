@@ -13,8 +13,8 @@ Local install is global-only: `fleet_sync install|all` writes `~/.cursor` and re
 
 Where to look
 - Paste: shared/rules/USER-RULES.paste.txt
-- Hooks: shared/hooks/session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh
-- Hook lib: shared/hooks/lib/common.sh stop_gate_core.sh pre_tool_use_core.sh
+- Hooks: shared/hooks/session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh post_tool_use.sh after_file_edit.sh
+- Hook lib: shared/hooks/lib/common.sh tool_io.sh scorecard.sh stop_gate_core.sh pre_tool_use_core.sh
 - Install: shared/hooks/fleet_sync.sh → ~/.cursor (global). Cloud agents: CLOUD=1 … project-hooks (thin Lane-A, no sessionStart — no double DUTY)
 - Platform installers: MacOS/install.sh Linux/install.sh Windows/install.ps1 (+ Windows/hooks/wsl-shim.ps1)
 - Scripts: scripts/doctor.sh scripts/install.sh scripts/sync.sh
@@ -29,6 +29,6 @@ chmod +x shared/hooks scripts then bash -n on hook scripts + bash scripts/doctor
 
 Hard stops
 - Never reintroduce Rust kleos-gate or pack Python
-- Never use updated_input in hooks; inject via additional_context (sessionStart) or continue (beforeSubmitPrompt)
+- Never use updated_input in hooks; inject via additional_context (sessionStart, postToolUse) or continue (beforeSubmitPrompt)
 - Secrets never in paste hooks or chat
 - Never make MCP a core dependency (optional only)

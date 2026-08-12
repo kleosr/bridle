@@ -18,6 +18,8 @@ bash -n shared/hooks/before_submit_prompt.sh
 bash -n shared/hooks/stop_gate.sh
 bash -n shared/hooks/lean_gate.sh
 bash -n shared/hooks/pre_tool_use.sh
+bash -n shared/hooks/post_tool_use.sh
+bash -n shared/hooks/after_file_edit.sh
 bash -n shared/hooks/fleet_sync.sh
 ```
 
@@ -28,7 +30,7 @@ echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
   | bash shared/hooks/before_submit_prompt.sh
 ```
 
-Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from deny/allow gates, `followup_message` from stop when INTENT is missing. Lean roofs live in `shared/hooks/policy/lean.json` (`comment_ratio_max=2`, soft LOC 120, hard 300, legacy emergency 700). Cloud: `CLOUD=1 bash shared/hooks/fleet_sync.sh project-hooks`.
+Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart and postToolUse, `permission` from deny/allow gates, `followup_message` from stop when INTENT/OBJECTIVE is missing. Lean roofs live in `shared/hooks/policy/lean.json` (`comment_ratio_max=2`, soft LOC 120, hard 300, legacy rewrite 700). Cloud: `CLOUD=1 bash shared/hooks/fleet_sync.sh project-hooks`.
 
 ## Doctor + Tests
 
@@ -48,6 +50,6 @@ Installs `~/.cursor` hooks+rules+skills (global single registration layer), sync
 
 ## Size roofs
 
-Keep each **event** hook under 80 LOC (`session_start`, `before_submit_prompt`, `stop_gate`, `lean_gate`, `pre_tool_use`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. Fail closed: bad parse or failed exec should block or return deny JSON.
+Keep each **event** hook under 80 LOC (`session_start`, `before_submit_prompt`, `stop_gate`, `lean_gate`, `pre_tool_use`, `post_tool_use`, `after_file_edit`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. Fail closed: bad parse or failed exec should block or return deny JSON.
 
 Wired policy only: `shared/hooks/policy/intent.json` (INTENT roofs) and `shared/hooks/policy/lean.json` (`file_loc_max`, `complexity_max`, `func_complexity_max`, `coupling_max`, `nesting_max`, `edit_velocity_max`).

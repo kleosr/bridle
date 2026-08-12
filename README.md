@@ -72,7 +72,7 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, soft 120 / hard 300 + legacy >700 emergency subatomic split + complexity + coupling + nesting + velocity) denies oversized writes — extract modules or stop; do not fight a deny.
+Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, soft 120 / hard 300 + >700 rewrite into modules + complexity + coupling + nesting + velocity) denies oversized writes — extract modules or stop; do not fight a deny. `post_tool_use.sh` injects a SCORECARD after dirty writes so the agent sees the mess in-context.
 
 Live `.cursor/` copies were retired: registration is global (`~/.cursor/hooks.json`); edit this pack and re-run `FORCE=1 bash shared/hooks/fleet_sync.sh all`.
 
@@ -92,15 +92,19 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 │       └── wsl-shim.ps1       — per-event PowerShell→WSL shim (stdin/stdout passthrough)
 ├── shared/
 │   ├── hooks/                 — canonical Bash hooks, macOS + Linux + WSL safe
-│   │   ├── session_start.sh      — inject HANDOFF tail + duties
-│   │   ├── before_submit_prompt.sh — route classify + INTENT duty
-│   │   ├── stop_gate.sh           — audit INTENT / Done-when (thin wrapper)
+│   │   ├── session_start.sh      — inject HANDOFF tail + short DEBERES
+│   │   ├── before_submit_prompt.sh — route classify + JOB CARD nudge
+│   │   ├── stop_gate.sh           — audit INTENT / OBJECTIVE / Done-when
 │   │   ├── lean_gate.sh           — ponytail roof + entropy + velocity (preToolUse)
 │   │   ├── pre_tool_use.sh        — selective autonomy gate (thin wrapper)
+│   │   ├── post_tool_use.sh       — dirty-file SCORECARD (additional_context)
+│   │   ├── after_file_edit.sh     — stamp on-disk writes (Agent + Tab)
 │   │   ├── fleet_sync.sh          — install + fleet sync + verify
 │   │   ├── fleet_dispatch.sh      — backlog dispatcher
 │   │   ├── lib/
 │   │   │   ├── common.sh          — shared utilities (root, deny, allow, follow, portable lock)
+│   │   │   ├── tool_io.sh         — tool name/path extract + write stamp
+│   │   │   ├── scorecard.sh       — post-edit dirty-file message
 │   │   │   ├── stop_gate_core.sh  — stop gate logic
 │   │   │   └── pre_tool_use_core.sh — autonomy gate logic
 │   │   ├── policy/                — intent.json + lean.json (wired only)
@@ -121,9 +125,9 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `session_start.sh` adds duties with `additional_context`. `before_submit_prompt.sh` classifies route/state and returns `continue` (block/allow only). Never mutates the user prompt.
-3. **Declare (Layer 1)** — the agent writes `INTENT:` and `Done-when:` in chat before tools run.
-4. **Audit (Layer 3/4)** — `stop_gate.sh` checks Done-when. If unmet, another pass. If met, clears `/state` and seeds HANDOFF.
+2. **Inject (Layer 2)** — `session_start.sh` adds HANDOFF + JOB CARD template (INTENT / OBJECTIVE / tags). `before_submit_prompt.sh` classifies route and may GROUNDING-then-JOB-CARD nudge. `post_tool_use.sh` injects a SCORECARD after dirty writes. Never mutates the user prompt.
+3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then the agent writes `INTENT:` with `OBJECTIVE=<postcondition>` and `edit:`/`NEW:` tags from those hits, before Write.
+4. **Audit (Layer 3/4)** — `stop_gate.sh` checks OBJECTIVE quality and Done-when. Files still >700 keep followup until rewrite. If met, clears `/state` and seeds HANDOFF.
 
 ## Ponytail / Lean Gate
 
@@ -133,7 +137,7 @@ The lean gate (`lean_gate.sh`) enforces roofs on every `Write|StrReplace`:
 |-------|------|--------|
 | Soft LOC | 120 | Allow + `agent_message` (prefer subatomic extract) |
 | Hard LOC | 300 | Deny growth; steer to subatomic modules |
-| Legacy emergency | >700 | Deny growth; reducing extract allowed with split steer |
+| Legacy rewrite | >700 | Deny growth; reducing extract allowed; stop followup until rewrite + import update |
 | Complexity (decision points) | 50 file / 4+ branch keywords per line | Deny if branching is too dense |
 | Coupling (import/include lines) | 10 | Deny if the file knows too much |
 | Nesting (brace depth) | 4 | Deny if blocks nest too deep |

@@ -25,19 +25,19 @@ ROUTE="code"
 printf '%s\n' "$PROMPT" >"$STATE/current_intent.md"
 printf '%s' "$PROMPT" | grep -oE '(edit|NEW):[A-Za-z0-9_./+=-]+' | sed 's/^[^:]*://' \
   | grep -vx 'path' >"$STATE/allowed_files.md" 2>/dev/null || true
-PROMPT_NORM="$(printf '%s' "$PROMPT" | iconv -f UTF-8 -t ASCII//TRANSLIT//IGNORE 2>/dev/null | tr -d "'\`~^" || true)"
+PROMPT_NORM="$(printf '%s' "$PROMPT" | tr -d "'\`~^")"
 [[ -z "$PROMPT_NORM" ]] && PROMPT_NORM="$PROMPT"
-CODE_RE='(edit:|NEW:|\.(sh|bash|zsh|py|rb|js|mjs|cjs|ts|tsx|jsx|go|rs|c|cc|cpp|h|hpp|java|kt|swift|php|lua|sql|json|ya?ml|toml|md|ps1)|src/|tests?/|docs/|fix|corrige|corrije|bug|error|falla|break|rompe|implement|refactor|crea|create|edita|edit|agrega|add|delete|elimin|test|commit|push|merge|deploy|instal|actualiza|update|hook|archiv|file|script)'
+CODE_RE='(edit:|NEW:|\.(sh|bash|zsh|py|rb|js|mjs|cjs|ts|tsx|jsx|go|rs|c|cc|cpp|h|hpp|java|kt|swift|php|lua|sql|json|ya?ml|toml|md|ps1)|src/|tests?/|docs/|fix|corrige|corrije|bug|error|falla|break|rompe|implement|refactor|crea|create|edita|edit|agrega|add|delete|elimin|test|commit|push|merge|deploy|instal|actualiza|update|hook|archiv|file|script|connect|conecta)'
 printf '%s' "$PROMPT_NORM" | grep -qiE "$CODE_RE" || ROUTE="chat"
 printf '%s\n' "$ROUTE" >"$STATE/route"
-OUTCOMES=$(printf '%s' "$PROMPT_NORM" | grep -oiE '\b(conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test)\b' | wc -l || true)
+OUTCOMES=$(printf '%s' "$PROMPT_NORM" | grep -oiE "$(wb_alt 'conecta|implementa|arregla|crea|asegurate?|verifica|anhade|remueve|actualiza|refactoriza|configura|despliega|integra|construye|optimiza|corrije|migra|documenta|escribe|disena|connect|implement|fix|create|ensure|verify|add|remove|update|refactor|configure|deploy|integrate|build|optimize|migrate|document|write|design|test')" | wc -l || true)
 OUTCOMES="${OUTCOMES//[!0-9]}"
 [[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
 [[ "$OUTCOMES" -gt 5 ]] && OUTCOMES=5
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
 NUDGE=""
 if [[ "$ROUTE" == "code" ]]; then
-  PATH_HITS="$(printf '%s' "$PROMPT" | grep -oE '\b(src|tests?|docs|shared|scripts|lib|app|hooks)/[A-Za-z0-9_./+=-]+\.[A-Za-z0-9]+|\b[A-Za-z0-9_.-]+\.(ts|tsx|js|jsx|sh|py|go|rs|md|json)\b' 2>/dev/null | head -n 8 || true)"
+  PATH_HITS="$(printf '%s' "$PROMPT" | grep -oE '(src|tests?|docs|shared|scripts|lib|app|hooks)/[A-Za-z0-9_./+=-]+\.[A-Za-z0-9]+|[A-Za-z0-9_.-]+\.(ts|tsx|js|jsx|sh|py|go|rs|md|json)' 2>/dev/null | head -n 8 || true)"
   UNTAGGED=""
   while IFS= read -r p; do
     [[ -z "$p" ]] && continue
@@ -50,6 +50,12 @@ $PATH_HITS
 EOF
   if [[ -n "$UNTAGGED" ]]; then
     NUDGE="FILE_MAP nudge: prompt mentions paths without edit:|NEW: tags (${UNTAGGED}). Declare them in INTENT chat prose — not a block, proceeding."
+  fi
+  if ! printf '%s' "$PROMPT" | grep -qiE 'OBJECTIVE[[:space:]]*[=:]|(^|[[:space:]])(edit|NEW):'; then
+    JC="GROUNDING then JOB CARD: 1) Grep/Glob/Read THIS codebase for the user's request — do not invent paths. 2) Then in chat before Write: INTENT: <one line> OBJECTIVE=<postcondition on named units> edit:path|NEW:path from those hits. Done-when: ≤5 decidable predicates."
+    TERMS="$(culture_prompt_terms "$PROMPT" || true)"
+    [[ -n "$TERMS" ]] && JC="${JC} Grep nouns from the prompt: ${TERMS}"
+    if [[ -n "$NUDGE" ]]; then NUDGE="${NUDGE} ${JC}"; else NUDGE="$JC"; fi
   fi
   CULT="$(culture_submit_nudge "$PROMPT" "$ROUTE" || true)"
   if [[ -n "$CULT" ]]; then

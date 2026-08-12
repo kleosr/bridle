@@ -2,7 +2,7 @@
 # Sourced by run.sh. Static checks: syntax, shellcheck, JSON validity.
 
 echo "=== Syntax checks ==="
-for f in "$PACK"/shared/hooks/*.sh "$PACK"/shared/hooks/lib/*.sh "$PACK"/MacOS/install.sh; do
+for f in "$PACK"/shared/hooks/*.sh "$PACK"/shared/hooks/lib/*.sh "$PACK"/MacOS/install.sh "$PACK"/Linux/install.sh; do
   if bash -n "$f" 2>/dev/null; then
     echo "[pass] syntax: ${f#$PACK/}"; PASS=$((PASS + 1))
   else
@@ -13,7 +13,7 @@ done
 echo ""
 echo "=== shellcheck (if available) ==="
 if command -v shellcheck >/dev/null 2>&1; then
-  for f in "$PACK"/shared/hooks/*.sh "$PACK"/shared/hooks/lib/*.sh "$PACK"/MacOS/install.sh; do
+  for f in "$PACK"/shared/hooks/*.sh "$PACK"/shared/hooks/lib/*.sh "$PACK"/MacOS/install.sh "$PACK"/Linux/install.sh; do
     if shellcheck -S warning "$f" 2>/dev/null; then
       echo "[pass] shellcheck: ${f#$PACK/}"; PASS=$((PASS + 1))
     else

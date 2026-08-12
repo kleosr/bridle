@@ -14,19 +14,19 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 ## Harness
 
-Bash hooks: `session_start` (`additional_context`), `before_submit_prompt` (`continue`), `stop_gate` (`followup_message`), `lean_gate`/`pre_tool_use`/`before_shell`/`before_read_file`/`before_mcp` (`permission`). No Rust.
+Bash hooks: `session_start` (`additional_context`), `before_submit_prompt` (`continue` + JOB CARD nudge), `post_tool_use` (`additional_context` scorecard), `stop_gate` (`followup_message`), `lean_gate`/`pre_tool_use`/`before_shell`/`before_read_file`/`before_mcp` (`permission`). No Rust.
 Brain = `HANDOFF.md` (local). Cloud agents: thin project hooks via `fleet_sync.sh project-hooks` (no sessionStart — avoids double DUTY).
 Injection != Declaration: `sessionStart` injects `additional_context` only; `beforeSubmitPrompt` is continue/block. Never `updated_input`.
 
 ## INTENT protocol
 
-Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/code-fence — poisons stop detection).
-Job card: `OBJECTIVE` = postcondition + `edit:path`|`NEW:path` tags; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
+Order: **GROUND → DECLARE → WRITE**. Grep/Glob/Read THIS codebase for the user's request first. Do not invent paths. Then declare `INTENT:` as chat prose before Write (never Shell/code-fence — poisons stop detection). Tags come from hits only.
+Job card: `OBJECTIVE` = postcondition on named units (what is true when done — not implement/add/fix the…); `edit:path`|`NEW:path` from hits; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
 
 ## File map
 
 Ground → tag → edit/NEW → re-Read → prove Done-when.
-Glob/Grep/Read first; `Write` for create/overwrite (Cursor primary write tool).
+Glob/Grep/Read first; `Write` for create/overwrite (Cursor primary write tool). pre_tool_use denies Write/Delete on a path that was not Read this session (NEW files need Grep/Glob first).
 Finish EVERY tagged path this turn — no drip, no orphan unconnected files.
 Before Done: verify all Done-when predicates with TOOLCHAIN evidence — cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test in chat (stop_gate may soft-followup once if missing).
 
@@ -38,9 +38,10 @@ Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
 
 ## Autonomous loop (no early stops)
 
-1. DECLARE FIRST: INTENT in chat before any tool.
-2. NO ASK INSIDE INTENT: missing Done-when work → do it now.
-3. NO PARTIAL HANDOFFS / NO DRIP.
-4. GROUND → TAG → WRITE: Glob/Grep/Read; tag paths; Write; cascade-fix.
-5. PRE-STOP: re-Read tagged FILES; run TOOLCHAIN verify; cite green; prove Done-when; then `Done-when: met`.
-6. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates / missing verify cite (fail-open after one nudge).
+1. GROUND FIRST: Grep/Glob/Read this codebase for the user's request. Do not invent paths.
+2. THEN DECLARE: INTENT in chat before Write (never Shell/fence). Tags from hits only.
+3. NO ASK INSIDE INTENT: missing Done-when work → do it now.
+4. NO PARTIAL HANDOFFS / NO DRIP.
+5. WRITE: Write/StrReplace only tagged paths; cascade-fix.
+6. PRE-STOP: re-Read tagged FILES; run TOOLCHAIN verify; cite green; prove Done-when; then `Done-when: met`.
+7. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates / missing verify cite (fail-open after one nudge).

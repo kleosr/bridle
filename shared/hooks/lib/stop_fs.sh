@@ -42,7 +42,15 @@ rules_untouched() {
   while IFS= read -r p; do
     [[ -z "$p" ]] && continue
     [[ "$p" = /* ]] && fp="$p" || fp="$(pwd)/$p"
-    [[ -f "$fp" ]] || { untouched="$untouched $p(missing)"; continue; }
+    if [[ ! -f "$fp" ]]; then
+      if grep -qxF "$p" "$STATE/writes" 2>/dev/null || grep -qxF "$fp" "$STATE/writes" 2>/dev/null; then
+        continue
+      fi
+      local base; base="$(basename "$p")"
+      if grep -qxF "$base" "$STATE/writes" 2>/dev/null; then continue; fi
+      untouched="$untouched $p(missing)"
+      continue
+    fi
     local m; m="$(file_mtime "$fp" || echo 0)"
     m="${m//[!0-9]}"; [[ -z "$m" ]] && m=0
     [[ "$session_ts" -eq 0 || "$m" -ge "$session_ts" ]] || untouched="$untouched $p"

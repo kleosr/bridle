@@ -12,13 +12,16 @@ Prohibido usar `sed`, `cat`, `echo >`, `tee`, `rg` o `find` en Shell para leer/e
 - **Leer:** `Read`
 - **Buscar Código:** `Grep`
 - **Buscar Archivos:** `Glob`
-- **Editar/Crear:** `Write` (create or overwrite)
+- **Crear/overwrite:** `Write`
+- **Editar fragmento:** `StrReplace`
+- **Notebook:** `EditNotebook`
+- **Borrar:** `Delete`
 - **Shell:** solo para builds/tests/git — never to bypass gates
 
 ## 2. DENY RECOVERY PROTOCOL (Cuando un hook bloquea)
 El gate proyecta el LOC **y** comment/complexity del archivo post-edit:
 - `Write`/`StrReplace` proyectado > 300 LOC (crecimiento) → deny + subatomic split.
-- Legacy on-disk > 700 LOC → emergency subatomic split (reducir/extraer permitido con steer; crecer deny).
+- Legacy on-disk > 700 LOC → rewrite into modules ≤300 (Write new files, StrReplace original + callers to imports). Reducing extract allowed with rewrite steer; growth denied.
 - `Write`/`StrReplace` con ratio de comentarios prosa > 2% → deny.
 - Soft > 120 LOC en sources → allow + `agent_message` warn (extrae pronto).
 - Reducir/splittear un archivo sobre techo → **allow** con mensaje subatomic.

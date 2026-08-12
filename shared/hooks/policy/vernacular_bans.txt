@@ -1,13 +1,14 @@
-# Soft vernacular bans (corporate/AI-slop). One regex per line. Fail-open if file missing.
-\bleverage\b
-\bsynerg(y|ies|ize)\b
-\bcircle back\b
-\bbest[- ]practices?\b
-\butilize\b
-\bbandwidth\b
-\bparadigm shift\b
-\btouch base\b
-\blow[- ]hanging fruit\b
-\bdelve (into|deeper)\b
-\bgame[- ]changer\b
-\brobust solution\b
+# Soft vernacular bans (corporate/AI-slop). One POSIX ERE per line. Fail-open if file missing.
+# Do not use GNU \b — stock macOS grep treats \b as backspace.
+(^|[^A-Za-z0-9_])leverage([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])synerg(y|ies|ize)([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])circle back([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])best[- ]practices?([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])utilize([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])bandwidth([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])paradigm shift([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])touch base([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])low[- ]hanging fruit([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])delve (into|deeper)([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])game[- ]changer([^A-Za-z0-9_]|$)
+(^|[^A-Za-z0-9_])robust solution([^A-Za-z0-9_]|$)

@@ -2,40 +2,27 @@
 
 ## Active Objective
 
-Session complete 2026-08-11 — hook audit fixes + route-scaled injection + tiered stop-gate.
+GROUND → INTENT → tags. No product allowlist. Read-before-Write is steel.
 
 ## Current State
 
-Done-when: met. 87/87 tests, doctor green.
-fleet_dispatch --sweep: orphan janitor (removes state/<conv> idle >2d, same retention as
-session_end). Semantic HANDOFF compaction stays agent-driven via tier3 roof followup —
-CLI compaction dropped as over-engineering (auto-compaction never touches disk; hook
-re-injection makes the duty compaction-proof).
-Audit fixes live: rules_accept preserves real HANDOFF (placeholder check); metrics printf typo;
-session_end sweep guard; fleet_dispatch sources common.sh ($PWD-first resolve_root); echo→printf
-everywhere; PS5.1 BOM-safe write; before_read_file single deny shape (permission); is_ignored dead
-arm removed; lean_gate count_lines empty=0.
-NEW: route-scaled injection — before_submit classifies chat vs code (CODE_RE, biased full:
-break|rompe|file|archiv included); chat = 2-line context, code = full DEBERES. stop_gate accepts
-chat route ONLY when state/writes empty (pre_tool_use stamps writes per turn; reset each prompt) —
-slang false-negatives still enforced. Stop-gate tiered: tier0_accept/tier1_structure/
-tier2_semantic (1-pass pe_semantic_hit ask|drip)/tier3_fs. set -e trap: tier functions must
-return 0 (failing && as last stmt kills caller).
-GLOBAL SYNC VERIFIED 2026-08-11 09:45: fleet_sync all green — ~/.cursor/hooks identical to
-shared/hooks (only AGENTS.md/fleet_sync.sh/hooks.json stay pack-only by design); global
-hooks.json registers 10 commands across 9 events; 4 fleet projects synced, zero repo-level
-hooks (single layer). UNCOMMITTED on master (no commit requested).
+Loop (correct order):
+1. User prompt
+2. GROUNDING — Grep/Glob/Read THIS codebase for what they named. Do not invent paths.
+3. INTENT + OBJECTIVE + edit:|NEW: from those hits
+4. Write/StrReplace only tagged paths; stop_gate audits; HANDOFF survives
+
+Steel: pre_tool_use denies Write/Delete on a path not Read this session. NEW files need Grep/Glob first.
+Steer: before_submit always says GROUNDING then JOB CARD on code prompts; Grep nouns from the prompt (not a neon/api special case).
+Ponytail stays in always-apply mdc. Hooks are not a retriever — dumping rg hits would bias the model.
 
 ## Next Actions
 
-- Commit master work if user approves (branch+PR or direct).
-- Backlog breakthroughs: token telemetry report from session.log; semantic HANDOFF compaction
-  (external CLI because hooks run when agent is NOT running — answered); subagent velocity budget.
-- Test Windows/install.ps1 on real Windows+WSL box.
+- Local: `bash MacOS/install.sh` then re-paste USER-RULES.paste.txt
 
 ## Archived
 
-(Older context compacted here when active sections exceed ~150 lines.)
+macOS POSIX grep (wb_alt); Cursor-only tools; second-brain channels.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

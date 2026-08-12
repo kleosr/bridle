@@ -12,5 +12,5 @@ PCT="$(echo "$INPUT" | jq -r '.context_usage_percent // "?"' 2>/dev/null || echo
 printf '%s | PRECOMPACT | trigger=%s usage=%s\n' \
   "$(date +%Y-%m-%d\ %H:%M:%S)" "$TRIGGER" "$PCT" >>"$STATE/session.log" 2>/dev/null || true
 # Observational: remind grounding after compaction (Cursor shows user_message).
-jq -n --arg m "Context compacted (${TRIGGER}). Re-Read HANDOFF.md tail + your current INTENT (edit:|NEW: tags + Done-when) before the next Write." \
+jq -n --arg m "Context compacted (${TRIGGER}). Re-Read HANDOFF.md tail + INTENT: OBJECTIVE=<postcondition on named units>, edit:|NEW: tags, Done-when predicates — before the next Write." \
   '{user_message:$m}'

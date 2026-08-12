@@ -29,7 +29,7 @@ gate_shell_source_write() {
     hit=1
   elif echo "$cmd" | grep -qE "(^|[[:space:];|&])tee([[:space:]]+-a)?[[:space:]]+['\"]?[^|&;[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
     hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])dd[[:space:]]+[^;&|]*\bof=['\"]?[^[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
+  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])dd[[:space:]]+[^;&|]*of=['\"]?[^[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
     hit=1
   elif echo "$cmd" | grep -qE "(^|[[:space:];|&])(cp|mv|install)[[:space:]]+([^[:space:]]+[[:space:]]+)+['\"]?[^|&;[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
     hit=1
