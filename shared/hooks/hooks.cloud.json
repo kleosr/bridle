@@ -3,13 +3,13 @@
   "hooks": {
     "preToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|StrReplace",
+        "matcher": "Write|StrReplace",
         "command": ".cursor/hooks/lean_gate.sh",
         "timeout": 30,
         "failClosed": true
       },
       {
-        "matcher": "Write|Edit|MultiEdit|StrReplace|Shell|Bash",
+        "matcher": "Write|StrReplace|Shell",
         "command": ".cursor/hooks/pre_tool_use.sh",
         "timeout": 30,
         "failClosed": true

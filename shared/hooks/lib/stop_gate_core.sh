@@ -29,9 +29,8 @@ load_transcript_msgs() {
     jq -c 'if type == "array" then . else (.messages // .transcript // .conversation // []) end' "$path" 2>/dev/null || return 1
     return 0
   fi
-  # JSONL (Cursor / Claude-compat transcript lines)
-  # Cursor 3.x: {"role":"user","message":{"content":[{"type":"text","text":"..."}]}}
-  # Flat / Claude-compat: {"role"|"type", "content"|"text"} or nested .message.role
+  # JSONL transcript lines (Cursor): role/content or nested .message
+  # Flat: {"role"|"type", "content"|"text"} or nested .message.role
   jq -s -c '
     def to_text:
       if type == "array"
