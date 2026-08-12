@@ -163,6 +163,10 @@ else
   echo "[fail] hooks.json timeout field wrong"; FAIL=$((FAIL + 1))
 fi
 
+TIMEOUT_BAD="$(jq -r '.. | objects | select(has("timeout")) | .timeout' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" 2>/dev/null | grep -cv '^30$' || true)"
+TIMEOUT_BAD="${TIMEOUT_BAD//[!0-9]}"; [[ -z "$TIMEOUT_BAD" ]] && TIMEOUT_BAD=0
+run_test "all hooks.json/hooks.cloud.json timeout fields are 30" "0" "$TIMEOUT_BAD"
+
 if grep -q 'beforeShellExecution' "$PACK/shared/hooks/hooks.json" && grep -q 'Shell' "$PACK/shared/hooks/hooks.json"; then
   echo "[pass] hooks.json wires beforeShellExecution + Shell matcher"; PASS=$((PASS + 1))
 else
