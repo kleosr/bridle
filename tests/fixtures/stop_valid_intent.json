@@ -1,1 +1,1 @@
-{"status":"completed","loop_count":0,"messages":[{"role":"user","content":"fix the bug"},{"role":"assistant","content":"INTENT: fix docs\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}]}
+{"status":"completed","loop_count":0,"messages":[{"role":"user","content":"fix the bug"},{"role":"assistant","content":"INTENT: fix docs\nOBJECTIVE=README updated\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}]}

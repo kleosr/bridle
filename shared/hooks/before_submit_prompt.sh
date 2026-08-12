@@ -2,6 +2,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
+source "$HERE/lib/culture_gate.sh"
 resolve_root
 INPUT="$(cat)"
 CONV_ID="$(extract_conv_id "$INPUT")"
@@ -16,7 +17,6 @@ if [[ "$MODE" != "agent" ]]; then
   emit_continue true; exit 0
 fi
 PROMPT="$(echo "$INPUT" | jq -r '.prompt // .user_prompt // .message // .text // empty' 2>/dev/null || true)"
-# Sensitive-prompt guard (continue:false). Keep patterns lean.
 if printf '%s' "$PROMPT" | grep -qE '(ghp_[A-Za-z0-9]{20,}|gho_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN ([A-Z]+ )?PRIVATE KEY-----)'; then
   emit_continue false "Blocked: prompt looks like it contains a secret/token (ghp_/sk-/AKIA/private key). Remove credentials and resubmit."
   exit 0
@@ -35,7 +35,6 @@ OUTCOMES="${OUTCOMES//[!0-9]}"
 [[ -z "$OUTCOMES" || "$OUTCOMES" -lt 1 ]] && OUTCOMES=1
 [[ "$OUTCOMES" -gt 5 ]] && OUTCOMES=5
 printf '%s\n' "$OUTCOMES" >"$STATE/outcomes.md"
-# Soft FILE_MAP nudge: path-like tokens without edit:|NEW: tags → continue:true + user_message (never block).
 NUDGE=""
 if [[ "$ROUTE" == "code" ]]; then
   PATH_HITS="$(printf '%s' "$PROMPT" | grep -oE '\b(src|tests?|docs|shared|scripts|lib|app|hooks)/[A-Za-z0-9_./+=-]+\.[A-Za-z0-9]+|\b[A-Za-z0-9_.-]+\.(ts|tsx|js|jsx|sh|py|go|rs|md|json)\b' 2>/dev/null | head -n 8 || true)"
@@ -51,6 +50,10 @@ $PATH_HITS
 EOF
   if [[ -n "$UNTAGGED" ]]; then
     NUDGE="FILE_MAP nudge: prompt mentions paths without edit:|NEW: tags (${UNTAGGED}). Declare them in INTENT chat prose — not a block, proceeding."
+  fi
+  CULT="$(culture_submit_nudge "$PROMPT" "$ROUTE" || true)"
+  if [[ -n "$CULT" ]]; then
+    if [[ -n "$NUDGE" ]]; then NUDGE="${NUDGE} ${CULT}"; else NUDGE="$CULT"; fi
   fi
 fi
 if [[ -n "$NUDGE" ]]; then

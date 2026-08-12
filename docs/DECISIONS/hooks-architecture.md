@@ -17,7 +17,7 @@ Context: V2 harness — Bash hooks + local HANDOFF brain. No Rust kleos-gate. No
 | `before_submit_prompt.sh` | beforeSubmitPrompt | Route classify + state writes; allow/block via `continue` (not context) |
 | `stop_gate.sh` | stop | Audit INTENT / Done-when from `transcript_path` (or inline arrays); followup or accept |
 | `lean_gate.sh` | preToolUse (Write\|Edit\|…) | Deny files over roof; complexity + coupling + nesting + velocity (`permission`) |
-| `pre_tool_use.sh` | preToolUse (Write\|…\|Shell\|Bash) | Selective autonomy: topology + destructive blocks |
+| `pre_tool_use.sh` | preToolUse (Write\|StrReplace\|Shell) | Selective autonomy: topology + destructive blocks |
 | `before_shell.sh` | beforeShellExecution | Destructive shell gating (`permission`) |
 | `before_mcp.sh` | beforeMCPExecution | Dangerous MCP pattern deny (`permission`) |
 | `before_read_file.sh` | beforeReadFile + beforeTabFileRead | Secret path deny |
@@ -62,14 +62,14 @@ Single source: `shared/hooks/hooks.json`. `fleet_sync.sh` generates the global `
 
 ### preToolUse matcher overlap (intentional)
 
-Two preToolUse hooks fire for Cursor `Write` (plus Claude-compat edit aliases):
+Two preToolUse hooks fire for Cursor `Write|StrReplace`:
 
 | Hook | Matcher | Responsibility |
 |------|---------|----------------|
-| `lean_gate.sh` | `Write\|Edit\|MultiEdit\|StrReplace` | Size roof (700 LOC), complexity, coupling, nesting, velocity |
-| `pre_tool_use.sh` | `Write\|Edit\|MultiEdit\|StrReplace\|Shell\|Bash` | Topology sandbox, destructive content, destructive Shell |
+| `lean_gate.sh` | `Write\|StrReplace` | Soft 120 / hard 300 / legacy >700 subatomic split, complexity, coupling, nesting, velocity |
+| `pre_tool_use.sh` | `Write\|StrReplace\|Shell` | Topology sandbox, destructive content, destructive Shell |
 
-This is intentional: `lean_gate` enforces complexity discipline; `pre_tool_use` enforces autonomy/safety. Both run independently — a write must pass both gates. Destructive shell commands are also gated by `beforeShellExecution` → `before_shell.sh` (Cursor-native shell hook; `failClosed: true`).
+This is intentional: `lean_gate` enforces complexity discipline; `pre_tool_use` enforces autonomy/safety. Both run independently — a write must pass both gates. Destructive shell commands and Shell source-write bypasses are also gated by `beforeShellExecution` → `before_shell.sh` (Cursor-native shell hook; `failClosed: true`).
 
 ## Residual (class J)
 

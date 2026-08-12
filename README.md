@@ -72,7 +72,7 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, 700 LOC + complexity + coupling + nesting + velocity) denies oversized writes — rewrite or stop; do not fight a deny.
+Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, soft 120 / hard 300 + legacy >700 emergency subatomic split + complexity + coupling + nesting + velocity) denies oversized writes — extract modules or stop; do not fight a deny.
 
 Live `.cursor/` copies were retired: registration is global (`~/.cursor/hooks.json`); edit this pack and re-run `FORCE=1 bash shared/hooks/fleet_sync.sh all`.
 
@@ -127,17 +127,20 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 
 ## Ponytail / Lean Gate
 
-The lean gate (`lean_gate.sh`) enforces five roofs on every `Write|Edit|MultiEdit|StrReplace`:
+The lean gate (`lean_gate.sh`) enforces roofs on every `Write|StrReplace`:
 
 | Check | Roof | Action |
 |-------|------|--------|
-| Projected LOC | 700 | Deny if post-edit file exceeds |
+| Soft LOC | 120 | Allow + `agent_message` (prefer subatomic extract) |
+| Hard LOC | 300 | Deny growth; steer to subatomic modules |
+| Legacy emergency | >700 | Deny growth; reducing extract allowed with split steer |
 | Complexity (decision points) | 50 file / 4+ branch keywords per line | Deny if branching is too dense |
 | Coupling (import/include lines) | 10 | Deny if the file knows too much |
 | Nesting (brace depth) | 4 | Deny if blocks nest too deep |
 | Edit velocity (same file per session) | 15 edits | Deny repeated patching (LOC-reducing edits exempt) |
+| Comment ratio | 2% | Deny prose comments on executable source |
 
-Deny recovery: `Read` the blocked file → plan split → `Write` new modules → `StrReplace` imports → retry. Never use Shell to bypass.
+Deny recovery: `Read` the blocked file → plan subatomic split → `Write` new modules → `StrReplace` imports → retry. Never use Shell to bypass.
 
 ## Testing
 

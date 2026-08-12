@@ -29,7 +29,7 @@ rm -rf "$PACK/state"
 TP="$(mktemp)"
 printf '%s\n' \
   '{"role":"user","content":"fix the bug"}' \
-  '{"role":"assistant","content":"INTENT: fix docs\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}' > "$TP"
+  '{"role":"assistant","content":"INTENT: fix docs\nOBJECTIVE=README updated\nedit:README.md\nDone-when:\n- file updated\nDone-when: met"}' > "$TP"
 RESULT="$(echo "{\"status\":\"completed\",\"loop_count\":0,\"transcript_path\":\"$TP\"}" | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate accepts valid INTENT via transcript_path" "accept" "$RESULT"
 rm -f "$TP"
@@ -111,11 +111,21 @@ run_test "session_start tail excludes COMPACTION PROTOCOL block" "true" "$RESULT
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\n' > /tmp/vel_target.ts
 for i in $(seq 1 15); do echo '/tmp/vel_target.ts' >> "$PACK/state/edit_velocity.log"; done
-RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n","new_string":"l1"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
+RESULT="$(echo '{"tool_name":"StrReplace","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n","new_string":"l1"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
 run_test "lean_gate skips velocity deny on LOC-reducing edit" "allow" "$RESULT"
-RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1","new_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
+RESULT="$(echo '{"tool_name":"StrReplace","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1","new_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
 run_test "lean_gate enforces velocity on non-reducing edit" "deny" "$RESULT"
 rm -f /tmp/vel_target.ts
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state" "$PACK/frontend/components"
+printf 'export const Nav = () => null;\n' > "$PACK/frontend/components/SectionNav.tsx"
+ABS="$(cd "$PACK/frontend/components" && pwd)/SectionNav.tsx"
+RESULT="$(echo "{\"tool_name\":\"StrReplace\",\"tool_input\":{\"file_path\":\"$ABS\",\"old_string\":\"null\",\"new_string\":\"null \"}}" | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
+RESULT2="$(echo '{"tool_name":"StrReplace","tool_input":{"file_path":"frontend/components/SectionNav.tsx","old_string":"null ","new_string":"null  "}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
+VEL_KEYS="$(sort -u "$PACK/state/edit_velocity.log" | wc -l | tr -d ' ')"
+run_test "velocity canonicalizes abs+relative to one key" "1" "$VEL_KEYS"
+rm -rf "$PACK/frontend"
+rm -rf "$PACK/state"
 
 rm -rf "$PACK/state"
 printf '# HANDOFF — Session State\n\n## Current State\n\nReal session content worth keeping.\n\n## Next Actions\n\n- ship it\n' > "$PACK/HANDOFF.md"
@@ -145,11 +155,11 @@ run_test "fleet_sync project-hooks completes" "0" "$RESULT"
 run_test "project-hooks omits sessionStart (no double DUTY)" "yes" "$CLOUD_OK"
 run_test "project-hooks includes lean_gate" "1" "$CLOUD_LEAN"
 
-# comment_ratio_check must finish well under Cursor lean_gate timeout on ~600LOC
+# comment_ratio_check must finish well under Cursor lean_gate timeout on ~250LOC (under hard 300)
 rm -rf "$PACK/state"
 BIG_TS="$(mktemp /tmp/lean_bigXXXXXX.ts)"
 i=1
-while [[ "$i" -le 300 ]]; do
+while [[ "$i" -le 120 ]]; do
   printf '// prose comment line %s explaining nothing useful here\nexport const item%s = %s;\n' "$i" "$i" "$i"
   i=$((i + 1))
 done > "$BIG_TS"
@@ -160,13 +170,28 @@ ELAPSED=$((SECONDS - START))
 BIG_PERM="$(printf '%s' "$BIG_OUT" | jq -r '.permission // "none"')"
 BIG_MSG="$(printf '%s' "$BIG_OUT" | jq -r '.user_message // empty')"
 rm -f "$BIG_TS"
-run_test "lean_gate 600LOC comment file exits 0 (no hard-fail)" "0" "$BIG_RC"
-run_test "lean_gate 600LOC comment file returns COMMENT DENY JSON" "deny" "$BIG_PERM"
+run_test "lean_gate 240LOC comment file exits 0 (no hard-fail)" "0" "$BIG_RC"
+run_test "lean_gate 240LOC comment file returns COMMENT DENY JSON" "deny" "$BIG_PERM"
 RESULT="$(printf '%s' "$BIG_MSG" | grep -q 'COMMENT DENY' && echo ok || echo fail)"
-run_test "lean_gate 600LOC comment file message is COMMENT DENY" "ok" "$RESULT"
+run_test "lean_gate 240LOC comment file message is COMMENT DENY" "ok" "$RESULT"
 RESULT="$([[ "$ELAPSED" -le 2 ]] && echo ok || echo "slow:${ELAPSED}s")"
-run_test "lean_gate 600LOC comment_ratio finishes under 2s" "ok" "$RESULT"
+run_test "lean_gate 240LOC comment_ratio finishes under 2s" "ok" "$RESULT"
 
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"create a new app from scratch with auth","conversation_id":"conv-leap-1"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("PONYTAIL")) then "nudge" else "no" end')"
+run_test "before_submit ponytail leapfrog soft nudge" "nudge" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"please leverage best practices for src/auth.ts","conversation_id":"conv-vern-1"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("VERNACULAR")) then "nudge" else "no" end')"
+run_test "before_submit vernacular jargon soft nudge" "nudge" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+# legacy monster reduce path: allow with EMERGENCY SUBATOMIC message
+python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(720)]))' > /tmp/legacy_monster.ts
+REDUCED="$(python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(500)]))')"
+RESULT="$(jq -n --arg c "$REDUCED" --arg p "/tmp/legacy_monster.ts" '{tool_name:"Write",tool_input:{file_path:$p,content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r 'if .permission=="allow" and (.agent_message|test("EMERGENCY SUBATOMIC")) then "ok" else "no" end')"
+run_test "lean_gate allows legacy>700 reduce with emergency split steer" "ok" "$RESULT"
+rm -f /tmp/legacy_monster.ts
 rm -rf "$PACK/state"
 CHAT_OUT="$(printf '%s' '{"prompt":"gracias por la explicacion de arquitectura","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-chat-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
 RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.continue')"
@@ -200,7 +225,7 @@ printf 'src/x.ts\n' > "$PACK/state/writes"
 printf 'src/x.ts\n' > "$PACK/state/allowed_files.md"
 date +%s > "$PACK/state/session_ts"
 printf '%s | SHELL | duration=1 sandbox=false out_len=10 | ls -la\n' "$(date +%Y-%m-%d\ %H:%M:%S)" > "$PACK/state/session.log"
-RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EVIDENCE") then "evidence" else "other" end')"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=x fixed\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message|test("EVIDENCE") then "evidence" else "other" end')"
 run_test "stop_gate soft evidence followup when Done-when met without verify cite" "evidence" "$RESULT"
 
 # Second stop after nudge → fail open (accept), not loop
@@ -212,7 +237,7 @@ printf '1\n' > "$PACK/state/outcomes.md"
 date +%s > "$PACK/state/session_ts"
 # Touch tagged file so rules_untouched passes
 touch src/x.ts 2>/dev/null || mkdir -p src && touch src/x.ts
-RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix x"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=x fixed\nedit:src/x.ts\nDone-when:\n- file updated\nDone-when: met"}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate evidence nudge fail-open on second pass" "accept" "$RESULT"
 rm -f src/x.ts
 
@@ -225,7 +250,7 @@ printf 'src/y.ts\n' > "$PACK/state/allowed_files.md"
 date +%s > "$PACK/state/session_ts"
 printf '%s | SHELL VERIFY GREEN | duration=2 sandbox=false out_len=40 | bash tests/run.sh\n' "$(date +%Y-%m-%d\ %H:%M:%S)" > "$PACK/state/session.log"
 mkdir -p src; touch src/y.ts
-RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix y"},{"role":"assistant","content":"INTENT: fix\nedit:src/y.ts\nDone-when:\n- file updated\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
+RESULT="$(printf '%s' '{"status":"completed","messages":[{"role":"user","content":"fix y"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=y fixed\nedit:src/y.ts\nDone-when:\n- file updated\nDone-when: met\nRan bash tests/run.sh — PASS / green."}]}' | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
 run_test "stop_gate accepts Done-when met with verify evidence" "accept" "$RESULT"
 rm -f src/y.ts
 rm -rf "$PACK/state"
