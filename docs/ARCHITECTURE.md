@@ -24,7 +24,7 @@ Law, state, and feedback must not share one dump.
 
 ## Injection vs Declaration
 
-1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF + short DEBERES through `additional_context`. `before_submit_prompt.sh` classifies route/state and returns `continue` (JOB CARD / FILE_MAP via `user_message`; not context). `post_tool_use.sh` injects SCORECARD via `additional_context`. Never mutate the user prompt (`updated_input` is banned).
+1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF + JOB CARD template (INTENT / OBJECTIVE / edit:|NEW: / Done-when) through `additional_context`. `before_submit_prompt.sh` classifies route/state and returns `continue` (JOB CARD / FILE_MAP / GROUNDING via `user_message`; not context). `post_tool_use.sh` injects SCORECARD via `additional_context`. Never mutate the user prompt (`updated_input` is banned). Ponytail law stays in always-apply `.mdc` — not re-injected as an essay.
 2. **Declaration (Layer 1/4):** INTENT job card in **chat prose before tools** (never Shell/Write/fence). OBJECTIVE=postcondition on named units (what is true when done, not a task) + `edit:`|`NEW:` tags; Done-when=≤5 decidable predicates. Finish all tags same turn. User prompt immutable.
 3. **Audit (Layer 3):** `stop_gate.sh` checks **assistant prose only** (strips tool payloads + fences), OBJECTIVE quality, thin-roof caps, FILE_MAP tags, drip reject, >700 rewrite until split, and `Done-when: met`.
 

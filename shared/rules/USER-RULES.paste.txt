@@ -20,7 +20,7 @@ Default to action over analysis. When I ask for options, rank them by impact vs 
 ## Session Protocol (enforced by hooks — work with them, not against them)
 - Start: session_start injects HANDOFF.md tail + DUTY via additional_context. Read it before anything else.
 - INTENT: chat prose BEFORE tools (never Shell/Write/fence). OBJECTIVE = postcondition on named units (what is true when done, not a task) + edit:path|NEW:path tags for every file you will touch.
-- Ground first: AGENTS.md, Glob/Grep/Read the feature area, then Write/StrReplace. Cursor tools: Write/StrReplace/Shell/Read/Grep/Delete/Task/EditNotebook.
+- Ground first: AGENTS.md, Glob/Grep/Read the feature in THIS codebase, then Write/StrReplace. Cursor tools: Write/StrReplace/Shell/Read/Grep/Delete/Task/EditNotebook.
 - Constraints: zero prose comments (lean_gate ≈2% roof); soft 120 LOC warn; hard 300 deny; >700 LOC rewrite into modules ≤300 and StrReplace original+callers to imports; ≤15 edits/file; Write|StrReplace only (never Shell to write code).
 - Done-when: ≤5 decidable predicates, one per detected outcome. Under-scoped Done-when is rejected.
 - Finish EVERY tagged path this turn. No drip, no partial handoffs, no permission asks, no "next turn".

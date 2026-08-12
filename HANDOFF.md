@@ -2,23 +2,25 @@
 
 ## Active Objective
 
-Hooks as second brain for context engineering (2026-08-12).
+macOS-first Cursor hooks: POSIX grep, JOB CARD + grounding, no Claude vocabulary.
 
 ## Current State
 
-Done-when: met. 173/173 tests, doctor green except missing global ~/.cursor in this cloud VM (expected).
+Done-when: met. 178/178 tests.
 
-Three channels:
-- Law = paste + mdc (sessionStart no longer dumps ponytail essay)
-- State = HANDOFF tail + short DEBERES
-- Feedback = postToolUse SCORECARD on dirty writes; afterFileEdit stamps on-disk truth
+Day-to-day loop (unchanged contract, now Mac-safe):
+1. Prompt in → before_submit classifies code, nudges GROUNDING + JOB CARD
+2. Agent Grep/Read THIS codebase (reuse / ponytail.mdc always-apply)
+3. Agent declares INTENT + OBJECTIVE + edit:|NEW: in chat before tools
+4. stop_gate audits; HANDOFF survives
 
-Steel: Delete|EditNotebook matchers; OBJECTIVE quality (reject weak/task-shaped); >700 rewrite followup until split; deleted tagged files count as touched.
+Ponytail is law in always-apply mdc, not a sessionStart essay.
+Stock macOS: no GNU grep \b (BSD treats it as backspace). wb_alt() is the boundary.
 
 ## Next Actions
 
-- fleet_sync install on local IDE so ~/.cursor picks up postToolUse/afterFileEdit
-- Paste updated USER-RULES.paste.txt if the capsule drifted
+- Local: `bash MacOS/install.sh` then re-paste USER-RULES.paste.txt
+- Windows: `.\Windows\install.ps1` now copies skills too
 
 ## Archived
 

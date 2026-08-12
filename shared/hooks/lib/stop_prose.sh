@@ -7,7 +7,7 @@ pe_has_done_when() { printf '%s\n' "$PROSE" | grep -iqE '^[[:space:]]*Done-when:
 pe_stop_accepted() { printf '%s\n' "$PROSE" | grep -Fq 'STOP ACCEPTED'            && echo 1 || echo 0; }
 
 pe_dw_met() {
-  printf '%s\n' "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' \
+  printf '%s\n' "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)([^A-Za-z0-9_]|$)|✅[[:space:]]*Done-when[[:space:]]+met' \
     && echo 1 || echo 0
 }
 
@@ -42,7 +42,7 @@ pe_objective_ok() {
   if printf '%s' "$body" | grep -qiE '^(done|fixed|ok|complete|listo|hecho|finish(ed)?)\.?$'; then
     printf 'weak'; return 0
   fi
-  if printf '%s' "$body" | grep -qiE '^(i will|i am going|vamos a|voy a|implement(ar)?|add |create |make |fix the|update the|refactor )\b'; then
+  if printf '%s' "$body" | grep -qiE '^(i will|i am going|vamos a|voy a|implement(ar)?|add |create |make |fix the|update the|refactor )'; then
     printf 'task'; return 0
   fi
   printf 'ok'

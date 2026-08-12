@@ -19,13 +19,20 @@ if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 40 "$HANDOFF" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15)"
 fi
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
-[[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; OBJECTIVE=<postcondition>; tag edit:|NEW:; Write|StrReplace only — never Shell to write code. >700 LOC = rewrite modules + imports."
-CTX="Session start. GROUNDING (antes del primer Write/StrReplace — steering only, no deny):
-1. Read HANDOFF.md tail
-2. Read AGENTS.md (o AGENTS del proyecto) + FILE_MAP / module map
-3. Identify files to touch; Read each before Write/StrReplace
+[[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; OBJECTIVE=<postcondition>; tag edit:|NEW:; Write|StrReplace only."
+CTX="Session start. GROUNDING (before any Write/StrReplace — steering, no deny):
+1. Read HANDOFF.md tail + AGENTS.md
+2. Grep/Glob/Read THIS codebase for the feature (reuse before write)
+3. Read each file you will tag
+JOB CARD — declare in chat prose before tools (never Shell/fence):
+INTENT: <one line>
+OBJECTIVE=<postcondition on named units — what is true when done>
+edit:path
+NEW:path
+Done-when:
+- <decidable predicate>
+Then Write|StrReplace only tagged paths. Never Shell to write code.
 DEBERES: ${DUTY}
-FILE_MAP: ground Glob|Grep|Read → tag edit:path|NEW:path in chat INTENT → Write|StrReplace → re-Read tags → prove Done-when. Never Shell to write code.
 HANDOFF tail:
 ${TAIL}"
 emit_context "$CTX"

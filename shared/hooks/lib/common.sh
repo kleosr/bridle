@@ -102,6 +102,11 @@ is_script_path() {
   esac
 }
 
+# POSIX ERE word boundary. GNU grep \b is a backspace on BSD grep (stock macOS).
+wb_alt() {
+  printf '(^|[^A-Za-z0-9_])(%s)([^A-Za-z0-9_]|$)' "$1"
+}
+
 if stat -f %m / >/dev/null 2>&1; then
   file_mtime() { stat -f %m "$1" 2>/dev/null; }
 else
@@ -119,7 +124,7 @@ acquire_lock() {
     age=$(( $(date +%s) - $(file_mtime "$lockdir" || echo 0) ))
     [[ "$age" -gt 10 ]] && { rmdir "$lockdir" 2>/dev/null || true; continue; }
     [[ "$tries" -ge 20 ]] && { emit_deny "State busy (parallel hook collision), retry."; exit 0; }
-    sleep 0.05
+    sleep 0.05 2>/dev/null || sleep 1
   done
   _LOCK_DIR="$lockdir"
 }

@@ -4,6 +4,7 @@ HERE="${HERE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 source "$HERE/lib/common.sh"
 source "$HERE/lib/shell_gate.sh"
 source "$HERE/lib/tool_io.sh"
+source "$HERE/lib/shared_state.sh"
 resolve_root
 INPUT="$(cat)"
 CONV_ID="$(extract_conv_id "$INPUT")"
@@ -37,7 +38,25 @@ sandbox_nudge() {
   printf '%s' "$nudge"
 }
 case "$(tool_family "$TOOL_NAME")" in
-  read) emit_quiet; exit 0 ;;
+  read)
+    mkdir -p "$STATE"
+    case "$TOOL_NAME" in
+      Grep)
+        PAT="$(echo "$INPUT" | jq -r '.tool_input.pattern // .tool_input.query // empty' 2>/dev/null || true)"
+        log_session_event "GREP" "${PAT:0:80}"
+        printf 'Grep\n' >>"$STATE/reads" 2>/dev/null || true
+        ;;
+      Glob)
+        PAT="$(echo "$INPUT" | jq -r '.tool_input.glob_pattern // .tool_input.pattern // empty' 2>/dev/null || true)"
+        log_session_event "GLOB" "${PAT:0:80}"
+        ;;
+      Read)
+        [[ -n "$FILE_PATH" ]] && printf '%s\n' "$FILE_PATH" >>"$STATE/reads" 2>/dev/null || true
+        log_session_event "READ" "${FILE_PATH:0:120}"
+        ;;
+    esac
+    emit_quiet; exit 0
+    ;;
   write)
     [[ -z "$FILE_PATH" ]] && { emit_quiet; exit 0; }
     NUDGE="$(sandbox_nudge "$FILE_PATH")"

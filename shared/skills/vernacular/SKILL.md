@@ -35,7 +35,7 @@ Before `Write` in a directory: `Read` 1–2 sibling files. Match their import gr
 
 ## Cursor tools (primary vocabulary)
 Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`, `EditNotebook`.
-Do not use non-Cursor tool names in chat/examples. Matchers: Write|StrReplace|Shell|Delete|EditNotebook.
+Matchers: Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob.
 
 ## INTENT
 - Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/fence).
