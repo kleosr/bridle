@@ -145,6 +145,28 @@ run_test "fleet_sync project-hooks completes" "0" "$RESULT"
 run_test "project-hooks omits sessionStart (no double DUTY)" "yes" "$CLOUD_OK"
 run_test "project-hooks includes lean_gate" "1" "$CLOUD_LEAN"
 
+# comment_ratio_check must finish well under Cursor lean_gate timeout on ~600LOC
+rm -rf "$PACK/state"
+BIG_TS="$(mktemp /tmp/lean_bigXXXXXX.ts)"
+i=1
+while [[ "$i" -le 300 ]]; do
+  printf '// prose comment line %s explaining nothing useful here\nexport const item%s = %s;\n' "$i" "$i" "$i"
+  i=$((i + 1))
+done > "$BIG_TS"
+START=$SECONDS
+BIG_OUT="$(jq -n --rawfile c "$BIG_TS" '{tool_name:"Write",tool_input:{file_path:"src/SectionNavBig.ts",content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh")"
+BIG_RC=$?
+ELAPSED=$((SECONDS - START))
+BIG_PERM="$(printf '%s' "$BIG_OUT" | jq -r '.permission // "none"')"
+BIG_MSG="$(printf '%s' "$BIG_OUT" | jq -r '.user_message // empty')"
+rm -f "$BIG_TS"
+run_test "lean_gate 600LOC comment file exits 0 (no hard-fail)" "0" "$BIG_RC"
+run_test "lean_gate 600LOC comment file returns COMMENT DENY JSON" "deny" "$BIG_PERM"
+RESULT="$(printf '%s' "$BIG_MSG" | grep -q 'COMMENT DENY' && echo ok || echo fail)"
+run_test "lean_gate 600LOC comment file message is COMMENT DENY" "ok" "$RESULT"
+RESULT="$([[ "$ELAPSED" -le 2 ]] && echo ok || echo "slow:${ELAPSED}s")"
+run_test "lean_gate 600LOC comment_ratio finishes under 2s" "ok" "$RESULT"
+
 rm -rf "$PACK/state"
 CHAT_OUT="$(printf '%s' '{"prompt":"gracias por la explicacion de arquitectura","hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-chat-001"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
 RESULT="$(printf '%s' "$CHAT_OUT" | jq -r '.continue')"

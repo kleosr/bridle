@@ -5,20 +5,20 @@
       {
         "matcher": "Write|Edit|MultiEdit|StrReplace",
         "command": ".cursor/hooks/lean_gate.sh",
-        "timeout": 5,
+        "timeout": 30,
         "failClosed": true
       },
       {
         "matcher": "Write|Edit|MultiEdit|StrReplace|Shell|Bash",
         "command": ".cursor/hooks/pre_tool_use.sh",
-        "timeout": 5,
+        "timeout": 30,
         "failClosed": true
       }
     ],
     "beforeShellExecution": [
       {
         "command": ".cursor/hooks/before_shell.sh",
-        "timeout": 5,
+        "timeout": 30,
         "failClosed": true
       }
     ],
@@ -37,7 +37,7 @@
     "beforeMCPExecution": [
       {
         "command": ".cursor/hooks/before_mcp.sh",
-        "timeout": 5,
+        "timeout": 30,
         "failClosed": true
       }
     ],
