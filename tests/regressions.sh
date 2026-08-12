@@ -109,13 +109,18 @@ RESULT="$(echo '{}' | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.addit
 run_test "session_start tail excludes COMPACTION PROTOCOL block" "true" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
-printf 'l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\n' > /tmp/vel_target.ts
-for i in $(seq 1 15); do echo '/tmp/vel_target.ts' >> "$PACK/state/edit_velocity.log"; done
-RESULT="$(echo '{"tool_name":"StrReplace","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n","new_string":"l1"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
+VEL_FILE="$PACK/state/vel_target.ts"
+printf 'l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\n' > "$VEL_FILE"
+VEL_KEY="$(HERE="$PACK/shared/hooks" ROOT="$PACK" bash -c '
+  source "$HERE/lib/common.sh"; source "$HERE/lib/shared_state.sh"
+  canonicalize_edit_path "'"$VEL_FILE"'"
+')"
+for i in $(seq 1 15); do printf '%s\n' "$VEL_KEY" >> "$PACK/state/edit_velocity.log"; done
+RESULT="$(echo "{\"tool_name\":\"StrReplace\",\"tool_input\":{\"file_path\":\"$VEL_FILE\",\"old_string\":\"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\n\",\"new_string\":\"l1\"}}" | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
 run_test "lean_gate skips velocity deny on LOC-reducing edit" "allow" "$RESULT"
-RESULT="$(echo '{"tool_name":"StrReplace","tool_input":{"file_path":"/tmp/vel_target.ts","old_string":"l1","new_string":"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
+RESULT="$(echo "{\"tool_name\":\"StrReplace\",\"tool_input\":{\"file_path\":\"$VEL_FILE\",\"old_string\":\"l1\",\"new_string\":\"l1\nl2\nl3\nl4\nl5\nl6\nl7\nl8\nl9\nl10\nl11\nl12\n\"}}" | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "none"')"
 run_test "lean_gate enforces velocity on non-reducing edit" "deny" "$RESULT"
-rm -f /tmp/vel_target.ts
+rm -f "$VEL_FILE"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state" "$PACK/frontend/components"
 printf 'export const Nav = () => null;\n' > "$PACK/frontend/components/SectionNav.tsx"
