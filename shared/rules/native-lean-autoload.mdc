@@ -17,10 +17,12 @@ Prohibido usar `sed`, `cat`, `echo >`, `tee`, `rg` o `find` en Shell para leer/e
 
 ## 2. DENY RECOVERY PROTOCOL (Cuando un hook bloquea)
 El gate proyecta el LOC **y** comment/complexity del archivo post-edit:
-- `Write` proyectado > 700 LOC → deny.
-- Edit/`Write` con ratio de comentarios prosa > 2% → deny.
-- Soft > 150 LOC en sources → allow + `agent_message` warn (extrae pronto).
-- Reducir/splittear un archivo sobre techo → **allow**.
+- `Write`/`StrReplace` proyectado > 300 LOC (crecimiento) → deny + subatomic split.
+- Legacy on-disk > 700 LOC → emergency subatomic split (reducir/extraer permitido con steer; crecer deny).
+- `Write`/`StrReplace` con ratio de comentarios prosa > 2% → deny.
+- Soft > 120 LOC en sources → allow + `agent_message` warn (extrae pronto).
+- Reducir/splittear un archivo sobre techo → **allow** con mensaje subatomic.
+- Shell `cat>`/`tee`/`dd of=`/redirect a source → deny (usa Write/StrReplace).
 
 Si `lean_gate.sh` bloquea, NO uses Shell para bypassear:
 

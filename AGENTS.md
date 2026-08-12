@@ -8,6 +8,9 @@ Overview
 kleosrules V2 Bash hooks + local HANDOFF memory. Brain equals HANDOFF.md (local).
 Muscle equals hooks scripts. No Rust. No Python pack tooling. No MCP core dependency.
 
+Install scope
+Local install is global-only: `fleet_sync install|all` writes `~/.cursor` and removes per-repo `.cursor/hooks*` by default so sessionStart DUTY never double-fires. Cloud agents cannot see `~/.cursor` — use `CLOUD=1 bash shared/hooks/fleet_sync.sh project-hooks` (Lane-A `hooks.cloud.json`, no sessionStart). Do not special-case individual repos.
+
 Where to look
 - Paste: shared/rules/USER-RULES.paste.txt
 - Hooks: shared/hooks/session_start.sh before_submit_prompt.sh stop_gate.sh lean_gate.sh pre_tool_use.sh

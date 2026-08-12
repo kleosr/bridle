@@ -8,9 +8,36 @@ log_session_event() {
   printf '%s | %s | %s\n' "$(date +%Y-%m-%d\ %H:%M:%S)" "$event" "$details" >>"$dir/session.log" 2>/dev/null || true
 }
 
+canonicalize_edit_path() {
+  local fp="$1" root="${ROOT:-}" out=""
+  [[ -z "$fp" ]] && return 0
+  fp="${fp#./}"
+  while [[ "$fp" == *//* ]]; do fp="${fp//\/\//\/}"; done
+  if [[ -e "$fp" ]]; then
+    if command -v realpath >/dev/null 2>&1; then
+      out="$(realpath "$fp" 2>/dev/null || true)"
+    fi
+    if [[ -z "$out" ]]; then
+      local dir base
+      dir="$(cd "$(dirname "$fp")" 2>/dev/null && pwd || true)"
+      base="$(basename "$fp")"
+      [[ -n "$dir" ]] && out="${dir}/${base}"
+    fi
+  fi
+  [[ -z "$out" ]] && out="$fp"
+  if [[ -n "$root" ]]; then
+    case "$out" in
+      "$root"/*) out="${out#"$root"/}" ;;
+    esac
+  fi
+  printf '%s' "$out"
+}
+
 velocity_bump() {
   local fp="$1" skip="${2:-0}" vmax="${VMAX:-15}" log="${VELOCITY_LOG:-}"
   [[ -z "$log" ]] && return 0
+  fp="$(canonicalize_edit_path "$fp")"
+  [[ -z "$fp" ]] && return 0
   mkdir -p "$(dirname "$log")"
   acquire_lock
   local count

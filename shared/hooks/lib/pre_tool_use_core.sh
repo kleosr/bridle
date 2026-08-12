@@ -26,11 +26,10 @@ is_executable_path() {
   esac
 }
 case "$TOOL_NAME" in
-  Read|Grep|Glob|LS|Delete|BashOutput|WebFetch|WebSearch|TodoWrite|Task|TaskOutput) emit_quiet; exit 0 ;;
+  Read|Grep|Glob|LS|Delete|WebFetch|WebSearch|TodoWrite|Task|TaskOutput) emit_quiet; exit 0 ;;
 esac
-# Cursor primary: Write. Claude-compat aliases: Edit|MultiEdit|StrReplace.
 case "$TOOL_NAME" in
-  Write|Edit|MultiEdit|StrReplace)
+  Write|StrReplace)
     FILE_PATH="$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.filePath // .tool_input.path // empty')"
     [[ -z "$FILE_PATH" ]] && { emit_quiet; exit 0; }
     printf '%s\n' "$FILE_PATH" >>"$STATE/writes" 2>/dev/null || true
@@ -47,7 +46,6 @@ case "$TOOL_NAME" in
     NEW_CONTENT=""
     case "$TOOL_NAME" in
       Write) NEW_CONTENT="$(echo "$INPUT" | jq -r '(.tool_input.content // empty) | if type=="array" then map((.text // .content // "")) | join("\n") else . end' 2>/dev/null || true)" ;;
-      Edit|MultiEdit) NEW_CONTENT="$(echo "$INPUT" | jq -r '[.tool_input.new_string // "", (.tool_input.edits[]?.new_string // "")] | join("\n")' 2>/dev/null || true)" ;;
       StrReplace) NEW_CONTENT="$(echo "$INPUT" | jq -r '.tool_input.new_string // ""' 2>/dev/null || true)" ;;
     esac
     if is_executable_path "$FILE_PATH"; then
@@ -60,9 +58,8 @@ case "$TOOL_NAME" in
     emit_quiet; exit 0
     ;;
 esac
-# Cursor primary: Shell. Claude-compat alias: Bash.
 case "$TOOL_NAME" in
-  Shell|Bash|shell|bash)
+  Shell|shell)
     CMD="$(echo "$INPUT" | jq -r '.tool_input.command // .tool_input.cmd // .command // empty')"
     [[ -z "$CMD" ]] && { emit_quiet; exit 0; }
     if ! gate_shell_command "$CMD"; then

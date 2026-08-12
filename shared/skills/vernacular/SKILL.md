@@ -29,12 +29,13 @@ Before `Write` in a directory: `Read` 1–2 sibling files. Match their import gr
 - Exports: named only. No default exports.
 - Dead code / TODOs: delete or ticket-ref (`TODO(AUTH-12):`). No `// implement later`, empty `catch {}`, debug `console.log` left behind.
 - Imports: no unused; group/stable style matching neighbors.
-- Functions: one responsibility; extract before soft LOC 150 (`file_loc_soft`); hard deny at 700.
+- Functions: one responsibility; extract before soft LOC 120 (`file_loc_soft`); hard deny at 300.
 - Tests: behavior changes need tests when testing skill applies; cite `docs/TOOLCHAIN.md` evidence before Done.
+- Corporate/AI-slop jargon: soft-banned via `shared/hooks/policy/vernacular_bans.txt` (beforeSubmit/stop nudge; fail-open if list missing).
 
 ## Cursor tools (primary vocabulary)
-Use: `Write`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`.
-Do not prefer Claude-only names (`Bash`, `StrReplace`, `MultiEdit`, `Edit`) in chat/examples — hooks may still accept those as aliases.
+Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`.
+Do not use non-Cursor tool names in chat/examples. Matchers are Write|StrReplace|Shell only.
 
 ## INTENT
 - Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/fence).

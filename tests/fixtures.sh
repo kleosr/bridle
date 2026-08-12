@@ -61,16 +61,20 @@ RESULT="$(cat "$PACK/tests/fixtures/lean_comments_machine_ok.json" | bash "$PACK
 run_test "lean_gate allows machine-directive-only comments" "allow" "$RESULT"
 
 rm -rf "$PACK/state"
-# Projected whole-file: fragment is clean but on-disk file still has prose comments → deny
 printf '%s\n' '// Narrating prose comment that must be scored on projected file.' 'export const x = 1;' 'export const y = 2;' 'export const z = 3;' 'export const w = 4;' 'export const a = 5;' 'export const b = 6;' 'export const c = 7;' 'export const d = 8;' > /tmp/lean_proj_comments.ts
-RESULT="$(echo '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/lean_proj_comments.ts","old_string":"export const x = 1;","new_string":"export const x = 99;"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
+RESULT="$(echo '{"tool_name":"StrReplace","tool_input":{"file_path":"/tmp/lean_proj_comments.ts","old_string":"export const x = 1;","new_string":"export const x = 99;"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
 run_test "lean_gate scores projected whole file comments (not fragment only)" "deny" "$RESULT"
 rm -f /tmp/lean_proj_comments.ts
 
 rm -rf "$PACK/state"
-SOFT_BODY="$(python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(160)]))')"
+SOFT_BODY="$(python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(130)]))')"
 RESULT="$(jq -n --arg c "$SOFT_BODY" '{tool_name:"Write",tool_input:{file_path:"src/soft.ts",content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r 'if .permission=="allow" and (.agent_message|test("SOFT LOC")) then "warn" else "no" end')"
-run_test "lean_gate soft LOC allow+agent_message (>150)" "warn" "$RESULT"
+run_test "lean_gate soft LOC allow+agent_message (>120)" "warn" "$RESULT"
+
+rm -rf "$PACK/state"
+HARD_BODY="$(python3 -c 'print("\n".join([f"export const v{i} = {i};" for i in range(301)]))')"
+RESULT="$(jq -n --arg c "$HARD_BODY" '{tool_name:"Write",tool_input:{file_path:"src/hard.ts",content:$c}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r 'if .permission=="deny" and (.user_message|test("SUBATOMIC|MECHANICAL DENY")) then "deny" else "no" end')"
+run_test "lean_gate hard LOC deny (>300) steers subatomic split" "deny" "$RESULT"
 
 rm -rf "$PACK/state"
 RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"docs/guide.md","content":"# Title\n\nThis is a long prose doc.\n\nMore prose here.\n"}}' | bash "$PACK/shared/hooks/lean_gate.sh" | jq -r '.permission // "allow"')"
@@ -100,20 +104,32 @@ fi
 RESULT="$(echo '{"tool_name":"Read","tool_input":{"file_path":"x"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r 'if . == {} then "pass" else .permission end')"
 run_test "pre_tool_use allows Read" "pass" "$RESULT"
 
-RESULT="$(cat "$PACK/tests/fixtures/preToolUse_bash_destructive.json" | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission')"
-run_test "pre_tool_use blocks destructive Bash alias" "deny" "$RESULT"
-
 RESULT="$(echo '{"tool_name":"Shell","tool_input":{"command":"rm -rf /"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "none"')"
-run_test "pre_tool_use blocks destructive Shell (Cursor primary)" "deny" "$RESULT"
-
-RESULT="$(echo '{"tool_name":"Bash","hook_event_name":"preToolUse","tool_input":{"command":"rm -rf /"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "none"')"
-run_test "pre_tool_use Cursor-only deny even with hook_event_name" "deny" "$RESULT"
+run_test "pre_tool_use blocks destructive Shell" "deny" "$RESULT"
 
 RESULT="$(echo '{"command":"rm -rf /","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution blocks destructive command" "deny" "$RESULT"
 
 RESULT="$(echo '{"command":"ls -la","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution allows safe command" "allow" "$RESULT"
+
+RESULT="$(echo '{"command":"cat > src/x.ts <<EOF\n consoles\nEOF","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies cat> source write" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"tee frontend/SectionNav.tsx","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies tee source write" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"bash tests/run.sh","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows tests/run.sh" "allow" "$RESULT"
+
+RESULT="$(echo '{"command":"sed -i s/a/b/ src/app.ts","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies sed -i source" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"python -c \"open('\''x.ts'\'','\''w'\'').write('\''z'\'')\"","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies python -c write" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"rg -n TODO src/","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows rg read-only" "allow" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 echo 'src/db.ts' > "$PACK/state/allowed_files.md"
@@ -175,8 +191,28 @@ fi
 
 COMMENT_MAX="$(jq -r '.comment_ratio_max' "$PACK/shared/hooks/policy/lean.json")"
 SOFT_MAX="$(jq -r '.file_loc_soft' "$PACK/shared/hooks/policy/lean.json")"
+HARD_MAX="$(jq -r '.file_loc_max' "$PACK/shared/hooks/policy/lean.json")"
+LEGACY_MAX="$(jq -r '.file_loc_legacy_emergency' "$PACK/shared/hooks/policy/lean.json")"
 run_test "lean.json comment_ratio_max is 2 (zero-comment)" "2" "$COMMENT_MAX"
-run_test "lean.json file_loc_soft is 150" "150" "$SOFT_MAX"
+run_test "lean.json file_loc_soft is 120" "120" "$SOFT_MAX"
+run_test "lean.json file_loc_max is 300" "300" "$HARD_MAX"
+run_test "lean.json file_loc_legacy_emergency is 700" "700" "$LEGACY_MAX"
+
+MATCHERS="$(jq -r '.hooks.preToolUse[].matcher' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" 2>/dev/null | tr '|' '\n' | sort -u | tr '\n' ' ')"
+MATCHERS="$(echo "$MATCHERS" | xargs)"
+BAD_MATCH=0
+for m in $MATCHERS; do
+  case "$m" in
+    Write|StrReplace|Shell) ;;
+    *) BAD_MATCH=1; break ;;
+  esac
+done
+run_test "hooks matchers ⊆ {Write,StrReplace,Shell}" "0" "$BAD_MATCH"
+if ! grep -E 'Bash|MultiEdit|(^|[^a-zA-Z])Edit([^a-zA-Z]|$)' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" >/dev/null 2>&1; then
+  echo "[pass] hooks.json/hooks.cloud.json have zero Bash/Edit/MultiEdit matchers"; PASS=$((PASS + 1))
+else
+  echo "[fail] Claude tool names still in hook matchers"; FAIL=$((FAIL + 1))
+fi
 
 LOC_OK=1
 for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/session_end.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/stop_gate.sh "$PACK"/shared/hooks/lean_gate.sh "$PACK"/shared/hooks/pre_tool_use.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_mcp.sh "$PACK"/shared/hooks/pre_compact.sh "$PACK"/shared/hooks/subagent_start.sh "$PACK"/shared/hooks/subagent_stop.sh "$PACK"/shared/hooks/after_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do

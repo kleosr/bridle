@@ -1,0 +1,13 @@
+# Soft vernacular bans (corporate/AI-slop). One regex per line. Fail-open if file missing.
+\bleverage\b
+\bsynerg(y|ies|ize)\b
+\bcircle back\b
+\bbest[- ]practices?\b
+\butilize\b
+\bbandwidth\b
+\bparadigm shift\b
+\btouch base\b
+\blow[- ]hanging fruit\b
+\bdelve (into|deeper)\b
+\bgame[- ]changer\b
+\brobust solution\b
