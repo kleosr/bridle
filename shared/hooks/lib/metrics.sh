@@ -113,49 +113,54 @@ nesting_check() {
   return 0
 }
 
-# Machine-directive allowlist (not counted as prose comments).
-_is_machine_directive() {
-  printf '%s' "$1" | grep -qiE \
-    '^[[:space:]]*(#!|//[[:space:]]*#?(region|endregion)|/\*[[:space:]]*(eslint|prettier|webpack|vite|@license|license|copyright|spdx)|#[[:space:]]*(pragma|region|endregion|ifndef|define|endif|elif|else|include)|//[[:space:]]*@?ts-(expect-error|ignore|nocheck|check)|//[[:space:]]*eslint|//[[:space:]]*prettier|//[[:space:]]*istanbul|//!|///[[:space:]]*<reference|#[[:space:]]*!)' \
-    && return 0
-  printf '%s' "$1" | grep -qiE '^[[:space:]]*/\*[*!]?[[:space:]]*(eslint|prettier|license|copyright|spdx|@license)' && return 0
-  return 1
-}
-
+# Single-pass comment ratio; machine-directive allowlist inlined (was grep-per-line).
 comment_ratio_check() {
   local content="$1" max_pct="$2"
   [[ "$max_pct" -le 0 ]] && return 0
-  local total=0 comment_lines=0 code_lines pct in_block=0
-  # Count line/block/JSDoc prose; skip allowlisted machine directives.
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    printf '%s' "$line" | grep -qE '[[:alnum:]]' || continue
-    total=$((total + 1))
-    if _is_machine_directive "$line"; then
-      continue
-    fi
-    if [[ "$in_block" -eq 1 ]]; then
-      comment_lines=$((comment_lines + 1))
-      printf '%s' "$line" | grep -q '\*/' && in_block=0
-      continue
-    fi
-    if printf '%s' "$line" | grep -qE '^[[:space:]]*/\*'; then
-      comment_lines=$((comment_lines + 1))
-      printf '%s' "$line" | grep -q '\*/' || in_block=1
-      continue
-    fi
-    if printf '%s' "$line" | grep -qE '^[[:space:]]*(\*|//|#|--|<!--)'; then
-      comment_lines=$((comment_lines + 1))
-    fi
-  done <<EOF
-$content
-EOF
-  [[ "$total" -lt 8 ]] && return 0
-  code_lines=$(( total - comment_lines ))
-  [[ "$code_lines" -le 0 ]] && return 0
-  pct=$(( (comment_lines * 100) / total ))
-  if [[ "$pct" -gt "$max_pct" ]]; then
-    emit_deny "COMMENT DENY: prose-comment ratio ~${pct}% > ${max_pct}% roof (${comment_lines} comment lines / ${total} meaningful). Zero-comment doctrine — self-documenting names only; machine directives (shebang/pragma/license/build-guard/ts-expect-error) ok."
-    return 1
-  fi
-  return 0
+  local result status pct comment_lines total
+  result="$(printf '%s' "$content" | awk -v max_pct="$max_pct" '
+    function is_machine(l, t) {
+      t = tolower(l)
+      if (t ~ /^[[:space:]]*#!/) return 1
+      if (t ~ /^[[:space:]]*\/\/[[:space:]]*(#?region|#?endregion)/) return 1
+      if (t ~ /^[[:space:]]*\/\*[[:space:]]*(eslint|prettier|webpack|vite|@license|license|copyright|spdx)/) return 1
+      if (t ~ /^[[:space:]]*#[[:space:]]*(pragma|region|endregion|ifndef|define|endif|elif|else|include)/) return 1
+      if (t ~ /^[[:space:]]*\/\/[[:space:]]*@?ts-(expect-error|ignore|nocheck|check)/) return 1
+      if (t ~ /^[[:space:]]*\/\/[[:space:]]*(eslint|prettier|istanbul)/) return 1
+      if (t ~ /^[[:space:]]*\/\/!/) return 1
+      if (t ~ /^[[:space:]]*\/\/\/[[:space:]]*<reference/) return 1
+      if (t ~ /^[[:space:]]*#[[:space:]]*!/) return 1
+      if (t ~ /^[[:space:]]*\/\*[*!]?[[:space:]]*(eslint|prettier|license|copyright|spdx|@license)/) return 1
+      return 0
+    }
+    BEGIN { total=0; comments=0; in_block=0 }
+    {
+      if ($0 !~ /[[:alnum:]]/) next
+      total++
+      if (is_machine($0)) next
+      if (in_block) {
+        comments++
+        if ($0 ~ /\*\//) in_block=0
+        next
+      }
+      if ($0 ~ /^[[:space:]]*\/\*/) {
+        comments++
+        if ($0 !~ /\*\//) in_block=1
+        next
+      }
+      if ($0 ~ /^[[:space:]]*(\*|\/\/|#|--|<!--)/) comments++
+    }
+    END {
+      if (total < 8 || (total - comments) <= 0) { print "allow"; exit }
+      pct = int((comments * 100) / total)
+      if (pct > max_pct) printf "deny %d %d %d\n", pct, comments, total
+      else print "allow"
+    }
+  ')"
+  set -- $result
+  status="${1:-}"
+  [[ "$status" == "allow" ]] && return 0
+  pct="${2:-0}"; comment_lines="${3:-0}"; total="${4:-0}"
+  emit_deny "COMMENT DENY: prose-comment ratio ~${pct}% > ${max_pct}% roof (${comment_lines} comment lines / ${total} meaningful). Zero-comment doctrine — self-documenting names only; machine directives (shebang/pragma/license/build-guard/ts-expect-error) ok."
+  return 1
 }
