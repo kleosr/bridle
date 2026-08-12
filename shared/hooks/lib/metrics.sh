@@ -42,7 +42,12 @@ project_edit_content() {
 complexity_check() {
   local content="$1" max_file="$2" max_func="$3"
   local code; code="$(_code_lines "$content")"
-  local points; points="$(printf '%s' "$code" | grep -oiE '\b(if|for|while|switch|case|catch|elif)\b|\?[[:space:]]+[^:[:space:]]|&&|\|\|' | wc -l || true)"
+  local points kw ops
+  kw="$(printf '%s' "$code" | grep -oiE "$(wb_alt 'if|for|while|switch|case|catch|elif')" | wc -l || true)"
+  ops="$(printf '%s' "$code" | grep -oE '\?[[:space:]]+[^:[:space:]]|&&|\|\|' | wc -l || true)"
+  kw="${kw//[!0-9]}"; [[ -z "$kw" ]] && kw=0
+  ops="${ops//[!0-9]}"; [[ -z "$ops" ]] && ops=0
+  points=$((kw + ops))
   points="${points//[!0-9]}"
   [[ -z "$points" ]] && points=0
   local cc=$(( points + 1 ))

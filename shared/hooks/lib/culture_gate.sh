@@ -22,13 +22,13 @@ culture_leapfrog_hit() {
   local text="$1"
   local green=0 reuse=0
   printf '%s' "$text" | grep -qiE '(from scratch|greenfield|scaffold(ing)?|boilerplate|create (a |the )?(new )?(app|project|module|component|service|library)|NEW:[A-Za-z0-9_./+=-]+.*NEW:[A-Za-z0-9_./+=-]+)' && green=1
-  printf '%s' "$text" | grep -qiE '\b(Grep|reuse|reusing|existing (code|module|component|util)|already (in|have)|look(ed|ing)? (in|at|through) (the )?codebase|search(ed|ing)? (the )?codebase)\b' && reuse=1
+  printf '%s' "$text" | grep -qiE "$(wb_alt 'Grep|reuse|reusing')|existing (code|module|component|util)|already (in|have)|look(ed|ing)? (in|at|through) (the )?codebase|search(ed|ing)? (the )?codebase" && reuse=1
   [[ "$green" -eq 1 && "$reuse" -eq 0 ]]
 }
 
 culture_grounding_nudge() {
   local prompt="$1" hits unread="" p base
-  hits="$(printf '%s' "$prompt" | grep -oE '\b(src|tests?|docs|shared|scripts|lib|app|hooks)/[A-Za-z0-9_./+=-]+\.[A-Za-z0-9]+|\b[A-Za-z0-9_.-]+\.(ts|tsx|js|jsx|sh|py|go|rs)\b' 2>/dev/null | head -n 6 || true)"
+  hits="$(printf '%s' "$prompt" | grep -oE '(src|tests?|docs|shared|scripts|lib|app|hooks)/[A-Za-z0-9_./+=-]+\.[A-Za-z0-9]+|[A-Za-z0-9_.-]+\.(ts|tsx|js|jsx|sh|py|go|rs)' 2>/dev/null | head -n 6 || true)"
   [[ -z "$hits" ]] && return 0
   while IFS= read -r p; do
     [[ -z "$p" ]] && continue
@@ -43,6 +43,15 @@ $hits
 EOF
   [[ -z "$unread" ]] && return 0
   printf 'GROUNDING nudge: prompt names paths without prior Read this session (%s). Read them before Write/StrReplace — not a block, proceeding.' "$unread"
+}
+
+# Nouns from the prompt for Grep — not a file list, not a product allowlist.
+culture_prompt_terms() {
+  local prompt="$1"
+  printf '%s\n' "$prompt" | tr '[:upper:]' '[:lower:]' | sed 's/[^[:alnum:]_./-]/\n/g' \
+    | grep -E '^.{4,24}$' \
+    | grep -viE '^(this|that|with|from|have|need|want|please|just|make|corrige|corrije|implement|create|update|your|what|when|will|would|could|should|about|into|onto|then|than|them|they|their|here|there|some|more|also|very|really|like|edit|path|file|code|prompt|debe|quiero|necesito)$' \
+    | awk 'NF && !seen[$0]++' | head -n 6 | tr '\n' ' ' | sed 's/[[:space:]]*$//'
 }
 
 culture_submit_nudge() {
@@ -75,7 +84,7 @@ culture_stop_nudge() {
     return 0
   fi
   if culture_leapfrog_hit "$prose"; then
-    if [[ -f "${STATE}/session.log" ]] && grep -qE '\bGrep\b|GREP' "${STATE}/session.log" 2>/dev/null; then
+    if [[ -f "${STATE}/session.log" ]] && grep -qE 'GREP|Grep' "${STATE}/session.log" 2>/dev/null; then
       return 1
     fi
     printf '1\n' >"${STATE}/culture_nudge"

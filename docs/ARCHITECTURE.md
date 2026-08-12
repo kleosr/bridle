@@ -5,7 +5,7 @@ kleosrules V2 uses the 5 Layers framework. Layers nest; they do not replace each
 | # | Layer | Unit | kleosrules Implementation |
 |---|-------|------|---------------------------|
 | 1 | Prompt | Input | User message. The model remembers nothing before this call. |
-| 2 | Context | Window | `HANDOFF.md` (tail 15), `before_submit_prompt.sh` classify. |
+| 2 | Context | Window | `HANDOFF.md` (tail 15), JOB CARD, `post_tool_use.sh` scorecard. |
 | 3 | Harness | Pass | Cursor + Bash hooks + tools. Without `stop_gate`, you only have an API. |
 | 4 | Loop | Run | `stop_gate.sh` audits `Done-when`. Auto-brakes stop early exits. |
 | 5 | Graph | Job | Local Markdown files (`HANDOFF.md`). |
@@ -14,11 +14,19 @@ kleosrules V2 uses the 5 Layers framework. Layers nest; they do not replace each
 
 Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. Bash hooks force a read of HANDOFF tail at start and a seed of HANDOFF on stop-accept so the next chat is not blank.
 
+## Three channels (context engineering)
+
+Law, state, and feedback must not share one dump.
+
+1. **Law** — paste + always-apply `.mdc` + skills. Do not re-inject the ponytail essay at sessionStart.
+2. **State** — `session_start.sh` injects HANDOFF tail + a short DEBERES job card (`additional_context`). Cloud has no sessionStart; JOB CARD nudge on `beforeSubmitPrompt` and stop followups cover that gap.
+3. **Feedback** — `post_tool_use.sh` injects a SCORECARD after Write/StrReplace/Delete/EditNotebook only when the on-disk file is dirty (comments, >120, >300, >700). `after_file_edit.sh` stamps writes from on-disk truth (Agent + Tab).
+
 ## Injection vs Declaration
 
-1. **Injection (Layer 2):** `session_start.sh` injects duties through `additional_context`. `before_submit_prompt.sh` only classifies route/state and returns `continue` (Cursor does not support context injection there). Never mutate the user prompt (`updated_input` is banned).
-2. **Declaration (Layer 1/4):** INTENT job card in **chat prose before tools** (never Shell/Write/fence). OBJECTIVE=postcondition + `edit:`|`NEW:` tags; Done-when=≤5 decidable predicates. Finish all tags same turn. User prompt immutable.
-3. **Audit (Layer 3):** `stop_gate.sh` checks **assistant prose only** (strips tool payloads + fences), thin-roof caps, FILE_MAP tags, drip reject, and `Done-when: met`.
+1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF + JOB CARD template (INTENT / OBJECTIVE / edit:|NEW: / Done-when) through `additional_context`. `before_submit_prompt.sh` classifies route/state and returns `continue` (JOB CARD / FILE_MAP / GROUNDING via `user_message`; not context). `post_tool_use.sh` injects SCORECARD via `additional_context`. Never mutate the user prompt (`updated_input` is banned). Ponytail law stays in always-apply `.mdc` — not re-injected as an essay.
+2. **Declaration (Layer 1/4):** GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then INTENT job card in **chat prose before Write** (never Shell/fence). OBJECTIVE=postcondition on named units + `edit:`|`NEW:` tags from hits; Done-when=≤5 decidable predicates. Finish all tags same turn. User prompt immutable.
+3. **Audit (Layer 3):** `stop_gate.sh` checks **assistant prose only** (strips tool payloads + fences), OBJECTIVE quality, thin-roof caps, FILE_MAP tags, drip reject, >700 rewrite until split, and `Done-when: met`.
 
 ## Runtime map
 

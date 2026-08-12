@@ -7,7 +7,7 @@ pe_has_done_when() { printf '%s\n' "$PROSE" | grep -iqE '^[[:space:]]*Done-when:
 pe_stop_accepted() { printf '%s\n' "$PROSE" | grep -Fq 'STOP ACCEPTED'            && echo 1 || echo 0; }
 
 pe_dw_met() {
-  printf '%s\n' "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)\b|✅[[:space:]]*Done-when[[:space:]]+met' \
+  printf '%s\n' "$PROSE" | grep -iqE 'Done-when[[:space:]]*:[[:space:]]*(met|cumplido|complete|done)([^A-Za-z0-9_]|$)|✅[[:space:]]*Done-when[[:space:]]+met' \
     && echo 1 || echo 0
 }
 
@@ -21,6 +21,31 @@ pe_intent_body_lines() {
 
 pe_anchor_count() {
   printf '%s\n' "$PROSE" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|FILES|SCOPE|RISK):' || true
+}
+
+pe_objective_body() {
+  printf '%s\n' "$PROSE" | awk '
+    tolower($0) ~ /^[[:space:]]*objective[[:space:]]*[=:]/ {
+      sub(/^[[:space:]]*[Oo][Bb][Jj][Ee][Cc][Tt][Ii][Vv][Ee][[:space:]]*[=:][[:space:]]*/, "")
+      print
+      exit
+    }'
+}
+
+pe_objective_ok() {
+  local body
+  body="$(pe_objective_body)"
+  body="$(printf '%s' "$body" | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/  */ /g')"
+  if [[ ${#body} -lt 20 ]]; then
+    printf 'weak'; return 0
+  fi
+  if printf '%s' "$body" | grep -qiE '^(done|fixed|ok|complete|listo|hecho|finish(ed)?)\.?$'; then
+    printf 'weak'; return 0
+  fi
+  if printf '%s' "$body" | grep -qiE '^(i will|i am going|vamos a|voy a|implement(ar)?|add |create |make |fix the|update the|refactor )'; then
+    printf 'task'; return 0
+  fi
+  printf 'ok'
 }
 
 SEM_ASK_RE='(déjame saber|quieres que|puedo (hacer|agregar)|me avisas|debería agregar|let me know if|want me to|should I (add|also)|I can (add|also)|if you('\''|’)d like|if you want( me)? to|say if you want)'

@@ -34,12 +34,12 @@ Before `Write` in a directory: `Read` 1–2 sibling files. Match their import gr
 - Corporate/AI-slop jargon: soft-banned via `shared/hooks/policy/vernacular_bans.txt` (beforeSubmit/stop nudge; fail-open if list missing).
 
 ## Cursor tools (primary vocabulary)
-Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`.
-Do not use non-Cursor tool names in chat/examples. Matchers are Write|StrReplace|Shell only.
+Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`, `EditNotebook`.
+Matchers: Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob.
 
 ## INTENT
-- Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/fence).
-- Tag every path `edit:path`|`NEW:path`. Done-when ≤5 decidable predicates. Finish all tags this turn.
+- GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then declare `INTENT:` as chat prose before Write (never Shell/fence).
+- Tag every path `edit:path`|`NEW:path` from those hits. Done-when ≤5 decidable predicates. Finish all tags this turn.
 - stop_gate audits assistant prose from `transcript_path`.
 
 ## Bash hooks (`shared/hooks/*.sh`)

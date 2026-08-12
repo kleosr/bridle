@@ -15,12 +15,27 @@ $src = Join-Path $Pack 'shared\hooks'
 New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
 Copy-Item "$src\*.sh" $HooksD -Force
 Copy-Item "$src\lib\*.sh" "$HooksD\lib" -Force
-Copy-Item "$src\policy\*.json" "$HooksD\policy" -Force
+Copy-Item "$src\policy\*" "$HooksD\policy" -Force
 Copy-Item (Join-Path $PSScriptRoot 'hooks\wsl-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
 foreach ($name in 'native-lean-autoload', 'ponytail', 'agent', 'vernacular', 'testing') {
   Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
+}
+
+$skillsTxt = Join-Path $Pack 'shared\config\skills.txt'
+$skillsSrc = Join-Path $Pack 'shared\skills'
+$skillsDst = Join-Path $HomeC 'skills'
+New-Item -ItemType Directory -Force $skillsDst | Out-Null
+Get-Content $skillsTxt | ForEach-Object {
+  $line = $_.Trim()
+  if (-not $line -or $line.StartsWith('#')) { return }
+  $from = Join-Path $skillsSrc $line
+  $to = Join-Path $skillsDst $line
+  if (Test-Path $from) {
+    if (Test-Path $to) { Remove-Item $to -Recurse -Force }
+    Copy-Item $from $to -Recurse -Force
+  }
 }
 
 $json = Get-Content (Join-Path $src 'hooks.json') -Raw | ConvertFrom-Json
@@ -33,5 +48,5 @@ foreach ($event in $json.hooks.PSObject.Properties) {
 # PS 5.1 Set-Content -Encoding UTF8 writes a BOM, which breaks strict JSON parsers.
 [IO.File]::WriteAllText((Join-Path $HomeC 'hooks.json'), ($json | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))
 
-Write-Host '[done] kleosrules installed (Windows via WSL shim)'
+Write-Host '[done] kleosrules installed (Windows via WSL shim — same Cursor hooks as macOS/Linux)'
 Write-Host 'Next: paste shared/rules/USER-RULES.paste.txt into Cursor Settings -> User Rules, then start a NEW agent chat.'
