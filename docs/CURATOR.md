@@ -6,7 +6,7 @@ Layer 2 is mostly about what you throw away.
 
 Injection seeds duty; the agent declares a **job card in chat prose before tools**. Thin (≤5 anchors):
 
-1. **OBJECTIVE** — postcondition on named units. Tag `edit:path` or `NEW:path`.
+1. **OBJECTIVE** — postcondition on named units (what is true when done). Not a task ("implement X"). Tag `edit:path` or `NEW:path`. stop_gate rejects weak (`done`/`fixed`) and task-shaped OBJECTIVEs.
 2. **CONSTRAINTS** — optional ≤2 invariants or non-goals.
 3. **Done-when** — ≤5 decidable predicates. Fail-closed until all hold.
 4. **Surface** — chat prose only. Never declare INTENT via Shell, Write, or code fences (stop_gate ignores those; counting them poisons context).

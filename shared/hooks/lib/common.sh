@@ -89,7 +89,15 @@ is_agent_mode() {
 
 is_executable_src() {
   case "$1" in
-    *.sh|*.bash|*.zsh|*.py|*.rb|*.pl|*.js|*.mjs|*.cjs|*.ts|*.tsx|*.go|*.rs|*.c|*.cpp|*.cc|*.h|*.hpp|*.java|*.kt|*.swift|*.scala|*.php|*.lua|*.r|*.jl|*.ex|*.exs) return 0 ;;
+    *.sh|*.bash|*.zsh|*.py|*.rb|*.pl|*.js|*.mjs|*.cjs|*.ts|*.tsx|*.jsx|*.go|*.rs|*.c|*.cpp|*.cc|*.h|*.hpp|*.java|*.kt|*.swift|*.scala|*.php|*.lua|*.r|*.jl|*.ex|*.exs|*.vue|*.svelte) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_script_path() {
+  is_executable_src "$1" && return 0
+  case "$1" in
+    *.ps1|*.bat|*.cmd|*.psm1) return 0 ;;
     *) return 1 ;;
   esac
 }

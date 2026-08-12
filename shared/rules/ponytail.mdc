@@ -14,7 +14,7 @@ Doctrina: Smallest Diff. Cero bloat. Zero prose comments.
 4. Platform (React/Node native)
 5. Installed Dep
 6. 1-Liner
-7. Minimum (soft ~80 LOC / warn at 120 via lean_gate; hard 300 deny; legacy >700 emergency subatomic split)
+7. Minimum (soft ~80 LOC / warn at 120 via lean_gate; hard 300 deny; >700 rewrite into modules ≤300 + StrReplace original/callers to imports)
 
 ## SUBATOMIC
 One job per file. Small surface. No god-files. On lean deny: extract modules via Write + StrReplace original; prefer deletion over wrappers.

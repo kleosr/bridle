@@ -8,5 +8,5 @@
   "nesting_max": 4,
   "edit_velocity_max": 15,
   "comment_ratio_max": 2,
-  "notes": "Roofs: soft 120 warn; hard 300 deny growth; legacy >700 emergency subatomic split. comment_ratio_max=2 ≈ zero prose. Reducing edits on oversized files allowed with split steer."
+  "notes": "Roofs: soft 120 warn; hard 300 deny growth; legacy >700 rewrite into modules + update imports (reducing extract allowed). comment_ratio_max=2 ≈ zero prose."
 }

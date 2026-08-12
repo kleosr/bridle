@@ -15,7 +15,7 @@ $src = Join-Path $Pack 'shared\hooks'
 New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
 Copy-Item "$src\*.sh" $HooksD -Force
 Copy-Item "$src\lib\*.sh" "$HooksD\lib" -Force
-Copy-Item "$src\policy\*.json" "$HooksD\policy" -Force
+Copy-Item "$src\policy\*" "$HooksD\policy" -Force
 Copy-Item (Join-Path $PSScriptRoot 'hooks\wsl-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null

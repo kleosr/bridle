@@ -23,6 +23,31 @@ pe_anchor_count() {
   printf '%s\n' "$PROSE" | grep -ciE '^[[:space:]]*(INTENT|OBJECTIVE|CONSTRAINTS|FILES|SCOPE|RISK):' || true
 }
 
+pe_objective_body() {
+  printf '%s\n' "$PROSE" | awk '
+    tolower($0) ~ /^[[:space:]]*objective[[:space:]]*[=:]/ {
+      sub(/^[[:space:]]*[Oo][Bb][Jj][Ee][Cc][Tt][Ii][Vv][Ee][[:space:]]*[=:][[:space:]]*/, "")
+      print
+      exit
+    }'
+}
+
+pe_objective_ok() {
+  local body
+  body="$(pe_objective_body)"
+  body="$(printf '%s' "$body" | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/  */ /g')"
+  if [[ ${#body} -lt 20 ]]; then
+    printf 'weak'; return 0
+  fi
+  if printf '%s' "$body" | grep -qiE '^(done|fixed|ok|complete|listo|hecho|finish(ed)?)\.?$'; then
+    printf 'weak'; return 0
+  fi
+  if printf '%s' "$body" | grep -qiE '^(i will|i am going|vamos a|voy a|implement(ar)?|add |create |make |fix the|update the|refactor )\b'; then
+    printf 'task'; return 0
+  fi
+  printf 'ok'
+}
+
 SEM_ASK_RE='(déjame saber|quieres que|puedo (hacer|agregar)|me avisas|debería agregar|let me know if|want me to|should I (add|also)|I can (add|also)|if you('\''|’)d like|if you want( me)? to|say if you want)'
 SEM_DRIP_RE='(next (pass|step|turn|iteration|phase)|will continue|partial(ly)?|remaining files|in a follow-?up|siguiente (pass|turno|paso|fase)|dejar[eé] para|pr[oó]xim[oa]|luego|m[aá]s tarde|subsequent|later|resto|handle the rest|proceed with the rest)'
 

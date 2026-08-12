@@ -34,8 +34,8 @@ Before `Write` in a directory: `Read` 1–2 sibling files. Match their import gr
 - Corporate/AI-slop jargon: soft-banned via `shared/hooks/policy/vernacular_bans.txt` (beforeSubmit/stop nudge; fail-open if list missing).
 
 ## Cursor tools (primary vocabulary)
-Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`.
-Do not use non-Cursor tool names in chat/examples. Matchers are Write|StrReplace|Shell only.
+Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`, `EditNotebook`.
+Do not use non-Cursor tool names in chat/examples. Matchers: Write|StrReplace|Shell|Delete|EditNotebook.
 
 ## INTENT
 - Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/fence).

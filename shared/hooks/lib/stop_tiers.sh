@@ -27,7 +27,6 @@ tier2_legacy_split() {
   route="$(cat "$STATE/route" 2>/dev/null || echo code)"
   [[ "$route" == "code" ]] || return 0
   [[ -s "$STATE/writes" ]] || return 0
-  [[ -f "$STATE/legacy_split_nudge" ]] && return 0
   legacy="$(jq -r '.file_loc_legacy_emergency // 700' "$HERE/policy/lean.json" 2>/dev/null || echo 700)"
   while IFS= read -r p; do
     [[ -z "$p" ]] && continue
@@ -36,8 +35,7 @@ tier2_legacy_split() {
     lines="$(wc -l < "$fp" 2>/dev/null || echo 0)"
     lines="${lines//[!0-9]}"; [[ -z "$lines" ]] && lines=0
     if [[ "$lines" -gt "$legacy" ]]; then
-      printf '1\n' >"$STATE/legacy_split_nudge"
-      rules_follow "EMERGENCY SUBATOMIC SPLIT: wrote ${p} still ${lines} LOC (legacy >${legacy}). Extract into subatomic modules (one job/file) via Write + StrReplace; prefer deletion. Hard roof 300. Then Done-when: met."
+      rules_follow "EMERGENCY REWRITE: wrote ${p} still ${lines} LOC (legacy >${legacy}). Rewrite into modules ≤300 via Write; StrReplace original and callers to imports; prefer deletion. Then Done-when: met."
     fi
   done < "$STATE/writes"
   return 0
