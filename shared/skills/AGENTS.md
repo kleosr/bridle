@@ -4,7 +4,7 @@
 
 | Skill | Purpose |
 |-------|---------|
-| `ponytail` | Native Lean ladder + deny recovery (Write/Grep; zero comments; soft 150 / hard 700) |
+| `ponytail` | Native Lean ladder + deny recovery (Write/Grep; zero comments; soft 120 / hard 300 / legacy >700 subatomic) |
 | `debugging` | Reproduce → hypothesis → evidence → fix |
 | `testing` | Test-first, red-green-refactor; cite TOOLCHAIN before Done |
 | `vernacular` | Anti-slop procedure: zero comments, types, INTENT, Cursor-native emit |

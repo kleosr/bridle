@@ -264,7 +264,7 @@ verify_stop_gate() {
   [[ -d "$st" ]] && cp -a "$st/." "$snap/" 2>/dev/null
   echo "2" >"$st/outcomes.md"
   rm -f "$st/allowed_files.md" "$st/session_ts"
-  echo '{"status":"completed","transcript":[{"role":"user","content":"fix the bug and wire the api"},{"role":"assistant","content":"INTENT: fix bug, tag edit:x\nDone-when:\n- compiles\nDone-when: met"}]}' \
+  echo '{"status":"completed","transcript":[{"role":"user","content":"fix the bug and wire the api"},{"role":"assistant","content":"INTENT: fix\nOBJECTIVE=done\nedit:x\nDone-when:\n- compiles\nDone-when: met"}]}' \
     | bash "$HOOKS_DIR/lib/stop_gate_core.sh" 2>/dev/null \
     | grep -q 'UNDER-SCOPE' || { echo "[fail] stop_gate accepts under-scoped Done-when (2 outcomes, 1 predicate)"; rc=1; }
   rm -rf "$st"
