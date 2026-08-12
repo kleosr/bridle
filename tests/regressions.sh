@@ -143,22 +143,26 @@ RESULT="$(HOME="$FS_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" instal
 SKILLS_OK="$(test -L "$FS_HOME/.cursor/skills/ponytail" && echo yes || echo no)"
 HAS_BEFORE_SHELL="$(grep -c 'before_shell.sh' "$FS_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 HAS_BEFORE_SHELL="${HAS_BEFORE_SHELL//[!0-9]}"; [[ -z "$HAS_BEFORE_SHELL" ]] && HAS_BEFORE_SHELL=0
+HAS_VERN_BANS="$(test -f "$FS_HOME/.cursor/hooks/policy/vernacular_bans.txt" && echo yes || echo no)"
 rm -rf "$FS_HOME"
 run_test "fleet_sync install completes on fresh HOME (orphan-loop set -e regression)" "0" "$RESULT"
 run_test "fleet_sync install actually installs skills on fresh HOME" "yes" "$SKILLS_OK"
 run_test "fleet_sync installs beforeShellExecution hook" "1" "$HAS_BEFORE_SHELL"
+run_test "fleet_sync install copies vernacular_bans.txt" "yes" "$HAS_VERN_BANS"
 
 FS_HOME2="$(mktemp -d)"
 RESULT="$(HOME="$FS_HOME2" FORCE=1 CLOUD=1 bash "$PACK/shared/hooks/fleet_sync.sh" project-hooks >/dev/null 2>&1; echo $?)"
 CLOUD_OK="$(test -f "$PACK/.cursor/hooks.json" && jq -e '.hooks|has("sessionStart")|not' "$PACK/.cursor/hooks.json" >/dev/null && echo yes || echo no)"
 CLOUD_LEAN="$(grep -c lean_gate "$PACK/.cursor/hooks.json" 2>/dev/null || echo 0)"
 CLOUD_LEAN="${CLOUD_LEAN//[!0-9]}"; [[ -z "$CLOUD_LEAN" ]] && CLOUD_LEAN=0
+CLOUD_VERN="$(test -f "$PACK/.cursor/hooks/policy/vernacular_bans.txt" && echo yes || echo no)"
 rm -rf "$FS_HOME2"
 # Clean pack project hooks after test so default doctor mode stays green unless CLOUD=1
 rm -f "$PACK/.cursor/hooks.json"; rm -rf "$PACK/.cursor/hooks"
 run_test "fleet_sync project-hooks completes" "0" "$RESULT"
 run_test "project-hooks omits sessionStart (no double DUTY)" "yes" "$CLOUD_OK"
 run_test "project-hooks includes lean_gate" "1" "$CLOUD_LEAN"
+run_test "project-hooks copies vernacular_bans.txt" "yes" "$CLOUD_VERN"
 
 # comment_ratio_check must finish well under Cursor lean_gate timeout on ~250LOC (under hard 300)
 rm -rf "$PACK/state"

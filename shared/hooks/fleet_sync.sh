@@ -85,7 +85,7 @@ copy_hook_scripts() {
     cp -f "$s" "$dest/lib/$(basename "$s")"
     chmod +x "$dest/lib/$(basename "$s")"
   done
-  for p in "$HOOKS_DIR"/policy/*.json; do
+  for p in "$HOOKS_DIR"/policy/*; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
   done
@@ -196,7 +196,7 @@ install_project_hooks() {
     cp -f "$s" "$dest/lib/$(basename "$s")"
     chmod +x "$dest/lib/$(basename "$s")"
   done
-  for p in "$HOOKS_DIR"/policy/*.json; do
+  for p in "$HOOKS_DIR"/policy/*; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
   done
@@ -295,6 +295,9 @@ verify_smoke() {
       echo "[fail] skill wrong target: $skill -> $(readlink "$HOME_C/skills/$skill")"; bad=1
     fi
   done < <(load_lines "$PACK/shared/config/skills.txt")
+  if [[ ! -f "$HOME_C/hooks/policy/vernacular_bans.txt" ]]; then
+    echo "[fail] ~/.cursor/hooks/policy/vernacular_bans.txt missing after install"; bad=1
+  fi
   if ! grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json" 2>/dev/null; then
     echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1
   fi
