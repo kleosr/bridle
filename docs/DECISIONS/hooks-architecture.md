@@ -39,7 +39,7 @@ Event hook entrypoints are **thin wrappers** (≤80 LOC) that source core logic 
 
 Shared utilities in `lib/common.sh`: root resolution, state dir, deny/allow/followup/context emitters.
 
-Hard bans: never `updated_input`; never reintroduce `hooks/bin/kleos-gate` or pack Python; each event hook ≤80 LOC; fail-closed where registered; no MCP core dependency; no GNU-only utils (`flock`, `mapfile`, `realpath`, `stat -c`, awk `\<` boundaries) — hooks must run on stock macOS bash 3.2 + BSD userland. **Cursor-native**: hook stdout uses `permission`/`user_message`/`agent_message` (deny-allow), `additional_context` (sessionStart + postToolUse), `continue` (beforeSubmitPrompt), `followup_message` (stop) — never Claude shapes (`hookSpecificOutput`/`permissionDecision`) and never legacy `action`/`additionalContext`.
+Hard bans: never `updated_input`; never reintroduce `hooks/bin/kleos-gate` or pack Python; each event hook ≤80 LOC; fail-closed where registered; no MCP core dependency; no GNU-only utils (`flock`, `mapfile`, `realpath`, `stat -c`, awk `\<` boundaries, grep `\\b`) — hooks must run on stock macOS bash 3.2 + BSD userland. **Cursor-native**: hook stdout uses `permission`/`user_message`/`agent_message` (deny-allow), `additional_context` (sessionStart + postToolUse), `continue` (beforeSubmitPrompt), `followup_message` (stop) — never `hookSpecificOutput`/`permissionDecision` and never legacy `action`/`additionalContext`.
 
 ## Why not Rust
 

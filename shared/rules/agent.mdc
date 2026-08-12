@@ -41,6 +41,6 @@ Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
 1. DECLARE FIRST: INTENT in chat before any tool.
 2. NO ASK INSIDE INTENT: missing Done-when work → do it now.
 3. NO PARTIAL HANDOFFS / NO DRIP.
-4. GROUND → TAG → WRITE: Glob/Grep/Read; tag paths; Write; cascade-fix.
+4. GROUND → TAG → WRITE: Glob/Grep/Read this codebase (reuse before write); tag paths; Write/StrReplace; cascade-fix.
 5. PRE-STOP: re-Read tagged FILES; run TOOLCHAIN verify; cite green; prove Done-when; then `Done-when: met`.
 6. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates / missing verify cite (fail-open after one nudge).

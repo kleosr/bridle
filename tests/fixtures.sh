@@ -13,6 +13,9 @@ run_test "session_start injects DEBERES duty" "true" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("GROUNDING") and test("HANDOFF.md") and test("AGENTS.md")')"
 run_test "session_start injects grounding checklist" "true" "$RESULT"
 
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("JOB CARD") and test("INTENT:") and test("OBJECTIVE=")')"
+run_test "session_start injects JOB CARD template (INTENT/OBJECTIVE/tags)" "true" "$RESULT"
+
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("PONYTAIL LADDER")')"
 run_test "session_start does not dump ponytail ladder (law stays in mdc)" "false" "$RESULT"
 
@@ -172,7 +175,7 @@ else
   echo "[fail] updated_input or Rust gate found"; FAIL=$((FAIL + 1))
 fi
 
-# Emitters must not use Claude/legacy Cursor shapes
+# Emitters must not use non-Cursor / legacy shapes
 if ! grep -RE --include='*.sh' '\{action:|"action":|additionalContext' "$PACK/shared/hooks/" 2>/dev/null | grep -v 'AGENTS.md' >/dev/null; then
   echo "[pass] no legacy action/additionalContext emitters"; PASS=$((PASS + 1))
 else
@@ -210,15 +213,15 @@ MATCHERS="$(echo "$MATCHERS" | xargs)"
 BAD_MATCH=0
 for m in $MATCHERS; do
   case "$m" in
-    Write|StrReplace|Shell|Delete|EditNotebook) ;;
+    Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob) ;;
     *) BAD_MATCH=1; break ;;
   esac
 done
-run_test "hooks matchers ⊆ {Write,StrReplace,Shell,Delete,EditNotebook}" "0" "$BAD_MATCH"
-if ! grep -E 'Bash|MultiEdit|(^|[^a-zA-Z])Edit([^a-zA-Z]|$)' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" >/dev/null 2>&1; then
-  echo "[pass] hooks.json/hooks.cloud.json have zero Bash/Edit/MultiEdit matchers"; PASS=$((PASS + 1))
+run_test "hooks matchers ⊆ {Write,StrReplace,Shell,Delete,EditNotebook,Read,Grep,Glob}" "0" "$BAD_MATCH"
+if ! grep -E 'MultiEdit|(^|[^a-zA-Z])Bash([^a-zA-Z]|$)' "$PACK/shared/hooks/hooks.json" "$PACK/shared/hooks/hooks.cloud.json" >/dev/null 2>&1; then
+  echo "[pass] hooks.json/hooks.cloud.json have zero non-Cursor Bash/MultiEdit matchers"; PASS=$((PASS + 1))
 else
-  echo "[fail] Claude tool names still in hook matchers"; FAIL=$((FAIL + 1))
+  echo "[fail] non-Cursor tool names still in hook matchers"; FAIL=$((FAIL + 1))
 fi
 
 LOC_OK=1
@@ -263,3 +266,16 @@ rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 echo '{"tool_name":"EditNotebook","tool_input":{"target_notebook":"notes/demo.ipynb","new_string":"x=1"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
 RESULT="$(grep -qxF 'notes/demo.ipynb' "$PACK/state/writes" && echo ok || echo fail)"
 run_test "pre_tool_use stamps EditNotebook target_notebook onto writes" "ok" "$RESULT"
+
+rm -rf "$PACK/state"
+RESULT="$(echo '{"prompt":"fix the api endpoint on the backend and connect it to neon"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("GROUNDING")) and (.user_message|test("JOB CARD")) then "ok" else "no" end')"
+run_test "before_submit GROUNDING+JOB CARD on feature ask without paths" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"neon"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(grep -q 'GREP' "$PACK/state/session.log" 2>/dev/null && echo ok || echo fail)"
+run_test "pre_tool_use logs Grep to session.log for ponytail reuse" "ok" "$RESULT"
+
+B_HITS="$(grep -Rn --include='*.sh' --include='*.txt' -F '\b' "$PACK/shared/hooks" 2>/dev/null | grep -vE ':[0-9]+:[[:space:]]*#' || true)"
+RESULT="$([[ -z "$B_HITS" ]] && echo ok || echo fail)"
+run_test "hooks have zero GNU grep \\\\b (macOS BSD-safe)" "ok" "$RESULT"

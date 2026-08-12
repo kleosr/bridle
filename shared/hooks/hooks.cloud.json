@@ -9,7 +9,7 @@
         "failClosed": true
       },
       {
-        "matcher": "Write|StrReplace|Shell|Delete|EditNotebook",
+        "matcher": "Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob",
         "command": ".cursor/hooks/pre_tool_use.sh",
         "timeout": 30,
         "failClosed": true

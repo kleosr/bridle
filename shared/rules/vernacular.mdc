@@ -16,7 +16,7 @@ Doctrina: Smallest Diff. Cero slop. Zero prose comments.
 - No unused imports. Match neighbors: before Write in a directory, Read 1–2 sibling files and match imports/naming/error idiom. One responsibility per function; extract before soft LOC (120).
 - Infer loading from data. No redundant `isLoading` when data starts null.
 - Hooks Bash: max 80 LOC entrypoints; `jq`; emit `permission` / `additional_context` / `continue` / `followup_message`. No Python/Node/`cd`/`updated_input`.
-- Cursor tools: `Write` `StrReplace` `Shell` `Read` `Grep` `Delete` `Task` `EditNotebook` `Glob` (primary). No Claude tool names in matchers.
+- Cursor tools: `Write` `StrReplace` `Shell` `Read` `Grep` `Delete` `Task` `EditNotebook` `Glob` (primary). Matchers use those names only.
 - Soft jargon bans: `shared/hooks/policy/vernacular_bans.txt` (beforeSubmit/stop nudge; fail-open if missing).
 - INTENT: chat prose before tools; `edit:`|`NEW:` tags; Done-when decidable. Never Shell-declare INTENT.
 
