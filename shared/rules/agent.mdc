@@ -14,14 +14,14 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 ## Harness
 
-Bash hooks: `session_start` (`additional_context`), `before_submit_prompt` (`continue`), `stop_gate` (`followup_message`), `lean_gate`/`pre_tool_use`/`before_shell`/`before_read_file`/`before_mcp` (`permission`). No Rust.
+Bash hooks: `session_start` (`additional_context`), `before_submit_prompt` (`continue` + JOB CARD nudge), `post_tool_use` (`additional_context` scorecard), `stop_gate` (`followup_message`), `lean_gate`/`pre_tool_use`/`before_shell`/`before_read_file`/`before_mcp` (`permission`). No Rust.
 Brain = `HANDOFF.md` (local). Cloud agents: thin project hooks via `fleet_sync.sh project-hooks` (no sessionStart — avoids double DUTY).
 Injection != Declaration: `sessionStart` injects `additional_context` only; `beforeSubmitPrompt` is continue/block. Never `updated_input`.
 
 ## INTENT protocol
 
 Declare `INTENT:` as **chat prose before any tool** (never Shell/Write/code-fence — poisons stop detection).
-Job card: `OBJECTIVE` = postcondition + `edit:path`|`NEW:path` tags; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
+Job card: `OBJECTIVE` = postcondition on named units (what is true when done — not implement/add/fix the…); `edit:path`|`NEW:path` tags; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
 
 ## File map
 

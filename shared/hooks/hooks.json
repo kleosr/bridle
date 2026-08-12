@@ -9,7 +9,7 @@
         "failClosed": true
       },
       {
-        "matcher": "Write|StrReplace|Shell",
+        "matcher": "Write|StrReplace|Shell|Delete|EditNotebook",
         "command": "./hooks/pre_tool_use.sh",
         "timeout": 30,
         "failClosed": true
@@ -50,6 +50,25 @@
       {
         "command": "./hooks/subagent_stop.sh",
         "loop_limit": 3,
+        "failClosed": false
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "Write|StrReplace|Delete|EditNotebook",
+        "command": "./hooks/post_tool_use.sh",
+        "failClosed": false
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "./hooks/after_file_edit.sh",
+        "failClosed": false
+      }
+    ],
+    "afterTabFileEdit": [
+      {
+        "command": "./hooks/after_file_edit.sh",
         "failClosed": false
       }
     ],

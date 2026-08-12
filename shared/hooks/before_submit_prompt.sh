@@ -51,6 +51,10 @@ EOF
   if [[ -n "$UNTAGGED" ]]; then
     NUDGE="FILE_MAP nudge: prompt mentions paths without edit:|NEW: tags (${UNTAGGED}). Declare them in INTENT chat prose — not a block, proceeding."
   fi
+  if ! printf '%s' "$PROMPT" | grep -qiE 'OBJECTIVE[[:space:]]*[=:]|(^|[[:space:]])(edit|NEW):'; then
+    JC="JOB CARD: declare INTENT in chat before tools. OBJECTIVE=<postcondition on named units>. Tag edit:path|NEW:path. Done-when ≤5 decidable predicates."
+    if [[ -n "$NUDGE" ]]; then NUDGE="${NUDGE} ${JC}"; else NUDGE="$JC"; fi
+  fi
   CULT="$(culture_submit_nudge "$PROMPT" "$ROUTE" || true)"
   if [[ -n "$CULT" ]]; then
     if [[ -n "$NUDGE" ]]; then NUDGE="${NUDGE} ${CULT}"; else NUDGE="$CULT"; fi

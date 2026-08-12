@@ -21,7 +21,7 @@ Stop at first rung that holds after reading the ask + touched code:
 6. One clear line.
 7. Minimum — shortest correct private-native diff. Prefer files under soft ~80 LOC;
    lean_gate warns via `agent_message` above soft 120 LOC and denies projected growth > 300 LOC.
-   Legacy monsters >700 LOC: emergency subatomic split (cannot allow forever).
+   Files >700 LOC: rewrite into subatomic modules ≤300 (Write new, StrReplace original + callers to imports).
    Zero prose comments (`comment_ratio_max=2` on projected whole file).
    Subatomic = one job per file, small surface, no god-files.
 
@@ -30,7 +30,7 @@ Soft Rule: skipping a rung needs one chat line naming why lower rungs fail.
 ## Refactor decision tree
 When adding behavior to a hot file:
 - If file approaches 300 projected LOC: extract first (Deny Recovery), then add. The gate checks the projected post-edit size, so removing code to split always passes.
-- If file is already >700 LOC: emergency — extract subatomic modules immediately; reducing edits allowed with split steer, growth denied.
+- If file is already >700 LOC: rewrite now — extract subatomic modules; reducing edits allowed with rewrite steer, growth denied. Update imports on original and callers.
 - Third real repetition → extract; before that, duplicate is cheaper.
 - Shared change: Grep callers; private-match siblings; blast-radius in chat.
 - Prefer deletion over wrappers. No monorepo/Nx/Clean Architecture theater.

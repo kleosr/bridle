@@ -54,7 +54,7 @@ GNU_HITS="$(grep -Rn --include='*.sh' -E 'flock|mapfile|readlink -f|stat -c' "$H
 if [[ -z "$GNU_HITS" ]]; then ok "no GNU-only utils in hooks (macOS safe)"
 else fail "GNU-only util found in hooks: $GNU_HITS"; fi
 
-for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/stop_gate.sh "$HOOKS_DIR"/lean_gate.sh "$HOOKS_DIR"/pre_tool_use.sh; do
+for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/stop_gate.sh "$HOOKS_DIR"/lean_gate.sh "$HOOKS_DIR"/pre_tool_use.sh "$HOOKS_DIR"/post_tool_use.sh "$HOOKS_DIR"/after_file_edit.sh; do
   n="$(wc -l < "$f")"
   if [[ "$n" -le 80 ]]; then ok "LOC ≤ 80: ${f#$PACK/} ($n)"
   else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
