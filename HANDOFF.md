@@ -2,29 +2,27 @@
 
 ## Active Objective
 
-macOS-first Cursor hooks: POSIX grep, JOB CARD + grounding, no Claude vocabulary.
+GROUND → INTENT → tags. No product allowlist. Read-before-Write is steel.
 
 ## Current State
 
-Done-when: met. 178/178 tests.
+Loop (correct order):
+1. User prompt
+2. GROUNDING — Grep/Glob/Read THIS codebase for what they named. Do not invent paths.
+3. INTENT + OBJECTIVE + edit:|NEW: from those hits
+4. Write/StrReplace only tagged paths; stop_gate audits; HANDOFF survives
 
-Day-to-day loop (unchanged contract, now Mac-safe):
-1. Prompt in → before_submit classifies code, nudges GROUNDING + JOB CARD
-2. Agent Grep/Read THIS codebase (reuse / ponytail.mdc always-apply)
-3. Agent declares INTENT + OBJECTIVE + edit:|NEW: in chat before tools
-4. stop_gate audits; HANDOFF survives
-
-Ponytail is law in always-apply mdc, not a sessionStart essay.
-Stock macOS: no GNU grep \b (BSD treats it as backspace). wb_alt() is the boundary.
+Steel: pre_tool_use denies Write/Delete on a path not Read this session. NEW files need Grep/Glob first.
+Steer: before_submit always says GROUNDING then JOB CARD on code prompts; Grep nouns from the prompt (not a neon/api special case).
+Ponytail stays in always-apply mdc. Hooks are not a retriever — dumping rg hits would bias the model.
 
 ## Next Actions
 
 - Local: `bash MacOS/install.sh` then re-paste USER-RULES.paste.txt
-- Windows: `.\Windows\install.ps1` now copies skills too
 
 ## Archived
 
-(Older context compacted here when active sections exceed ~150 lines.)
+macOS POSIX grep (wb_alt); Cursor-only tools; second-brain channels.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

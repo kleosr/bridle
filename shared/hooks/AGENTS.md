@@ -3,8 +3,8 @@ Platform: macOS + Linux natively, Windows via WSL shim — bash 3.2-safe (no flo
 Scope: Bash Cursor hooks for INTENT inject, lean size/zero-comment, autonomy gate, stop audit, HANDOFF tail, post-edit scorecard.
 
 Layers
-- Steering (soft law): shared/rules/*.mdc + skills — vernacular/ponytail/agent. sessionStart grounding checklist + FILE_MAP nudges (no deny).
-- Steel (mechanical): hooks + policy/lean.json + policy/intent.json.
+- Steering (soft law): shared/rules/*.mdc + skills — vernacular/ponytail/agent. sessionStart: GROUND then JOB CARD (no deny).
+- Steel (mechanical): hooks + policy/lean.json + policy/intent.json. pre_tool_use denies Write/Delete unless the path was Read this session (NEW needs Grep/Glob).
 - Feedback (second brain): postToolUse additional_context scorecard on dirty writes; afterFileEdit stamps on-disk truth.
 
 Roofs (lean.json)

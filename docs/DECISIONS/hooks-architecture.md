@@ -19,7 +19,7 @@ Context: V2 harness — Bash hooks + local HANDOFF brain. No Rust kleos-gate. No
 | `after_file_edit.sh` | afterFileEdit + afterTabFileEdit | Stamp on-disk writes |
 | `stop_gate.sh` | stop | Audit INTENT / OBJECTIVE quality / Done-when; >700 rewrite followup |
 | `lean_gate.sh` | preToolUse (Write\|StrReplace) | Deny files over roof; complexity + coupling + nesting + velocity (`permission`) |
-| `pre_tool_use.sh` | preToolUse (Write\|StrReplace\|Shell\|Delete\|EditNotebook) | Selective autonomy: topology + destructive blocks |
+| `pre_tool_use.sh` | preToolUse (Write\|StrReplace\|Shell\|Delete\|EditNotebook\|Read\|Grep\|Glob) | Grounding (Read-before-Write), topology, destructive blocks |
 | `before_shell.sh` | beforeShellExecution | Destructive shell gating (`permission`) |
 | `before_mcp.sh` | beforeMCPExecution | Dangerous MCP pattern deny (`permission`) |
 | `before_read_file.sh` | beforeReadFile + beforeTabFileRead | Secret path deny |

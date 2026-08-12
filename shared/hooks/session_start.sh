@@ -19,19 +19,17 @@ if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 40 "$HANDOFF" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15)"
 fi
 DUTY="$(jq -r '.duty // empty' "$HERE/policy/intent.json" 2>/dev/null || true)"
-[[ -z "$DUTY" ]] && DUTY="INTENT chat prose before tools; OBJECTIVE=<postcondition>; tag edit:|NEW:; Write|StrReplace only."
-CTX="Session start. GROUNDING (before any Write/StrReplace — steering, no deny):
-1. Read HANDOFF.md tail + AGENTS.md
-2. Grep/Glob/Read THIS codebase for the feature (reuse before write)
-3. Read each file you will tag
-JOB CARD — declare in chat prose before tools (never Shell/fence):
+[[ -z "$DUTY" ]] && DUTY="GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then INTENT + OBJECTIVE + edit:|NEW: from hits. Write|StrReplace only tagged paths."
+CTX="Session start. Order (steering, no deny):
+1. GROUNDING — Read HANDOFF.md + AGENTS.md. Grep/Glob/Read THIS codebase for the user's request. Do not invent paths. Read every file you will tag.
+2. JOB CARD — after hits, declare in chat (never Shell/fence) before Write:
 INTENT: <one line>
 OBJECTIVE=<postcondition on named units — what is true when done>
 edit:path
 NEW:path
 Done-when:
 - <decidable predicate>
-Then Write|StrReplace only tagged paths. Never Shell to write code.
+Tags come from hits only. Then Write|StrReplace only tagged paths. Never Shell to write code.
 DEBERES: ${DUTY}
 HANDOFF tail:
 ${TAIL}"

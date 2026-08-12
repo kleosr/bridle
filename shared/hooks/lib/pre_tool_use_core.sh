@@ -22,6 +22,38 @@ warn_allow() {
   emit_allow "$msg"
   exit 0
 }
+path_was_read() {
+  local fp="$1" base
+  [[ -z "$fp" || ! -f "${STATE}/reads" ]] && return 1
+  grep -qF "$fp" "${STATE}/reads" 2>/dev/null && return 0
+  base="$(basename "$fp")"
+  grep -qF "$base" "${STATE}/reads" 2>/dev/null && return 0
+  return 1
+}
+
+session_searched() {
+  [[ -f "${STATE}/session.log" ]] && grep -qE 'GREP|GLOB' "${STATE}/session.log" 2>/dev/null
+}
+
+write_is_grounded() {
+  local fp="$1" disk
+  [[ -z "$fp" ]] && return 1
+  path_was_read "$fp" && return 0
+  disk="$fp"
+  [[ "$fp" != /* && -n "${ROOT:-}" ]] && disk="${ROOT}/${fp}"
+  if [[ ! -e "$disk" ]]; then
+    session_searched && return 0
+  fi
+  return 1
+}
+
+require_grounding() {
+  local fp="$1"
+  is_agent_mode || return 0
+  write_is_grounded "$fp" && return 0
+  deny "GROUNDING: Grep/Glob this codebase, then Read '$fp' before Write/StrReplace/Delete. Do not invent paths. Then declare INTENT + OBJECTIVE + edit:|NEW: from hits."
+}
+
 sandbox_nudge() {
   local fp="$1" base nudge=""
   [[ -z "$fp" ]] && return 0
@@ -59,6 +91,7 @@ case "$(tool_family "$TOOL_NAME")" in
     ;;
   write)
     [[ -z "$FILE_PATH" ]] && { emit_quiet; exit 0; }
+    require_grounding "$FILE_PATH"
     NUDGE="$(sandbox_nudge "$FILE_PATH")"
     NEW_CONTENT=""
     case "$TOOL_NAME" in
@@ -76,6 +109,7 @@ case "$(tool_family "$TOOL_NAME")" in
     ;;
   delete)
     [[ -z "$FILE_PATH" ]] && { emit_quiet; exit 0; }
+    require_grounding "$FILE_PATH"
     NUDGE="$(sandbox_nudge "$FILE_PATH")"
     if [[ -n "$NUDGE" ]]; then warn_allow "$NUDGE"; fi
     emit_quiet; exit 0

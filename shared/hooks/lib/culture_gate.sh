@@ -45,11 +45,13 @@ EOF
   printf 'GROUNDING nudge: prompt names paths without prior Read this session (%s). Read them before Write/StrReplace — not a block, proceeding.' "$unread"
 }
 
-culture_feature_grounding() {
+# Nouns from the prompt for Grep — not a file list, not a product allowlist.
+culture_prompt_terms() {
   local prompt="$1"
-  printf '%s' "$prompt" | grep -qiE '(api|endpoint|backend|frontend|auth|database|neon|supabase|prisma|stripe|webhook|oauth)' || return 0
-  printf '%s' "$prompt" | grep -qiE "$(wb_alt 'Grep|reuse')|existing (code|module)" && return 0
-  printf 'GROUNDING: Grep/Read this codebase for the named system before Write. Reuse what exists. Then declare INTENT + OBJECTIVE + edit:|NEW: tags in chat.'
+  printf '%s\n' "$prompt" | tr '[:upper:]' '[:lower:]' | sed 's/[^[:alnum:]_./-]/\n/g' \
+    | grep -E '^.{4,24}$' \
+    | grep -viE '^(this|that|with|from|have|need|want|please|just|make|corrige|corrije|implement|create|update|your|what|when|will|would|could|should|about|into|onto|then|than|them|they|their|here|there|some|more|also|very|really|like|edit|path|file|code|prompt|debe|quiero|necesito)$' \
+    | awk 'NF && !seen[$0]++' | head -n 6 | tr '\n' ' ' | sed 's/[[:space:]]*$//'
 }
 
 culture_submit_nudge() {
@@ -66,10 +68,6 @@ culture_submit_nudge() {
     fi
   fi
   g="$(culture_grounding_nudge "$prompt" || true)"
-  if [[ -n "$g" ]]; then
-    if [[ -n "$msg" ]]; then msg="${msg} ${g}"; else msg="$g"; fi
-  fi
-  g="$(culture_feature_grounding "$prompt" || true)"
   if [[ -n "$g" ]]; then
     if [[ -n "$msg" ]]; then msg="${msg} ${g}"; else msg="$g"; fi
   fi

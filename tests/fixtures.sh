@@ -143,6 +143,7 @@ run_test "beforeShellExecution allows rg read-only" "allow" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 echo 'src/db.ts' > "$PACK/state/allowed_files.md"
+printf 'src/config.ts\n' > "$PACK/state/reads"
 RESULT="$(cat "$PACK/tests/fixtures/preToolUse_scope_expansion.json" | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
 run_test "pre_tool_use scope expansion uses allow permission" "allow" "$RESULT"
 
@@ -244,35 +245,59 @@ RESULT="$(HERE="$PACK/shared/hooks" bash -c 'source "$0/lib/common.sh" && emit_c
 run_test "emit_context uses additional_context key" "true" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'docs/security.md\n' > "$PACK/state/reads"
 echo '{"tool_name":"Write","tool_input":{"file_path":"docs/security.md","content":"# blocks rm -rf / literally\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"' > /tmp/_exec_test_out 2>/dev/null || true
 RESULT="$(cat /tmp/_exec_test_out 2>/dev/null || echo allow)"
 run_test "pre_tool_use skips destructive scan for non-executable (.md)" "allow" "$RESULT"
 rm -f /tmp/_exec_test_out
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'evil.sh\n' > "$PACK/state/reads"
 RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"evil.sh","content":"rm -rf /\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
 run_test "pre_tool_use still scans executable files (.sh)" "deny" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'evil.tsx\n' > "$PACK/state/reads"
 RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"evil.tsx","content":"rm -rf /\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
 run_test "pre_tool_use scans executable .tsx" "deny" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'src/gone.ts\n' > "$PACK/state/reads"
 echo '{"tool_name":"Delete","tool_input":{"file_path":"src/gone.ts"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
 RESULT="$(grep -qxF 'src/gone.ts' "$PACK/state/writes" && echo ok || echo fail)"
 run_test "pre_tool_use stamps Delete onto writes" "ok" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'notes/demo.ipynb\n' > "$PACK/state/reads"
 echo '{"tool_name":"EditNotebook","tool_input":{"target_notebook":"notes/demo.ipynb","new_string":"x=1"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
 RESULT="$(grep -qxF 'notes/demo.ipynb' "$PACK/state/writes" && echo ok || echo fail)"
 run_test "pre_tool_use stamps EditNotebook target_notebook onto writes" "ok" "$RESULT"
 
 rm -rf "$PACK/state"
-RESULT="$(echo '{"prompt":"fix the api endpoint on the backend and connect it to neon"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("GROUNDING")) and (.user_message|test("JOB CARD")) then "ok" else "no" end')"
-run_test "before_submit GROUNDING+JOB CARD on feature ask without paths" "ok" "$RESULT"
+RESULT="$(echo '{"prompt":"fix the button on the header on the frontend"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and (.user_message|test("GROUNDING")) and (.user_message|test("JOB CARD")) and (.user_message|test("button")) and (.user_message|test("header")) then "ok" else "no" end')"
+run_test "before_submit GROUNDING+JOB CARD on any code ask (not a product allowlist)" "ok" "$RESULT"
 
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
-echo '{"tool_name":"Grep","tool_input":{"pattern":"neon"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/Header.tsx","content":"export const Header = () => null;\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r 'if .permission=="deny" and (.user_message|test("GROUNDING")) then "ok" else "no" end')"
+run_test "pre_tool_use denies Write without prior Read/Grep" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+printf 'src/Header.tsx\n' > "$PACK/state/reads"
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/Header.tsx","content":"export const Header = () => null;\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
+run_test "pre_tool_use allows Write after Read of that path" "allow" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"Header"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"src/does_not_exist_zz.ts","content":"export const x = 1;\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r '.permission // "allow"')"
+run_test "pre_tool_use allows NEW Write after Grep" "allow" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"Header"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
+RESULT="$(echo '{"tool_name":"Write","tool_input":{"file_path":"HANDOFF.md","content":"# x\n"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" | jq -r 'if .permission=="deny" and (.user_message|test("GROUNDING")) then "ok" else "no" end')"
+run_test "pre_tool_use denies Write of existing file after Grep without Read" "ok" "$RESULT"
+
+rm -rf "$PACK/state"; mkdir -p "$PACK/state"
+echo '{"tool_name":"Grep","tool_input":{"pattern":"Header"}}' | bash "$PACK/shared/hooks/pre_tool_use.sh" >/dev/null
 RESULT="$(grep -q 'GREP' "$PACK/state/session.log" 2>/dev/null && echo ok || echo fail)"
 run_test "pre_tool_use logs Grep to session.log for ponytail reuse" "ok" "$RESULT"
 
