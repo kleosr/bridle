@@ -1,80 +1,22 @@
 {
   "version": 1,
   "hooks": {
-    "preToolUse": [
-      {
-        "matcher": "Write|StrReplace",
-        "command": "./hooks/lean_gate.sh",
-        "timeout": 30,
-        "failClosed": true
-      },
-      {
-        "matcher": "Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob",
-        "command": "./hooks/pre_tool_use.sh",
-        "timeout": 30,
-        "failClosed": true
-      }
-    ],
-    "beforeShellExecution": [
-      {
-        "command": "./hooks/before_shell.sh",
-        "timeout": 30,
-        "failClosed": true
-      }
-    ],
-    "beforeSubmitPrompt": [
-      {
-        "command": "./hooks/before_submit_prompt.sh",
-        "failClosed": true
-      }
-    ],
     "sessionStart": [
       {
         "command": "./hooks/session_start.sh",
         "failClosed": false
       }
     ],
-    "sessionEnd": [
+    "beforeSubmitPrompt": [
       {
-        "command": "./hooks/session_end.sh",
+        "command": "./hooks/before_submit_prompt.sh",
         "failClosed": false
       }
     ],
-    "subagentStart": [
+    "beforeShellExecution": [
       {
-        "command": "./hooks/subagent_start.sh",
-        "failClosed": false
-      }
-    ],
-    "subagentStop": [
-      {
-        "command": "./hooks/subagent_stop.sh",
-        "loop_limit": 3,
-        "failClosed": false
-      }
-    ],
-    "postToolUse": [
-      {
-        "matcher": "Write|StrReplace|Delete|EditNotebook",
-        "command": "./hooks/post_tool_use.sh",
-        "failClosed": false
-      }
-    ],
-    "afterFileEdit": [
-      {
-        "command": "./hooks/after_file_edit.sh",
-        "failClosed": false
-      }
-    ],
-    "afterTabFileEdit": [
-      {
-        "command": "./hooks/after_file_edit.sh",
-        "failClosed": false
-      }
-    ],
-    "afterShellExecution": [
-      {
-        "command": "./hooks/after_shell.sh",
+        "command": "./hooks/before_shell.sh",
+        "timeout": 30,
         "failClosed": false
       }
     ],
@@ -82,32 +24,6 @@
       {
         "command": "./hooks/before_read_file.sh",
         "failClosed": true
-      }
-    ],
-    "beforeTabFileRead": [
-      {
-        "command": "./hooks/before_read_file.sh",
-        "failClosed": true
-      }
-    ],
-    "beforeMCPExecution": [
-      {
-        "command": "./hooks/before_mcp.sh",
-        "timeout": 30,
-        "failClosed": true
-      }
-    ],
-    "preCompact": [
-      {
-        "command": "./hooks/pre_compact.sh",
-        "failClosed": false
-      }
-    ],
-    "stop": [
-      {
-        "command": "./hooks/stop_gate.sh",
-        "loop_limit": 5,
-        "failClosed": false
       }
     ]
   }

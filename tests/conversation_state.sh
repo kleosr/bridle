@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Conversation-scoped state (F-01): two conversation_ids must produce isolated state dirs.
 
 rm -rf "$PACK/state"
 
@@ -22,13 +21,5 @@ DEFAULT_DIR="$(HERE="$PACK/shared/hooks" bash -c '
   source "$0/lib/common.sh" && resolve_root && CONV_ID="default" && state_dir
 ' "$PACK/shared/hooks" 2>/dev/null)"
 run_test "default conv_id falls back to legacy state/" "$PACK/state" "$DEFAULT_DIR"
-
-rm -rf "$PACK/state"
-
-echo '{"status":"completed","conversation_id":"conv-canary-x","messages":[{"role":"user","content":"run the test"},{"role":"assistant","content":[{"type":"tool_use","name":"Shell","input":{"command":"ls"}}]}]}' \
-  | bash "$PACK/shared/hooks/stop_gate.sh" >/dev/null 2>&1 || true
-CANARY_HIT="$(grep -c 'CANARY | stop_gate empty PROSE' "$PACK/state/conv-canary-x/session.log" 2>/dev/null || true)"
-CANARY_HIT="${CANARY_HIT//[!0-9]}"; [[ -z "$CANARY_HIT" ]] && CANARY_HIT=0
-run_test "stop_gate canary logs schema drift to session.log" "1" "$CANARY_HIT"
 
 rm -rf "$PACK/state"

@@ -1,0 +1,7 @@
+DROP TABLE
+DELETE FROM .* WHERE 1=1
+git push --force
+rm -rf /
+password[[:space:]]*=[[:space:]]*["'][^"']+["']
+API_KEY[[:space:]]*=[[:space:]]*["'][^"']+["']
+secret[[:space:]]*=[[:space:]]*["'][^"']+["']
