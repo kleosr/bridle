@@ -5,35 +5,42 @@ kleosrules V2 uses the 5 Layers framework. Layers nest; they do not replace each
 | # | Layer | Unit | kleosrules Implementation |
 |---|-------|------|---------------------------|
 | 1 | Prompt | Input | User message. The model remembers nothing before this call. |
-| 2 | Context | Window | `HANDOFF.md` (tail 15), JOB CARD, `post_tool_use.sh` scorecard. |
-| 3 | Harness | Pass | Cursor + Bash hooks + tools. Without `stop_gate`, you only have an API. |
-| 4 | Loop | Run | `stop_gate.sh` audits `Done-when`. Auto-brakes stop early exits. |
+| 2 | Context | Window | `HANDOFF.md` tail 15 via `session_start.sh`. |
+| 3 | Harness | Pass | Cursor + four Bash user hooks. Law lives in `.mdc` / skills. |
+| 4 | Loop | Run | The agent follows INTENT in chat. Hooks do not police conversation. |
 | 5 | Graph | Job | Local Markdown files (`HANDOFF.md`). |
 
 ## Preventive Amnesia
 
-Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. Bash hooks force a read of HANDOFF tail at start and a seed of HANDOFF on stop-accept so the next chat is not blank.
+Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. `session_start.sh` injects the HANDOFF tail so the next chat is not blank.
 
 ## Three channels (context engineering)
 
 Law, state, and feedback must not share one dump.
 
 1. **Law** — paste + always-apply `.mdc` + skills. Do not re-inject the ponytail essay at sessionStart.
-2. **State** — `session_start.sh` injects HANDOFF tail + a short DEBERES job card (`additional_context`). Cloud has no sessionStart; JOB CARD nudge on `beforeSubmitPrompt` and stop followups cover that gap.
-3. **Feedback** — `post_tool_use.sh` injects a SCORECARD after Write/StrReplace/Delete/EditNotebook only when the on-disk file is dirty (comments, >120, >300, >700). `after_file_edit.sh` stamps writes from on-disk truth (Agent + Tab).
+2. **State** — `session_start.sh` injects HANDOFF tail (`additional_context`). Cloud has no sessionStart.
+3. **Feedback** — the model sees tool results. No postToolUse scorecard is registered.
 
 ## Injection vs Declaration
 
-1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF + JOB CARD template (INTENT / OBJECTIVE / edit:|NEW: / Done-when) through `additional_context`. `before_submit_prompt.sh` classifies route/state and returns `continue` (JOB CARD / FILE_MAP / GROUNDING via `user_message`; not context). `post_tool_use.sh` injects SCORECARD via `additional_context`. Never mutate the user prompt (`updated_input` is banned). Ponytail law stays in always-apply `.mdc` — not re-injected as an essay.
-2. **Declaration (Layer 1/4):** GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then INTENT job card in **chat prose before Write** (never Shell/fence). OBJECTIVE=postcondition on named units + `edit:`|`NEW:` tags from hits; Done-when=≤5 decidable predicates. Finish all tags same turn. User prompt immutable.
-3. **Audit (Layer 3):** `stop_gate.sh` checks **assistant prose only** (strips tool payloads + fences), OBJECTIVE quality, thin-roof caps, FILE_MAP tags, drip reject, >700 rewrite until split, and `Done-when: met`.
+1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF tail through `additional_context`. `before_submit_prompt.sh` returns `continue` (secret prompts may be `continue:false`). Never mutate the user prompt (`updated_input` is banned).
+2. **Declaration (Layer 1):** GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then INTENT job card in **chat prose before Write** (never Shell/fence). That is law in `.mdc`, not a hook followup.
+3. **Steel (Layer 3):** `before_shell.sh` denies a small destructive/source-write list (infra/DB is `ask`). `before_read_file.sh` denies secret paths. `beforeSubmitPrompt.failClosed` is false so a submit-hook crash cannot freeze chat.
 
 ## Runtime map
 
-- **Muscles:** Bash scripts under `/shared/hooks` (event hooks max 80 LOC each; fail-closed where registered; macOS + Linux + WSL userland). Core logic in `/shared/hooks/lib/`.
-- **Policy (wired only):** `shared/hooks/policy/intent.json` + `shared/hooks/policy/lean.json`.
+- **Muscles:** Four registered event hooks under `/shared/hooks` (max 80 LOC each; macOS + Linux + WSL userland). Unregistered conversation/lean/grounding scripts are gone.
+- **Policy (wired):** `shared/hooks/policy/lean.json` (unregistered leftover) + `policy/*.ere` (destructive / secret_paths) consumed by the registered shell/read hooks.
 - **Law (shared core):** `shared/rules/` (canonical .mdc + paste), `shared/skills/`, `shared/config/` (fleet scan roots, retire lists).
-- **Platforms:** `MacOS/install.sh`, `Linux/install.sh`, `Windows/install.ps1` + `Windows/hooks/wsl-shim.ps1` (PowerShell→WSL bridge). Canonical hooks are POSIX bash in `shared/hooks/`.
+- **Platforms:** `MacOS/install.sh`, `Linux/install.sh`, `Windows/install.ps1` + `Windows/hooks/wsl-shim.ps1`. Canonical hooks are POSIX bash in `shared/hooks/`.
 - **Brain:** `HANDOFF.md` (local, always works).
-- **State:** Ephemeral files in `/state/` (gitignored). Cleared each run.
-- **Registration (single GLOBAL layer):** hooks register only in `~/.cursor/hooks.json` (generated by `fleet_sync.sh`). Per-repo `.cursor/hooks.json` is removed on sync — user-level and repo-level hooks both fire when both exist, doubling every `additional_context` injection per session (measured 2026-08-10: DEBERES block arrived 2×). Hooks spawn with cwd = workspace root, so `resolve_root` (lib/common.sh) keeps HANDOFF/state per-project under the global layer.
+- **State:** Ephemeral files in `/state/` (gitignored).
+- **Registration (single GLOBAL layer):** user hooks live in `~/.cursor/hooks.json`. Commands are native `./hooks/*.sh` (cwd is `~/.cursor`). `fleet_sync.sh install` copies `hooks.json` unchanged. `sync`/`all` do **not** copy or delete other repos’ `.cursor/hooks`. Cloud: `CLOUD=1 TARGET_REPO=path … project-hooks` writes `hooks.cloud.json` into that repo only (no sessionStart; TARGET_REPO required; never the pack).
+
+## Steel vs ask
+
+- **deny:** destructive Shell (force-push, wipe of filesystem root), executable-file content matching `policy/destructive.ere`, secret paths (`policy/secret_paths.ere`).
+- **ask:** infra/DB mutation (`terraform apply`, `kubectl delete`, `psql`, …) — Cursor approval card, not a silent deny.
+- **Read secrets:** `before_read_file.sh` (`failClosed: true`).
+- **Ungrounded Write / lean roofs / stop followups:** law in `.mdc`. Not registered events.

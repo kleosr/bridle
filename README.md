@@ -72,9 +72,9 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → fleet_sync install → work under hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Lean size roof (`lean_gate.sh`, soft 120 / hard 300 + >700 rewrite into modules + complexity + coupling + nesting + velocity) denies oversized writes — extract modules or stop; do not fight a deny. `post_tool_use.sh` injects a SCORECARD after dirty writes so the agent sees the mess in-context.
+Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under four hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`. Registered steel is secrets + shell deny + HANDOFF tail.
 
-Live `.cursor/` copies were retired: registration is global (`~/.cursor/hooks.json`); edit this pack and re-run `FORCE=1 bash shared/hooks/fleet_sync.sh all`.
+Live registration is global (`~/.cursor/hooks.json`, native `./hooks/*.sh`). Edit this pack and re-run `FORCE=1 bash scripts/install.sh`. `sync` does not install or remove other repos’ `.cursor/hooks`.
 
 Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`, `/session-handoff`
 
@@ -92,23 +92,16 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 │       └── wsl-shim.ps1       — per-event PowerShell→WSL shim (stdin/stdout passthrough)
 ├── shared/
 │   ├── hooks/                 — canonical Bash hooks, macOS + Linux + WSL safe
-│   │   ├── session_start.sh      — inject HANDOFF tail + short DEBERES
-│   │   ├── before_submit_prompt.sh — route classify + JOB CARD nudge
-│   │   ├── stop_gate.sh           — audit INTENT / OBJECTIVE / Done-when
-│   │   ├── lean_gate.sh           — ponytail roof + entropy + velocity (preToolUse)
-│   │   ├── pre_tool_use.sh        — selective autonomy gate (thin wrapper)
-│   │   ├── post_tool_use.sh       — dirty-file SCORECARD (additional_context)
-│   │   ├── after_file_edit.sh     — stamp on-disk writes (Agent + Tab)
-│   │   ├── fleet_sync.sh          — install + fleet sync + verify
-│   │   ├── fleet_dispatch.sh      — backlog dispatcher
+│   │   ├── session_start.sh      — inject HANDOFF tail
+│   │   ├── before_submit_prompt.sh — secret-prompt block (failClosed:false)
+│   │   ├── before_shell.sh        — destructive / source-write deny
+│   │   ├── before_read_file.sh    — secret path deny
+│   │   ├── fleet_sync.sh          — install + fleet rules sync + verify
 │   │   ├── lib/
-│   │   │   ├── common.sh          — shared utilities (root, deny, allow, follow, portable lock)
-│   │   │   ├── tool_io.sh         — tool name/path extract + write stamp
-│   │   │   ├── scorecard.sh       — post-edit dirty-file message
-│   │   │   ├── stop_gate_core.sh  — stop gate logic
-│   │   │   └── pre_tool_use_core.sh — autonomy gate logic
-│   │   ├── policy/                — intent.json + lean.json (wired only)
-│   │   └── hooks.json             — canonical hook registry
+│   │   │   ├── common.sh          — shared utilities (root, deny, allow, continue)
+│   │   │   └── shell_gate.sh      — before_shell policy
+│   │   ├── policy/                — *.ere deny lists + leftover json
+│   │   └── hooks.json             — canonical 4-event registry
 │   ├── rules/                 — paste capsule + always-on companions (.mdc)
 │   ├── skills/                — on-demand Cursor skills
 │   └── config/                — skills list + scan roots + retire lists
@@ -120,18 +113,18 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 └── LICENSE                    — MIT
 ```
 
-Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1 bash shared/hooks/fleet_sync.sh all`.
+Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1 bash scripts/install.sh`.
 
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `session_start.sh` adds HANDOFF + JOB CARD template (INTENT / OBJECTIVE / tags). `before_submit_prompt.sh` classifies route and may GROUNDING-then-JOB-CARD nudge. `post_tool_use.sh` injects a SCORECARD after dirty writes. Never mutates the user prompt.
-3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then the agent writes `INTENT:` with `OBJECTIVE=<postcondition>` and `edit:`/`NEW:` tags from those hits, before Write.
-4. **Audit (Layer 3/4)** — `stop_gate.sh` checks OBJECTIVE quality and Done-when. Files still >700 keep followup until rewrite. If met, clears `/state` and seeds HANDOFF.
+2. **Inject (Layer 2)** — `session_start.sh` adds the HANDOFF tail. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
+3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then the agent writes `INTENT:` with `OBJECTIVE=<postcondition>` and `edit:`/`NEW:` tags from those hits, before Write. That is `.mdc` law, not a hook followup.
+4. **Steel** — `before_shell.sh` and `before_read_file.sh` deny a small list. Conversation police is not registered.
 
 ## Ponytail / Lean Gate
 
-The lean gate (`lean_gate.sh`) enforces roofs on every `Write|StrReplace`:
+Ponytail roofs (soft 120 / hard 300 / >700 rewrite / zero prose comments) live in `ponytail.mdc`. There is no registered lean hook.
 
 | Check | Roof | Action |
 |-------|------|--------|
