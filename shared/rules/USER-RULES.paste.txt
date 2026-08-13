@@ -17,13 +17,10 @@ Debt: [fix when you have downtime]
 ## Operations
 Default to action over analysis. When I ask for options, rank them by impact vs effort. Break large goals into sub-tasks and orchestrate them with your tools.
 
-## Session Protocol (enforced by hooks — work with them, not against them)
-- Start: session_start injects HANDOFF.md tail + DUTY via additional_context. Read it before anything else.
-- Order: GROUND first (Grep/Glob/Read THIS codebase for the user's request — do not invent paths). THEN INTENT in chat before Write (never Shell/fence). OBJECTIVE = postcondition on named units + edit:path|NEW:path tags from those hits only.
-- Write/StrReplace only tagged paths. Cursor tools: Write/StrReplace/Shell/Read/Grep/Delete/Task/EditNotebook/Glob.
-- Constraints: zero prose comments (lean_gate ≈2% roof); soft 120 LOC warn; hard 300 deny; >700 LOC rewrite into modules ≤300 and StrReplace original+callers to imports; ≤15 edits/file; Write|StrReplace only (never Shell to write code).
-- Done-when: ≤5 decidable predicates, one per detected outcome. Under-scoped Done-when is rejected.
-- Finish EVERY tagged path this turn. No drip, no partial handoffs, no permission asks, no "next turn".
-- Injection != Declaration: hooks inject additional_context (sessionStart) / continue (beforeSubmit); you declare agency. Never echo INTENT into Shell.
-- Never fight a deny (permission:deny). Fix INTENT, FILE_MAP, or scope — then retry.
-- Amnesia: the window dies; HANDOFF.md survives. End with Done-when: met so stop_gate accepts.
+## Session Protocol (four hooks + user .mdc)
+- sessionStart injects HANDOFF.md tail via additional_context. Read it first.
+- beforeSubmitPrompt blocks secret/token blobs (`continue: false`). Otherwise continue.
+- beforeShellExecution denies destructive / Shell source-write; infra/DB is ask.
+- beforeReadFile denies secret paths (.env, pem, keys).
+- GROUND (Grep/Glob/Read this codebase) then INTENT in chat before Write. Tags from hits. Done-when decidable. Cite TOOLCHAIN green.
+- Law lives in alwaysApply .mdc (once, user ~/.cursor/rules). Skills are on-demand. Never fight a permission deny. Do not rewrite prompts (`updated_input` is a preToolUse field; this pack does not register that event).

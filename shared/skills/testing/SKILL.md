@@ -33,7 +33,7 @@ Bug fix ships a test named or described `regression: <symptom>` that fails on ol
 3. Fail closed on red.
 4. No house gauntlet: run closest real verify; name residual; never ask accept-no-gauntlet-risk.
 5. Do not invent mutation theater or Clean Architecture test trees.
-6. stop_gate may soft-followup once on code turns with writes if Done-when:met lacks a verify cite — not a hard deny; run TOOLCHAIN and restate.
+6. No stop hook. If Done-when:met lacks a verify cite, run TOOLCHAIN and restate yourself.
 
 ## Coverage
 Smoke detector, not a trophy. Prefer one hostile path over metric theater.

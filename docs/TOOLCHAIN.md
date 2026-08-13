@@ -49,4 +49,4 @@ Installs `~/.cursor` hooks+rules+skills (global single registration layer). `hoo
 
 Keep each **registered** event hook under 80 LOC (`session_start`, `before_submit_prompt`, `before_shell`, `before_read_file`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. `beforeReadFile` is failClosed; the other three are not.
 
-Wired policy: `policy/*.ere` (destructive / secret_paths) consumed via `grep -f`.
+Wired policy: `policy/secret_paths.ere` consumed via `grep -f`. Destructive and Shell source-write lists live inline in `lib/shell_gate.sh`.

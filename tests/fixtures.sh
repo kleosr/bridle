@@ -47,3 +47,15 @@ if jq -e '(.hooks|has("beforeTabFileRead")|not) and (.hooks|has("beforeMCPExecut
 else
   echo "[fail] cloud/tab/mcp hooks.json shape wrong"; FAIL=$((FAIL + 1))
 fi
+
+LAW_STALE=no
+for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
+  "$PACK/shared/rules/vernacular.mdc" \
+  "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
+  "$PACK/shared/skills/testing/SKILL.md" "$PACK/shared/skills/vernacular/SKILL.md"; do
+  [[ -f "$f" ]] || { LAW_STALE=yes; continue; }
+  if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
+    LAW_STALE=yes
+  fi
+done
+run_test "law and skills do not name deleted hooks" "no" "$LAW_STALE"
