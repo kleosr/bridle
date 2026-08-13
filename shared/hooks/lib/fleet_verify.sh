@@ -22,8 +22,23 @@ verify_smoke() {
       echo "[fail] skill wrong target: $skill -> $(readlink "$HOME_C/skills/$skill")"; bad=1
     fi
   done < <(load_lines "$PACK/shared/config/skills.txt")
-  if [[ ! -f "$HOME_C/hooks/policy/vernacular_bans.txt" ]]; then
-    echo "[fail] ~/.cursor/hooks/policy/vernacular_bans.txt missing after install"; bad=1
+  if [[ ! -f "$HOME_C/hooks/policy/secret_paths.ere" ]]; then
+    echo "[fail] ~/.cursor/hooks/policy/secret_paths.ere missing after install"; bad=1
+  fi
+  if [[ -e "$HOME_C/rules/native-lean-autoload.mdc" || -L "$HOME_C/rules/native-lean-autoload.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/native-lean-autoload.mdc should be retired"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/rules/debugging.mdc" || -L "$PACK/.cursor/rules/debugging.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/debugging.mdc duplicates debugging skill"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/rules/agent.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/agent.mdc missing after install"; bad=1
+  fi
+  if [[ -e "$HOME_C/rules/types.mdc" || -L "$HOME_C/rules/types.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/types.mdc must stay project-layer"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/rules/agent.mdc" || -L "$PACK/.cursor/rules/agent.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/agent.mdc duplicates user alwaysApply"; bad=1
   fi
   if ! grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json" 2>/dev/null; then
     echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1

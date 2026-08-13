@@ -45,6 +45,6 @@ gate_shell_source_write() {
     hit=1
   fi
   [[ "$hit" -eq 0 ]] && return 1
-  emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace so lean_gate scores the edit. Never Shell to write code. CMD: ${cmd:0:120}"
+  emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code. CMD: ${cmd:0:120}"
   return 0
 }
