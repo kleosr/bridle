@@ -26,11 +26,11 @@ done
 if jq empty "$HOOKS_DIR/hooks.json" 2>/dev/null; then ok "shared/hooks/hooks.json valid JSON"
 else fail "shared/hooks/hooks.json invalid JSON"; fi
 
+if jq empty "$HOOKS_DIR/hooks.cloud.json" 2>/dev/null; then ok "shared/hooks/hooks.cloud.json valid JSON"
+else fail "shared/hooks/hooks.cloud.json invalid JSON"; fi
+
 if jq -e '.complexity_max and .func_complexity_max and .coupling_max and .nesting_max' "$HOOKS_DIR/policy/lean.json" >/dev/null 2>&1; then ok "lean.json has complexity/coupling/nesting thresholds"
 else fail "lean.json missing new metric thresholds"; fi
-
-if [[ -f "$HOOKS_DIR/lib/metrics.sh" ]] && grep -q 'metrics.sh' "$HOOKS_DIR/lean_gate.sh"; then ok "metrics.sh wired into lean_gate"
-else fail "metrics.sh missing or not sourced by lean_gate"; fi
 
 POLICY_COUNT="$(find "$HOOKS_DIR/policy" -name '*.json' 2>/dev/null | wc -l)"
 if [[ "$POLICY_COUNT" -eq 2 ]]; then ok "policy count = 2 (intent + lean only)"
@@ -58,7 +58,7 @@ B_HITS="$(grep -Rn --include='*.sh' --include='*.txt' -F '\b' "$HOOKS_DIR/" 2>/d
 if [[ -z "$B_HITS" ]]; then ok "no GNU grep \\\\b (stock macOS BSD grep safe)"
 else fail "GNU grep \\\\b found (breaks stock macOS): $B_HITS"; fi
 
-for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/stop_gate.sh "$HOOKS_DIR"/lean_gate.sh "$HOOKS_DIR"/pre_tool_use.sh "$HOOKS_DIR"/post_tool_use.sh "$HOOKS_DIR"/after_file_edit.sh; do
+for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh; do
   n="$(wc -l < "$f")"
   if [[ "$n" -le 80 ]]; then ok "LOC ≤ 80: ${f#$PACK/} ($n)"
   else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
@@ -84,14 +84,13 @@ if grep -q 'hooks/before_submit_prompt.sh' "$HOME/.cursor/hooks.json" 2>/dev/nul
   ok "global hook registration (~/.cursor single layer)"
 else fail "~/.cursor/hooks.json missing beforeSubmitPrompt (run: bash shared/hooks/fleet_sync.sh install)"; fi
 
-if [[ -f "$PACK/.cursor/hooks.json" ]] && jq -e '.hooks.sessionStart' "$PACK/.cursor/hooks.json" >/dev/null 2>&1; then
-  fail "pack project hooks register sessionStart — double DUTY (use hooks.cloud.json / project-hooks)"
-elif [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
-  if jq -e '.hooks.preToolUse' "$PACK/.cursor/hooks.json" >/dev/null 2>&1; then
-    ok "pack has thin Lane-A project hooks (no sessionStart; cloud-safe)"
-  else
-    fail "pack has unexpected repo-level hooks"
-  fi
+if jq -e '.hooks|keys|length == 4' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1; then
+  ok "hooks.json is 4 native ./hooks/ events"
+else fail "hooks.json must be 4 events with ./hooks/ commands"; fi
+
+if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
+  fail "pack has repo-level hooks (never Lane-A into this pack)"
 else ok "no repo-level hooks in pack (local global-only mode)"; fi
 
 if ! grep -RqiE 'CallMcpTool|user-obsidian' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
@@ -100,10 +99,9 @@ else fail "MCP core dependency found in hooks (should be optional, not core)"; f
 if [[ -f "$PACK/HANDOFF.md" ]] && grep -q 'COMPACTION' "$PACK/HANDOFF.md"; then ok "HANDOFF.md with compaction protocol"
 else fail "HANDOFF.md missing or lacks compaction protocol"; fi
 
-for wrapper in stop_gate pre_tool_use; do
-  if grep -q 'source.*lib/.*_core.sh' "$HOOKS_DIR/${wrapper}.sh" 2>/dev/null; then ok "wrapper sources lib: ${wrapper}.sh"
-  else fail "wrapper missing source: ${wrapper}.sh"; fi
-done
+if [[ ! -f "$HOOKS_DIR/stop_gate.sh" && ! -f "$HOOKS_DIR/lean_gate.sh" && ! -f "$HOOKS_DIR/pre_tool_use.sh" ]]; then
+  ok "unregistered event scripts removed"
+else fail "unregistered event scripts still on disk"; fi
 
 if [[ ! -f "$PACK/shared/rules/lean-code.mdc" && ! -d "$PACK/shared/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi

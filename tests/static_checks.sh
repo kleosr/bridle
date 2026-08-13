@@ -26,7 +26,7 @@ fi
 
 echo ""
 echo "=== JSON validity ==="
-for j in "$PACK"/shared/hooks/hooks.json "$PACK"/shared/hooks/policy/*.json "$PACK"/package.json; do
+for j in "$PACK"/shared/hooks/hooks.json "$PACK"/shared/hooks/hooks.cloud.json "$PACK"/shared/hooks/policy/*.json "$PACK"/package.json; do
   [[ -f "$j" ]] || continue
   if jq empty "$j" 2>/dev/null; then
     echo "[pass] valid JSON: ${j#$PACK/}"; PASS=$((PASS + 1))

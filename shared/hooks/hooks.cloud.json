@@ -1,37 +1,10 @@
 {
   "version": 1,
   "hooks": {
-    "preToolUse": [
-      {
-        "matcher": "Write|StrReplace",
-        "command": ".cursor/hooks/lean_gate.sh",
-        "timeout": 30,
-        "failClosed": true
-      },
-      {
-        "matcher": "Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob",
-        "command": ".cursor/hooks/pre_tool_use.sh",
-        "timeout": 30,
-        "failClosed": true
-      }
-    ],
     "beforeShellExecution": [
       {
         "command": ".cursor/hooks/before_shell.sh",
         "timeout": 30,
-        "failClosed": true
-      }
-    ],
-    "postToolUse": [
-      {
-        "matcher": "Write|StrReplace|Delete|EditNotebook",
-        "command": ".cursor/hooks/post_tool_use.sh",
-        "failClosed": false
-      }
-    ],
-    "afterFileEdit": [
-      {
-        "command": ".cursor/hooks/after_file_edit.sh",
         "failClosed": false
       }
     ],
@@ -41,35 +14,9 @@
         "failClosed": true
       }
     ],
-    "beforeTabFileRead": [
-      {
-        "command": ".cursor/hooks/before_read_file.sh",
-        "failClosed": true
-      }
-    ],
-    "beforeMCPExecution": [
-      {
-        "command": ".cursor/hooks/before_mcp.sh",
-        "timeout": 30,
-        "failClosed": true
-      }
-    ],
     "beforeSubmitPrompt": [
       {
         "command": ".cursor/hooks/before_submit_prompt.sh",
-        "failClosed": true
-      }
-    ],
-    "preCompact": [
-      {
-        "command": ".cursor/hooks/pre_compact.sh",
-        "failClosed": false
-      }
-    ],
-    "stop": [
-      {
-        "command": ".cursor/hooks/stop_gate.sh",
-        "loop_limit": 5,
         "failClosed": false
       }
     ]

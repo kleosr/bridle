@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Plan-mode regression suite. Sourced by run.sh — assumes PACK, run_test, PASS, FAIL set.
 
 rm -rf "$PACK/state"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart_plan_mode.json" | bash "$PACK/shared/hooks/session_start.sh")"
@@ -12,20 +11,8 @@ rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'plan\n' > "$PACK/state/mode"
 RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_plan_mode.json" | bash "$PACK/shared/hooks/before_submit_prompt.sh")"
 RESULT_CONTINUE="$(printf '%s' "$RESULT" | jq -r '.continue // empty')"
-# Plan mode: continue:true (or legacy quiet {}). Either is non-blocking.
 if [[ "$RESULT_CONTINUE" == "true" ]] || [[ "$(printf '%s' "$RESULT" | jq -r 'if . == {} then "quiet" else "other" end')" == "quiet" ]]; then
   echo "[pass] before_submit_prompt non-blocking in plan mode"; PASS=$((PASS + 1))
 else
   echo "[fail] before_submit_prompt blocked or injected in plan mode: $RESULT"; FAIL=$((FAIL + 1))
 fi
-
-rm -rf "$PACK/state"; mkdir -p "$PACK/state"
-printf 'plan\n' > "$PACK/state/mode"
-printf '# HANDOFF — Session State\n\n## Active Objective\n\nx\n' > "$PACK/HANDOFF.md"
-RESULT="$(cat "$PACK/tests/fixtures/stop_valid_intent.json" | bash "$PACK/shared/hooks/stop_gate.sh" 2>/dev/null | jq -r 'if .followup_message then "followup" else "accept" end')"
-run_test "stop_gate accepts (no followup) in plan mode" "accept" "$RESULT"
-
-rm -rf "$PACK/state"; mkdir -p "$PACK/state"
-printf 'agent\n' > "$PACK/state/mode"
-RESULT="$(cat "$PACK/tests/fixtures/stop_no_intent.json" | bash "$PACK/shared/hooks/stop_gate.sh" | jq -r 'if .followup_message then "followup" else "accept" end')"
-run_test "stop_gate still enforces in agent mode" "followup" "$RESULT"
