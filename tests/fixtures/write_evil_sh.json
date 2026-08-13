@@ -1,0 +1,1 @@
+{"tool_name":"Write","tool_input":{"file_path":"evil.sh","content":"git push --force\n"}}

@@ -4,11 +4,11 @@ gate_shell_command() {
   local cmd="$1"
   [[ -z "$cmd" ]] && return 0
   if echo "$cmd" | grep -qiE '(rm -rf? /|rm -rf? ~|mkfs|dd if=|git push --force|git push -f|drop database|truncate table|>:.*\/dev\/sd|shred )'; then
-    emit_deny "AUTONOMY BLOCK: command matches a destructive pattern. Human approval required. CMD: ${cmd:0:120}"
+    emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
     return 1
   fi
   if echo "$cmd" | grep -qiE '(psql|mysql|mongosh|supabase db|terraform apply|kubectl delete|docker rm -f|systemctl stop)'; then
-    emit_deny "AUTONOMY BLOCK: command mutates infra/DB. Human approval required. CMD: ${cmd:0:120}"
+    emit_ask "Command mutates infra/DB. Approve in the Cursor card to proceed. CMD: ${cmd:0:120}"
     return 1
   fi
   if gate_shell_source_write "$cmd"; then
@@ -38,6 +38,10 @@ gate_shell_source_write() {
   elif echo "$cmd" | grep -qE "(^|[[:space:];|&])perl[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
     hit=1
   elif echo "$cmd" | grep -qiE "(^|[[:space:];|&])(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+)[[:space:]].{0,200}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)"; then
+    hit=1
+  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])(curl|wget)[[:space:]].*-[oO][[:space:]]+['\"]?[^|&;[:space:]'\"]+\.${ext}"; then
+    hit=1
+  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])git[[:space:]]+(checkout|restore)[[:space:]].*\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
     hit=1
   fi
   [[ "$hit" -eq 0 ]] && return 1

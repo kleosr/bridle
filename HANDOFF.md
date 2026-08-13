@@ -2,27 +2,29 @@
 
 ## Active Objective
 
-GROUND → INTENT → tags. No product allowlist. Read-before-Write is steel.
+Native four-hook cut is live. Leftover unregistered scripts are deleted.
 
 ## Current State
 
-Loop (correct order):
-1. User prompt
-2. GROUNDING — Grep/Glob/Read THIS codebase for what they named. Do not invent paths.
-3. INTENT + OBJECTIVE + edit:|NEW: from those hits
-4. Write/StrReplace only tagged paths; stop_gate audits; HANDOFF survives
+`~/.cursor/hooks.json` is 4 events, `./hooks/*.sh`. 12 bash files, 667 LOC. Tests PASS:81 FAIL:0. Results canvas: canvases/hooks-native-cut.canvas.tsx.
 
-Steel: pre_tool_use denies Write/Delete on a path not Read this session. NEW files need Grep/Glob first.
-Steer: before_submit always says GROUNDING then JOB CARD on code prompts; Grep nouns from the prompt (not a neon/api special case).
-Ponytail stays in always-apply mdc. Hooks are not a retriever — dumping rg hits would bias the model.
+## Constraints
+
+Never Lane-A into this pack. Destructive literals stay in `policy/*.ere`. No `updated_input`.
+
+## Done-When
+
+- unregistered event scripts gone from shared/hooks
+- `bash tests/run.sh` FAIL:0 and doctor ALL CHECKS PASSED
+- results canvas written
 
 ## Next Actions
 
-- Local: `bash MacOS/install.sh` then re-paste USER-RULES.paste.txt
+Optional clutter: unused tests/fixtures JSON, emit_followup in common.sh, intent.json unused by hooks.
 
 ## Archived
 
-macOS POSIX grep (wb_alt); Cursor-only tools; second-brain channels.
+16-event harness cut then leftover delete 2026-08-12. Diagnosis canvas hooks-native-audit.canvas.tsx. 127 lockout was project-relative paths plus failClosed submit.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

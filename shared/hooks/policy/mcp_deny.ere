@@ -1,0 +1,5 @@
+rm -rf /
+rm -rf ~
+/etc/passwd
+drop database
+base64 -d.{0,40}\|.{0,20}sh

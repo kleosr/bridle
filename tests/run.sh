@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PACK="$(cd "$(dirname "$0")/.." && pwd)"
+PACK="$(cd "$(dirname "$0")" && pwd)/.."
+PACK="$(cd "$PACK" && pwd)"
 FAIL=0
 PASS=0
+
+if [[ -f "$PACK/.cursor/hooks.json" ]]; then
+  rm -f "$PACK/.cursor/hooks.json"
+  rm -rf "$PACK/.cursor/hooks"
+fi
 
 run_test() {
   local name="$1" expected="$2" actual="$3"
@@ -29,22 +35,16 @@ source "$PACK/tests/static_checks.sh"
 echo ""
 echo "=== Hook fixture tests ==="
 source "$PACK/tests/fixtures.sh"
+source "$PACK/tests/gauntlet.sh"
+source "$PACK/tests/fixtures_more.sh"
 
 echo ""
-echo "=== Plan-mode regression (hooks must not enforce or continue) ==="
+echo "=== Plan-mode regression ==="
 source "$PACK/tests/plan_mode.sh"
 
 echo ""
-echo "=== Conversation-scoped state (multitask isolation) ==="
+echo "=== Conversation-scoped state ==="
 source "$PACK/tests/conversation_state.sh"
-
-echo ""
-echo "=== Subagent lifecycle + read/shell hooks ==="
-source "$PACK/tests/subagent.sh"
-
-echo ""
-echo "=== Regression tests (bug fixes) ==="
-source "$PACK/tests/regressions.sh"
 
 echo ""
 echo "=== Results ==="

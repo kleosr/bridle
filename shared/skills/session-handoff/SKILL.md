@@ -30,7 +30,7 @@ Template: `shared/skills/session-handoff/references/handoff-template.md`
 
 ## Pause / update
 
-Default compact root `HANDOFF.md` (also seeded by `stop_gate.sh`):
+Default compact root `HANDOFF.md`:
 
 ```
 TASK
