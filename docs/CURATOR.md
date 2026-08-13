@@ -4,7 +4,7 @@ Layer 2 is mostly about what you throw away.
 
 ## INTENT quality (declaration)
 
-Injection seeds duty; the agent **grounds first**, then declares a **job card in chat prose before Write**. Thin (≤5 anchors):
+Injection seeds HANDOFF; the agent **grounds first**, then declares a **job card in chat prose before Write**. Thin (≤5 anchors):
 
 1. **OBJECTIVE** — postcondition on named units (what is true when done). Not a task ("implement X"). Tag `edit:path` or `NEW:path`. Weak (`done`/`fixed`) and task-shaped OBJECTIVEs are law in agent.mdc, not a hook.
 2. **CONSTRAINTS** — optional ≤2 invariants or non-goals.
