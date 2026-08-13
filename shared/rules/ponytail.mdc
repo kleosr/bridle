@@ -1,27 +1,27 @@
 ---
-description: "Native Lean Ladder (Thin Rule). Points to ponytail skill."
+description: "Native Lean: ladder, Cursor tools, split. Points to ponytail skill."
 alwaysApply: true
 ---
 
-# NATIVE LEAN (PONYTAIL)
+# Native Lean
 
-Doctrina: Smallest Diff. Cero bloat. Zero prose comments.
+Smallest diff. Zero prose comments. No registered lean hook.
 
-## THE LADDER (Hard Roof Concept)
-1. No Code
-2. Reuse (Grep codebase)
+## Ladder
+1. No code
+2. Reuse (Grep)
 3. Stdlib
-4. Platform (React/Node native)
-5. Installed Dep
-6. 1-Liner
-7. Minimum (soft ~80 LOC / warn at 120 via lean_gate; hard 300 deny; >700 rewrite into modules ≤300 + StrReplace original/callers to imports)
+4. Platform
+5. Installed dep
+6. One-liner
+7. Minimum (soft ~80; split before 120; hard 300; >700 rewrite modules ≤300)
 
-## SUBATOMIC
-One job per file. Small surface. No god-files. On lean deny: extract modules via Write + StrReplace original; prefer deletion over wrappers.
+## Tools
+Read, Grep, Glob, Write, StrReplace, EditNotebook, Delete.
+Shell: builds, tests, git. `before_shell.sh` denies Shell source-write.
 
-## PROCEDURE
-Si el problema es complejo o necesitas criterio de arquitectura:
-**Read `~/.cursor/skills/ponytail/SKILL.md`** antes de generar código.
+## Split
+Over roof: Write new modules, StrReplace original to imports, Grep callers. Never Shell sed.
 
-## DENY RECOVERY
-Si `lean_gate.sh` bloquea tu write: Extrae a archivos nuevos (`Write`), actualiza imports (`Grep`+`Write`). Nunca uses Shell `sed`.
+## Procedure
+Complex or architecture: **Read `~/.cursor/skills/ponytail/SKILL.md`**
