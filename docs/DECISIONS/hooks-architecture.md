@@ -35,12 +35,16 @@ Conversation police (`stop_gate`), Read-before-Write grounding, and `lean_gate` 
 | File | Consumer |
 |------|----------|
 | `shared/hooks/policy/secret_paths.ere` | `before_read_file.sh` |
-| `shared/hooks/policy/destructive.ere` | leftover list (before_shell uses inline regex in `shell_gate.sh`) |
+| `shared/hooks/lib/shell_gate.sh` | `before_shell.sh` (inline destructive / source-write / infra ask) |
 
-`intent.json` / `lean.json` are leftover for unregistered scripts and unit tests.
+Roofs live in `ponytail.mdc`. No json policy.
 
 ## Hook config (canonical)
 
 Single source: `shared/hooks/hooks.json`. User commands are `./hooks/*.sh`. Windows `install.ps1` still rewrites to the WSL shim.
 
 **2026-08-12 — native cut.** Four events. Native paths. Fleet does not copy/delete other repos’ `.cursor/hooks`. `beforeSubmitPrompt.failClosed: false`. `beforeReadFile.failClosed: true`.
+
+**2026-08-12 — law coherence.** alwaysApply `.mdc` install user-only (`GLOBAL`). Project layer is `types`. Cloud `project-hooks` copies GLOBAL+SHARED. Steel hooks are stateless (secrets + shell). Paste/skills describe those four events.
+
+**2026-08-13 — audit fix.** Merged native-lean into `ponytail.mdc`. Retired `debugging.mdc` (skill only). Deleted unused `lean.json`, `intent.json`, `mcp_deny.ere`, `destructive.ere`, `vernacular_bans.txt` from hook policy. Bans list lives next to the vernacular skill.
