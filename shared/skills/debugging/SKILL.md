@@ -8,6 +8,8 @@ description: >-
 
 # Bug hunt
 
+No thin `.mdc`. This skill is the debugging roof.
+
 Prove the cause; do not change code to generate hypotheses.
 
 ## Mode
