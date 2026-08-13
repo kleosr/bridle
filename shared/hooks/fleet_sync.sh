@@ -8,8 +8,8 @@ CLOUD="${CLOUD:-0}"
 PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 TARGET_REPO="${TARGET_REPO:-}"
 CMD="${1:-all}"
-SHARED=(agent types testing debugging native-lean-autoload ponytail vernacular)
-GLOBAL=(native-lean-autoload ponytail agent vernacular testing)
+SHARED=(types)
+GLOBAL=(ponytail agent vernacular testing)
 source "$HOOKS_DIR/lib/fleet_scan.sh"
 source "$HOOKS_DIR/lib/fleet_install.sh"
 source "$HOOKS_DIR/lib/fleet_sync_repos.sh"
@@ -20,6 +20,7 @@ case "$CMD" in
     install_home_hooks
     install_global_rules
     install_skills
+    link_pack_rules
     ;;
   sync)
     sync_fleet
@@ -35,7 +36,7 @@ case "$CMD" in
       exit 2
     fi
     install_project_hooks "$TARGET_REPO" "target"
-    echo "[done] project-hooks (Lane-A; no sessionStart). Global still owns DUTY injection locally."
+    echo "[done] project-hooks (Lane-A; no sessionStart). Cloud got full .mdc set."
     ;;
   verify)
     verify_smoke

@@ -9,3 +9,5 @@ types-v2.mdc
 prompt.mdc
 option-c-core.mdc
 context-curator.mdc
+native-lean-autoload.mdc
+debugging.mdc

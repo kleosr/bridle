@@ -1,5 +1,5 @@
 ---
-description: "Autonomous loop capsule — single source of truth for INTENT, file-map, and harness doctrine"
+description: "Autonomous loop capsule — INTENT, file-map, four-hook harness"
 alwaysApply: true
 ---
 
@@ -12,36 +12,39 @@ Git only when asked. Secrets never in code or chat.
 Done = `docs/TOOLCHAIN.md` green with evidence.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
-## Harness
+## Harness (four registered events)
 
-Bash hooks: `session_start` (`additional_context`), `before_submit_prompt` (`continue` + JOB CARD nudge), `post_tool_use` (`additional_context` scorecard), `stop_gate` (`followup_message`), `lean_gate`/`pre_tool_use`/`before_shell`/`before_read_file`/`before_mcp` (`permission`). No Rust.
-Brain = `HANDOFF.md` (local). Cloud agents: thin project hooks via `fleet_sync.sh project-hooks` (no sessionStart — avoids double DUTY).
-Injection != Declaration: `sessionStart` injects `additional_context` only; `beforeSubmitPrompt` is continue/block. Never `updated_input`.
+| Event | Script | Job |
+|---|---|---|
+| sessionStart | `session_start.sh` | `additional_context`: HANDOFF tail. Quiet in plan mode. |
+| beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
+| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Infra/DB `ask`. |
+| beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
+
+Cursor documents 21 hook events. This pack registers the four above. There is no `stop`, `postToolUse`, `preToolUse`, `beforeMCPExecution`, or LOC gate in `hooks.json` or on disk. Writes are not blocked by file size. Closing a turn does not follow up.
+
+Brain = `HANDOFF.md`. Cloud: `project-hooks` (no sessionStart; Cursor defers it). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there).
 
 ## INTENT protocol
 
-Order: **GROUND → DECLARE → WRITE**. Grep/Glob/Read THIS codebase for the user's request first. Do not invent paths. Then declare `INTENT:` as chat prose before Write (never Shell/code-fence — poisons stop detection). Tags come from hits only.
-Job card: `OBJECTIVE` = postcondition on named units (what is true when done — not implement/add/fix the…); `edit:path`|`NEW:path` from hits; `CONSTRAINTS` ≤2 invariants; `Done-when` ≤5 decidable predicates.
+Order: **GROUND → DECLARE → WRITE**. Grep/Glob/Read THIS codebase for the user's request first. Do not invent paths. Then declare `INTENT:` as chat prose before Write (never Shell/code-fence).
+`OBJECTIVE` = postcondition on named units; `edit:path`|`NEW:path` from hits only; `CONSTRAINTS` ≤2; `Done-when` ≤5 decidable predicates.
 
 ## File map
 
 Ground → tag → edit/NEW → re-Read → prove Done-when.
-Glob/Grep/Read first; `Write` for create/overwrite (Cursor primary write tool). pre_tool_use denies Write/Delete on a path that was not Read this session (NEW files need Grep/Glob first).
-Finish EVERY tagged path this turn — no drip, no orphan unconnected files.
-Before Done: verify all Done-when predicates with TOOLCHAIN evidence — cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test in chat (stop_gate may soft-followup once if missing).
+Glob/Grep/Read first; `Write` for create/overwrite. Finish EVERY tagged path this turn — no drip, no orphan files.
+Before Done: verify Done-when with TOOLCHAIN evidence — cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test.
 
 ## State
 
-`/state/` overwrite-only; clears on stop_gate success.
-`pending_files.md` survives stop followups until accept.
-Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
+`HANDOFF.md` is durable. `/state/` is ephemeral (`mode` from sessionStart). Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
 
-## Autonomous loop (no early stops)
+## Autonomous loop
 
-1. GROUND FIRST: Grep/Glob/Read this codebase for the user's request. Do not invent paths.
-2. THEN DECLARE: INTENT in chat before Write (never Shell/fence). Tags from hits only.
+1. GROUND FIRST: Grep/Glob/Read this codebase. Do not invent paths.
+2. DECLARE: INTENT in chat before Write. Tags from hits only.
 3. NO ASK INSIDE INTENT: missing Done-when work → do it now.
 4. NO PARTIAL HANDOFFS / NO DRIP.
 5. WRITE: Write/StrReplace only tagged paths; cascade-fix.
-6. PRE-STOP: re-Read tagged FILES; run TOOLCHAIN verify; cite green; prove Done-when; then `Done-when: met`.
-7. CLOSE: stop_gate reads assistant prose from `transcript_path` and followups on poison/drip/unmet predicates / missing verify cite (fail-open after one nudge).
+6. CLOSE: re-Read tagged FILES; run TOOLCHAIN; cite green; `Done-when: met`; update HANDOFF.

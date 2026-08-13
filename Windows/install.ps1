@@ -19,7 +19,7 @@ Copy-Item "$src\policy\*" "$HooksD\policy" -Force
 Copy-Item (Join-Path $PSScriptRoot 'hooks\wsl-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
-foreach ($name in 'native-lean-autoload', 'ponytail', 'agent', 'vernacular', 'testing') {
+foreach ($name in 'ponytail', 'agent', 'vernacular', 'testing') {
   Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
 }
 

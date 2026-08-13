@@ -20,7 +20,7 @@ Thin roof: `shared/rules/vernacular.mdc` (hard bans). This file = procedure + ex
 Before `Write` in a directory: `Read` 1–2 sibling files. Match their import grouping, naming, and error/result idiom. Do not invent a parallel dialect in the same folder.
 
 ## TypeScript / React / Node
-- Comments: **zero prose**. Machine directives only (`#!`, pragma, license, build-guard, `@ts-expect-error`, eslint/prettier directives). Enforced by `lean_gate` on **projected whole file** (`comment_ratio_max=2`).
+- Comments: **zero prose**. Machine directives only (`#!`, pragma, license, build-guard, `@ts-expect-error`, eslint/prettier directives).
 - Names: self-documenting; never narrate what the next line does.
 - State: `if (!data) return <Loading/>` — no redundant isLoading when data starts null.
 - Returns: early-return; max nesting depth 2.
@@ -31,7 +31,7 @@ Before `Write` in a directory: `Read` 1–2 sibling files. Match their import gr
 - Imports: no unused; group/stable style matching neighbors.
 - Functions: one responsibility; extract before soft LOC 120 (`file_loc_soft`); hard deny at 300.
 - Tests: behavior changes need tests when testing skill applies; cite `docs/TOOLCHAIN.md` evidence before Done.
-- Corporate/AI-slop jargon: soft-banned via `shared/hooks/policy/vernacular_bans.txt` (beforeSubmit/stop nudge; fail-open if list missing).
+- Corporate/AI-slop jargon: soft-banned via `shared/skills/vernacular/bans.txt` (model follows; fail-open if list missing).
 
 ## Cursor tools (primary vocabulary)
 Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`, `EditNotebook`.
@@ -40,7 +40,6 @@ Matchers: Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob.
 ## INTENT
 - GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then declare `INTENT:` as chat prose before Write (never Shell/fence).
 - Tag every path `edit:path`|`NEW:path` from those hits. Done-when ≤5 decidable predicates. Finish all tags this turn.
-- stop_gate audits assistant prose from `transcript_path`.
 
 ## Bash hooks (`shared/hooks/*.sh`)
 Cursor-native emit (exit 0 so messages survive; non-zero only for failClosed parse failures):
@@ -49,7 +48,6 @@ Cursor-native emit (exit 0 so messages survive; non-zero only for failClosed par
     # deny: {"permission":"deny","user_message":"..."}
     # sessionStart: {"additional_context":"..."}
     # beforeSubmitPrompt: {"continue":true|false}
-    # stop: {"followup_message":"..."}
 
 Banned: `updated_input`, Python/Node gates, external APIs, `cd` in hooks.
 Required: jq; event-hook entrypoints ≤80 LOC.
@@ -59,7 +57,7 @@ Required: jq; event-hook entrypoints ≤80 LOC.
 - HANDOFF: TASK / FILES / STATUS / NEXT.
 
 ## JSON
-- Strict JSON (no comments). One roof per policy file (`lean.json`, `intent.json`).
+- Strict JSON (no comments).
 
 ## Anti-patterns
 - Foreign UseCase/Repository theater.

@@ -24,11 +24,9 @@ else
   echo "[fail] hooks.json timeout field wrong"; FAIL=$((FAIL + 1))
 fi
 
-COMMENT_MAX="$(jq -r '.comment_ratio_max' "$PACK/shared/hooks/policy/lean.json")"
-run_test "lean.json comment_ratio_max is 2 (zero-comment)" "2" "$COMMENT_MAX"
-run_test "lean.json file_loc_soft is 120" "120" "$(jq -r '.file_loc_soft' "$PACK/shared/hooks/policy/lean.json")"
-run_test "lean.json file_loc_max is 300" "300" "$(jq -r '.file_loc_max' "$PACK/shared/hooks/policy/lean.json")"
-run_test "lean.json file_loc_legacy_emergency is 700" "700" "$(jq -r '.file_loc_legacy_emergency' "$PACK/shared/hooks/policy/lean.json")"
+run_test "ponytail.mdc states hard 300" "1" "$(grep -c 'hard 300' "$PACK/shared/rules/ponytail.mdc" | tr -d ' ')"
+run_test "ponytail.mdc states split before 120" "1" "$(grep -c 'split before 120' "$PACK/shared/rules/ponytail.mdc" | tr -d ' ')"
+run_test "ponytail.mdc states >700 rewrite" "1" "$(grep -c '>700' "$PACK/shared/rules/ponytail.mdc" | tr -d ' ')"
 
 LOC_OK=1
 for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do

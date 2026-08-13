@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 
+prune_project_names_from_home() {
+  local name
+  for name in ${SHARED[@]+"${SHARED[@]}"}; do
+    if [[ -e "$HOME_C/rules/${name}.mdc" || -L "$HOME_C/rules/${name}.mdc" ]]; then
+      rm -f "$HOME_C/rules/${name}.mdc"
+      echo "[rm] ~/.cursor/rules/${name}.mdc (project layer)"
+    fi
+  done
+}
+
+prune_user_layer_from_project() {
+  local dest="$1" name
+  for name in ${GLOBAL[@]+"${GLOBAL[@]}"}; do
+    if [[ -e "$dest/${name}.mdc" || -L "$dest/${name}.mdc" ]]; then
+      rm -f "$dest/${name}.mdc"
+      echo "[rm] ${dest}/${name}.mdc (user layer)"
+    fi
+  done
+}
+
 install_global_rules() {
   local name orphan
   mkdir -p "$HOME_C/rules"
@@ -7,6 +27,7 @@ install_global_rules() {
     cp -f "$PACK/shared/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
     echo "[ok] ~/.cursor/rules/${name}.mdc"
   done
+  prune_project_names_from_home
   while IFS= read -r orphan; do
     [[ -z "$orphan" ]] && continue
     if [[ -e "$HOME_C/rules/$orphan" || -L "$HOME_C/rules/$orphan" ]]; then
@@ -50,7 +71,8 @@ install_skills() {
 link_pack_rules() {
   local dest="$PACK/.cursor/rules" name orphan
   mkdir -p "$dest"
-  for name in "${SHARED[@]}"; do
+  prune_user_layer_from_project "$dest"
+  for name in ${SHARED[@]+"${SHARED[@]}"}; do
     [[ -f "$PACK/shared/rules/${name}.mdc" ]] || continue
     symlink_force "../../shared/rules/${name}.mdc" "$dest/${name}.mdc"
   done
@@ -61,7 +83,7 @@ link_pack_rules() {
       echo "[rm] pack/$orphan"
     fi
   done < <(load_lines "$PACK/shared/config/retired.txt")
-  echo "[ok] pack .cursor/rules → shared/rules"
+  echo "[ok] pack .cursor/rules → shared/rules (project layer)"
 }
 
 gitignore_state() {
@@ -82,7 +104,8 @@ sync_repo_rules() {
   local repo="$1" label="$2" dest name orphan
   dest="$repo/.cursor/rules"
   mkdir -p "$dest"
-  for name in "${SHARED[@]}"; do
+  prune_user_layer_from_project "$dest"
+  for name in ${SHARED[@]+"${SHARED[@]}"}; do
     [[ -f "$PACK/shared/rules/${name}.mdc" ]] || continue
     rm -f "$dest/${name}.mdc"
     cp -f "$PACK/shared/rules/${name}.mdc" "$dest/${name}.mdc"
@@ -94,7 +117,7 @@ sync_repo_rules() {
       echo "[rm] $label/$orphan"
     fi
   done < <(load_lines "$PACK/shared/config/retired.txt")
-  echo "[ok] rules → $label"
+  echo "[ok] rules → $label (project layer)"
 }
 
 sync_fleet() {
