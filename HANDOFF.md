@@ -2,29 +2,29 @@
 
 ## Active Objective
 
-Native four-hook cut is live. Leftover unregistered scripts are deleted.
+Audit findings closed. Four hooks unchanged. Law and leftover policy match that registry.
 
 ## Current State
 
-`~/.cursor/hooks.json` is 4 events, `./hooks/*.sh`. 12 bash files, 667 LOC. Tests PASS:81 FAIL:0. Results canvas: canvases/hooks-native-cut.canvas.tsx.
+alwaysApply is agent.mdc + ponytail.mdc. debugging is the skill. Hook policy is secret_paths.ere only. `bash tests/run.sh` PASS:87 FAIL:0. doctor ALL CHECKS PASSED. FORCE=1 install pruned native-lean-autoload from ~/.cursor/rules. Canvas: canvases/audit-fix-before-after.canvas.tsx.
 
 ## Constraints
 
-Never Lane-A into this pack. Destructive literals stay in `policy/*.ere`. No `updated_input`.
+Never Lane-A into this pack. Do not emit updated_input (no preToolUse registered). New chat required to drop cached alwaysApply.
 
 ## Done-When
 
-- unregistered event scripts gone from shared/hooks
-- `bash tests/run.sh` FAIL:0 and doctor ALL CHECKS PASSED
-- results canvas written
+- native-lean-autoload.mdc and debugging.mdc gone — met
+- unused hook policy gone — met
+- tests FAIL:0, doctor green, install, before/after canvas — met
 
 ## Next Actions
 
-Optional clutter: unused tests/fixtures JSON, emit_followup in common.sh, intent.json unused by hooks.
+New agent chat. Re-paste USER-RULES.paste.txt if Settings still has the old blob.
 
 ## Archived
 
-16-event harness cut then leftover delete 2026-08-12. Diagnosis canvas hooks-native-audit.canvas.tsx. 127 lockout was project-relative paths plus failClosed submit.
+Native Cursor + pstack audit 2026-08-13. Law coherence 2026-08-12. Native four-hook cut PR #17.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

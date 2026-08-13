@@ -25,7 +25,7 @@ Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported), **Linux**, 
 
 Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer — they spawn with cwd = workspace root, so `HANDOFF.md` and `state/` stay per-project. No per-repo `.cursor/hooks.json` (it fires alongside the global one and doubles every prompt injection).
 
-How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. Hooks inject context at start and audit completion. No Obsidian/vault — `HANDOFF.md` is the only memory.
+How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. `sessionStart` injects the HANDOFF tail; the other three hooks are steel (secrets + shell). No Obsidian/vault — `HANDOFF.md` is the only memory.
 
 ## Setup
 

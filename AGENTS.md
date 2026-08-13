@@ -14,7 +14,7 @@ Local install is global-only: `FORCE=1 bash scripts/install.sh` writes `~/.curso
 Where to look
 - Paste: shared/rules/USER-RULES.paste.txt
 - Hooks: shared/hooks/session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh
-- Hook lib: shared/hooks/lib/common.sh tool_io.sh shell_gate.sh
+- Hook lib: shared/hooks/lib/common.sh shell_gate.sh shell_fleet.sh
 - Install: shared/hooks/fleet_sync.sh → ~/.cursor (global). Cloud: CLOUD=1 TARGET_REPO=… project-hooks
 - Platform installers: MacOS/install.sh Linux/install.sh Windows/install.ps1 (+ Windows/hooks/wsl-shim.ps1)
 - Scripts: scripts/doctor.sh scripts/install.sh scripts/sync.sh
@@ -29,6 +29,6 @@ chmod +x shared/hooks scripts then bash -n on hook scripts + bash scripts/doctor
 
 Hard stops
 - Never reintroduce Rust kleos-gate or pack Python
-- Never use updated_input in hooks; inject via additional_context (sessionStart) or continue (beforeSubmitPrompt)
+- Never emit updated_input (this pack does not register preToolUse); inject via additional_context (sessionStart) or continue (beforeSubmitPrompt)
 - Secrets never in paste hooks or chat
 - Never make MCP a core dependency (optional only)

@@ -29,18 +29,18 @@ else fail "shared/hooks/hooks.json invalid JSON"; fi
 if jq empty "$HOOKS_DIR/hooks.cloud.json" 2>/dev/null; then ok "shared/hooks/hooks.cloud.json valid JSON"
 else fail "shared/hooks/hooks.cloud.json invalid JSON"; fi
 
-if jq -e '.complexity_max and .func_complexity_max and .coupling_max and .nesting_max' "$HOOKS_DIR/policy/lean.json" >/dev/null 2>&1; then ok "lean.json has complexity/coupling/nesting thresholds"
-else fail "lean.json missing new metric thresholds"; fi
+if [[ ! -f "$HOOKS_DIR/policy/lean.json" && ! -f "$HOOKS_DIR/policy/intent.json" ]]; then ok "no leftover lean/intent json"
+else fail "leftover lean.json or intent.json still in policy/"; fi
 
-POLICY_COUNT="$(find "$HOOKS_DIR/policy" -name '*.json' 2>/dev/null | wc -l)"
-if [[ "$POLICY_COUNT" -eq 2 ]]; then ok "policy count = 2 (intent + lean only)"
-else fail "policy count = $POLICY_COUNT (expected 2)"; fi
+POLICY_JSON="$(find "$HOOKS_DIR/policy" -name '*.json' 2>/dev/null | wc -l | tr -d ' ')"
+if [[ "$POLICY_JSON" -eq 0 ]]; then ok "policy has zero json (hooks do not read json policy)"
+else fail "policy json count = $POLICY_JSON (expected 0)"; fi
 
-for p in "$HOOKS_DIR"/policy/*.json; do
-  [[ -f "$p" ]] || continue
-  if jq empty "$p" 2>/dev/null; then ok "policy valid: ${p#$PACK/}"
-  else fail "policy invalid JSON: ${p#$PACK/}"; fi
-done
+if [[ -f "$HOOKS_DIR/policy/secret_paths.ere" ]]; then ok "secret_paths.ere present"
+else fail "secret_paths.ere missing"; fi
+
+if [[ ! -f "$HOOKS_DIR/policy/mcp_deny.ere" && ! -f "$HOOKS_DIR/policy/destructive.ere" && ! -f "$HOOKS_DIR/policy/vernacular_bans.txt" ]]; then ok "unused policy files removed"
+else fail "unused policy files still on disk"; fi
 
 if [[ ! -e "$HOOKS_DIR/kleos-gate" && ! -e "$HOOKS_DIR/bin/kleos-gate" ]]; then ok "no Rust kleos-gate"
 else fail "Rust kleos-gate detected — should be removed"; fi
@@ -102,6 +102,25 @@ else fail "HANDOFF.md missing or lacks compaction protocol"; fi
 if [[ ! -f "$HOOKS_DIR/stop_gate.sh" && ! -f "$HOOKS_DIR/lean_gate.sh" && ! -f "$HOOKS_DIR/pre_tool_use.sh" ]]; then
   ok "unregistered event scripts removed"
 else fail "unregistered event scripts still on disk"; fi
+
+LAW_STALE=""
+for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
+  "$PACK/shared/rules/vernacular.mdc" \
+  "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
+  "$PACK/shared/skills/testing/SKILL.md" "$PACK/shared/skills/vernacular/SKILL.md"; do
+  [[ -f "$f" ]] || { LAW_STALE="$LAW_STALE missing:${f#$PACK/}"; continue; }
+  if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
+    LAW_STALE="$LAW_STALE ${f#$PACK/}"
+  fi
+done
+if [[ -z "$LAW_STALE" ]]; then ok "law/skills match four-hook harness"
+else fail "stale deleted-hook names in$LAW_STALE"; fi
+
+if [[ ! -f "$PACK/shared/rules/native-lean-autoload.mdc" && ! -f "$PACK/shared/rules/debugging.mdc" ]]; then ok "merged/retired duplicate mdc gone"
+else fail "native-lean-autoload.mdc or debugging.mdc still on disk"; fi
+
+if grep -q 'hard 300' "$PACK/shared/rules/ponytail.mdc"; then ok "ponytail.mdc has hard 300 roof"
+else fail "ponytail.mdc missing hard 300 roof"; fi
 
 if [[ ! -f "$PACK/shared/rules/lean-code.mdc" && ! -d "$PACK/shared/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi

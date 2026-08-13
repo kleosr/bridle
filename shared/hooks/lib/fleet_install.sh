@@ -69,7 +69,7 @@ install_home_hooks() {
 }
 
 install_project_hooks() {
-  local repo="$1" label="$2" dest s p
+  local repo="$1" label="$2" dest s p rules_dest
   heal_orphan_project_hooks "$repo"
   dest="$repo/.cursor/hooks"
   mkdir -p "$dest/policy" "$dest/lib"
@@ -93,7 +93,13 @@ install_project_hooks() {
     return 1
   fi
   cp -f "$HOOKS_DIR/hooks.cloud.json" "$repo/.cursor/hooks.json"
-  echo "[ok] project Lane-A hooks → $label (no sessionStart; cloud-safe)"
+  rules_dest="$repo/.cursor/rules"
+  mkdir -p "$rules_dest"
+  for s in ${GLOBAL[@]+"${GLOBAL[@]}"} ${SHARED[@]+"${SHARED[@]}"}; do
+    [[ -f "$PACK/shared/rules/${s}.mdc" ]] || continue
+    cp -f "$PACK/shared/rules/${s}.mdc" "$rules_dest/${s}.mdc"
+  done
+  echo "[ok] project Lane-A hooks + .mdc → $label (no sessionStart; cloud-safe)"
 }
 
 remove_project_hooks() {
