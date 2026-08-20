@@ -2,8 +2,8 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
-resolve_root
 INPUT="$(cat)"
+resolve_root "$INPUT"
 CONV_ID="$(extract_conv_id "$INPUT")"
 STATE="$(state_dir)"
 mkdir -p "$STATE"

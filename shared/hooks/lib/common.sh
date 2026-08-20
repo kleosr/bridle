@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
 resolve_root() {
-  local d
+  local d wr
+  wr="$(printf '%s' "${1:-}" | jq -r '.workspace_roots[0] // empty' 2>/dev/null || true)"
+  [[ "$wr" == "null" ]] && wr=""
+  if [[ -n "$wr" && ( -f "$wr/HANDOFF.md" || -f "$wr/AGENTS.md" ) ]]; then
+    ROOT="$(cd "$wr" && pwd)"; return 0
+  fi
   if [[ -f "$PWD/HANDOFF.md" || -f "$PWD/AGENTS.md" ]]; then
     ROOT="$(cd "$PWD" && pwd)"; return 0
   fi
