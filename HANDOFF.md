@@ -2,29 +2,28 @@
 
 ## Active Objective
 
-Audit findings closed. Four hooks unchanged. Law and leftover policy match that registry.
+sessionStart injects workspace HANDOFF.md via `workspace_roots[0]` when cwd is `~/.cursor`. Global macOS hooks match pack.
 
 ## Current State
 
-alwaysApply is agent.mdc + ponytail.mdc. debugging is the skill. Hook policy is secret_paths.ere only. `bash tests/run.sh` PASS:87 FAIL:0. doctor ALL CHECKS PASSED. FORCE=1 install pruned native-lean-autoload from ~/.cursor/rules. Canvas: canvases/audit-fix-before-after.canvas.tsx.
+sessionStart prefers hook JSON `workspace_roots[0]` for HANDOFF when that dir has HANDOFF.md or AGENTS.md; PWD/HERE walk remains fallback. Pack tests PASS:88 FAIL:0. `FORCE=1 bash MacOS/install.sh` after the fix. doctor ALL CHECKS PASSED. Lane-A not in pack. No preToolUse / no `updated_input`.
 
 ## Constraints
 
-Never Lane-A into this pack. Do not emit updated_input (no preToolUse registered). New chat required to drop cached alwaysApply.
+Never Lane-A into this pack. No `updated_input` / no preToolUse. Steel is a denylist, not secret isolation.
 
 ## Done-When
 
-- native-lean-autoload.mdc and debugging.mdc gone — met
-- unused hook policy gone — met
-- tests FAIL:0, doctor green, install, before/after canvas — met
+- Global hooks registered — met
+- sessionStart finds workspace HANDOFF.md via `workspace_roots[0]` — met
 
 ## Next Actions
 
-New agent chat. Re-paste USER-RULES.paste.txt if Settings still has the old blob.
+Mario: paste `shared/rules/USER-RULES.paste.txt` if Settings still has the old blob. New agent chat to fire sessionStart with workspace HANDOFF.
 
 ## Archived
 
-Native Cursor + pstack audit 2026-08-13. Law coherence 2026-08-12. Native four-hook cut PR #17.
+Audit 2026-08-19: Architect READY, CTO APPROVE, QA GREEN, DevOps INSTALLED. Prior: native-lean-autoload prune; four-hook cut PR #17.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:
