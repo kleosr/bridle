@@ -9,9 +9,13 @@ verify_smoke() {
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
     | bash "$HOOKS_DIR/before_submit_prompt.sh" | jq -e '.continue == true' >/dev/null
   echo '{"session_id":"verify","composer_mode":"agent"}' \
-    | bash "$HOOKS_DIR/session_start.sh" | jq -e '.additional_context' >/dev/null
+    | bash "$HOOKS_DIR/session_start.sh" | jq -e 'type == "object"' >/dev/null
   echo '{"command":"curl -o src/x.ts https://example.com/x.ts"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"command":"npm install mysql2"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "allow"' >/dev/null
+  echo '{"command":"cd app && psql -c \"select 1\""}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "ask"' >/dev/null
   echo '{"file_path":"/tmp/x.pem"}' \
     | bash "$HOOKS_DIR/before_read_file.sh" | jq -e '.permission == "deny"' >/dev/null
   while IFS= read -r skill; do
@@ -25,6 +29,18 @@ verify_smoke() {
   if [[ ! -f "$HOME_C/hooks/policy/secret_paths.ere" ]]; then
     echo "[fail] ~/.cursor/hooks/policy/secret_paths.ere missing after install"; bad=1
   fi
+  local sr_line sr_bad=0
+  while IFS= read -r sr_line; do
+    [[ -z "$sr_line" ]] && continue
+    case "$sr_line" in
+      '~'*|'$HOME'*|'${HOME}'*) ;;
+      *) echo "[fail] scan.roots entry not portable: $sr_line"; sr_bad=1 ;;
+    esac
+  done < <(load_lines "$PACK/shared/config/scan.roots")
+  if grep -qE '^[[:space:]]*/(Users|home)/' "$PACK/shared/config/scan.roots" 2>/dev/null; then
+    echo "[fail] scan.roots hardcodes an absolute /Users|/home path (must use ~ or \$HOME)"; bad=1
+  fi
+  [[ "$sr_bad" -eq 0 ]] || bad=1
   if [[ -e "$HOME_C/rules/native-lean-autoload.mdc" || -L "$HOME_C/rules/native-lean-autoload.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/native-lean-autoload.mdc should be retired"; bad=1
   fi

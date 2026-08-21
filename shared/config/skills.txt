@@ -1,6 +1,11 @@
-# Active skills (5 core)
+# Active skills (10)
 ponytail
 debugging
 testing
 vernacular
 session-handoff
+design-stack
+landing-page-design
+premium-ui-craft
+redesign-existing-projects
+ux-web-research

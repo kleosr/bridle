@@ -1,2 +1,6 @@
-# Directories to scan for project children (one absolute path per line).
-/Users/melanie/Documents/Mario
+# Directories to scan for project children (one path per line).
+# Portable for every machine: supports ~, $HOME and ${HOME} tokens,
+# expanded at runtime. NEVER hardcode absolute /Users/<name> paths here.
+# Nested group folders (e.g. ~/Documents/<group>/<project>) are found
+# automatically by the depth-2 discovery.
+$HOME/Documents

@@ -1,0 +1,12 @@
+---
+description: Bind global UX skills to @Design / product-designer
+alwaysApply: true
+---
+
+# Design skill bind
+
+When Product Designer (`product-designer`, @Design) runs, or the user asks for UI/UX/visual/sidebar/dashboard/landing work:
+
+1. Read `design-stack`, `premium-ui-craft`, `ux-web-research`, `landing-page-design`, and `redesign-existing-projects` under `~/.cursor/skills/`.
+2. Premium-ui-craft stays on every Design turn. Elaya landing/redesign apply per design-stack (marketing vs in-app).
+3. CoS briefs to Design must name those skills.

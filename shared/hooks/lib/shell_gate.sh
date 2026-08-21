@@ -7,7 +7,7 @@ gate_shell_command() {
     emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
     return 1
   fi
-  if echo "$cmd" | grep -qiE '(psql|mysql|mongosh|supabase db|terraform apply|kubectl delete|docker rm -f|systemctl stop)'; then
+  if echo "$cmd" | grep -qiE '((^|[;&|(][[:space:]]*)(sudo[[:space:]]+|env[[:space:]]+)?(psql|mysql|mongosh)([[:space:]]|$))|supabase[[:space:]]+db|terraform[[:space:]]+apply|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)'; then
     emit_ask "Command mutates infra/DB. Approve in the Cursor card to proceed. CMD: ${cmd:0:120}"
     return 1
   fi
