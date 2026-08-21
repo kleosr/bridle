@@ -23,6 +23,21 @@ is_ignored() {
   return 1
 }
 
+expand_path() {
+  local p="$1" name value line tok
+  p="${p/#\~/$HOME}"
+  while IFS= read -r line; do
+    name="${line%%=*}"
+    value="${line#*=}"
+    [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    tok="\${${name}}"
+    p="${p//"$tok"/$value}"
+    tok="\$${name}"
+    p="${p//"$tok"/$value}"
+  done < <(env)
+  printf '%s\n' "$p"
+}
+
 is_project() {
   local d="$1"
   [[ -d "$d/.git" || -f "$d/package.json" || -f "$d/pnpm-workspace.yaml" \
@@ -39,13 +54,16 @@ symlink_force() {
 }
 
 discover() {
-  local roots=() root child
-  while IFS= read -r line; do roots+=("$line"); done < <(load_lines "$PACK/shared/config/scan.roots")
+  local roots=() root child grand raw exp
+  while IFS= read -r raw; do
+    exp="$(expand_path "$raw")"
+    [[ -d "$exp" ]] || continue
+    roots+=("$(canon "$exp")")
+  done < <(load_lines "$PACK/shared/config/scan.roots")
   if [[ ${#roots[@]} -eq 0 ]]; then
     roots=("$(dirname "$PACK")")
   fi
   for root in "${roots[@]}"; do
-    [[ -d "$root" ]] || continue
     if is_project "$root" && ! is_ignored "$root"; then
       canon "$root"
     fi
@@ -53,8 +71,15 @@ discover() {
       [[ -d "$child" ]] || continue
       child="${child%/}"
       is_ignored "$child" && continue
-      is_project "$child" || continue
-      canon "$child"
+      if is_project "$child"; then canon "$child"; fi
+      # depth-2: group folders like ~/Documents/<group>/<project>
+      for grand in "$child"/*/; do
+        [[ -d "$grand" ]] || continue
+        grand="${grand%/}"
+        is_ignored "$grand" && continue
+        is_project "$grand" || continue
+        canon "$grand"
+      done
     done
   done | sort -u
 }

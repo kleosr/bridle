@@ -18,5 +18,9 @@ TAIL=""
 if [[ -f "$HANDOFF" ]]; then
   TAIL="$(tail -n 40 "$HANDOFF" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15)"
 fi
-emit_context "HANDOFF:
+if [[ -n "$TAIL" ]]; then
+  emit_context "HANDOFF:
 ${TAIL}"
+else
+  emit_quiet
+fi
