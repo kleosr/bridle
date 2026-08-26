@@ -26,6 +26,12 @@ New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
 foreach ($name in 'ponytail', 'agent', 'vernacular', 'testing', 'mario-engineering-team') {
   Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
 }
+Get-Content (Join-Path $Pack 'shared\config\retired.txt') | ForEach-Object {
+  $line = $_.Trim()
+  if (-not $line -or $line.StartsWith('#')) { return }
+  $orphan = Join-Path (Join-Path $HomeC 'rules') $line
+  if (Test-Path $orphan) { Remove-Item $orphan -Force }
+}
 
 $skillsTxt = Join-Path $Pack 'shared\config\skills.txt'
 $skillsSrc = Join-Path $Pack 'shared\skills'
