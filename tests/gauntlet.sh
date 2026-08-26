@@ -59,7 +59,8 @@ run_test "cloud beforeSubmitPrompt failClosed is false" "false" "$CLOUD_FC"
 
 FS_HOME2="$(mktemp -d)"
 TMP_REPO="$(mktemp -d)"
-mkdir -p "$TMP_REPO/.git"
+mkdir -p "$TMP_REPO/.git" "$TMP_REPO/.cursor/rules"
+printf '%s\n' '---' 'alwaysApply: true' '---' '# leftover Design bind' > "$TMP_REPO/.cursor/rules/product-designer-skills.mdc"
 RESULT="$(HOME="$FS_HOME2" FORCE=1 CLOUD=1 TARGET_REPO="$TMP_REPO" bash "$PACK/shared/hooks/fleet_sync.sh" project-hooks >/dev/null 2>&1; echo $?)"
 CLOUD_OK="$(test -f "$TMP_REPO/.cursor/hooks.json" && jq -e '.hooks|has("sessionStart")|not' "$TMP_REPO/.cursor/hooks.json" >/dev/null && echo yes || echo no)"
 CLOUD_SH="$(grep -c before_shell "$TMP_REPO/.cursor/hooks.json" 2>/dev/null || true)"
@@ -67,6 +68,7 @@ CLOUD_SH="${CLOUD_SH//[!0-9]}"; [[ -z "$CLOUD_SH" ]] && CLOUD_SH=0
 CLOUD_VERN="$(test -f "$TMP_REPO/.cursor/hooks/policy/secret_paths.ere" && echo yes || echo no)"
 CLOUD_AGENT="$(test -f "$TMP_REPO/.cursor/rules/agent.mdc" && echo yes || echo no)"
 CLOUD_TYPES="$(test -f "$TMP_REPO/.cursor/rules/types.mdc" && echo yes || echo no)"
+CLOUD_DESIGN="$(test -e "$TMP_REPO/.cursor/rules/product-designer-skills.mdc" && echo yes || echo no)"
 if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then PACK_LEFT=yes; else PACK_LEFT=no; fi
 rm -rf "$FS_HOME2" "$TMP_REPO"
 run_test "fleet_sync project-hooks completes" "0" "$RESULT"
@@ -75,6 +77,7 @@ run_test "project-hooks includes before_shell" "1" "$CLOUD_SH"
 run_test "project-hooks copies secret_paths.ere" "yes" "$CLOUD_VERN"
 run_test "project-hooks copies agent.mdc for cloud" "yes" "$CLOUD_AGENT"
 run_test "project-hooks copies types.mdc for cloud" "yes" "$CLOUD_TYPES"
+run_test "regression: project-hooks prunes leftover product-designer-skills.mdc" "no" "$CLOUD_DESIGN"
 run_test "project-hooks does not install into pack" "no" "$PACK_LEFT"
 
 FS_HOME4="$(mktemp -d)"
@@ -110,6 +113,8 @@ run_test "windows rewrite keeps beforeShellExecution as array" "array" "$(printf
 run_test "windows rewrite sessionStart[0].failClosed stays false" "false" "$(printf '%s' "$WIN_JSON" | jq -r '.hooks.sessionStart[0].failClosed')"
 
 FS_HOME3="$(mktemp -d)"
+mkdir -p "$FS_HOME3/.cursor/rules"
+printf '%s\n' '---' 'alwaysApply: true' '---' '# leftover Design bind' > "$FS_HOME3/.cursor/rules/product-designer-skills.mdc"
 HOME="$FS_HOME3" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1
 REL_CMD="$(jq -r '.hooks[][]?.command // empty' "$FS_HOME3/.cursor/hooks.json" 2>/dev/null | grep -c '^\.cursor/hooks/' || true)"
 REL_CMD="${REL_CMD//[!0-9]}"; [[ -z "$REL_CMD" ]] && REL_CMD=0
@@ -132,7 +137,7 @@ run_test "home hooks.json uses ./hooks/ commands" "4" "$DOT_CMD"
 run_test "home hooks.json has 4 events" "4" "$HOME_EVT"
 run_test "install copies agent.mdc to user rules" "yes" "$HOME_AGENT"
 run_test "install copies mario-engineering-team.mdc to user rules" "yes" "$HOME_MARIO"
-run_test "install does not copy duplicate product-designer-skills.mdc" "no" "$HOME_DESIGN"
+run_test "regression: install prunes leftover product-designer-skills.mdc" "no" "$HOME_DESIGN"
 run_test "install does not copy fleet_install.sh into runtime lib" "no" "$HOME_FLEET_LIB"
 run_test "install copies shell_gate.sh into runtime lib" "yes" "$HOME_GATE"
 run_test "install does not copy types.mdc to user rules" "no" "$HOME_TYPES"
