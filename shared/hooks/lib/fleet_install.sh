@@ -2,6 +2,7 @@
 
 HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh)
 CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
+RUNTIME_LIBS=(common.sh shell_gate.sh shell_fleet.sh)
 
 prune_hook_scripts() {
   local dest="$1" s b keep k
@@ -17,6 +18,24 @@ prune_hook_scripts() {
   done
 }
 
+copy_runtime_libs() {
+  local dest="$1" s b keep k
+  mkdir -p "$dest/lib"
+  for s in "${RUNTIME_LIBS[@]}"; do
+    cp -f "$HOOKS_DIR/lib/$s" "$dest/lib/$s"
+    chmod +x "$dest/lib/$s"
+  done
+  for s in "$dest/lib"/*.sh; do
+    [[ -f "$s" ]] || continue
+    b="$(basename "$s")"
+    keep=0
+    for k in "${RUNTIME_LIBS[@]}"; do
+      [[ "$b" == "$k" ]] && keep=1 && break
+    done
+    [[ "$keep" -eq 1 ]] || rm -f "$s"
+  done
+}
+
 copy_hook_scripts() {
   local dest="$1" s p
   mkdir -p "$dest/policy" "$dest/lib"
@@ -24,11 +43,7 @@ copy_hook_scripts() {
     cp -f "$HOOKS_DIR/$s" "$dest/$s"
     chmod +x "$dest/$s"
   done
-  for s in "$HOOKS_DIR"/lib/*.sh; do
-    [[ -f "$s" ]] || continue
-    cp -f "$s" "$dest/lib/$(basename "$s")"
-    chmod +x "$dest/lib/$(basename "$s")"
-  done
+  copy_runtime_libs "$dest"
   for p in "$HOOKS_DIR"/policy/*; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
@@ -77,11 +92,7 @@ install_project_hooks() {
     cp -f "$HOOKS_DIR/$s" "$dest/$s"
     chmod +x "$dest/$s"
   done
-  for s in "$HOOKS_DIR"/lib/*.sh; do
-    [[ -f "$s" ]] || continue
-    cp -f "$s" "$dest/lib/$(basename "$s")"
-    chmod +x "$dest/lib/$(basename "$s")"
-  done
+  copy_runtime_libs "$dest"
   for p in "$HOOKS_DIR"/policy/*; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
