@@ -13,13 +13,17 @@ if ($LASTEXITCODE -ne 0) { throw 'jq missing inside WSL. Run: wsl sudo apt-get i
 
 $src = Join-Path $Pack 'shared\hooks'
 New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
-Copy-Item "$src\*.sh" $HooksD -Force
-Copy-Item "$src\lib\*.sh" "$HooksD\lib" -Force
+foreach ($s in 'session_start.sh', 'before_submit_prompt.sh', 'before_shell.sh', 'before_read_file.sh') {
+  Copy-Item (Join-Path $src $s) $HooksD -Force
+}
+foreach ($s in 'common.sh', 'shell_gate.sh', 'shell_fleet.sh') {
+  Copy-Item (Join-Path $src "lib\$s") (Join-Path $HooksD 'lib') -Force
+}
 Copy-Item "$src\policy\*" "$HooksD\policy" -Force
 Copy-Item (Join-Path $PSScriptRoot 'hooks\wsl-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
-foreach ($name in 'ponytail', 'agent', 'vernacular', 'testing') {
+foreach ($name in 'ponytail', 'agent', 'vernacular', 'testing', 'mario-engineering-team') {
   Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
 }
 
@@ -38,15 +42,17 @@ Get-Content $skillsTxt | ForEach-Object {
   }
 }
 
-$json = Get-Content (Join-Path $src 'hooks.json') -Raw | ConvertFrom-Json
-foreach ($event in $json.hooks.PSObject.Properties) {
-  foreach ($entry in @($event.Value)) {
-    $script = [IO.Path]::GetFileName($entry.command)
-    $entry.command = "powershell -NoProfile -ExecutionPolicy Bypass -File `"$HooksD\wsl-shim.ps1`" $script"
-  }
-}
-# PS 5.1 Set-Content -Encoding UTF8 writes a BOM, which breaks strict JSON parsers.
-[IO.File]::WriteAllText((Join-Path $HomeC 'hooks.json'), ($json | ConvertTo-Json -Depth 10), (New-Object Text.UTF8Encoding $false))
+# ConvertTo-Json unwraps singleton arrays. Keep [{...}] via jq (WSL).
+$srcJson = Join-Path $src 'hooks.json'
+$jqFile = Join-Path $src 'lib\windows_hooks_rewrite.jq'
+$dstJson = Join-Path $HomeC 'hooks.json'
+$srcWsl = (wsl.exe wslpath -a $srcJson).Trim()
+$jqWsl = (wsl.exe wslpath -a $jqFile).Trim()
+$dstWsl = (wsl.exe wslpath -a $dstJson).Trim()
+$shim = Join-Path $HooksD 'wsl-shim.ps1'
+$shimQ = $shim.Replace("'", "'\''")
+wsl.exe bash -lc "jq --arg shim '$shimQ' -f '$jqWsl' '$srcWsl' > '$dstWsl'"
+if ($LASTEXITCODE -ne 0) { throw 'jq rewrite of hooks.json failed (need jq inside WSL)' }
 
 Write-Host '[done] kleosrules installed (Windows via WSL shim — same Cursor hooks as macOS/Linux)'
 Write-Host 'Next: paste shared/rules/USER-RULES.paste.txt into Cursor Settings -> User Rules, then start a NEW agent chat.'
