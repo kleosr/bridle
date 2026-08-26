@@ -44,6 +44,9 @@ verify_smoke() {
   if [[ -e "$HOME_C/rules/native-lean-autoload.mdc" || -L "$HOME_C/rules/native-lean-autoload.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/native-lean-autoload.mdc should be retired"; bad=1
   fi
+  if [[ -e "$HOME_C/rules/product-designer-skills.mdc" || -L "$HOME_C/rules/product-designer-skills.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/product-designer-skills.mdc should be retired"; bad=1
+  fi
   if [[ -e "$PACK/.cursor/rules/debugging.mdc" || -L "$PACK/.cursor/rules/debugging.mdc" ]]; then
     echo "[fail] pack .cursor/rules/debugging.mdc duplicates debugging skill"; bad=1
   fi

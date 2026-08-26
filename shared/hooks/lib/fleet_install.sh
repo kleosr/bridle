@@ -110,6 +110,13 @@ install_project_hooks() {
     [[ -f "$PACK/shared/rules/${s}.mdc" ]] || continue
     cp -f "$PACK/shared/rules/${s}.mdc" "$rules_dest/${s}.mdc"
   done
+  while IFS= read -r orphan; do
+    [[ -z "$orphan" ]] && continue
+    if [[ -e "$rules_dest/$orphan" || -L "$rules_dest/$orphan" ]]; then
+      rm -f "$rules_dest/$orphan"
+      echo "[rm] $label/.cursor/rules/$orphan"
+    fi
+  done < <(load_lines "$PACK/shared/config/retired.txt")
   echo "[ok] project Lane-A hooks + .mdc → $label (no sessionStart; cloud-safe)"
 }
 
