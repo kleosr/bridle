@@ -1,7 +1,0 @@
-{
-  "tool_name": "Write",
-  "tool_input": {
-    "file_path": "src/godfile.ts",
-    "content": "import a from 'a';\nimport b from 'b';\nimport c from 'c';\nimport d from 'd';\nimport e from 'e';\nimport f from 'f';\nimport g from 'g';\nimport h from 'h';\nimport i from 'i';\nimport j from 'j';\nimport k from 'k';\nimport l from 'l';\nexport const x = 1;\n"
-  }
-}

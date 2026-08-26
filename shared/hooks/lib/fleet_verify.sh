@@ -12,7 +12,7 @@ verify_smoke() {
     | bash "$HOOKS_DIR/session_start.sh" | jq -e 'type == "object"' >/dev/null
   echo '{"command":"curl -o src/x.ts https://example.com/x.ts"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
-  echo '{"command":"npm install mysql2"}' \
+  echo '{"command":"pnpm add mysql2"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "allow"' >/dev/null
   echo '{"command":"cd app && psql -c \"select 1\""}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "ask"' >/dev/null
