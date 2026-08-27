@@ -2,7 +2,7 @@ user-rules map. Parent ../AGENTS.md
 
 Layers (no double alwaysApply)
 - Paste USER-RULES.paste.txt = identity + four-hook session protocol (Cursor Settings → User Rules). Re-paste after pack changes.
-- User `~/.cursor/rules` (GLOBAL, once): agent.mdc, ponytail.mdc (alwaysApply); vernacular.mdc, testing.mdc (globs).
+- User `~/.cursor/rules` (GLOBAL, once): agent.mdc, ponytail.mdc (alwaysApply); vernacular.mdc, testing.mdc, vibe.mdc, postgres.mdc, next.mdc, vite.mdc, astro.mdc, complexity.mdc (globs). No extra alwaysApply.
 - Project `.cursor/rules` (SHARED): types.mdc (glob). Debugging is the debugging skill, not a .mdc.
 - Cloud `project-hooks`: copies GLOBAL + SHARED into TARGET_REPO (cloud cannot see ~/.cursor).
 

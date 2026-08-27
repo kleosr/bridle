@@ -33,6 +33,15 @@ run_test "beforeShellExecution denies git checkout source" "deny" "$RESULT"
 RESULT="$(echo '{"command":"terraform apply","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution asks on terraform apply" "ask" "$RESULT"
 
+RESULT="$(echo '{"command":"npx eslint --rule complexity:off src/a.ts","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies complexity:off" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"ruff check --ignore C901 src/a.py","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies ruff ignore C901" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"pnpm exec eslint src --max-warnings 0","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows eslint lint" "allow" "$RESULT"
+
 SUBMIT_FC="$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeSubmitPrompt failClosed is false" "false" "$SUBMIT_FC"
 
@@ -123,6 +132,8 @@ DOT_CMD="${DOT_CMD//[!0-9]}"; [[ -z "$DOT_CMD" ]] && DOT_CMD=0
 HOME_EVT="$(jq -r '.hooks|keys|length' "$FS_HOME3/.cursor/hooks.json" 2>/dev/null || echo 0)"
 HOME_AGENT="$(test -f "$FS_HOME3/.cursor/rules/agent.mdc" && echo yes || echo no)"
 HOME_MARIO="$(test -f "$FS_HOME3/.cursor/rules/mario-engineering-team.mdc" && echo yes || echo no)"
+HOME_CYCLO="$(test -f "$FS_HOME3/.cursor/rules/complexity.mdc" && echo yes || echo no)"
+HOME_CYCLO_SK="$(test -L "$FS_HOME3/.cursor/skills/complexity" && echo yes || echo no)"
 HOME_DESIGN="$(test -e "$FS_HOME3/.cursor/rules/product-designer-skills.mdc" && echo yes || echo no)"
 HOME_FLEET_LIB="$(test -e "$FS_HOME3/.cursor/hooks/lib/fleet_install.sh" && echo yes || echo no)"
 HOME_GATE="$(test -f "$FS_HOME3/.cursor/hooks/lib/shell_gate.sh" && echo yes || echo no)"
@@ -137,6 +148,8 @@ run_test "home hooks.json uses ./hooks/ commands" "4" "$DOT_CMD"
 run_test "home hooks.json has 4 events" "4" "$HOME_EVT"
 run_test "install copies agent.mdc to user rules" "yes" "$HOME_AGENT"
 run_test "install copies mario-engineering-team.mdc to user rules" "yes" "$HOME_MARIO"
+run_test "install copies complexity.mdc to user rules" "yes" "$HOME_CYCLO"
+run_test "install symlinks complexity skill" "yes" "$HOME_CYCLO_SK"
 run_test "regression: install prunes leftover product-designer-skills.mdc" "no" "$HOME_DESIGN"
 run_test "install does not copy fleet_install.sh into runtime lib" "no" "$HOME_FLEET_LIB"
 run_test "install copies shell_gate.sh into runtime lib" "yes" "$HOME_GATE"

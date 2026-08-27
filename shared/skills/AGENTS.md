@@ -1,12 +1,13 @@
 # Skills catalog
 
-## Active skills (5)
+## Active skills
 
 | Skill | Purpose |
 |-------|---------|
 | `ponytail` | Native Lean ladder + split recovery (Write/StrReplace/Grep; zero comments; soft 120 / hard 300 / >700 rewrite) |
 | `debugging` | Reproduce → hypothesis → evidence → fix |
 | `testing` | Test-first, red-green-refactor; cite TOOLCHAIN before Done |
+| `complexity` | Cyclomatic cap (repo or 10); extract until lint green; never disable |
 | `vernacular` | Anti-slop procedure: zero comments, types, INTENT, Cursor-native emit |
 | `session-handoff` | Structured handoff between sessions |
 

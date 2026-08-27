@@ -4,7 +4,7 @@ Scope: Four registered Cursor user hooks. Secrets + shell deny + HANDOFF tail. L
 
 Layers
 - Steering (soft law): user ~/.cursor/rules alwaysApply + glob; project types.mdc; skills on-demand.
-- Steel (mechanical): before_shell.sh + before_read_file.sh + before_submit_prompt.sh secret block + policy/secret_paths.ere.
+- Steel (mechanical): before_shell.sh + before_read_file.sh + before_submit_prompt.sh secret block + policy/secret_paths.ere. Complexity-lint disable is inline in shell_gate.sh.
 - Feedback: none registered. HANDOFF tail is the session brain.
 
 Roofs (ponytail.mdc)

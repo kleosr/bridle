@@ -1,7 +1,8 @@
-# Active skills (10)
+# Active skills (11)
 ponytail
 debugging
 testing
+complexity
 vernacular
 session-handoff
 design-stack

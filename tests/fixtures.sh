@@ -64,8 +64,12 @@ fi
 LAW_STALE=no
 for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
   "$PACK/shared/rules/vernacular.mdc" \
+  "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
+  "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
+  "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
   "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
-  "$PACK/shared/skills/testing/SKILL.md" "$PACK/shared/skills/vernacular/SKILL.md"; do
+  "$PACK/shared/skills/testing/SKILL.md" "$PACK/shared/skills/vernacular/SKILL.md" \
+  "$PACK/shared/skills/complexity/SKILL.md"; do
   [[ -f "$f" ]] || { LAW_STALE=yes; continue; }
   if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
     LAW_STALE=yes
