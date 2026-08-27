@@ -25,7 +25,7 @@ Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported), **Linux**, 
 
 Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer — they spawn with cwd = workspace root, so `HANDOFF.md` and `state/` stay per-project. No per-repo `.cursor/hooks.json` (it fires alongside the global one and doubles every prompt injection).
 
-How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. `sessionStart` injects the HANDOFF tail; the other three hooks are steel (secrets + shell). No Obsidian/vault — `HANDOFF.md` is the only memory.
+How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `HANDOFF.md` state file so sessions persist across chats. `sessionStart` injects the HANDOFF active sections; the other three hooks are steel (secrets + shell). No Obsidian/vault — `HANDOFF.md` is the only memory.
 
 ## Setup
 
@@ -72,7 +72,7 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under four hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`. Registered steel is secrets + shell deny + HANDOFF tail.
+Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under four hooks → doctor green → update HANDOFF**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`. Registered steel is secrets + shell deny + HANDOFF state.
 
 Live registration is global (`~/.cursor/hooks.json`, native `./hooks/*.sh`). Edit this pack and re-run `FORCE=1 bash scripts/install.sh`. `sync` does not install or remove other repos’ `.cursor/hooks`.
 
@@ -92,7 +92,7 @@ Skill routes: `/ponytail` (Native Lean), `/debugging`, `/testing`, `/vernacular`
 │       └── wsl-shim.ps1       — per-event PowerShell→WSL shim (stdin/stdout passthrough)
 ├── shared/
 │   ├── hooks/                 — canonical Bash hooks, macOS + Linux + WSL safe
-│   │   ├── session_start.sh      — inject HANDOFF tail
+│   │   ├── session_start.sh      — inject HANDOFF active sections
 │   │   ├── before_submit_prompt.sh — secret-prompt block (failClosed:false)
 │   │   ├── before_shell.sh        — destructive / source-write deny
 │   │   ├── before_read_file.sh    — secret path deny
@@ -118,8 +118,8 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `session_start.sh` adds the HANDOFF tail. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
-3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then the agent writes `INTENT:` with `OBJECTIVE=<postcondition>` and `edit:`/`NEW:` tags from those hits, before Write. That is `.mdc` law, not a hook followup.
+2. **Inject (Layer 2)** — `session_start.sh` adds the HANDOFF active sections. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
+3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then one or two sentences before Write: what will be true, which files, how you will prove it. That is `.mdc` law, not a hook followup.
 4. **Steel** — `before_shell.sh` and `before_read_file.sh` deny a small list. Conversation police is not registered.
 
 ## Ponytail / Lean Gate

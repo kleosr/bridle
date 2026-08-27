@@ -7,6 +7,10 @@ run_test "session_start quiet in plan mode" "quiet" "$RESULT_IS_EMPTY"
 PLAN_MODE_WRITTEN="$(cat "$PACK/state/plan-test/mode" 2>/dev/null || echo "")"
 run_test "session_start writes state/mode=plan" "plan" "$PLAN_MODE_WRITTEN"
 
+rm -rf "$PACK/state"
+CHAT_HAS="$(jq -n '{hook_event_name:"sessionStart",composer_mode:"chat",session_id:"chat-test",conversation_id:"chat-test"}' | bash "$PACK/shared/hooks/session_start.sh" | jq -r 'has("additional_context")')"
+run_test "session_start injects HANDOFF in chat mode" "true" "$CHAT_HAS"
+
 rm -rf "$PACK/state"; mkdir -p "$PACK/state"
 printf 'plan\n' > "$PACK/state/mode"
 RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_plan_mode.json" | bash "$PACK/shared/hooks/before_submit_prompt.sh")"

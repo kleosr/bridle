@@ -11,7 +11,7 @@ description: >-
 
 MIT. Upstream: [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills). Full text: [SKILL.md](https://raw.githubusercontent.com/elayadesign/ai-design-skills/main/skills/landing-page-design/SKILL.md).
 
-**This turn:** WebFetch that raw URL and follow it verbatim for marketing/landing work. If fetch fails, use the rules below.
+**This turn:** WebFetch that raw URL and follow it for marketing/landing work. If fetch fails, use the rules below. Mario ban wins over fetch: never Scandinavian, Nordic, Japandi, or hygge palettes (parchment, oatmeal, linen, sage-on-cream, pale wood).
 
 **Product / in-app UX (shadcn dashboards, couple apps):** do **not** apply island nav, 700ms springs, Phosphor-only, or no-serif. Use `premium-ui-craft` instead. Keep Elaya copy rules (no lorem, no Elevate/Seamless, real CTAs, full states).
 

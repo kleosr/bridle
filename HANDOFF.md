@@ -1,25 +1,25 @@
 # HANDOFF — Session State
 
-## Active Objective
+## Now
 
-sessionStart injects workspace HANDOFF.md via `workspace_roots[0]` when cwd is `~/.cursor`. Global macOS hooks match pack.
+sessionStart injects HANDOFF for agent and chat. Quiet only in plan. Cursor live composer_mode is `chat`, not `agent`.
 
-## Current State
+## State
 
-sessionStart prefers hook JSON `workspace_roots[0]` for HANDOFF. Complexity is glob `complexity.mdc` + skill; `before_shell` denies lint-disable. Still four events. Lane-A not in pack. No preToolUse / no `updated_input`.
+sessionStart prefers hook JSON `workspace_roots[0]` for HANDOFF. Complexity is glob `complexity.mdc` + skill; `before_shell` denies lint-disable. Designer: no Scandinavian/Nordic/Japandi. Still four events. Lane-A not in pack. No preToolUse / no `updated_input`.
 
-## Constraints
+## Limits
 
 Never Lane-A into this pack. No `updated_input` / no preToolUse. Steel is a denylist, not secret isolation.
 
-## Done-When
+## Proof
 
 - Global hooks registered — met
 - sessionStart finds workspace HANDOFF.md via `workspace_roots[0]` — met
 
-## Next Actions
+## Next
 
-Mario: paste `shared/rules/USER-RULES.paste.txt` if Settings still has the old blob. New agent chat to fire sessionStart with workspace HANDOFF.
+Paste `shared/rules/USER-RULES.paste.txt` if Settings still has the old blob. Debug closed: chat-mode sessionStart injects HANDOFF; job-card labels stripped from law.
 
 ## Archived
 
@@ -29,13 +29,13 @@ Audit 2026-08-19: Architect READY, CTO APPROVE, QA GREEN, DevOps INSTALLED. Prio
 When the active sections above (before this line) exceed ~150 lines:
 1. Move Recent Verified Changes older than the last 3 items into Archived.
 2. Compress Failed Attempts into one-liners.
-3. Keep Active Objective, Current State, Constraints, Next Actions, Done-When current.
+3. Keep Now, State, Limits, Next, Proof current.
 4. Delete Archived entries older than the last 2 sessions.
 5. The active section must stay under ~150 lines after compaction.
 
-session_start.sh injects the last 15 actionable lines of this file as additional_context
+session_start.sh injects Now, State, Limits, Proof, and Next as additional_context
 (the COMPACTION PROTOCOL block at the bottom is excluded).
-Keep the bottom of this file as the most actionable context.
+Keep those sections current. Archived is not injected.
 
 Update this file ONLY when state meaningfully changes — not on every small edit.
 -->

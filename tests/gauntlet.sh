@@ -42,6 +42,12 @@ run_test "beforeShellExecution denies ruff ignore C901" "deny" "$RESULT"
 RESULT="$(echo '{"command":"pnpm exec eslint src --max-warnings 0","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution allows eslint lint" "allow" "$RESULT"
 
+RESULT="$(echo '{"command":"git commit -m complexity:off","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows git commit that mentions complexity:off" "allow" "$RESULT"
+
+RESULT="$(echo '{"command":"gh pr create --body complexity:off","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows gh pr body that mentions complexity:off" "allow" "$RESULT"
+
 SUBMIT_FC="$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeSubmitPrompt failClosed is false" "false" "$SUBMIT_FC"
 
