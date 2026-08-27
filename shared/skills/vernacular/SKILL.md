@@ -2,7 +2,7 @@
 name: vernacular
 description: >
   Private dialect + V2 anti-slop stack guides (TS/React, Bash hooks, Markdown,
-  JSON, state, INTENT). Read when vernacular.mdc globs match or user asks naming
+  JSON, state, before-write). Read when vernacular.mdc globs match or user asks naming
   / native match / anti-slop. Thin rule holds hard bans; this skill holds examples.
 ---
 
@@ -37,9 +37,9 @@ Before `Write` in a directory: `Read` 1–2 sibling files. Match their import gr
 Use: `Write`, `StrReplace`, `Shell`, `Read`, `Grep`, `Delete`, `Task`, `Glob`, `EditNotebook`.
 Matchers: Write|StrReplace|Shell|Delete|EditNotebook|Read|Grep|Glob.
 
-## INTENT
-- GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then declare `INTENT:` as chat prose before Write (never Shell/fence).
-- Tag every path `edit:path`|`NEW:path` from those hits. Done-when ≤5 decidable predicates. Finish all tags this turn.
+## Before Write
+- GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then one or two sentences in chat before Write: what will be true, which files, how you will prove it. Never Shell, Write, or a fence.
+- Only paths you actually opened. Finish them this turn. Cite a green TOOLCHAIN command.
 
 ## Bash hooks (`shared/hooks/*.sh`)
 Cursor-native emit (exit 0 so messages survive; non-zero only for failClosed parse failures):

@@ -15,9 +15,11 @@ Sources (read when stuck): [sources.md](sources.md)
 
 ## Doctrine
 
-Interaction-dense, visually sparse. Color means something (gold = accent/complete, clay = danger). Never a rainbow of card accents.
+Interaction-dense, visually sparse. Color means something (one accent for primary/complete, one for danger). Never a rainbow of card accents.
 
-Typography is the brand. One UI family + one display/serif for titles if the product is editorial. 4–6 sizes. Tabular nums for counts. No decorative third font.
+Never Scandinavian, Nordic, Japandi, or hygge. No parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige fields, or default serif-on-paper titles. This skill is Linear/Stripe/Apple.
+
+Typography is the brand. One UI sans. 4–6 sizes. Tabular nums for counts. No decorative second font unless Mario asks.
 
 Motion: one curve, one duration. Apple-like `300ms` / `cubic-bezier(0.22, 1, 0.36, 1)`. No bounce, no card lift on hover. `prefers-reduced-motion` zeros duration.
 
@@ -26,7 +28,7 @@ Motion: one curve, one duration. Apple-like `300ms` / `cubic-bezier(0.22, 1, 0.3
 Every screen: one primary job. Eye hits title, then the action (check, save), then chrome.
 
 - Kickers: 11px, wide tracking, muted, sentence or uppercase meta
-- Titles: serif/display, tight tracking, real copy (names, not ISO dates)
+- Titles: same sans as body, tight tracking, real copy (names, not ISO dates)
 - Body: 15px-ish, muted for secondary
 - Hairlines: 1px at low alpha. Not `<hr>` soup
 
@@ -50,7 +52,7 @@ Every control: default, hover, focus (visible ring, designed), active, disabled.
 ## Checklist before handoff
 
 - [ ] Primary action obvious without decoration
-- [ ] One palette, gold/sage only as meaning
+- [ ] One palette; accent and danger only as meaning
 - [ ] No hover translate on surfaces
 - [ ] Lists are full-row hit targets
 - [ ] Dates/human language, not `YYYY-MM-DD` in heroes

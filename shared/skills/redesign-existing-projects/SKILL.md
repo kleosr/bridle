@@ -14,7 +14,7 @@ MIT. Upstream: [elayadesign/redesign-skill](https://github.com/elayadesign/redes
 
 **This turn:** WebFetch that raw URL. Report diagnosis before fixing. Do not rewrite the stack.
 
-**Product apps:** keep the audit checklist (generic cards, missing states, Inter/Roboto, purple AI gradients, equal three columns, dead links). Replace values using `premium-ui-craft` (ink/parchment/gold, 300ms Apple curve, lucide/shadcn, rail+dock). Do not force floating island nav or Phosphor on an existing shadcn app unless Mario asks for a marketing site.
+**Product apps:** keep the audit checklist (generic cards, missing states, Inter/Roboto, purple AI gradients, equal three columns, dead links). Replace values using `premium-ui-craft` (semantic tokens, 300ms Apple curve, lucide/shadcn, rail+dock). Do not force floating island nav or Phosphor on an existing shadcn app unless Mario asks for a marketing site. Never Scandinavian/Nordic/Japandi palettes.
 
 ## Order of fixes
 

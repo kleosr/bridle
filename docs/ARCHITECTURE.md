@@ -5,27 +5,27 @@ kleosrules V2 uses the 5 Layers framework. Layers nest; they do not replace each
 | # | Layer | Unit | kleosrules Implementation |
 |---|-------|------|---------------------------|
 | 1 | Prompt | Input | User message. The model remembers nothing before this call. |
-| 2 | Context | Window | `HANDOFF.md` tail 15 via `session_start.sh`. |
+| 2 | Context | Window | `HANDOFF.md` active sections via `session_start.sh`. |
 | 3 | Harness | Pass | Cursor + four Bash user hooks. Law lives in `.mdc` / skills. |
-| 4 | Loop | Run | The agent follows INTENT in chat. Hooks do not police conversation. |
+| 4 | Loop | Run | The agent states the job in chat. Hooks do not police conversation. |
 | 5 | Graph | Job | Local Markdown files (`HANDOFF.md`). |
 
 ## Preventive Amnesia
 
-Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. `session_start.sh` injects the HANDOFF tail so the next chat is not blank.
+Cursor reasons in a window that dies. `HANDOFF.md` keeps what must survive. `session_start.sh` injects the HANDOFF active sections so the next chat is not blank.
 
 ## Three channels (context engineering)
 
 Law, state, and feedback must not share one dump.
 
 1. **Law** — paste + user `~/.cursor/rules` alwaysApply/glob `.mdc` (once) + skills on-demand. Project `.cursor/rules` is types.mdc. Cloud `project-hooks` copies GLOBAL+SHARED. Do not re-inject ponytail at sessionStart.
-2. **State** — `session_start.sh` injects HANDOFF tail (`additional_context`). Cloud has no sessionStart.
+2. **State** — `session_start.sh` injects HANDOFF active sections (`additional_context`). Cloud has no sessionStart.
 3. **Feedback** — the model sees tool results. No postToolUse scorecard is registered.
 
 ## Injection vs Declaration
 
-1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF tail through `additional_context`. `before_submit_prompt.sh` returns `continue` (secret prompts may be `continue:false`). This pack does not register `preToolUse`, so it never emits `updated_input`.
-2. **Declaration (Layer 1):** GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then INTENT job card in **chat prose before Write** (never Shell/fence). That is law in `.mdc`, not a hook followup.
+1. **Injection (Layer 2):** `session_start.sh` injects HANDOFF active sections through `additional_context`. `before_submit_prompt.sh` returns `continue` (secret prompts may be `continue:false`). This pack does not register `preToolUse`, so it never emits `updated_input`.
+2. **Declaration (Layer 1):** GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then one or two sentences in chat before Write (never Shell/fence). That is law in `.mdc`, not a hook followup.
 3. **Steel (Layer 3):** `before_shell.sh` denies a small destructive/source-write list (infra/DB is `ask`). `before_read_file.sh` denies secret paths. `beforeSubmitPrompt.failClosed` is false so a submit-hook crash cannot freeze chat.
 
 ## Runtime map
