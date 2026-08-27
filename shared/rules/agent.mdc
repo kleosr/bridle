@@ -18,7 +18,7 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 |---|---|---|
 | sessionStart | `session_start.sh` | `additional_context`: HANDOFF tail. Quiet in plan mode. |
 | beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
-| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Infra/DB `ask`. |
+| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Complexity-lint disable deny. Infra/DB `ask`. |
 | beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
 
 Cursor documents 21 hook events. This pack registers the four above. There is no `stop`, `postToolUse`, `preToolUse`, `beforeMCPExecution`, or LOC gate in `hooks.json` or on disk. Writes are not blocked by file size. Closing a turn does not follow up.

@@ -1,0 +1,19 @@
+---
+description: "Astro roof. HTML first, islands explicit. Docs over training."
+globs: ["**/*.astro","astro.config.*","**/src/content.config.*","**/src/content/**"]
+alwaysApply: false
+---
+
+# Astro
+
+Training is stale (actions, sessions, content collections). Before Write: current Astro docs (Docs MCP if connected, else docs.astro.build). Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
+
+## Hard
+
+- HTML first. Client JS only with an explicit `client:*` directive. Do not wrap the whole page in React/Vue.
+- Official integrations: `pnpm astro add <name>`. Do not hand-edit `astro.config` for those.
+- Content: use Content Collections if this repo already has `src/content`. Do not invent a parallel glob CMS.
+- Routing and `output` (static vs server) from **this** `astro.config.*`. No `getServerSideProps`. No `app/` directory as Next.
+- Islands: pass only the props the island needs. No fetching in `useEffect` for data the `.astro` frontmatter already has.
+
+Subagents inherit this. Do not paste into Task prompts.

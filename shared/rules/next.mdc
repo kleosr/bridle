@@ -1,0 +1,23 @@
+---
+description: "Next.js roof. Bundled docs for THIS next version. App vs Pages from the tree."
+globs: ["next.config.*","middleware.ts","middleware.js","**/app/**/*.{ts,tsx,js,jsx}","**/pages/**/*.{ts,tsx,js,jsx}","**/src/app/**/*.{ts,tsx,js,jsx}","**/src/pages/**/*.{ts,tsx,js,jsx}"]
+alwaysApply: false
+---
+
+# Next.js
+
+This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos: not the repo root if `next` is nested). Heed deprecations.
+
+If that folder is missing: Next <16.2. Use project `AGENTS.md` / `.next-docs/` or `npx @next/codemod@canary agents-md`. Do not guess APIs.
+
+Detect router from the tree: `app/` → App Router only. `pages/` without `app/` → Pages only. Never mix.
+
+## Hard
+
+- Fetch in Server Components. No `useEffect` for initial server data.
+- `cookies()` / `headers()`: follow **this** version's docs (often async).
+- No `getServerSideProps` / `getStaticProps` in `app/`. No `next/navigation` in Pages.
+- No Vite `import.meta.env` for Next public env; use `process.env` as this version documents.
+- Knowledge from bundled docs, not from a Next "knowledge skill". Skills like `next-dev-loop` are workflows only.
+
+pnpm for installs. Subagents inherit this.

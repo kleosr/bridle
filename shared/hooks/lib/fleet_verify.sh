@@ -14,6 +14,8 @@ verify_smoke() {
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
   echo '{"command":"pnpm add mysql2"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "allow"' >/dev/null
+  echo '{"command":"npx eslint --rule complexity:off src/a.ts"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
   echo '{"command":"cd app && psql -c \"select 1\""}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "ask"' >/dev/null
   echo '{"file_path":"/tmp/x.pem"}' \
