@@ -6,7 +6,7 @@ sessionStart injects workspace HANDOFF.md via `workspace_roots[0]` when cwd is `
 
 ## Current State
 
-sessionStart prefers hook JSON `workspace_roots[0]` for HANDOFF when that dir has HANDOFF.md or AGENTS.md; PWD/HERE walk remains fallback. Pack tests PASS:88 FAIL:0. `FORCE=1 bash MacOS/install.sh` after the fix. doctor ALL CHECKS PASSED. Lane-A not in pack. No preToolUse / no `updated_input`.
+sessionStart prefers hook JSON `workspace_roots[0]` for HANDOFF. Complexity is glob `complexity.mdc` + skill; `before_shell` denies lint-disable. Still four events. Lane-A not in pack. No preToolUse / no `updated_input`.
 
 ## Constraints
 

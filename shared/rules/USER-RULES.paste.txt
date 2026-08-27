@@ -20,7 +20,17 @@ Default to action over analysis. When I ask for options, rank them by impact vs 
 ## Session Protocol (four hooks + user .mdc)
 - sessionStart injects HANDOFF.md tail via additional_context. Read it first.
 - beforeSubmitPrompt blocks secret/token blobs (`continue: false`). Otherwise continue.
-- beforeShellExecution denies destructive / Shell source-write; infra/DB is ask.
+- beforeShellExecution denies destructive / Shell source-write and cyclomatic-lint disable; infra/DB is ask.
 - beforeReadFile denies secret paths (.env, pem, keys).
 - GROUND (Grep/Glob/Read this codebase) then INTENT in chat before Write. Tags from hits. Done-when decidable. Cite TOOLCHAIN green.
 - Law lives in alwaysApply .mdc (once, user ~/.cursor/rules). Skills are on-demand. Never fight a permission deny. Do not rewrite prompts (`updated_input` is a preToolUse field; this pack does not register that event).
+
+## Retrieval harness (token + grounding)
+
+Prefer retrieval-led reasoning over pre-training-led reasoning. Think in Grep/Read/skill files. Do not narrate chain-of-thought. Chat is INTENT, diffs, evidence.
+
+Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dumps, hunter prompts, or 80KB AGENTS.md into context or Task briefs. Read SKILL.md only when the glob or task matches; then read one `rules/*.md`, never the compiled dump.
+
+Whoever writes code (parent or subagent) follows `vibe.mdc` on TS/JS after detecting the stack from the nearest `package.json`: Next → `next.mdc` + `node_modules/next/dist/docs/`; Vite (no next) → `vite.mdc`; Astro → `astro.mdc`; SQL/schema → `postgres.mdc`. Cyclomatic: `complexity.mdc` (repo cap, else 10; do not disable). Do not mix Next, Vite, and Astro APIs. `hunter` / `cut` / `prove` stay specialists. Do not re-implement them in every turn.
+
+Done = TOOLCHAIN green with a cited command, not a vibe.

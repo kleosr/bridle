@@ -1,0 +1,25 @@
+---
+description: "Postgres/Supabase roof — RLS, queries, migrations. Index only."
+globs: ["**/*.sql","**/prisma/**","**/*supabase*","**/migrations/**","**/*.prisma"]
+alwaysApply: false
+---
+
+# Postgres
+
+Prefer retrieval-led reasoning over pre-training. Do not dump skill AGENTS.md.
+
+Before Write SQL/schema/RLS: Read **one** file from `supabase-postgres-best-practices` (`query-` / `conn-` / `security-` / `schema-`). Product/auth/SSR: Read the `supabase` skill SKILL.md.
+
+## Hard (cheap)
+
+- RLS on every tenant table. `auth.uid()` in policies. No app-only `WHERE user_id =`.
+- Views: `security_invoker = true` (PG15+). No `SECURITY DEFINER` to "fix" RLS.
+- Service role never in client bundles. User JWT for user data.
+- Parameterized SQL only. No string-concat queries.
+- Index what you filter/join. `EXPLAIN` before guessing.
+- Migrations forward-only, named, in the repo's existing folder. No drive-by schema in app code.
+- Pooler-aware connections. No connection-per-request in serverless without the pooler.
+
+Hooks: infra/DB shell is `ask`. Never fight a deny.
+
+Subagents inherit this. Do not paste these bullets into Task prompts.

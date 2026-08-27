@@ -9,7 +9,7 @@ PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 TARGET_REPO="${TARGET_REPO:-}"
 CMD="${1:-all}"
 SHARED=(types)
-GLOBAL=(ponytail agent vernacular testing mario-engineering-team)
+GLOBAL=(ponytail agent vernacular testing mario-engineering-team vibe postgres next vite astro complexity)
 source "$HOOKS_DIR/lib/fleet_scan.sh"
 source "$HOOKS_DIR/lib/fleet_install.sh"
 source "$HOOKS_DIR/lib/fleet_sync_repos.sh"

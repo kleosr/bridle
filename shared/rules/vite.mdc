@@ -1,0 +1,21 @@
+---
+description: "Vite roof. SPA/SSR from this repo's plugins. Not Next, not Astro."
+globs: ["vite.config.*","vitest.config.*","src/main.ts","src/main.tsx","src/main.js","src/entry-client.*","src/entry-server.*"]
+alwaysApply: false
+---
+
+# Vite
+
+Only if `package.json` has `vite` and not `next`. If both, Next wins. Do not import `next/navigation`, `next/image`, or `getServerSideProps`.
+
+Read `vite.config.*` and neighbors. Entry is `index.html` + `src/main.*` unless this config says otherwise.
+
+## Hard
+
+- Env: `import.meta.env` (`VITE_` prefix for public). Do not invent Next `NEXT_PUBLIC_*` here.
+- Client SPA by default. No RSC, no `app/` router conventions, no Server Components.
+- SSR only if a plugin in **this** config already does it (vike, vite-plugin-ssr). Match that plugin. Do not invent Next `loading.tsx`.
+- Aliases and `base` from this Vite config, not from Next `basePath`.
+- Tests: Vitest if `vitest` is a dependency. pnpm.
+
+Subagents inherit this. Do not paste into Task prompts.

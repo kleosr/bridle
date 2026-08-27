@@ -40,7 +40,7 @@ Law, state, and feedback must not share one dump.
 
 ## Steel vs ask
 
-- **deny:** destructive Shell and source-write (`shell_gate.sh` inline regex), secret paths (`policy/secret_paths.ere`).
+- **deny:** destructive Shell and source-write (`shell_gate.sh` inline regex), cyclomatic-lint disable (`eslint-disable` complexity / C901 / clippy allow), secret paths (`policy/secret_paths.ere`).
 - **ask:** infra/DB mutation (`terraform apply`, `kubectl delete`, `psql`, …) — Cursor approval card, not a silent deny.
 - **Read secrets:** `before_read_file.sh` (`failClosed: true`).
 - **Ungrounded Write / lean roofs / stop followups:** law in `.mdc`. Not registered events.

@@ -1,0 +1,16 @@
+---
+description: "Cyclomatic cap. Repo lint wins, else 10. Do not disable."
+globs: ["**/*.ts","**/*.tsx","**/*.js","**/*.jsx","**/*.mjs","**/*.cjs","**/*.py","**/*.go","**/*.rs"]
+alwaysApply: false
+---
+
+# Complexity
+
+Code you write must pass cyclomatic complexity lint. That is a number, not a vibe.
+
+- Cap: this repo's existing rule (`eslint complexity`, ruff C901, gocyclo, clippy). If none, **10**.
+- Do not disable it (`eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, clippy allow).
+- Extract. Early return. Flat `if`. No nested pyramids.
+- Nesting >2 (vibe/vernacular) is not a substitute for the lint number.
+- Done = cited lint command green on the files you touched.
+- Procedure when the repo has no cap, or lint is red: Read `~/.cursor/skills/complexity/SKILL.md`.

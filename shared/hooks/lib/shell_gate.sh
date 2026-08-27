@@ -11,10 +11,22 @@ gate_shell_command() {
     emit_ask "Command mutates infra/DB. Approve in the Cursor card to proceed. CMD: ${cmd:0:120}"
     return 1
   fi
+  if gate_complexity_bypass "$cmd"; then
+    return 1
+  fi
   if gate_shell_source_write "$cmd"; then
     return 1
   fi
   return 0
+}
+
+gate_complexity_bypass() {
+  local cmd="$1"
+  if echo "$cmd" | grep -qiE 'eslint-disable[^[:space:]]*[[:space:]]+([^[:space:],]+,)*complexity|complexity[[:space:]]*:[[:space:]]*['\''"]?off|complexity[[:space:]]*:[[:space:]]*0([^0-9]|$)|(--ignore|--extend-ignore)[=[:space:]][^;&]*C901|noqa:[[:space:]]*C901|clippy::(cyclo|cognitive)[[:alnum:]_]*complexity'; then
+    emit_deny "COMPLEXITY BYPASS BLOCK: do not disable cyclomatic lint. Extract until the project lint is green. CMD: ${cmd:0:120}"
+    return 0
+  fi
+  return 1
 }
 
 gate_shell_source_write() {

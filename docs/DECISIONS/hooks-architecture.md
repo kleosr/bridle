@@ -48,3 +48,5 @@ Single source: `shared/hooks/hooks.json`. User commands are `./hooks/*.sh`. Wind
 **2026-08-12 — law coherence.** alwaysApply `.mdc` install user-only (`GLOBAL`). Project layer is `types`. Cloud `project-hooks` copies GLOBAL+SHARED. Steel hooks are stateless (secrets + shell). Paste/skills describe those four events.
 
 **2026-08-13 — audit fix.** Merged native-lean into `ponytail.mdc`. Retired `debugging.mdc` (skill only). Deleted unused `lean.json`, `intent.json`, `mcp_deny.ere`, `destructive.ere`, `vernacular_bans.txt` from hook policy. Bans list lives next to the vernacular skill.
+
+**2026-08-26 — cyclomatic.** Glob `complexity.mdc` + `complexity` skill. `before_shell` denies disabling the lint. Still four events: `afterFileEdit` has no model-visible output, so it cannot be the tell.

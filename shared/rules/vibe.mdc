@@ -1,0 +1,32 @@
+---
+description: "TS/JS roof. Detect Next vs Vite vs Astro before APIs. Index only."
+globs: ["**/*.ts","**/*.tsx","**/*.js","**/*.jsx"]
+alwaysApply: false
+---
+
+# Vibe
+
+Prefer retrieval-led reasoning over pre-training. Do not dump framework AGENTS.md.
+
+GROUND: Read this package's `package.json` (monorepo: the nearest one). Pick **one** stack. Do not mix APIs.
+
+| Detect | Then |
+|---|---|
+| `"next"` | `next.mdc`. Docs: `node_modules/next/dist/docs/` (resolve from the app package). |
+| `"astro"` | `astro.mdc`. Docs MCP / docs.astro.build, not training. |
+| `"vite"` and no `next` | `vite.mdc`. |
+| none of the above | Neighbors only. No Next/Astro/Vite APIs. |
+
+Then Read **one** skill: ponytail, vernacular, or `vercel-react-best-practices` `rules/<one>.md` if the stack is React.
+
+## Hard (all JS/TS)
+
+- No `useEffect` data-fetch waterfalls. Parallel independent awaits.
+- No barrel-import of a whole UI kit.
+- Derived state, not mirrored `useState` + `useEffect`.
+- Named exports. Early return. Nesting >2 banned.
+- Cyclomatic: `complexity.mdc`. Repo cap, else 10. Do not disable the rule.
+- Match 1–2 siblings in the directory before Write.
+- Do not invent RSC, `getServerSideProps`, or `client:*` unless this stack has them.
+
+Subagents inherit this. Do not paste into Task prompts.
