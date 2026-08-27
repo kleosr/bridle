@@ -52,6 +52,23 @@ run_test "session_start injects Now section from the top" "true" "$RESULT"
 run_test "session_start does not inject Archived filler" "false" "$RESULT_ARCH"
 rm -rf "$FAKE_HOME" "$WS"
 
+FAKE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-home.XXXXXX")"
+FAKE_C="$FAKE_HOME/.cursor"
+WS="$(mktemp -d "${TMPDIR:-/tmp}/kleos-ws.XXXXXX")"
+mkdir -p "$FAKE_C/hooks/lib"
+cp "$PACK/shared/hooks/session_start.sh" "$FAKE_C/hooks/"
+cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
+{
+  printf '# Handoff\n\n**Goal:** LIVE_JOB_AT_TOP\n\n## Done\n\n- done item\n\n'
+  printf '## Open\n\n- open item\n\n## Blockers\n\n- none\n\n'
+  printf '## Next\n\nNEXT_ONLY_SECTION\n\n## Verify\n\nVERIFY_MARKER\n\n'
+  printf '## Notes\n\n- notes\n'
+} >"$WS/HANDOFF.md"
+PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
+RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("VERIFY_MARKER")')"
+run_test "session_start falls back when HANDOFF only shares Next" "true" "$RESULT"
+rm -rf "$FAKE_HOME" "$WS"
+
 rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"please fix src/auth.ts login bug"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and ((.user_message // "")|test("FILE_MAP nudge")) then "nudge" else "no" end')"
 run_test "before_submit does not FILE_MAP-nudge (continue:true)" "no" "$RESULT"
