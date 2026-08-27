@@ -44,7 +44,7 @@ extract_handoff() {
     }
     keep { print }
   ' "$f")"
-  if [[ -n "$body" ]]; then
+  if [[ -n "$body" ]] && printf '%s\n' "$body" | grep -qE '^## (Now|State|Limits|Proof)[[:space:]]*$'; then
     printf '%s\n' "$body" | head -n 40
   else
     tail -n 40 "$f" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15
