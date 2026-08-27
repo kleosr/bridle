@@ -39,6 +39,24 @@ run_test "beforeShellExecution denies complexity:off" "deny" "$RESULT"
 RESULT="$(echo '{"command":"ruff check --ignore C901 src/a.py","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution denies ruff ignore C901" "deny" "$RESULT"
 
+RESULT="$(echo '{"command":"ruff check --ignore E501,C901 src/a.py","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies ruff ignore list containing C901" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"ruff check --ignore E501 --select C901","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows ruff select C901 after unrelated ignore" "allow" "$RESULT"
+
+RESULT="$(echo '{"command":"ruff check --ignore E501 tests/test_c901.py","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows ruff path containing C901 after unrelated ignore" "allow" "$RESULT"
+
+RESULT="$(echo '{"command":"cargo clippy -- -A clippy::cognitive_complexity","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution denies clippy allow cognitive_complexity" "deny" "$RESULT"
+
+RESULT="$(echo '{"command":"cargo clippy -- -D clippy::cognitive_complexity","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows clippy deny cognitive_complexity" "allow" "$RESULT"
+
+RESULT="$(echo '{"command":"cargo clippy -- -W clippy::cognitive_complexity","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "beforeShellExecution allows clippy warn cognitive_complexity" "allow" "$RESULT"
+
 RESULT="$(echo '{"command":"pnpm exec eslint src --max-warnings 0","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution allows eslint lint" "allow" "$RESULT"
 
