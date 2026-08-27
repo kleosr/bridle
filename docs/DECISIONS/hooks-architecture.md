@@ -13,7 +13,7 @@ Context: Cursor user hooks are JSON stdio, cwd `~/.cursor`, native `./hooks/foo.
 
 | Script | Event | Job |
 |--------|-------|-----|
-| `session_start.sh` | sessionStart | Inject HANDOFF tail (`additional_context`) |
+| `session_start.sh` | sessionStart | Inject HANDOFF active sections (`additional_context`) |
 | `before_submit_prompt.sh` | beforeSubmitPrompt | Secret-prompt block via `continue` (`failClosed: false`) |
 | `before_shell.sh` | beforeShellExecution | Destructive / source-write deny; infra/DB `ask` (`failClosed: false`) |
 | `before_read_file.sh` | beforeReadFile | Secret path deny (`failClosed: true`) |
@@ -49,4 +49,4 @@ Single source: `shared/hooks/hooks.json`. User commands are `./hooks/*.sh`. Wind
 
 **2026-08-13 — audit fix.** Merged native-lean into `ponytail.mdc`. Retired `debugging.mdc` (skill only). Deleted unused `lean.json`, `intent.json`, `mcp_deny.ere`, `destructive.ere`, `vernacular_bans.txt` from hook policy. Bans list lives next to the vernacular skill.
 
-**2026-08-26 — cyclomatic.** Glob `complexity.mdc` + `complexity` skill. `before_shell` denies disabling the lint. Still four events: `afterFileEdit` has no model-visible output, so it cannot be the tell.
+**2026-08-27 — HANDOFF inject + INTENT voice.** `session_start.sh` sends named active sections, not a dumb last-15 tail (Objective lived at the top and was dropped). Law asks for one or two professional sentences before Write, not an `OBJECTIVE=` job card. `before_shell` ignores git/gh when scanning cyclomatic-lint bypass (PR bodies were false positives). Quiet only when `composer_mode` is `plan` — live Cursor Agent sends `chat`, which used to skip inject.

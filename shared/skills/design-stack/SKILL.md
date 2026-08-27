@@ -23,4 +23,4 @@ Read **all** of these this turn (user-global):
 | New marketing / landing / campaign page | **landing-page-design** (then Elaya Part B) |
 | Audit/polish of an existing site or app | **redesign-existing-projects** diagnosis, then values from the row above |
 
-Never drop premium-ui-craft. Elaya visual system (Geist-only, no italic, 700ms island nav, Phosphor) does not override a locked product theme unless Mario is shipping a landing page.
+Never drop premium-ui-craft. Never Scandinavian, Nordic, Japandi, or hygge (no parchment, oatmeal, linen, sage-cream, pale wood). Elaya visual system (Geist-only, no italic, 700ms island nav, Phosphor) does not override a locked product theme unless Mario is shipping a landing page.

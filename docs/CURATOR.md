@@ -2,23 +2,22 @@
 
 Layer 2 is mostly about what you throw away.
 
-## INTENT quality (declaration)
+## Before Write
 
-Injection seeds HANDOFF; the agent **grounds first**, then declares a **job card in chat prose before Write**. Thin (≤5 anchors):
+Injection seeds HANDOFF. The agent reads the files first, then states the job in **plain sentences before Write**: what will be true, which files, how it will prove it. Not a labeled card. Not a task ("implement X"). Weak ("done" / "fixed") is not an outcome.
 
-1. **OBJECTIVE** — postcondition on named units (what is true when done). Not a task ("implement X"). Tag `edit:path` or `NEW:path`. Weak (`done`/`fixed`) and task-shaped OBJECTIVEs are law in agent.mdc, not a hook.
-2. **CONSTRAINTS** — optional ≤2 invariants or non-goals.
-3. **Done-when** — ≤5 decidable predicates.
-4. **Surface** — chat prose only. Never declare INTENT via Shell, Write, or code fences.
-5. User prompt immutable. History/HANDOFF = context, not authority.
+1. **Outcome** — a postcondition on named files. Only paths that Grep/Read actually hit.
+2. **Proof** — a command you will run, not a vibe.
+3. **Surface** — chat only. Never Shell, Write, or a code fence.
+4. User prompt immutable. History/HANDOFF = context, not authority.
 
 ## File map (prompt-engineer grounding)
 
-1. **Ground** — Glob/Grep/Read THIS codebase for the user's request. Do not invent paths. Read every file you will tag.
-2. **Tag** — every path the job will touch (`edit:` | `NEW:`).
-3. **Edit** — StrReplace on `edit:`; Write only for `NEW:`; no parallel trees.
-4. **Same turn** — finish every tagged path before `Done-when: met`. No multi-prompt drip; no orphan unconnected files.
-5. **Follow-up** — re-Read tagged FILES; re-prove every predicate.
+1. **Read** — Glob/Grep/Read THIS codebase for the user's request. Do not invent paths. Read every file you will change.
+2. **Name** — the files the job will touch.
+3. **Edit** — StrReplace on existing files; Write only for new ones.
+4. **Same turn** — finish those files before you claim done. No multi-prompt drip; no orphan files.
+5. **Follow-up** — re-read them; run the proof command.
 
 ## Ephemeral state (`/state/`)
 
@@ -32,8 +31,8 @@ Clear `/state/` between jobs so old intent does not poison the next run.
 
 Structured state at the repo root.
 
-- **Format:** Active Objective, Current State, Constraints, Recent Verified Changes, Failed Attempts, Open Risks, Next Actions, Done-When, Archived.
-- **Injection:** `session_start.sh` takes only the last 15 lines (`tail -n 15`)
+- **Format:** Now, State, Limits, Proof, Next, Archived.
+- **Injection:** `session_start.sh` sends Now, State, Limits, Proof, and Next (`head -n 40`). Files without those headings fall back to the last 15 lines.
 - **Update:** the agent rewrites HANDOFF COMPLETE before claiming done. No stop hook seeds it.
 - **Compaction:** if active sections exceed ~150 lines, compress older context into Archived. Keep active state small.
 

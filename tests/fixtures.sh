@@ -7,7 +7,7 @@ RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hook
 run_test "session_start emits additional_context" "true" "$RESULT"
 
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("HANDOFF")')"
-run_test "session_start injects HANDOFF tail" "true" "$RESULT"
+run_test "session_start injects HANDOFF" "true" "$RESULT"
 
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("DEBERES:")')"
 run_test "session_start does not inject DEBERES duty" "false" "$RESULT"
@@ -29,6 +29,44 @@ printf '# HANDOFF\n\n%s\n' "$MARKER" >"$WS/HANDOFF.md"
 PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
 RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r --arg m "$MARKER" '.additional_context | test($m)')"
 run_test "session_start uses workspace_roots[0] when cwd is not the pack" "true" "$RESULT"
+rm -rf "$FAKE_HOME" "$WS"
+
+FAKE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-home.XXXXXX")"
+FAKE_C="$FAKE_HOME/.cursor"
+WS="$(mktemp -d "${TMPDIR:-/tmp}/kleos-ws.XXXXXX")"
+mkdir -p "$FAKE_C/hooks/lib"
+cp "$PACK/shared/hooks/session_start.sh" "$FAKE_C/hooks/"
+cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
+{
+  printf '# HANDOFF\n\n## Now\n\nKEEP_ME_NOW\n\n## Archived\n\n'
+  i=1
+  while [[ "$i" -le 30 ]]; do
+    printf 'archive line %s\n' "$i"
+    i=$((i + 1))
+  done
+} >"$WS/HANDOFF.md"
+PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
+RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("KEEP_ME_NOW")')"
+RESULT_ARCH="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("archive line 30")')"
+run_test "session_start injects Now section from the top" "true" "$RESULT"
+run_test "session_start does not inject Archived filler" "false" "$RESULT_ARCH"
+rm -rf "$FAKE_HOME" "$WS"
+
+FAKE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-home.XXXXXX")"
+FAKE_C="$FAKE_HOME/.cursor"
+WS="$(mktemp -d "${TMPDIR:-/tmp}/kleos-ws.XXXXXX")"
+mkdir -p "$FAKE_C/hooks/lib"
+cp "$PACK/shared/hooks/session_start.sh" "$FAKE_C/hooks/"
+cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
+{
+  printf '# Handoff\n\n**Goal:** LIVE_JOB_AT_TOP\n\n## Done\n\n- done item\n\n'
+  printf '## Open\n\n- open item\n\n## Blockers\n\n- none\n\n'
+  printf '## Next\n\nNEXT_ONLY_SECTION\n\n## Verify\n\nVERIFY_MARKER\n\n'
+  printf '## Notes\n\n- notes\n'
+} >"$WS/HANDOFF.md"
+PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
+RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("VERIFY_MARKER")')"
+run_test "session_start falls back when HANDOFF only shares Next" "true" "$RESULT"
 rm -rf "$FAKE_HOME" "$WS"
 
 rm -rf "$PACK/state"

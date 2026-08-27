@@ -33,6 +33,24 @@ extract_conv_id() {
   printf '%s' "$id"
 }
 
+extract_handoff() {
+  local f="$1" body
+  [[ -f "$f" ]] || return 0
+  body="$(awk '
+    BEGIN { keep=0 }
+    /^<!-- COMPACTION PROTOCOL/ { exit }
+    /^## / {
+      keep = ($0 ~ /^## (Now|State|Limits|Proof|Next)[[:space:]]*$/)
+    }
+    keep { print }
+  ' "$f")"
+  if [[ -n "$body" ]] && printf '%s\n' "$body" | grep -qE '^## (Now|State|Limits|Proof)[[:space:]]*$'; then
+    printf '%s\n' "$body" | head -n 40
+  else
+    tail -n 40 "$f" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15
+  fi
+}
+
 emit_allow() {
   local msg="${1:-}"
   if [[ -n "$msg" ]]; then

@@ -18,16 +18,16 @@ Debt: [fix when you have downtime]
 Default to action over analysis. When I ask for options, rank them by impact vs effort. Break large goals into sub-tasks and orchestrate them with your tools.
 
 ## Session Protocol (four hooks + user .mdc)
-- sessionStart injects HANDOFF.md tail via additional_context. Read it first.
+- sessionStart injects HANDOFF.md active sections via additional_context. Read it first.
 - beforeSubmitPrompt blocks secret/token blobs (`continue: false`). Otherwise continue.
 - beforeShellExecution denies destructive / Shell source-write and cyclomatic-lint disable; infra/DB is ask.
 - beforeReadFile denies secret paths (.env, pem, keys).
-- GROUND (Grep/Glob/Read this codebase) then INTENT in chat before Write. Tags from hits. Done-when decidable. Cite TOOLCHAIN green.
+- Read the files first, then say in one or two sentences what will be true, which files, and how you will prove it. Cite TOOLCHAIN green.
 - Law lives in alwaysApply .mdc (once, user ~/.cursor/rules). Skills are on-demand. Never fight a permission deny. Do not rewrite prompts (`updated_input` is a preToolUse field; this pack does not register that event).
 
 ## Retrieval harness (token + grounding)
 
-Prefer retrieval-led reasoning over pre-training-led reasoning. Think in Grep/Read/skill files. Do not narrate chain-of-thought. Chat is INTENT, diffs, evidence.
+Prefer retrieval-led reasoning over pre-training-led reasoning. Think in Grep/Read/skill files. Do not narrate chain-of-thought. Chat is the decision, the diffs, and the evidence.
 
 Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dumps, hunter prompts, or 80KB AGENTS.md into context or Task briefs. Read SKILL.md only when the glob or task matches; then read one `rules/*.md`, never the compiled dump.
 

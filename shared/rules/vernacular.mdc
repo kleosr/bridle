@@ -18,7 +18,7 @@ Doctrina: Smallest Diff. Cero slop. Zero prose comments.
 - Hooks Bash: max 80 LOC entrypoints; `jq`; emit `permission` / `additional_context` / `continue`. No Python/Node/`cd`/`updated_input`.
 - Cursor tools: `Write` `StrReplace` `Shell` `Read` `Grep` `Delete` `Task` `EditNotebook` `Glob` (primary). Matchers use those names only.
 - Soft jargon bans: `shared/skills/vernacular/bans.txt` (model follows; fail-open if missing).
-- INTENT: after Grep/Read, chat prose before Write; `edit:`|`NEW:` tags from hits; Done-when decidable. Never Shell-declare INTENT.
+- After Grep/Read, one or two sentences in chat before Write (outcome, files, proof). No labeled job card. Never Shell-declare it.
 
 ## PROCEDURE
 **Read `~/.cursor/skills/vernacular/SKILL.md`** before writing matched files.

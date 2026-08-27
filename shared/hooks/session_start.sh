@@ -10,13 +10,13 @@ mkdir -p "$STATE"
 MODE="$(echo "$INPUT" | jq -r '.composer_mode // empty' 2>/dev/null || true)"
 [[ -z "$MODE" ]] && MODE="agent"
 printf '%s\n' "$MODE" >"$STATE/mode"
-if [[ "$MODE" != "agent" ]]; then
+if [[ "$MODE" == "plan" ]]; then
   emit_quiet; exit 0
 fi
 HANDOFF="$ROOT/HANDOFF.md"
 TAIL=""
 if [[ -f "$HANDOFF" ]]; then
-  TAIL="$(tail -n 40 "$HANDOFF" | sed -n '/<!-- COMPACTION PROTOCOL/,$d;p' | tail -n 15)"
+  TAIL="$(extract_handoff "$HANDOFF")"
 fi
 if [[ -n "$TAIL" ]]; then
   emit_context "HANDOFF:

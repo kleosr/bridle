@@ -1,5 +1,5 @@
 ---
-description: "Autonomous loop capsule — INTENT, file-map, four-hook harness"
+description: "Autonomous loop capsule — before-write, file-map, four-hook harness"
 alwaysApply: true
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: true
 
 Bash hooks + local HANDOFF memory. One model per conversation.
 Read `HANDOFF.md` for multi-session work. Prefer NO CODE. Smallest Diff. Zero prose comments.
-Start: read HANDOFF.md tail. Stop with tools: update HANDOFF.
+Start: read HANDOFF.md. Stop with tools: update HANDOFF.
 Git only when asked. Secrets never in code or chat.
 Done = `docs/TOOLCHAIN.md` green with evidence.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
@@ -16,7 +16,7 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 | Event | Script | Job |
 |---|---|---|
-| sessionStart | `session_start.sh` | `additional_context`: HANDOFF tail. Quiet in plan mode. |
+| sessionStart | `session_start.sh` | `additional_context`: HANDOFF active sections. Quiet in plan mode. |
 | beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
 | beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Complexity-lint disable deny. Infra/DB `ask`. |
 | beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
@@ -25,16 +25,15 @@ Cursor documents 21 hook events. This pack registers the four above. There is no
 
 Brain = `HANDOFF.md`. Cloud: `project-hooks` (no sessionStart; Cursor defers it). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there).
 
-## INTENT protocol
+## Before you write
 
-Order: **GROUND → DECLARE → WRITE**. Grep/Glob/Read THIS codebase for the user's request first. Do not invent paths. Then declare `INTENT:` as chat prose before Write (never Shell/code-fence).
-`OBJECTIVE` = postcondition on named units; `edit:path`|`NEW:path` from hits only; `CONSTRAINTS` ≤2; `Done-when` ≤5 decidable predicates.
+Read this codebase first. Do not invent paths.
+Then, in one or two normal sentences, say what will be true when you stop, which files you will change, and how you will prove it. Never declare that via Shell, Write, or a code fence.
 
 ## File map
 
-Ground → tag → edit/NEW → re-Read → prove Done-when.
-Glob/Grep/Read first; `Write` for create/overwrite. Finish EVERY tagged path this turn — no drip, no orphan files.
-Before Done: verify Done-when with TOOLCHAIN evidence — cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test.
+Change only files you actually opened. Finish them this turn. No drip, no orphan files.
+Before you claim done: cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test.
 
 ## State
 
@@ -42,9 +41,9 @@ Before Done: verify Done-when with TOOLCHAIN evidence — cite green `bash tests
 
 ## Autonomous loop
 
-1. GROUND FIRST: Grep/Glob/Read this codebase. Do not invent paths.
-2. DECLARE: INTENT in chat before Write. Tags from hits only.
-3. NO ASK INSIDE INTENT: missing Done-when work → do it now.
-4. NO PARTIAL HANDOFFS / NO DRIP.
-5. WRITE: Write/StrReplace only tagged paths; cascade-fix.
-6. CLOSE: re-Read tagged FILES; run TOOLCHAIN; cite green; `Done-when: met`; update HANDOFF.
+1. Grep/Glob/Read this codebase. Do not invent paths.
+2. One or two sentences in chat before Write: outcome, files, proof.
+3. If the proof is missing, do that work now. Do not ask.
+4. No partial HANDOFFs. No drip.
+5. Write/StrReplace those files. Fix callers.
+6. Re-read them. Run TOOLCHAIN. Cite green. Update HANDOFF.
