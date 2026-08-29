@@ -47,6 +47,12 @@ Get-Content $skillsTxt | ForEach-Object {
     Copy-Item $from $to -Recurse -Force
   }
 }
+Get-Content (Join-Path $Pack 'shared\config\retired-skills.txt') | ForEach-Object {
+  $line = $_.Trim()
+  if (-not $line -or $line.StartsWith('#')) { return }
+  $orphan = Join-Path $skillsDst $line
+  if (Test-Path $orphan) { Remove-Item $orphan -Recurse -Force }
+}
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'agents') | Out-Null
 foreach ($a in 'hunter', 'cut', 'prove') {
