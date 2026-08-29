@@ -14,7 +14,7 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 chmod +x "$PACK/shared/hooks"/*.sh "$PACK/shared/hooks/lib"/*.sh "$PACK/scripts"/*.sh
-FORCE="${FORCE:-0}" bash "$PACK/shared/hooks/fleet_sync.sh" all
+FORCE="${FORCE:-0}" bash "$PACK/shared/hooks/fleet_sync.sh" install
 
 echo "[done] kleosrules installed (macOS — stock bash 3.2 + BSD grep)"
 echo "Next: paste shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules, then start a NEW agent chat."

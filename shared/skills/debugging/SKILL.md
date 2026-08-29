@@ -38,8 +38,7 @@ Prove the cause; do not change code to generate hypotheses.
 
 - No catch/sleep/retry, mock, assertion, or test weakening to hide failure.
 - No simultaneous fixes for competing hypotheses.
-- Cross-boundary symptoms use session-handoff; communication failures may
-  use session-handoff.
+- Cross-boundary symptoms use `NOW.md` (`/now`).
 - Preserve logs/artifacts needed to explain the result; never expose secrets.
 
 ## Report

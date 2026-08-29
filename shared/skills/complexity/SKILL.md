@@ -7,35 +7,70 @@ description: >
   or the user asks for simpler / less nested code.
 ---
 
-# Complexity (fat skill)
+# Complexity
 
-Thin roof: `shared/rules/complexity.mdc`. This file = how to wire the number and recover when red.
+Thin roof: `shared/rules/complexity.mdc`. The lint number is law. Nesting ≤2 in ponytail is not a substitute.
 
 ## Cap
-Repo config wins. Else **10**.
-Do not switch to Sonar cognitive complexity unless this repo already uses it.
+
+Repo config wins. Else **10**. Do not raise a cap that already exists. Do not switch to Sonar cognitive complexity unless this repo already uses it.
 
 ## Detect (Grep, then one tool)
-1. Grep `complexity`, `C901`, `mccabe`, `gocyclo`, `cyclo` in eslint/ruff/clippy/pyproject/Makefile/CI.
-2. If a cap exists, that number is law. Do not raise it.
-3. If missing and eslint or ruff is already installed: add the rule to that config. Do not add a new linter stack.
+
+1. Grep `complexity`, `C901`, `mccabe`, `gocyclo`, `cyclo`, `cognitive` in eslint/ruff/clippy/biome/`pyproject.toml`/Makefile/CI.
+2. If a cap exists, that number is law.
+3. If missing and eslint, ruff, or biome is already installed: add the rule to **that** config. Do not add a new linter stack.
 4. If no linter exists: still write as if cap 10. Cite that TOOLCHAIN has no complexity job. Do not invent eslint for a repo that has none.
 
 ## TS/JS
-Existing eslint: `"complexity": ["error", 10]` (or the repo's number).
-Run the repo's lint on the files you touched (`pnpm exec eslint path`, not a global npx stack).
 
-## Python
-Existing ruff: `C901` with `max-complexity = 10` (or the repo's number).
-Pylint `R1260` only if pylint is already the house linter.
+Legacy `.eslintrc*`: `"complexity": ["error", 10]` (or the repo's number).
 
-## Go / Rust
-gocyclo or clippy only if already in TOOLCHAIN. Same cap.
+Flat `eslint.config.*`: keep the repo's existing `complexity` option; if absent and eslint already runs, add it next to the other rules — same number.
 
-## Red
-Extract a function. Early return. Table/map instead of `else if` chains.
-Never `eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, or clippy allow-wrap.
-`before_shell.sh` denies those bypasses.
+Run the **repo** lint on files you touched (`pnpm exec eslint path`, `pnpm exec biome check path`). Not a global npx stack.
+
+## Python / Go / Rust
+
+Ruff: `C901` with `max-complexity = 10` (or the repo's number). Pylint `R1260` only if pylint is already the house linter. gocyclo or clippy only if already in TOOLCHAIN.
+
+## Red — extract until green
+
+Do this, in order:
+
+1. Early return. Flatten `if`.
+2. Replace `else if` chains with a map/table.
+3. Pull a branch into a named function that does one job.
+4. Nested ternary → `if` or a lookup.
+
+Never `eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, or clippy allow-wrap. `before_shell.sh` denies those bypasses.
+
+```ts
+// BAD — one function owns every branch
+export function route(cmd: string, admin: boolean): string {
+  if (cmd === "a") {
+    if (admin) return "a-admin"
+    return "a"
+  } else if (cmd === "b") {
+    if (admin) return "b-admin"
+    return "b"
+  }
+  return "none"
+}
+
+// GOOD — table + early return (lint can count this)
+const TABLE: Record<string, { user: string; admin: string }> = {
+  a: { user: "a", admin: "a-admin" },
+  b: { user: "b", admin: "b-admin" },
+}
+export function route(cmd: string, admin: boolean): string {
+  const row = TABLE[cmd]
+  if (!row) return "none"
+  if (admin) return row.admin
+  return row.user
+}
+```
 
 ## Done
-Cite the lint command and green output. Same standard as testing.mdc.
+
+Cite the exact lint command and green output on the files you touched. Same standard as `testing.mdc`.

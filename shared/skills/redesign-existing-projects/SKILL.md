@@ -10,11 +10,19 @@ description: >-
 
 # Redesign existing projects (Elaya)
 
-MIT. Upstream: [elayadesign/redesign-skill](https://github.com/elayadesign/redesign-skill). Full text: [SKILL.md](https://raw.githubusercontent.com/elayadesign/redesign-skill/main/skills/redesign-existing-projects/SKILL.md).
+MIT. Upstream (reference only, do not fetch at runtime): [elayadesign/redesign-skill](https://github.com/elayadesign/redesign-skill). This file is the law.
 
-**This turn:** WebFetch that raw URL. Report diagnosis before fixing. Do not rewrite the stack.
+Report diagnosis before fixing. Do not rewrite the stack.
 
-**Product apps:** keep the audit checklist (generic cards, missing states, Inter/Roboto, purple AI gradients, equal three columns, dead links). Replace values using `premium-ui-craft` (semantic tokens, 300ms Apple curve, lucide/shadcn, rail+dock). Do not force floating island nav or Phosphor on an existing shadcn app unless Mario asks for a marketing site. Never Scandinavian/Nordic/Japandi palettes.
+**Product apps:** keep the audit checklist. Replace values using `premium-ui-craft` (semantic tokens, 300ms Apple curve, lucide/shadcn, rail+dock). Do not force floating island nav or Phosphor on an existing shadcn app unless Mario asks for a marketing site. Never Scandinavian/Nordic/Japandi palettes.
+
+## Diagnose (must list before edits)
+
+- Generic cards, equal three columns, purple AI gradients
+- Inter/Roboto/Open Sans, missing type scale
+- Missing hover/focus/active, dead `#` links
+- No empty/error/loading, lorem or fake stats
+- Hover lift on cards, rainbow accents
 
 ## Order of fixes
 
@@ -27,7 +35,5 @@ MIT. Upstream: [elayadesign/redesign-skill](https://github.com/elayadesign/redes
 7. Loading / empty / error
 8. Copy
 9. Type polish
-
-## Always
 
 Work in the current stack. Do not break behavior. Ask before inventing a token not in the active design system.

@@ -20,6 +20,8 @@ verify_smoke() {
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "ask"' >/dev/null
   echo '{"file_path":"/tmp/x.pem"}' \
     | bash "$HOOKS_DIR/before_read_file.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"command":"cat ~/.ssh/id_rsa"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
     if [[ ! -L "$HOME_C/skills/$skill" ]]; then
@@ -30,6 +32,9 @@ verify_smoke() {
   done < <(load_lines "$PACK/shared/config/skills.txt")
   if [[ ! -f "$HOME_C/hooks/policy/secret_paths.ere" ]]; then
     echo "[fail] ~/.cursor/hooks/policy/secret_paths.ere missing after install"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/hooks/policy/secret_tokens.ere" ]]; then
+    echo "[fail] ~/.cursor/hooks/policy/secret_tokens.ere missing after install"; bad=1
   fi
   local sr_line sr_bad=0
   while IFS= read -r sr_line; do
@@ -46,6 +51,17 @@ verify_smoke() {
   if [[ -e "$HOME_C/rules/native-lean-autoload.mdc" || -L "$HOME_C/rules/native-lean-autoload.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/native-lean-autoload.mdc should be retired"; bad=1
   fi
+  if [[ -e "$HOME_C/rules/vernacular.mdc" || -L "$HOME_C/rules/vernacular.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/vernacular.mdc should be retired"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/rules/pnpm.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/pnpm.mdc missing after install"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/agents/hunter.md" || ! -f "$HOME_C/agents/cut.md" || ! -f "$HOME_C/agents/prove.md" ]]; then
+    echo "[fail] ~/.cursor/agents hunter/cut/prove missing after install"; bad=1
+  fi
+  jq -e '.hooks.beforeReadFile[0].timeout == 10' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeReadFile timeout must be 10"; bad=1; }
   if [[ -e "$HOME_C/rules/product-designer-skills.mdc" || -L "$HOME_C/rules/product-designer-skills.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/product-designer-skills.mdc should be retired"; bad=1
   fi

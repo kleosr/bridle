@@ -4,3 +4,5 @@ monorepo
 package-scope
 spec-kit
 speckit-adhd
+vernacular
+session-handoff
