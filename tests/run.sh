@@ -25,9 +25,9 @@ run_test() {
 
 rm -rf "$PACK/state"
 
-HANDOFF_BACKUP=""
-if [[ -f "$PACK/HANDOFF.md" ]]; then
-  HANDOFF_BACKUP="$(cat "$PACK/HANDOFF.md")"
+NOW_BACKUP=""
+if [[ -f "$PACK/NOW.md" ]]; then
+  NOW_BACKUP="$(cat "$PACK/NOW.md")"
 fi
 
 source "$PACK/tests/static_checks.sh"
@@ -52,8 +52,8 @@ echo "PASS: $PASS"
 echo "FAIL: $FAIL"
 rm -rf "$PACK/state"
 
-if [[ -n "$HANDOFF_BACKUP" ]]; then
-  printf '%s' "$HANDOFF_BACKUP" >"$PACK/HANDOFF.md"
+if [[ -n "$NOW_BACKUP" ]]; then
+  printf '%s' "$NOW_BACKUP" >"$PACK/NOW.md"
 fi
 
 [[ "$FAIL" -eq 0 ]] && exit 0 || exit 1

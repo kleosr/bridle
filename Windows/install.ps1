@@ -23,7 +23,7 @@ Copy-Item "$src\policy\*" "$HooksD\policy" -Force
 Copy-Item (Join-Path $PSScriptRoot 'hooks\wsl-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
-foreach ($name in 'ponytail', 'agent', 'vernacular', 'testing', 'mario-engineering-team', 'vibe', 'postgres', 'next', 'vite', 'astro', 'complexity') {
+foreach ($name in 'ponytail', 'agent', 'testing', 'mario-engineering-team', 'vibe', 'postgres', 'next', 'vite', 'astro', 'complexity', 'pnpm') {
   Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
 }
 Get-Content (Join-Path $Pack 'shared\config\retired.txt') | ForEach-Object {
@@ -46,6 +46,11 @@ Get-Content $skillsTxt | ForEach-Object {
     if (Test-Path $to) { Remove-Item $to -Recurse -Force }
     Copy-Item $from $to -Recurse -Force
   }
+}
+
+New-Item -ItemType Directory -Force (Join-Path $HomeC 'agents') | Out-Null
+foreach ($a in 'hunter', 'cut', 'prove') {
+  Copy-Item (Join-Path $Pack "shared\agents\$a.md") (Join-Path $HomeC "agents\$a.md") -Force
 }
 
 # ConvertTo-Json unwraps singleton arrays. Keep [{...}] via jq (WSL).

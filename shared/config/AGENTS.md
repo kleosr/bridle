@@ -11,18 +11,18 @@ Install/sync inputs: which skills ship, which repos get scanned, retire lists.
 | File | Role |
 |------|------|
 | `skills.txt` | Harness-owned personal skill directory names |
-| `scan.roots` | Fleet roots for `fleet_sync.sh` discover |
+| `scan.roots` | Opt-in roots for `fleet_sync.sh sync` (empty = no other repos) |
 | `scan.ignore` | Paths/repos skipped by scan |
 | `retired-skills.txt` | Skills not to install |
 | `retired.txt` | Retired pack items |
 
 ## Done (local)
 
-After edits: `FORCE=1 bash shared/hooks/fleet_sync.sh all` (or `sync` / `verify`).
+After edits: `FORCE=1 bash scripts/install.sh` then `bash shared/hooks/fleet_sync.sh verify`.
 
 ## Ask first
 
-- Adding scan roots that write into many live app repos
+- Adding scan roots that write into live app repos (`sync` only)
 
 ## Manual notes
 

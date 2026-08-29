@@ -27,7 +27,7 @@ echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
   | bash shared/hooks/before_submit_prompt.sh
 ```
 
-Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from beforeShellExecution / beforeReadFile. Cloud: `CLOUD=1 TARGET_REPO=/path/to/workspace bash shared/hooks/fleet_sync.sh project-hooks` (never against the pack). `beforeSubmitPrompt.failClosed` must be false. `beforeReadFile.failClosed` is true.
+Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from beforeShellExecution / beforeReadFile. `beforeSubmitPrompt.failClosed` must be false. `beforeReadFile.failClosed` is true.
 
 ## Doctor + Tests
 
@@ -43,10 +43,10 @@ FORCE=1 bash scripts/install.sh
 FORCE=1 bash shared/hooks/fleet_sync.sh verify
 ```
 
-Installs `~/.cursor` hooks+rules+skills (global single registration layer). `hooks.json` commands stay `./hooks/*.sh` (user-hook cwd is `~/.cursor`). `sync` copies `.cursor/rules` to projects under `shared/config/scan.roots` and does **not** install or remove those projects’ `.cursor/hooks`. Hooks spawn with cwd = workspace root for project hooks; user hooks spawn with cwd = `~/.cursor`.
+Installs `~/.cursor` hooks+rules+skills+agents (global single registration layer). `hooks.json` commands stay `./hooks/*.sh` (user-hook cwd is `~/.cursor`). `sync` is opt-in (`shared/config/scan.roots` empty by default) and does **not** install or remove those projects’ `.cursor/hooks`. User hooks spawn with cwd = `~/.cursor`.
 
 ## Size roofs
 
 Keep each **registered** event hook under 80 LOC (`session_start`, `before_submit_prompt`, `before_shell`, `before_read_file`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. `beforeReadFile` is failClosed; the other three are not.
 
-Wired policy: `policy/secret_paths.ere` consumed via `grep -f`. Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`.
+Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.sh` via `grep -f`). `policy/secret_tokens.ere` (`before_submit_prompt.sh`). Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`. Human-readable SSOT: `SECURITY.md`. `bash scripts/doctor.sh` checksums `~/.cursor/hooks` against the pack when the global install exists.
