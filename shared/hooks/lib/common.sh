@@ -4,14 +4,14 @@ resolve_root() {
   local d wr
   wr="$(printf '%s' "${1:-}" | jq -r '.workspace_roots[0] // empty' 2>/dev/null || true)"
   [[ "$wr" == "null" ]] && wr=""
-  if [[ -n "$wr" && ( -f "$wr/HANDOFF.md" || -f "$wr/AGENTS.md" ) ]]; then
+  if [[ -n "$wr" && ( -f "$wr/NOW.md" || -f "$wr/AGENTS.md" ) ]]; then
     ROOT="$(cd "$wr" && pwd)"; return 0
   fi
-  if [[ -f "$PWD/HANDOFF.md" || -f "$PWD/AGENTS.md" ]]; then
+  if [[ -f "$PWD/NOW.md" || -f "$PWD/AGENTS.md" ]]; then
     ROOT="$(cd "$PWD" && pwd)"; return 0
   fi
   for d in "$HERE/.." "$HERE/../.." "$HERE/../../.."; do
-    if [[ -f "$d/HANDOFF.md" || -f "$d/AGENTS.md" ]]; then
+    if [[ -f "$d/NOW.md" || -f "$d/AGENTS.md" ]]; then
       ROOT="$(cd "$d" && pwd)"; return 0
     fi
   done
@@ -33,7 +33,7 @@ extract_conv_id() {
   printf '%s' "$id"
 }
 
-extract_handoff() {
+extract_now() {
   local f="$1" body
   [[ -f "$f" ]] || return 0
   body="$(awk '

@@ -68,6 +68,16 @@ install_skills() {
   return 0
 }
 
+install_agents() {
+  local a
+  mkdir -p "$HOME_C/agents"
+  for a in hunter cut prove; do
+    [[ -f "$PACK/shared/agents/${a}.md" ]] || { echo "[fail] missing shared/agents/${a}.md"; return 1; }
+    cp -f "$PACK/shared/agents/${a}.md" "$HOME_C/agents/${a}.md"
+    echo "[ok] ~/.cursor/agents/${a}.md"
+  done
+}
+
 link_pack_rules() {
   local dest="$PACK/.cursor/rules" name orphan
   mkdir -p "$dest"
@@ -96,8 +106,8 @@ sync_repo_hooks() {
   local repo="$1" label="$2"
   if [[ "$(canon "$repo")" == "$(canon "$PACK")" ]]; then
     remove_project_hooks "$repo" "$label"
+    gitignore_state "$repo"
   fi
-  gitignore_state "$repo"
 }
 
 sync_repo_rules() {

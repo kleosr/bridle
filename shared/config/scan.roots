@@ -1,6 +1,5 @@
-# Directories to scan for project children (one path per line).
-# Portable for every machine: supports ~, $HOME and ${HOME} tokens,
-# expanded at runtime. NEVER hardcode absolute /Users/<name> paths here.
-# Nested group folders (e.g. ~/Documents/<group>/<project>) are found
-# automatically by the depth-2 discovery.
-$HOME/Documents
+# Opt-in roots for `fleet_sync.sh sync` only.
+# Empty (comments only) = clean local install; do not touch other repos.
+# One path per line. Portable: ~, $HOME, ${HOME}. Never hardcode /Users/<name>.
+# Example:
+# $HOME/src/myapp

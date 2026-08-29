@@ -1,0 +1,15 @@
+---
+description: JS and TS installs use pnpm only. Never npm, yarn, or bun.
+alwaysApply: true
+---
+
+# pnpm
+
+When adding, updating, running, or auditing JavaScript dependencies, use **pnpm**. Never `npm`, `yarn`, or `bun`.
+
+- Prefer `pnpm-lock.yaml`. If the repo already has only `package-lock.json`, `yarn.lock`, or `bun.lockb`, say so and keep that lockfile until the user asks to convert.
+- New packages must lose to stdlib, the framework, and already-installed deps first.
+- Audit with `pnpm audit`, not `npm audit`.
+- Do not run `curl | sh` or unknown package `postinstall` scripts. Trust `onlyBuiltDependencies` / `strictDepBuilds` when the repo already sets them. Do not invent a workspace security config for a one-line install.
+- `packageManager` in `package.json`, when you touch it, should name pnpm.
+- Before changing pnpm security keys or adding a JS dependency, Read `SECURITY.md`.

@@ -17,7 +17,7 @@ GROUND: Read this package's `package.json` (monorepo: the nearest one). Pick **o
 | `"vite"` and no `next` | `vite.mdc`. |
 | none of the above | Neighbors only. No Next/Astro/Vite APIs. |
 
-Then Read **one** skill: ponytail, vernacular, or `vercel-react-best-practices` `rules/<one>.md` if the stack is React.
+Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>.md` if the stack is React.
 
 ## Hard (all JS/TS)
 

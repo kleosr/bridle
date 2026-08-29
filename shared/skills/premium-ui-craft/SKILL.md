@@ -49,6 +49,10 @@ Compose pages as **structure** (header + list), not stacked generic cards with b
 
 Every control: default, hover, focus (visible ring, designed), active, disabled. Empty and error are designed copy, not "No data".
 
+## Access
+
+Keyboard: every action reachable without a pointer. Focus ring is designed, not `outline: none` with no replacement. Hit targets ≥44px on touch. Contrast: body text vs surface must read as primary, not gray-on-gray. `prefers-reduced-motion` already zeros duration — do not add a second motion system.
+
 ## Checklist before handoff
 
 - [ ] Primary action obvious without decoration

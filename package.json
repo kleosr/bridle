@@ -2,7 +2,7 @@
   "name": "kleosrules",
   "version": "18.0.0",
   "private": true,
-  "description": "Cursor harness pack — User Rules, companions, skills, Bash hooks, local HANDOFF memory. No Rust. No MCP core dependency.",
+  "description": "Cursor harness pack — User Rules, companions, skills, Bash hooks, local NOW.md memory. No Rust. No MCP core dependency.",
   "license": "MIT",
   "scripts": {
     "doctor": "bash scripts/doctor.sh",

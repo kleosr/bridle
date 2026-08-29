@@ -61,7 +61,7 @@ discover() {
     roots+=("$(canon "$exp")")
   done < <(load_lines "$PACK/shared/config/scan.roots")
   if [[ ${#roots[@]} -eq 0 ]]; then
-    roots=("$(dirname "$PACK")")
+    return 0
   fi
   for root in "${roots[@]}"; do
     if is_project "$root" && ! is_ignored "$root"; then

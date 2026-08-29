@@ -39,6 +39,9 @@ else fail "policy json count = $POLICY_JSON (expected 0)"; fi
 if [[ -f "$HOOKS_DIR/policy/secret_paths.ere" ]]; then ok "secret_paths.ere present"
 else fail "secret_paths.ere missing"; fi
 
+if [[ -f "$HOOKS_DIR/policy/secret_tokens.ere" ]]; then ok "secret_tokens.ere present"
+else fail "secret_tokens.ere missing"; fi
+
 if [[ ! -f "$HOOKS_DIR/policy/mcp_deny.ere" && ! -f "$HOOKS_DIR/policy/destructive.ere" && ! -f "$HOOKS_DIR/policy/vernacular_bans.txt" ]]; then ok "unused policy files removed"
 else fail "unused policy files still on disk"; fi
 
@@ -96,8 +99,14 @@ else ok "no repo-level hooks in pack (local global-only mode)"; fi
 if ! grep -RqiE 'CallMcpTool|user-obsidian' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
 else fail "MCP core dependency found in hooks (should be optional, not core)"; fi
 
-if [[ -f "$PACK/HANDOFF.md" ]] && grep -q 'COMPACTION' "$PACK/HANDOFF.md"; then ok "HANDOFF.md with compaction protocol"
-else fail "HANDOFF.md missing or lacks compaction protocol"; fi
+if [[ -f "$PACK/NOW.md" ]] && grep -q 'COMPACTION' "$PACK/NOW.md"; then ok "NOW.md with compaction protocol"
+else fail "NOW.md missing or lacks compaction protocol"; fi
+
+if [[ -f "$PACK/SECURITY.md" ]] && grep -q 'onlyBuiltDependencies' "$PACK/SECURITY.md"; then ok "SECURITY.md present"
+else fail "SECURITY.md missing or incomplete"; fi
+
+if [[ ! -f "$PACK/HANDOFF.md" && ! -d "$PACK/shared/skills/session-handoff" ]]; then ok "HANDOFF.md and session-handoff retired"
+else fail "HANDOFF.md or skills/session-handoff still on disk (use NOW.md and /now)"; fi
 
 if [[ ! -f "$HOOKS_DIR/stop_gate.sh" && ! -f "$HOOKS_DIR/lean_gate.sh" && ! -f "$HOOKS_DIR/pre_tool_use.sh" ]]; then
   ok "unregistered event scripts removed"
@@ -105,12 +114,12 @@ else fail "unregistered event scripts still on disk"; fi
 
 LAW_STALE=""
 for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
-  "$PACK/shared/rules/vernacular.mdc" \
   "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
+  "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/mario-engineering-team.mdc" \
   "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
-  "$PACK/shared/skills/testing/SKILL.md" "$PACK/shared/skills/vernacular/SKILL.md" \
+  "$PACK/shared/skills/testing/SKILL.md" \
   "$PACK/shared/skills/complexity/SKILL.md"; do
   [[ -f "$f" ]] || { LAW_STALE="$LAW_STALE missing:${f#$PACK/}"; continue; }
   if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
@@ -126,11 +135,49 @@ else fail "native-lean-autoload.mdc or debugging.mdc still on disk"; fi
 if grep -q 'hard 300' "$PACK/shared/rules/ponytail.mdc"; then ok "ponytail.mdc has hard 300 roof"
 else fail "ponytail.mdc missing hard 300 roof"; fi
 
+if [[ ! -f "$PACK/shared/rules/vernacular.mdc" && ! -d "$PACK/shared/skills/vernacular" ]]; then ok "vernacular retired"
+else fail "vernacular.mdc or skills/vernacular still on disk"; fi
+
+if [[ -f "$PACK/shared/rules/pnpm.mdc" && -f "$PACK/shared/agents/hunter.md" ]]; then ok "pnpm.mdc + hunter/cut/prove in pack"
+else fail "pnpm.mdc or shared/agents/hunter.md missing"; fi
+
 if [[ ! -f "$PACK/shared/rules/lean-code.mdc" && ! -d "$PACK/shared/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi
 
 if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/shared/config/skills.txt" "$PACK/shared/skills/AGENTS.md" "$PACK/shared/rules/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
 else fail "Stale reference to deleted skill found in config files"; fi
+
+hash_file() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print $1}'
+  else
+    return 1
+  fi
+}
+HOME_HOOKS="${HOME}/.cursor/hooks"
+if [[ -d "$HOME_HOOKS" ]]; then
+  if hash_file "$HOOKS_DIR/session_start.sh" >/dev/null; then
+    for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh lib/common.sh lib/shell_gate.sh; do
+      src="$HOOKS_DIR/$rel"
+      dst="$HOME_HOOKS/$rel"
+      if [[ ! -f "$dst" ]]; then
+        fail "installed hook missing: ~/.cursor/hooks/$rel (run FORCE=1 bash scripts/install.sh)"
+        continue
+      fi
+      hs="$(hash_file "$src")"
+      hd="$(hash_file "$dst")"
+      if [[ -n "$hs" && "$hs" == "$hd" ]]; then
+        ok "checksum match: $rel"
+      else
+        fail "checksum drift ~/.cursor/hooks/$rel (run FORCE=1 bash scripts/install.sh)"
+      fi
+    done
+  else
+    fail "no shasum/sha256sum — cannot verify installed hook checksums"
+  fi
+fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then

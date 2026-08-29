@@ -13,13 +13,18 @@ printf '%s\n' "$MODE" >"$STATE/mode"
 if [[ "$MODE" == "plan" ]]; then
   emit_quiet; exit 0
 fi
-HANDOFF="$ROOT/HANDOFF.md"
+NOW="$ROOT/NOW.md"
 TAIL=""
-if [[ -f "$HANDOFF" ]]; then
-  TAIL="$(extract_handoff "$HANDOFF")"
+if [[ -f "$NOW" ]]; then
+  TAIL="$(extract_now "$NOW")"
+fi
+POL="$HERE/policy/secret_tokens.ere"
+if [[ -n "$TAIL" && -f "$POL" ]] && printf '%s' "$TAIL" | grep -qE -f "$POL"; then
+  emit_quiet
+  exit 0
 fi
 if [[ -n "$TAIL" ]]; then
-  emit_context "HANDOFF:
+  emit_context "NOW:
 ${TAIL}"
 else
   emit_quiet

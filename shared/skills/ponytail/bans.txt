@@ -1,4 +1,4 @@
-# Soft vernacular bans (corporate/AI-slop). One POSIX ERE per line. Fail-open if file missing.
+# Soft jargon bans (corporate/AI-slop). One POSIX ERE per line. Fail-open if file missing.
 # Do not use GNU \b — stock macOS grep treats \b as backspace.
 (^|[^A-Za-z0-9_])leverage([^A-Za-z0-9_]|$)
 (^|[^A-Za-z0-9_])synerg(y|ies|ize)([^A-Za-z0-9_]|$)

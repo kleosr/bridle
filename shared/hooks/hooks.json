@@ -4,12 +4,14 @@
     "sessionStart": [
       {
         "command": "./hooks/session_start.sh",
+        "timeout": 10,
         "failClosed": false
       }
     ],
     "beforeSubmitPrompt": [
       {
         "command": "./hooks/before_submit_prompt.sh",
+        "timeout": 10,
         "failClosed": false
       }
     ],
@@ -23,6 +25,7 @@
     "beforeReadFile": [
       {
         "command": "./hooks/before_read_file.sh",
+        "timeout": 10,
         "failClosed": true
       }
     ]

@@ -9,7 +9,7 @@ PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 TARGET_REPO="${TARGET_REPO:-}"
 CMD="${1:-all}"
 SHARED=(types)
-GLOBAL=(ponytail agent vernacular testing mario-engineering-team vibe postgres next vite astro complexity)
+GLOBAL=(ponytail agent testing mario-engineering-team vibe postgres next vite astro complexity pnpm)
 source "$HOOKS_DIR/lib/fleet_scan.sh"
 source "$HOOKS_DIR/lib/fleet_install.sh"
 source "$HOOKS_DIR/lib/fleet_sync_repos.sh"
@@ -20,6 +20,7 @@ case "$CMD" in
     install_home_hooks
     install_global_rules
     install_skills
+    install_agents
     link_pack_rules
     ;;
   sync)
@@ -45,17 +46,14 @@ case "$CMD" in
     install_home_hooks
     install_global_rules
     install_skills
-    sync_fleet
-    if [[ "$PROJECT_HOOKS" == "1" && -n "$TARGET_REPO" ]] \
-      && [[ "$(canon "$TARGET_REPO")" != "$(canon "$PACK")" ]]; then
-      install_project_hooks "$TARGET_REPO" "target"
-    fi
+    install_agents
+    link_pack_rules
     verify_smoke
-    echo "[done] fleet_sync all FORCE=$FORCE PROJECT_HOOKS=$PROJECT_HOOKS"
+    echo "[done] fleet_sync all FORCE=$FORCE (local ~/.cursor only; no fleet scan)"
     echo "Manual: paste $PACK/shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
     ;;
   *)
-    echo "usage: FORCE=1 [CLOUD=1|PROJECT_HOOKS=1] [TARGET_REPO=path] $0 {install|sync|project-hooks|verify|all}" >&2
+    echo "usage: FORCE=1 $0 {install|sync|project-hooks|verify|all}" >&2
     exit 2
     ;;
 esac

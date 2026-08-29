@@ -1,10 +1,9 @@
-# Active skills (11)
+# Active skills
 ponytail
 debugging
 testing
 complexity
-vernacular
-session-handoff
+now
 design-stack
 landing-page-design
 premium-ui-craft

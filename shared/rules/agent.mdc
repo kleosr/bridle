@@ -5,10 +5,10 @@ alwaysApply: true
 
 # AGENT CAPSULE
 
-Bash hooks + local HANDOFF memory. One model per conversation.
-Read `HANDOFF.md` for multi-session work. Prefer NO CODE. Smallest Diff. Zero prose comments.
-Start: read HANDOFF.md. Stop with tools: update HANDOFF.
-Git only when asked. Secrets never in code or chat.
+Bash hooks + local `NOW.md`. One model per conversation.
+Read `NOW.md` for multi-session work. Prefer NO CODE. Smallest Diff. Zero prose comments.
+Start: read NOW.md. Stop with tools: update NOW.md.
+Git only when asked. Secrets never in code or chat. Security: `SECURITY.md`.
 Done = `docs/TOOLCHAIN.md` green with evidence.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
@@ -16,14 +16,14 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 | Event | Script | Job |
 |---|---|---|
-| sessionStart | `session_start.sh` | `additional_context`: HANDOFF active sections. Quiet in plan mode. |
+| sessionStart | `session_start.sh` | `additional_context`: NOW.md active sections. Quiet in plan mode. |
 | beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
-| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Complexity-lint disable deny. Infra/DB `ask`. |
+| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. |
 | beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
 
 Cursor documents 21 hook events. This pack registers the four above. There is no `stop`, `postToolUse`, `preToolUse`, `beforeMCPExecution`, or LOC gate in `hooks.json` or on disk. Writes are not blocked by file size. Closing a turn does not follow up.
 
-Brain = `HANDOFF.md`. Cloud: `project-hooks` (no sessionStart; Cursor defers it). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there).
+Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there). Review specialists: `hunter`, `cut`, `prove`.
 
 ## Before you write
 
@@ -37,13 +37,13 @@ Before you claim done: cite green `bash tests/run.sh` / `scripts/doctor.sh` / pa
 
 ## State
 
-`HANDOFF.md` is durable. `/state/` is ephemeral (`mode` from sessionStart). Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md`.
+`NOW.md` is durable. `/state/` is ephemeral (`mode` from sessionStart). Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md` + `SECURITY.md`.
 
 ## Autonomous loop
 
 1. Grep/Glob/Read this codebase. Do not invent paths.
 2. One or two sentences in chat before Write: outcome, files, proof.
 3. If the proof is missing, do that work now. Do not ask.
-4. No partial HANDOFFs. No drip.
+4. No partial NOW.md. No drip.
 5. Write/StrReplace those files. Fix callers.
-6. Re-read them. Run TOOLCHAIN. Cite green. Update HANDOFF.
+6. Re-read them. Run TOOLCHAIN. Cite green. Update NOW.md.

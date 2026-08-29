@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 
+shell_is_git_gh() {
+  echo "$1" | grep -qiE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]+[[:space:]]+)*(git|gh)[[:space:]]'
+}
+
+shell_is_git_gh_body() {
+  echo "$1" | grep -qiE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]+[[:space:]]+)*(git[[:space:]]+commit|gh[[:space:]]+(pr|issue)[[:space:]])'
+}
+
 gate_shell_command() {
   local cmd="$1"
   [[ -z "$cmd" ]] && return 0
-  if echo "$cmd" | grep -qiE '(rm -rf? /|rm -rf? ~|mkfs|dd if=|git push --force|git push -f|drop database|truncate table|>:.*\/dev\/sd|shred )'; then
+  if echo "$cmd" | grep -qiE '(rm -rf? /|rm -rf? ~|mkfs|dd if=|git push --force|git push -f|git[[:space:]]+reset[[:space:]].*--hard|git[[:space:]]+clean[[:space:]].*-f|drop[[:space:]]+(database|table|schema)|truncate table|>:.*\/dev\/sd|shred )'; then
     emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
     return 1
   fi
@@ -17,16 +25,39 @@ gate_shell_command() {
   if gate_shell_source_write "$cmd"; then
     return 1
   fi
+  if gate_shell_secrets "$cmd"; then
+    return 1
+  fi
   return 0
 }
 
 gate_complexity_bypass() {
   local cmd="$1"
-  if echo "$cmd" | grep -qiE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]+[[:space:]]+)*(git|gh)[[:space:]]'; then
+  if shell_is_git_gh "$cmd"; then
     return 1
   fi
   if echo "$cmd" | grep -qiE 'eslint-disable[^[:space:]]*[[:space:]]+([^[:space:],]+,)*complexity|complexity[[:space:]]*:[[:space:]]*['\''"]?off|complexity[[:space:]]*:[[:space:]]*0([^0-9]|$)|(--ignore|--extend-ignore)[=[:space:]][^;&]*C901|noqa:[[:space:]]*C901|clippy::(cyclo|cognitive)[[:alnum:]_]*complexity'; then
     emit_deny "Do not disable cyclomatic lint from the shell. Extract until the project lint is green. CMD: ${cmd:0:120}"
+    return 0
+  fi
+  return 1
+}
+
+gate_shell_secrets() {
+  local cmd="$1" pol="${HERE}/policy/secret_paths.ere"
+  if shell_is_git_gh_body "$cmd"; then
+    return 1
+  fi
+  if [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qE -f "$pol"; then
+    emit_deny "AUTONOMY BLOCK: shell must not read secret paths. CMD: ${cmd:0:120}"
+    return 0
+  fi
+  if echo "$cmd" | grep -qiE '@\.env|(^|[[:space:];|&])(cat|head|tail|less|more|bat|source|\.)[[:space:]]+(['\''"]|\./)*\.env'; then
+    emit_deny "AUTONOMY BLOCK: shell must not read secret paths. CMD: ${cmd:0:120}"
+    return 0
+  fi
+  if echo "$cmd" | grep -qiE '(^|[[:space:];|&])git[[:space:]]+(show|cat-file|checkout|restore|archive)[[:space:]].*(\.env|\.pem|\.key|id_rsa|id_ed25519|credentials)'; then
+    emit_deny "AUTONOMY BLOCK: shell must not read secret paths. CMD: ${cmd:0:120}"
     return 0
   fi
   return 1

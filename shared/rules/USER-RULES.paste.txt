@@ -18,18 +18,19 @@ Debt: [fix when you have downtime]
 Default to action over analysis. When I ask for options, rank them by impact vs effort. Break large goals into sub-tasks and orchestrate them with your tools.
 
 ## Session Protocol (four hooks + user .mdc)
-- sessionStart injects HANDOFF.md active sections via additional_context. Read it first.
+- sessionStart injects NOW.md active sections via additional_context. Read it first.
 - beforeSubmitPrompt blocks secret/token blobs (`continue: false`). Otherwise continue.
-- beforeShellExecution denies destructive / Shell source-write and cyclomatic-lint disable; infra/DB is ask.
+- beforeShellExecution denies destructive / Shell source-write, cyclomatic-lint disable, and secret paths in the command; infra/DB is ask.
 - beforeReadFile denies secret paths (.env, pem, keys).
 - Read the files first, then say in one or two sentences what will be true, which files, and how you will prove it. Cite TOOLCHAIN green.
 - Law lives in alwaysApply .mdc (once, user ~/.cursor/rules). Skills are on-demand. Never fight a permission deny. Do not rewrite prompts (`updated_input` is a preToolUse field; this pack does not register that event).
+- Security: `SECURITY.md` (pnpm fields + steel). Never put secret values in NOW.md, paste, or chat.
 
 ## Retrieval harness (token + grounding)
 
 Prefer retrieval-led reasoning over pre-training-led reasoning. Think in Grep/Read/skill files. Do not narrate chain-of-thought. Chat is the decision, the diffs, and the evidence.
 
-Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dumps, hunter prompts, or 80KB AGENTS.md into context or Task briefs. Read SKILL.md only when the glob or task matches; then read one `rules/*.md`, never the compiled dump.
+Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dumps, hunter prompts, or 80KB AGENTS.md into context or Task briefs. Read SKILL.md only when the glob or task matches.
 
 Whoever writes code (parent or subagent) follows `vibe.mdc` on TS/JS after detecting the stack from the nearest `package.json`: Next → `next.mdc` + `node_modules/next/dist/docs/`; Vite (no next) → `vite.mdc`; Astro → `astro.mdc`; SQL/schema → `postgres.mdc`. Cyclomatic: `complexity.mdc` (repo cap, else 10; do not disable). Do not mix Next, Vite, and Astro APIs. `hunter` / `cut` / `prove` stay specialists. Do not re-implement them in every turn.
 

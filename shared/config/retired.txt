@@ -12,3 +12,4 @@ context-curator.mdc
 native-lean-autoload.mdc
 debugging.mdc
 product-designer-skills.mdc
+vernacular.mdc

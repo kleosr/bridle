@@ -6,8 +6,8 @@ run_test "before_submit_prompt emits continue:true" "true" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | length > 0')"
 run_test "session_start emits additional_context" "true" "$RESULT"
 
-RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("HANDOFF")')"
-run_test "session_start injects HANDOFF" "true" "$RESULT"
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("NOW")')"
+run_test "session_start injects NOW" "true" "$RESULT"
 
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("DEBERES:")')"
 run_test "session_start does not inject DEBERES duty" "false" "$RESULT"
@@ -24,8 +24,8 @@ WS="$(mktemp -d "${TMPDIR:-/tmp}/kleos-ws.XXXXXX")"
 mkdir -p "$FAKE_C/hooks/lib"
 cp "$PACK/shared/hooks/session_start.sh" "$FAKE_C/hooks/"
 cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
-MARKER="WORKSPACE_ROOT_HANDOFF_PROBE_8f3a"
-printf '# HANDOFF\n\n%s\n' "$MARKER" >"$WS/HANDOFF.md"
+MARKER="WORKSPACE_ROOT_NOW_PROBE_8f3a"
+printf '# NOW\n\n%s\n' "$MARKER" >"$WS/NOW.md"
 PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
 RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r --arg m "$MARKER" '.additional_context | test($m)')"
 run_test "session_start uses workspace_roots[0] when cwd is not the pack" "true" "$RESULT"
@@ -38,13 +38,13 @@ mkdir -p "$FAKE_C/hooks/lib"
 cp "$PACK/shared/hooks/session_start.sh" "$FAKE_C/hooks/"
 cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
 {
-  printf '# HANDOFF\n\n## Now\n\nKEEP_ME_NOW\n\n## Archived\n\n'
+  printf '# NOW\n\n## Now\n\nKEEP_ME_NOW\n\n## Archived\n\n'
   i=1
   while [[ "$i" -le 30 ]]; do
     printf 'archive line %s\n' "$i"
     i=$((i + 1))
   done
-} >"$WS/HANDOFF.md"
+} >"$WS/NOW.md"
 PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
 RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("KEEP_ME_NOW")')"
 RESULT_ARCH="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("archive line 30")')"
@@ -63,10 +63,10 @@ cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
   printf '## Open\n\n- open item\n\n## Blockers\n\n- none\n\n'
   printf '## Next\n\nNEXT_ONLY_SECTION\n\n## Verify\n\nVERIFY_MARKER\n\n'
   printf '## Notes\n\n- notes\n'
-} >"$WS/HANDOFF.md"
+} >"$WS/NOW.md"
 PAYLOAD="$(jq -n --arg wr "$WS" '{hook_event_name:"sessionStart",composer_mode:"agent",workspace_roots:[$wr]}')"
 RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/session_start.sh" | jq -r '.additional_context | test("VERIFY_MARKER")')"
-run_test "session_start falls back when HANDOFF only shares Next" "true" "$RESULT"
+run_test "session_start falls back when NOW.md only shares Next" "true" "$RESULT"
 rm -rf "$FAKE_HOME" "$WS"
 
 rm -rf "$PACK/state"
@@ -101,12 +101,12 @@ fi
 
 LAW_STALE=no
 for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
-  "$PACK/shared/rules/vernacular.mdc" \
   "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
-  "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
-  "$PACK/shared/skills/testing/SKILL.md" "$PACK/shared/skills/vernacular/SKILL.md" \
+  "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/USER-RULES.paste.txt" \
+  "$PACK/shared/skills/ponytail/SKILL.md" \
+  "$PACK/shared/skills/testing/SKILL.md" \
   "$PACK/shared/skills/complexity/SKILL.md"; do
   [[ -f "$f" ]] || { LAW_STALE=yes; continue; }
   if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
