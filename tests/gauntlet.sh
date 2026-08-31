@@ -171,6 +171,7 @@ run_test "windows rewrite sessionStart[0].failClosed stays false" "false" "$(pri
 FS_HOME3="$(mktemp -d)"
 mkdir -p "$FS_HOME3/.cursor/rules"
 printf '%s\n' '---' 'alwaysApply: true' '---' '# leftover Design bind' > "$FS_HOME3/.cursor/rules/product-designer-skills.mdc"
+printf '%s\n' '---' 'alwaysApply: true' '---' '# leftover seven-role team' > "$FS_HOME3/.cursor/rules/mario-engineering-team.mdc"
 HOME="$FS_HOME3" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1
 REL_CMD="$(jq -r '.hooks[][]?.command // empty' "$FS_HOME3/.cursor/hooks.json" 2>/dev/null | grep -c '^\.cursor/hooks/' || true)"
 REL_CMD="${REL_CMD//[!0-9]}"; [[ -z "$REL_CMD" ]] && REL_CMD=0
@@ -194,7 +195,7 @@ run_test "home hooks.json has no project-relative .cursor/hooks/ commands" "0" "
 run_test "home hooks.json uses ./hooks/ commands" "4" "$DOT_CMD"
 run_test "home hooks.json has 4 events" "4" "$HOME_EVT"
 run_test "install copies agent.mdc to user rules" "yes" "$HOME_AGENT"
-run_test "install copies mario-engineering-team.mdc to user rules" "yes" "$HOME_MARIO"
+run_test "regression: install prunes leftover mario-engineering-team.mdc" "no" "$HOME_MARIO"
 run_test "install copies complexity.mdc to user rules" "yes" "$HOME_CYCLO"
 run_test "install symlinks complexity skill" "yes" "$HOME_CYCLO_SK"
 run_test "regression: install prunes leftover product-designer-skills.mdc" "no" "$HOME_DESIGN"

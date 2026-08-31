@@ -117,7 +117,7 @@ for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
   "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
-  "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/mario-engineering-team.mdc" \
+  "$PACK/shared/rules/pnpm.mdc" \
   "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
   "$PACK/shared/skills/testing/SKILL.md" \
   "$PACK/shared/skills/complexity/SKILL.md"; do
@@ -137,6 +137,9 @@ else fail "ponytail.mdc missing hard 300 roof"; fi
 
 if [[ ! -f "$PACK/shared/rules/vernacular.mdc" && ! -d "$PACK/shared/skills/vernacular" ]]; then ok "vernacular retired"
 else fail "vernacular.mdc or skills/vernacular still on disk"; fi
+
+if [[ ! -f "$PACK/shared/rules/mario-engineering-team.mdc" ]]; then ok "mario-engineering-team retired"
+else fail "mario-engineering-team.mdc still on disk"; fi
 
 if [[ -f "$PACK/shared/rules/pnpm.mdc" && -f "$PACK/shared/agents/hunter.md" ]]; then ok "pnpm.mdc + hunter/cut/prove in pack"
 else fail "pnpm.mdc or shared/agents/hunter.md missing"; fi
