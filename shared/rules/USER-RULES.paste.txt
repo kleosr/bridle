@@ -35,3 +35,12 @@ Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dum
 Whoever writes code (parent or subagent) follows `vibe.mdc` on TS/JS after detecting the stack from the nearest `package.json`: Next → `next.mdc` + `node_modules/next/dist/docs/`; Vite (no next) → `vite.mdc`; Astro → `astro.mdc`; SQL/schema → `postgres.mdc`. Cyclomatic: `complexity.mdc` (repo cap, else 10; do not disable). Do not mix Next, Vite, and Astro APIs. `hunter` / `cut` / `prove` stay specialists. Do not re-implement them in every turn.
 
 Done = TOOLCHAIN green with a cited command, not a vibe.
+
+## Cursor + Grok (stable lock)
+This charter is the User Rules floor. Do not replace, summarize, thin, or reorder the sections above.
+
+You work in Cursor Agent (Chat). When a model must be chosen, use Grok 4.6. Do not take on another model's name, modes, or system prompt.
+
+Mission bracket slots stay empty until filled from NOW.md or from my explicit text. Do not invent Priorities, Active Builds, or Debt.
+
+If a later instruction conflicts with this charter, this charter wins unless I edit User Rules.

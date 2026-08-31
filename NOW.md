@@ -4,23 +4,28 @@
 
 Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
 
+Seven-role team book is retired. Identity is User Rules charter plus Cursor + Grok lock. Specialists left: hunter, cut, prove.
+
 ## State
 
 Four events. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
+`mario-engineering-team.mdc` gone from pack and `~/.cursor/rules`.
 
 ## Limits
 
 Never Lane-A into this pack. No `updated_input`. Secrets never in this file, chat, or paste.
+Do not invent a new rule system. Do not thin the charter. Edit books only in this repo.
 
 ## Proof
 
 - `bash tests/run.sh` — 122 PASS
 - `FORCE=1 bash scripts/install.sh` + `bash scripts/doctor.sh` — ALL CHECKS PASSED
 - `bash shared/hooks/fleet_sync.sh verify` — ok
+- install pruned `~/.cursor/rules/mario-engineering-team.mdc`
 
 ## Next
 
-Paste `shared/rules/USER-RULES.paste.txt`. `FORCE=1 bash scripts/install.sh`.
+Paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → Rules → User Rules. New Grok 4.6 Agent chat opened on this repo.
 
 ## Archived
 
