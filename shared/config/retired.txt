@@ -13,3 +13,4 @@ native-lean-autoload.mdc
 debugging.mdc
 product-designer-skills.mdc
 vernacular.mdc
+mario-engineering-team.mdc
