@@ -16,9 +16,10 @@ shell_is_git_gh_body() {
 gate_shell_command() {
   local cmd="$1"
   [[ -z "$cmd" ]] && return 0
-  local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${Q}?(/|~/?|\\\$HOME/?|\\\$\\{HOME\\}/?|\\.\\.?/?|\\*)\\*?${Q}?([[:space:];&|]|\$)"
-  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f|--force[^[:space:]]*)([[:space:]]|\$)"
-  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}-[[:alpha:]]*f|drop[[:space:]]+(database|table|schema)|truncate[[:space:]]+table|>[[:space:]]*/dev/sd|shred[[:space:]]"
+  local wipe_tgt="${Q}?(/(/*|\\./*|\\.\\./*)*|/[^/]+/\\.\\.(/*|\\./*|\\.\\./*)*|~|\\\$HOME|\\\$\\{HOME\\}|\\.\\.?|\\*)${Q}?/?${Q}?(\\.|\\*)?${Q}?"
+  local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&|]|\$)"
+  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force[^[:space:]]*)([[:space:]]|\$)"
+  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|drop[[:space:]]+(database|table|schema)|truncate[[:space:]]+table|>[[:space:]]*/dev/sd|shred[[:space:]]"
   if echo "$cmd" | grep -qiE "${rm_root}|${force_push}|${wipe}"; then
     emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
     return 1
@@ -47,13 +48,13 @@ gate_complexity_bypass() {
 gate_shell_secrets() {
   local cmd="$1" pol="${HERE}/policy/secret_paths.ere" hit=0
   shell_is_git_gh_body "$cmd" && return 1
-  local env_seed='cp[[:space:]]+\.env\.(example|sample|template)[[:space:]]+\.env([[:space:]]|$)'
-  local env_tok="(^|[[:space:]=(<@]|${Q})(\\./)?\\.env(\\.local|\\.development|\\.production|\\.staging|\\.test|rc)?${TERM}"
+  local env_seed='^[[:space:]]*cp[[:space:]]+\.env\.(example|sample|template)[[:space:]]+\.env[[:space:]]*$'
+  local env_tok="(^|[[:space:]=(<@]|${Q})(\\./)?\\.env(rc|\\.(local|development|dev|production|prod|staging|stage|test|ci|secret|secrets)(\\.[^[:space:]\"';|&)]*)?)?${TERM}"
   local readers='(cat|head|tail|less|more|bat|source|\.|grep|rg|awk|sed|cut|xxd|od|base64|openssl|strings|scp|cp)'
   local key_mat="${WORD}${readers}[[:space:]]+${SEG}([^[:space:]\"']+\\.(pem|key|p12|pfx)|[^[:space:]\"']*id_(rsa|ed25519|ecdsa))(${Q}|[[:space:];|&]|\$)"
   local git_leak="${WORD}git[[:space:]]+(show|cat-file|checkout|restore|archive)[[:space:]]${SEG}(\\.env|\\.pem|\\.key|id_rsa|id_ed25519|credentials)"
   if [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qE -f "$pol"; then hit=1
-  elif ! echo "$cmd" | grep -qE "$env_seed" && echo "$cmd" | grep -qE "$env_tok"; then hit=1
+  elif echo "$cmd" | grep -qE "$env_tok" && ! echo "$cmd" | grep -qE "$env_seed"; then hit=1
   elif echo "$cmd" | grep -qiE "$key_mat"; then hit=1
   elif echo "$cmd" | grep -qiE "$git_leak"; then hit=1
   fi
