@@ -31,11 +31,24 @@ for c in \
   'rm -fr /' \
   'rm -rf "$HOME"' \
   'rm -rf ./*' \
+  'rm -rf /.' \
+  'rm -rf /..' \
+  'rm -rf //' \
+  'rm -rf /tmp/..' \
+  'rm -rf "$HOME"/*' \
+  'rm -rf "$HOME/."' \
+  'rm -rf "$HOME/"*' \
   'git push origin main -f' \
   'git push origin main --force' \
+  'git push -fu origin' \
+  'git clean --force' \
+  'git clean -d --force' \
   'export $(cat .env | xargs)' \
   'grep API_KEY .env' \
   'awk 1 .env' \
+  'cp .env.example .env && cat .env' \
+  'cat .env.dev' \
+  'source .env.prod' \
   'cat id_rsa' \
   'cat server.pem | head -1' \
   'cat certs/server.key; echo' \
