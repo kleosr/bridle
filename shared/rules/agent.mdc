@@ -9,7 +9,7 @@ Bash hooks + local `NOW.md`. One model per conversation.
 Read `NOW.md` for multi-session work. Prefer NO CODE. Smallest Diff. Zero prose comments.
 Start: read NOW.md. Stop with tools: update NOW.md.
 Git only when asked. Secrets never in code or chat. Security: `SECURITY.md`.
-Done = `docs/TOOLCHAIN.md` green with evidence.
+Done = a cited green command from THIS repo (TOOLCHAIN, package test, or the proof the repo already names). Do not cite another repository's tests.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
 ## Harness (four registered events)
@@ -33,7 +33,7 @@ Then, in one or two normal sentences, say what will be true when you stop, which
 ## File map
 
 Change only files you actually opened. Finish them this turn. No drip, no orphan files.
-Before you claim done: cite green `bash tests/run.sh` / `scripts/doctor.sh` / package test.
+Before you claim done: cite a green command from THIS repo. In kleosrules: `bash tests/run.sh` / `scripts/doctor.sh`.
 
 ## State
 
@@ -46,4 +46,4 @@ Before you claim done: cite green `bash tests/run.sh` / `scripts/doctor.sh` / pa
 3. If the proof is missing, do that work now. Do not ask.
 4. No partial NOW.md. No drip.
 5. Write/StrReplace those files. Fix callers.
-6. Re-read them. Run TOOLCHAIN. Cite green. Update NOW.md.
+6. Re-read them. Run this repo's proof. Cite green. Update NOW.md.

@@ -39,6 +39,10 @@ source "$PACK/tests/gauntlet.sh"
 source "$PACK/tests/fixtures_more.sh"
 
 echo ""
+echo "=== Gate edges (false positives / bypasses) ==="
+source "$PACK/tests/gate_edges.sh"
+
+echo ""
 echo "=== Plan-mode regression ==="
 source "$PACK/tests/plan_mode.sh"
 

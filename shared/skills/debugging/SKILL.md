@@ -1,7 +1,7 @@
 ---
 name: debugging
 description: >-
-  Debugs difficult, intermittent, cross-layer, or regression bugs
+  Debugs difficult, intermittent, cross-layer, or regression bugs with
   evidence before fixes. Use when the cause is unknown, normal debugging
   stalled, or the user asks to hunt, diagnose, or root-cause a bug.
 ---

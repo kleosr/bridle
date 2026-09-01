@@ -4,28 +4,30 @@
 
 Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
 
-Seven-role team book is retired. Identity is User Rules charter plus Cursor + Grok lock. Specialists left: hunter, cut, prove.
+Hook audit done. `shell_gate.sh` rewritten: separators (`&&`, `;`, `|`) no longer bleed between commands; `rm -fr /`, `rm -rf "$HOME"`, `git push … -f`, `$(cat .env)`, `grep X .env`, `cat x.pem | …`, python heredoc source-write now deny. `.env.example` readable. Token regex word-bounded (`tomsk-…` passes). `head -n 150` matches compaction protocol. cwd diagnostic removed (answer: hooks run with cwd `~/.cursor`).
 
 ## State
 
 Four events. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
-`mario-engineering-team.mdc` gone from pack and `~/.cursor/rules`.
+Team book retired. Settings User Rules not readable from disk.
+Known accepted false positives: `echo "… > x.ts"` inside quotes; `jq '.env'`; `git push --force-with-lease`; `git checkout -- a.ts` (intended).
 
 ## Limits
 
 Never Lane-A into this pack. No `updated_input`. Secrets never in this file, chat, or paste.
-Do not invent a new rule system. Do not thin the charter. Edit books only in this repo.
+Do not invent a new rule system. Do not thin the charter.
+Cloud Agents, Tab, Inline Edit, Bugbot are out of scope.
 
 ## Proof
 
-- `bash tests/run.sh` — 122 PASS
+- `bash tests/run.sh` — 157 PASS (new `tests/gate_edges.sh`)
 - `FORCE=1 bash scripts/install.sh` + `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- `bash shared/hooks/fleet_sync.sh verify` — ok
-- install pruned `~/.cursor/rules/mario-engineering-team.mdc`
+- `docs/STEER-EVAL.md` — contaminated steer record
+- `cmp` Downloads pastes == `shared/rules/USER-RULES.paste.txt`
 
 ## Next
 
-Paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → Rules → User Rules. New Grok 4.6 Agent chat opened on this repo.
+Paste `shared/rules/USER-RULES.paste.txt` in Settings. Open this repo. New Grok 4.6 chat. Re-run the three prompts in `docs/STEER-EVAL.md`. Commit when asked.
 
 ## Archived
 
