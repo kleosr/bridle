@@ -42,6 +42,9 @@ case "$CMD" in
   verify)
     verify_smoke
     ;;
+  uninstall)
+    uninstall_home
+    ;;
   all)
     install_home_hooks
     install_global_rules
@@ -53,7 +56,7 @@ case "$CMD" in
     echo "Manual: paste $PACK/shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
     ;;
   *)
-    echo "usage: FORCE=1 $0 {install|sync|project-hooks|verify|all}" >&2
+    echo "usage: FORCE=1 $0 {install|sync|project-hooks|verify|uninstall|all}" >&2
     exit 2
     ;;
 esac

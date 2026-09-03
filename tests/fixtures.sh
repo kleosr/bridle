@@ -69,11 +69,9 @@ RESULT="$(cd "$FAKE_C" && printf '%s\n' "$PAYLOAD" | HOME="$FAKE_HOME" bash "$FA
 run_test "session_start falls back when NOW.md only shares Next" "true" "$RESULT"
 rm -rf "$FAKE_HOME" "$WS"
 
-rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"please fix src/auth.ts login bug"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and ((.user_message // "")|test("FILE_MAP nudge")) then "nudge" else "no" end')"
 run_test "before_submit does not FILE_MAP-nudge (continue:true)" "no" "$RESULT"
 
-rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r 'if .continue==true and ((.user_message // "")|test("JOB CARD")) then "job" else "other" end')"
 run_test "before_submit does not JOB CARD nudge" "other" "$RESULT"
 

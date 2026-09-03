@@ -2,7 +2,8 @@
 
 HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh)
 CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
-RUNTIME_LIBS=(common.sh shell_gate.sh shell_fleet.sh)
+RUNTIME_LIBS=(common.sh shell_gate.sh)
+PACK_AGENTS=(hunter cut prove)
 
 prune_hook_scripts() {
   local dest="$1" s b keep k
@@ -73,7 +74,7 @@ assert_dest_hook_scripts() {
 }
 
 install_home_hooks() {
-  mkdir -p "$HOME_C/hooks/policy" "$HOME_C/state"
+  mkdir -p "$HOME_C/hooks/policy"
   copy_hook_scripts "$HOME_C/hooks"
   for orphan in ask-gated-shell.sh backlog-on-read.sh block-dangerous-git.sh capture-mistake.sh deny-danger.sh install-user-hooks.sh; do
     rm -f "$HOME_C/hooks/$orphan"
@@ -118,6 +119,33 @@ install_project_hooks() {
     fi
   done < <(load_lines "$PACK/shared/config/retired.txt")
   echo "[ok] project Lane-A hooks + .mdc → $label (no sessionStart; cloud-safe)"
+}
+
+uninstall_home_hooks() {
+  local s p
+  if [[ -f "$HOME_C/hooks.json" ]] && grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json"; then
+    rm -f "$HOME_C/hooks.json"
+    echo "[rm] ~/.cursor/hooks.json"
+  fi
+  for s in "${HOOK_SCRIPTS[@]}"; do rm -f "$HOME_C/hooks/$s"; done
+  for s in "${RUNTIME_LIBS[@]}"; do rm -f "$HOME_C/hooks/lib/$s"; done
+  for p in "$HOOKS_DIR"/policy/*; do rm -f "$HOME_C/hooks/policy/$(basename "$p")"; done
+  rm -f "$HOME_C/hooks/wsl-shim.ps1"
+  rmdir "$HOME_C/hooks/policy" "$HOME_C/hooks/lib" "$HOME_C/hooks" 2>/dev/null || true
+}
+
+uninstall_home() {
+  local name skill dst
+  uninstall_home_hooks
+  for name in "${GLOBAL[@]}"; do rm -f "$HOME_C/rules/${name}.mdc"; done
+  while IFS= read -r skill; do
+    [[ -z "$skill" ]] && continue
+    dst="$HOME_C/skills/$skill"
+    [[ -L "$dst" && "$(canon "$dst")" == "$(canon "$PACK/shared/skills/$skill")" ]] && rm -f "$dst"
+  done < <(load_lines "$PACK/shared/config/skills.txt")
+  for name in "${PACK_AGENTS[@]}"; do rm -f "$HOME_C/agents/${name}.md"; done
+  rm -f "$PACK/.cursor/rules/types.mdc"
+  echo "[done] uninstall: kleosrules artifacts removed from ~/.cursor (foreign rules/skills/agents untouched)"
 }
 
 remove_project_hooks() {

@@ -48,32 +48,24 @@ verify_smoke() {
     echo "[fail] scan.roots hardcodes an absolute /Users|/home path (must use ~ or \$HOME)"; bad=1
   fi
   [[ "$sr_bad" -eq 0 ]] || bad=1
-  if [[ -e "$HOME_C/rules/native-lean-autoload.mdc" || -L "$HOME_C/rules/native-lean-autoload.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/native-lean-autoload.mdc should be retired"; bad=1
-  fi
-  if [[ -e "$HOME_C/rules/vernacular.mdc" || -L "$HOME_C/rules/vernacular.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/vernacular.mdc should be retired"; bad=1
-  fi
-  if [[ ! -f "$HOME_C/rules/pnpm.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/pnpm.mdc missing after install"; bad=1
-  fi
-  if [[ ! -f "$HOME_C/agents/hunter.md" || ! -f "$HOME_C/agents/cut.md" || ! -f "$HOME_C/agents/prove.md" ]]; then
-    echo "[fail] ~/.cursor/agents hunter/cut/prove missing after install"; bad=1
-  fi
+  local orphan
+  while IFS= read -r orphan; do
+    [[ -z "$orphan" ]] && continue
+    if [[ -e "$HOME_C/rules/$orphan" || -L "$HOME_C/rules/$orphan" || -e "$PACK/.cursor/rules/$orphan" || -L "$PACK/.cursor/rules/$orphan" ]]; then
+      echo "[fail] retired rule still present: $orphan"; bad=1
+    fi
+  done < <(load_lines "$PACK/shared/config/retired.txt")
+  local name
+  for name in "${GLOBAL[@]}"; do
+    [[ -f "$HOME_C/rules/${name}.mdc" ]] || { echo "[fail] ~/.cursor/rules/${name}.mdc missing after install"; bad=1; }
+  done
+  for name in "${PACK_AGENTS[@]}"; do
+    [[ -f "$HOME_C/agents/${name}.md" ]] || { echo "[fail] ~/.cursor/agents/${name}.md missing after install"; bad=1; }
+  done
+  jq -e '[.hooks[][] | .timeout] | all(type == "number")' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] every hooks.json entry needs a numeric timeout"; bad=1; }
   jq -e '.hooks.beforeReadFile[0].timeout == 10' "$HOOKS_DIR/hooks.json" >/dev/null \
     || { echo "[fail] beforeReadFile timeout must be 10"; bad=1; }
-  if [[ -e "$HOME_C/rules/product-designer-skills.mdc" || -L "$HOME_C/rules/product-designer-skills.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/product-designer-skills.mdc should be retired"; bad=1
-  fi
-  if [[ -e "$HOME_C/rules/mario-engineering-team.mdc" || -L "$HOME_C/rules/mario-engineering-team.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/mario-engineering-team.mdc should be retired"; bad=1
-  fi
-  if [[ -e "$PACK/.cursor/rules/debugging.mdc" || -L "$PACK/.cursor/rules/debugging.mdc" ]]; then
-    echo "[fail] pack .cursor/rules/debugging.mdc duplicates debugging skill"; bad=1
-  fi
-  if [[ ! -f "$HOME_C/rules/agent.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/agent.mdc missing after install"; bad=1
-  fi
   if [[ -e "$HOME_C/rules/types.mdc" || -L "$HOME_C/rules/types.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/types.mdc must stay project-layer"; bad=1
   fi

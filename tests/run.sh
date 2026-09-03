@@ -23,12 +23,7 @@ run_test() {
   fi
 }
 
-rm -rf "$PACK/state"
-
-NOW_BACKUP=""
-if [[ -f "$PACK/NOW.md" ]]; then
-  NOW_BACKUP="$(cat "$PACK/NOW.md")"
-fi
+NOW_BEFORE="$(cksum <"$PACK/NOW.md")"
 
 source "$PACK/tests/static_checks.sh"
 
@@ -42,18 +37,15 @@ echo ""
 echo "=== Plan-mode regression ==="
 source "$PACK/tests/plan_mode.sh"
 
+source "$PACK/tests/audit.sh"
+
 echo ""
-echo "=== Conversation-scoped state ==="
-source "$PACK/tests/conversation_state.sh"
+echo "=== Clean tree ==="
+run_test "tests did not modify NOW.md" "$NOW_BEFORE" "$(cksum <"$PACK/NOW.md")"
 
 echo ""
 echo "=== Results ==="
 echo "PASS: $PASS"
 echo "FAIL: $FAIL"
-rm -rf "$PACK/state"
-
-if [[ -n "$NOW_BACKUP" ]]; then
-  printf '%s' "$NOW_BACKUP" >"$PACK/NOW.md"
-fi
 
 [[ "$FAIL" -eq 0 ]] && exit 0 || exit 1

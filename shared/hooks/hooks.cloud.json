@@ -11,12 +11,14 @@
     "beforeReadFile": [
       {
         "command": ".cursor/hooks/before_read_file.sh",
+        "timeout": 10,
         "failClosed": true
       }
     ],
     "beforeSubmitPrompt": [
       {
         "command": ".cursor/hooks/before_submit_prompt.sh",
+        "timeout": 10,
         "failClosed": false
       }
     ]

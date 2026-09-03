@@ -16,7 +16,7 @@ New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
 foreach ($s in 'session_start.sh', 'before_submit_prompt.sh', 'before_shell.sh', 'before_read_file.sh') {
   Copy-Item (Join-Path $src $s) $HooksD -Force
 }
-foreach ($s in 'common.sh', 'shell_gate.sh', 'shell_fleet.sh') {
+foreach ($s in 'common.sh', 'shell_gate.sh') {
   Copy-Item (Join-Path $src "lib\$s") (Join-Path $HooksD 'lib') -Force
 }
 Copy-Item "$src\policy\*" "$HooksD\policy" -Force

@@ -8,10 +8,15 @@ shell_is_git_gh_body() {
   echo "$1" | grep -qiE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]+[[:space:]]+)*(git[[:space:]]+commit|gh[[:space:]]+(pr|issue)[[:space:]])'
 }
 
+RM_FLAGS='(-[a-z]+[[:space:]]+)*-[a-z]*r[a-z]*[[:space:]]+(-[a-z]+[[:space:]]+)*'
+RM_HOME='(~|\$\{?HOME\}?)(/[^[:space:]]*)?'
+RM_SYSTEM='/(usr|etc|var|home|bin|sbin|lib|lib64|boot|opt|root|srv|dev|proc|sys|private|Users|System|Library|Applications|Volumes)(/\*?)?'
+RM_DESTRUCTIVE="(^|[[:space:];|&(])rm[[:space:]]+${RM_FLAGS}['\"]?(/|/\\*|\\.\\.?|${RM_HOME}|${RM_SYSTEM})['\"]?([[:space:]]|$)"
+
 gate_shell_command() {
   local cmd="$1"
   [[ -z "$cmd" ]] && return 0
-  if echo "$cmd" | grep -qiE '(rm -rf? /|rm -rf? ~|mkfs|dd if=|git push --force|git push -f|git[[:space:]]+reset[[:space:]].*--hard|git[[:space:]]+clean[[:space:]].*-f|drop[[:space:]]+(database|table|schema)|truncate table|>:.*\/dev\/sd|shred )'; then
+  if printf '%s' "$cmd" | grep -qiE "${RM_DESTRUCTIVE}|mkfs|dd if=|git push --force|git push -f|git[[:space:]]+reset[[:space:]].*--hard|git[[:space:]]+clean[[:space:]].*-f|drop[[:space:]]+(database|table|schema)|truncate table|>:.*/dev/sd|shred "; then
     emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
     return 1
   fi
@@ -63,34 +68,32 @@ gate_shell_secrets() {
   return 1
 }
 
+SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs)'
+SRC_END="(['\"]|[[:space:]\"';|&]|$)"
+SRC_PATH="(['\"][^'\"]*\\.${SRC_EXT}['\"]|(\\\\ |[^|&;[:space:]'\"])+\\.${SRC_EXT}${SRC_END})"
+SRC_TAIL="\\.${SRC_EXT}${SRC_END}"
+SRC_WRITE_PATTERNS=(
+  "(>|>{2})[[:space:]]*${SRC_PATH}"
+  "(^|[[:space:];|&])tee([[:space:]]+-a)?[[:space:]]+${SRC_PATH}"
+  "(^|[[:space:];|&])dd[[:space:]]+[^;&|]*of=${SRC_PATH}"
+  "(^|[[:space:];|&])(cp|mv|install)[[:space:]]+([^[:space:]]+[[:space:]]+)+${SRC_PATH}"
+  "(^|[[:space:];|&])(sed|perl)[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*${SRC_TAIL}"
+  "(^|[[:space:];|&])(curl|wget)[[:space:]].*-[oO][[:space:]]+${SRC_PATH}"
+  "(^|[[:space:];|&])git[[:space:]]+(checkout|restore)[[:space:]].*${SRC_TAIL}"
+)
+SRC_INLINE_WRITE="(^|[[:space:];|&])(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+)[[:space:]].{0,200}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)"
+
+shell_writes_source() {
+  local cmd="$1" pat
+  for pat in "${SRC_WRITE_PATTERNS[@]}"; do
+    printf '%s' "$cmd" | grep -qE "$pat" && return 0
+  done
+  printf '%s' "$cmd" | grep -qiE "$SRC_INLINE_WRITE"
+}
+
 gate_shell_source_write() {
   local cmd="$1"
-  local ext='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs)'
-  local hit=0
-  if echo "$cmd" | grep -qE "(>|>{2})[[:space:]]*['\"]?[^|&;[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "<<[-]?[A-Za-z0-9_]+.*(>|>{2})[[:space:]]*['\"]?[^|&;[:space:]'\"]+\.${ext}"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(>|>{2})[[:space:]]*['\"]?[^|&;[:space:]'\"]+\.${ext}.*<<[-]?[A-Za-z0-9_]+"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])tee([[:space:]]+-a)?[[:space:]]+['\"]?[^|&;[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])dd[[:space:]]+[^;&|]*of=['\"]?[^[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])(cp|mv|install)[[:space:]]+([^[:space:]]+[[:space:]]+)+['\"]?[^|&;[:space:]'\"]+\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])sed[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])perl[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  elif echo "$cmd" | grep -qiE "(^|[[:space:];|&])(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+)[[:space:]].{0,200}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])(curl|wget)[[:space:]].*-[oO][[:space:]]+['\"]?[^|&;[:space:]'\"]+\.${ext}"; then
-    hit=1
-  elif echo "$cmd" | grep -qE "(^|[[:space:];|&])git[[:space:]]+(checkout|restore)[[:space:]].*\.${ext}(['\"]|[[:space:]\"';|&]|$)"; then
-    hit=1
-  fi
-  [[ "$hit" -eq 0 ]] && return 1
+  shell_writes_source "$cmd" || return 1
   emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code. CMD: ${cmd:0:120}"
   return 0
 }

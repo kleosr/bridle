@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
 
-rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"implement a login form"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r '.continue')"
 run_test "before_submit continues unbound task (no context inject)" "true" "$RESULT"
-RESULT="$([[ -f "$PACK/state/route" ]] && cat "$PACK/state/route" || echo missing)"
-run_test "before_submit does not write route=code" "missing" "$RESULT"
 
-rm -rf "$PACK/state"
 RESULT="$(echo '{"prompt":"the form breaks on submit"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r '.continue')"
 run_test "before_submit continues bugfix prompt" "true" "$RESULT"
-RESULT="$(cat "$PACK/state/route" 2>/dev/null || echo missing)"
-run_test "before_submit does not route bugfix" "missing" "$RESULT"
 
 if ! grep -Rq --include='*.sh' 'updated_input' "$PACK/shared/hooks/" 2>/dev/null && [[ ! -e "$PACK/shared/hooks/kleos-gate" ]]; then
   echo "[pass] no updated_input / Rust gate"; PASS=$((PASS + 1))

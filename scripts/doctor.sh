@@ -17,7 +17,7 @@ else fail "jq not found — required for JSON parsing in hooks (brew install jq)
 if command -v shellcheck >/dev/null 2>&1; then ok "shellcheck available"
 else echo "[warn] shellcheck not found (optional, recommended for CI)"; fi
 
-for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/MacOS/install.sh "$PACK"/Linux/install.sh; do
+for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/MacOS/install.sh "$PACK"/Linux/install.sh "$PACK"/scripts/*.sh; do
   [[ -f "$f" ]] || continue
   if [[ -x "$f" ]]; then ok "executable: ${f#$PACK/}"
   else fail "not executable: ${f#$PACK/}"; fi
@@ -80,8 +80,18 @@ while IFS= read -r cmd; do
   else fail "hook ref missing: $script (from hooks.json)"; fi
 done < <(jq -r '.hooks | to_entries[] | .value[]? | .command // empty' "$HOOKS_DIR/hooks.json" 2>/dev/null || true)
 
-if grep -q '^state/' "$PACK/.gitignore" && grep -q '\.cursor/' "$PACK/.gitignore"; then ok ".gitignore covers state/ and .cursor/"
-else fail ".gitignore missing state/ or .cursor/ coverage"; fi
+if grep -q '\.cursor/' "$PACK/.gitignore"; then ok ".gitignore covers .cursor/"
+else fail ".gitignore missing .cursor/ coverage"; fi
+
+AGENTS_COUNT="$(find "$PACK" -name AGENTS.md -not -path '*/.git/*' | wc -l | tr -d ' ')"
+if [[ "$AGENTS_COUNT" -eq 1 ]]; then ok "single AGENTS.md (no nested adapters)"
+else fail "expected exactly 1 AGENTS.md, found $AGENTS_COUNT"; fi
+
+if [[ ! -e "$PACK/CLAUDE.md" && ! -e "$PACK/.cursorrules" && ! -d "$PACK/.claude" ]]; then ok "no CLAUDE.md / .cursorrules (no consumer; see docs/engineering-rules-decision.md)"
+else fail "CLAUDE.md, .cursorrules, or .claude/ present without a verified consumer"; fi
+
+if [[ ! -e "$PACK/shared/hooks/lib/shell_fleet.sh" && ! -d "$PACK/state" ]]; then ok "no shell_fleet.sh / state/ leftovers"
+else fail "shell_fleet.sh or state/ still on disk (retired 2026-09-03)"; fi
 
 if grep -q 'hooks/before_submit_prompt.sh' "$HOME/.cursor/hooks.json" 2>/dev/null; then
   ok "global hook registration (~/.cursor single layer)"
@@ -147,7 +157,7 @@ else fail "pnpm.mdc or shared/agents/hunter.md missing"; fi
 if [[ ! -f "$PACK/shared/rules/lean-code.mdc" && ! -d "$PACK/shared/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi
 
-if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/shared/config/skills.txt" "$PACK/shared/skills/AGENTS.md" "$PACK/shared/rules/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
+if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/shared/config/skills.txt" "$PACK/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
 else fail "Stale reference to deleted skill found in config files"; fi
 
 hash_file() {

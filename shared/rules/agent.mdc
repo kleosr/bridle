@@ -12,18 +12,11 @@ Git only when asked. Secrets never in code or chat. Security: `SECURITY.md`.
 Done = `docs/TOOLCHAIN.md` green with evidence.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
-## Harness (four registered events)
+## Harness
 
-| Event | Script | Job |
-|---|---|---|
-| sessionStart | `session_start.sh` | `additional_context`: NOW.md active sections. Quiet in plan mode. |
-| beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
-| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. |
-| beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
+Four registered hook events (`shared/hooks/hooks.json`); what each denies, asks, or injects is the table in `SECURITY.md`. No `stop`, `postToolUse`, `preToolUse`, or LOC gate exists. Writes are not blocked by file size. Closing a turn does not follow up.
 
-Cursor documents 21 hook events. This pack registers the four above. There is no `stop`, `postToolUse`, `preToolUse`, `beforeMCPExecution`, or LOC gate in `hooks.json` or on disk. Writes are not blocked by file size. Closing a turn does not follow up.
-
-Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there). Review specialists: `hunter`, `cut`, `prove`.
+Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc` and never emit `updated_input`. Review specialists: `hunter`, `cut`, `prove`.
 
 ## Before you write
 
@@ -37,7 +30,7 @@ Before you claim done: cite green `bash tests/run.sh` / `scripts/doctor.sh` / pa
 
 ## State
 
-`NOW.md` is durable. `/state/` is ephemeral (`mode` from sessionStart). Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md` + `SECURITY.md`.
+`NOW.md` is durable. Hooks write nothing to disk. Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md` + `SECURITY.md`.
 
 ## Autonomous loop
 
