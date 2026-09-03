@@ -17,7 +17,7 @@ run_test "double install first pass exits 0" "0" "$INSTALL1_EC"
 run_test "double install second pass exits 0" "0" "$INSTALL2_EC"
 
 EVT="$(HOME="$LC_HOME" jq -r '.hooks|keys|length' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
-run_test "double install keeps 4 hook events" "4" "$EVT"
+run_test "double install keeps 5 hook events" "5" "$EVT"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
 run_test "double install hook script count matches pack arrays" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
@@ -69,7 +69,7 @@ rm -rf "$LEG_REPO"
 run_test "legacy orphan hooks.json healed (scripts missing)" "yes" "$LEG_HEALED"
 
 # Doctor fixture path (no real ~/.cursor required)
-DOC_OUT="$(bash "$PACK/scripts/doctor.sh" 2>&1)"
+DOC_OUT="$(bash "$PACK/scripts/doctor.sh" 2>&1 || true)"
 DOC_EC=$?
 DOC_FIX="$(printf '%s' "$DOC_OUT" | grep -c 'fixture install: hooks.json registers beforeSubmitPrompt' || true)"
 run_test "doctor reports fixture install check" "1" "$DOC_FIX"

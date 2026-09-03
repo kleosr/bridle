@@ -17,6 +17,7 @@ bash -n shared/hooks/session_start.sh
 bash -n shared/hooks/before_submit_prompt.sh
 bash -n shared/hooks/before_shell.sh
 bash -n shared/hooks/before_read_file.sh
+bash -n shared/hooks/stop.sh
 bash -n shared/hooks/fleet_sync.sh
 ```
 
@@ -27,7 +28,7 @@ echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
   | bash shared/hooks/before_submit_prompt.sh
 ```
 
-Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from beforeShellExecution / beforeReadFile. `beforeSubmitPrompt.failClosed` must be false. `beforeReadFile.failClosed` is true.
+Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from beforeShellExecution / beforeReadFile, `{}` or `followup_message` from stop. `beforeSubmitPrompt.failClosed` must be false. `beforeReadFile.failClosed` is true. `stop.loop_limit` is 1.
 
 ## Doctor + Tests
 
@@ -47,10 +48,10 @@ Installs `~/.cursor` hooks+rules+skills+agents (global single registration layer
 
 ## Size roofs
 
-Keep each **registered** event hook under 80 LOC (`session_start`, `before_submit_prompt`, `before_shell`, `before_read_file`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. `beforeReadFile` is failClosed; the other three are not.
+Keep each **registered** event hook under 80 LOC (`session_start`, `before_submit_prompt`, `before_shell`, `before_read_file`, `stop`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. `beforeReadFile` is failClosed; the other four are not.
 
-Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.sh` via `grep -f`). `policy/secret_tokens.ere` (`before_submit_prompt.sh`). Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`. Human-readable SSOT: `SECURITY.md`. `bash scripts/doctor.sh` verifies the pack using an **isolated fixture HOME** (passes in CI/agent env without a live `~/.cursor` install). When your machine has a kleosrules install, doctor also reports live hook checksum drift.
+Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.sh` via `grep -f`). `policy/secret_tokens.ere` (`before_submit_prompt.sh`). Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`. Ponytail diff roofs (LOC 300, duplicate helper) live inline in `lib/diff_gate.sh`. Human-readable SSOT: `SECURITY.md`. `bash scripts/doctor.sh` verifies the pack using an **isolated fixture HOME** (passes in CI/agent env without a live `~/.cursor` install). When your machine has a kleosrules install, doctor also reports live hook checksum drift.
 
 **Uninstall:** `bash scripts/uninstall.sh` — removes fingerprinted kleosrules artifacts from `~/.cursor` only.
 
-**Audit:** See `docs/engineering-rules-audit.md` for hook matrix, inventory, and traceability.
+**Audit:** See `docs/engineering-rules-audit.md` for hook matrix and inventory; `docs/runtime-grounding-audit.md` for the lifecycle matrix, runtime probes, and scorecard; `docs/engineering-system.md` for the GROUND→STOP loop.

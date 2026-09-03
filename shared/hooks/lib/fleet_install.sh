@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh)
+HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh)
 CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
-RUNTIME_LIBS=(common.sh shell_gate.sh shell_fleet.sh)
+RUNTIME_LIBS=(common.sh shell_gate.sh shell_fleet.sh diff_gate.sh)
 
 prune_hook_scripts() {
   local dest="$1" s b keep k
