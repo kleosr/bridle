@@ -102,6 +102,30 @@ scripts/doctor.sh + tests/run.sh
 
 ---
 
+## Activation reality: what the agent actually sees (verified 2026-09-03)
+
+Commands: `grep -m1 alwaysApply shared/rules/*.mdc`; `ls ~/.cursor/rules .cursor/rules`; `echo '{"composer_mode":"agent","workspace_roots":["/workspace"]}' | bash shared/hooks/session_start.sh`.
+
+| Surface | Local IDE after `scripts/install.sh` | Cloud agent on this repo (this VM) | Enforced by |
+|---------|--------------------------------------|-------------------------------------|-------------|
+| `ponytail.mdc`, `agent.mdc`, `pnpm.mdc` (alwaysApply) | loaded from `~/.cursor/rules` | **not loaded** — `~/.cursor/rules` absent; pack `.cursor/rules` holds only `types.mdc` by design (test: "install prunes alwaysApply from pack .cursor/rules") | Cursor rules engine |
+| Glob rules (`vibe`, `complexity`, `types`, …) | on path match | only `types.mdc` on path match | Cursor rules engine |
+| Grounding ("Read this codebase first, then declare") | `agent.mdc` + User Rules paste | **User Rules paste only** (if the operator pasted it) + root `AGENTS.md` | law, not hook |
+| Skills (`ponytail`, `testing`, …) | on demand: Cursor lists SKILL.md `description`; agent reads when task matches, or `/name` | same, only if `~/.cursor/skills` exists → **not available on cloud** | agent judgment; no hook |
+| `sessionStart` injection | NOW.md active sections only | n/a (cloud has no sessionStart) | `session_start.sh` |
+| Hooks inject `.mdc` or skills? | **No** (ARCHITECTURE.md: "Do not re-inject ponytail at sessionStart") | no | — |
+| "unslop" skill | **not in this pack** — `premium-ui-craft/sources.md` cites an external pstack plugin path only | — | — |
+
+Defects found by this check:
+
+| Finding | Sev | Status |
+|---------|-----|--------|
+| `NOW.md` Proof injected stale evidence ("122 PASS") every session | P2 | **fixed** (NOW.md updated to 148) |
+| Cloud agents on the pack get no `ponytail`/`agent` law from `.mdc` | P2 | **open — operator decision.** Options: (a) accept: cloud relies on User Rules paste + AGENTS.md; (b) allow `link_pack_rules` to symlink alwaysApply `.mdc` into pack `.cursor/rules` (breaks the "no double-load locally" invariant and 2 existing tests); (c) move the grounding + ladder text into root `AGENTS.md` (duplicates canonical policy — rejected by this audit's SSOT rule). Recommendation: (a) unless cloud agents become the primary editor of this repo. |
+| Grounding is unenforced (no `preToolUse`/`afterFileEdit`) | P3 | by design; enforcement would require registering a new event — architecture change, not a fix |
+
+---
+
 ## Retired / absent (verified)
 
 | Item | Evidence | Decision |
