@@ -49,4 +49,8 @@ Installs `~/.cursor` hooks+rules+skills+agents (global single registration layer
 
 Keep each **registered** event hook under 80 LOC (`session_start`, `before_submit_prompt`, `before_shell`, `before_read_file`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. `beforeReadFile` is failClosed; the other three are not.
 
-Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.sh` via `grep -f`). `policy/secret_tokens.ere` (`before_submit_prompt.sh`). Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`. Human-readable SSOT: `SECURITY.md`. `bash scripts/doctor.sh` checksums `~/.cursor/hooks` against the pack when the global install exists.
+Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.sh` via `grep -f`). `policy/secret_tokens.ere` (`before_submit_prompt.sh`). Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`. Human-readable SSOT: `SECURITY.md`. `bash scripts/doctor.sh` verifies the pack using an **isolated fixture HOME** (passes in CI/agent env without a live `~/.cursor` install). When your machine has a kleosrules install, doctor also reports live hook checksum drift.
+
+**Uninstall:** `bash scripts/uninstall.sh` — removes fingerprinted kleosrules artifacts from `~/.cursor` only.
+
+**Audit:** See `docs/engineering-rules-audit.md` for hook matrix, inventory, and traceability.

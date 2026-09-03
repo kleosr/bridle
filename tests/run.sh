@@ -47,6 +47,14 @@ echo "=== Conversation-scoped state ==="
 source "$PACK/tests/conversation_state.sh"
 
 echo ""
+echo "=== Hook edge cases ==="
+source "$PACK/tests/hook_edges.sh"
+
+echo ""
+echo "=== Install lifecycle (isolated HOME) ==="
+source "$PACK/tests/install_lifecycle.sh"
+
+echo ""
 echo "=== Results ==="
 echo "PASS: $PASS"
 echo "FAIL: $FAIL"
