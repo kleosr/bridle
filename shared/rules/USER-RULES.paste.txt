@@ -17,11 +17,12 @@ Debt: [fix when you have downtime]
 ## Operations
 Default to action over analysis. When I ask for options, rank them by impact vs effort. Break large goals into sub-tasks and orchestrate them with your tools.
 
-## Session Protocol (four hooks + user .mdc)
+## Session Protocol (five hooks + user .mdc)
 - sessionStart injects NOW.md active sections via additional_context. Read it first.
 - beforeSubmitPrompt blocks secret/token blobs (`continue: false`). Otherwise continue.
 - beforeShellExecution denies destructive / Shell source-write, cyclomatic-lint disable, and secret paths in the command; infra/DB is ask.
 - beforeReadFile denies secret paths (.env, pem, keys).
+- stop runs once per turn on the working-tree diff: unrequested rewrite of a tracked file (>50% lines changed, ≥80 LOC) or mass reindent (whitespace-only churn) returns one followup_message. Fix it, then re-cite proof.
 - Read the files first, then say in one or two sentences what will be true, which files, and how you will prove it. Cite TOOLCHAIN green.
 - Law lives in alwaysApply .mdc (once, user ~/.cursor/rules). Skills are on-demand. Never fight a permission deny. Do not rewrite prompts (`updated_input` is a preToolUse field; this pack does not register that event).
 - Security: `SECURITY.md` (pnpm fields + steel). Never put secret values in NOW.md, paste, or chat.

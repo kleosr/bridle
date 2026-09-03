@@ -61,7 +61,7 @@ B_HITS="$(grep -Rn --include='*.sh' --include='*.txt' -F '\b' "$HOOKS_DIR/" 2>/d
 if [[ -z "$B_HITS" ]]; then ok "no GNU grep \\\\b (stock macOS BSD grep safe)"
 else fail "GNU grep \\\\b found (breaks stock macOS): $B_HITS"; fi
 
-for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh; do
+for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh "$HOOKS_DIR"/stop.sh; do
   n="$(wc -l < "$f")"
   if [[ "$n" -le 80 ]]; then ok "LOC ≤ 80: ${f#$PACK/} ($n)"
   else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
@@ -91,7 +91,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh lib/common.sh lib/shell_gate.sh; do
+  for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -106,10 +106,11 @@ else
   echo "[info] live ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh locally)"
 fi
 
-if jq -e '.hooks|keys|length == 4' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1; then
-  ok "hooks.json is 4 native ./hooks/ events"
-else fail "hooks.json must be 4 events with ./hooks/ commands"; fi
+if jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.stop[0].command == "./hooks/stop.sh" and .hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1; then
+  ok "hooks.json is 5 native ./hooks/ events (stop bounded loop_limit 1)"
+else fail "hooks.json must be 5 events with ./hooks/ commands and stop.loop_limit 1"; fi
 
 if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
   fail "pack has repo-level hooks (never Lane-A into this pack)"
@@ -145,7 +146,7 @@ for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
     LAW_STALE="$LAW_STALE ${f#$PACK/}"
   fi
 done
-if [[ -z "$LAW_STALE" ]]; then ok "law/skills match four-hook harness"
+if [[ -z "$LAW_STALE" ]]; then ok "law/skills match five-hook harness (no deleted 2026-08 gate names)"
 else fail "stale deleted-hook names in$LAW_STALE"; fi
 
 if [[ ! -f "$PACK/shared/rules/native-lean-autoload.mdc" && ! -f "$PACK/shared/rules/debugging.mdc" ]]; then ok "merged/retired duplicate mdc gone"
@@ -181,7 +182,7 @@ hash_file() {
 HOME_HOOKS="${HOME}/.cursor/hooks"
 if grep -q 'hooks/before_submit_prompt.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
   if hash_file "$HOOKS_DIR/session_start.sh" >/dev/null; then
-    for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh lib/common.sh lib/shell_gate.sh; do
+    for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
       src="$HOOKS_DIR/$rel"
       dst="$HOME_HOOKS/$rel"
       if [[ ! -f "$dst" ]]; then

@@ -29,7 +29,7 @@ run_test "ponytail.mdc states split before 120" "1" "$(grep -c 'split before 120
 run_test "ponytail.mdc states >700 rewrite" "1" "$(grep -c '>700' "$PACK/shared/rules/ponytail.mdc" | tr -d ' ')"
 
 LOC_OK=1
-for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
+for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done

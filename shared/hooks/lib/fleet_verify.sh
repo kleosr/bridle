@@ -22,6 +22,8 @@ verify_smoke() {
     | bash "$HOOKS_DIR/before_read_file.sh" | jq -e '.permission == "deny"' >/dev/null
   echo '{"command":"cat ~/.ssh/id_rsa"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"status":"aborted","loop_count":0}' \
+    | bash "$HOOKS_DIR/stop.sh" | jq -e '. == {}' >/dev/null
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
     if [[ ! -L "$HOME_C/skills/$skill" ]]; then
@@ -94,8 +96,10 @@ verify_smoke() {
   fi
   jq -e '.hooks.beforeSubmitPrompt[0].failClosed == false' "$HOOKS_DIR/hooks.json" >/dev/null \
     || { echo "[fail] beforeSubmitPrompt must failClosed:false"; bad=1; }
-  jq -e '.hooks|keys|length == 4' "$HOOKS_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] hooks.json must register exactly 4 events"; bad=1; }
+  jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must register exactly 5 events"; bad=1; }
+  jq -e '.hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] stop must be bounded: loop_limit 1"; bad=1; }
   [[ "$bad" -eq 0 ]] || return 1
   echo "[ok] verify smoke"
 }

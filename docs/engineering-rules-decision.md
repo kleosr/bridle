@@ -85,11 +85,11 @@ FORCE=1 bash scripts/install.sh
 
 Extensions considered and **not** adopted without an operator decision:
 
-- Registering `afterFileEdit` to lint touched files (would add a 5th event; contradicts "four hooks" law across paste, agent.mdc, doctor, 6 tests).
+- Registering `afterFileEdit` to lint touched files (rejected; the 2026-09-03 runtime audit instead added `stop` as the 5th event — see `docs/engineering-system.md`).
 - Registering `preToolUse` to require a declaration before Write (would need conversation parsing; ARCHITECTURE.md explicitly bans conversation police).
 - Auto-injecting `ponytail.mdc` at sessionStart (ARCHITECTURE.md: law and state must not share one dump).
 
-The system's efficiency comes from what it refuses to load: 4 hooks, ~40 injected lines, 3 alwaysApply rules, everything else on path or on demand.
+The system's efficiency comes from what it refuses to load: 5 hooks, ~40 injected lines, 5 alwaysApply rules (complexity and vibe joined 2026-09-03 by operator request), everything else on path or on demand.
 
 ## Proof commands
 
