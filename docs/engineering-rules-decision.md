@@ -66,6 +66,31 @@ FORCE=1 bash scripts/install.sh
 - No per-repo hooks in the pack itself (global-only for local dev)
 - No mutating real `~/.cursor` in CI/doctor (fixture HOME instead)
 
+## Quality system: checks, not adjectives
+
+"Highest quality" is only meaningful as a set of falsifiable gates. Each row is a gate that exists today or a bounded extension; nothing here is a slogan.
+
+| Stage | Gate | Observable | Status |
+|-------|------|------------|--------|
+| Before write | Grounding: Grep/Read the files you will change; one-sentence declaration (outcome, files, proof) | Chat contains the declaration before the first Write | law (`agent.mdc`, paste); unenforced by hook |
+| Write | Ladder: no code → reuse → stdlib → platform → dep → one-liner → minimum | Diff size; no new dependency without a ladder step cited | `ponytail.mdc` + skill |
+| Write | Cyclomatic ≤ repo cap (else 10); never disable lint | `before_shell.sh` denies `complexity:off`, `noqa: C901`, clippy allow | **hook-enforced** |
+| Write | No Shell source-write; use Write/StrReplace | `before_shell.sh` denies `> x.ts`, `sed -i`, `tee`, heredoc | **hook-enforced** |
+| Write | Types: no `any`/blind cast/unwrap | `types.mdc` on path match | law |
+| Read | No secrets into model context | `before_read_file.sh` failClosed | **hook-enforced** |
+| Prompt | No tokens in prompts | `before_submit_prompt.sh` `continue:false` | **hook-enforced** |
+| Test | Red → green; cite the command and exit code | `bash tests/run.sh` PASS count in chat and NOW.md | harness |
+| Review | hunter (security), cut (dead code), prove (independent re-run) | subagent reports, empty is a pass | on demand |
+| Memory | NOW.md Proof reflects the last real run | `session_start.sh` injects it; stale Proof is a defect (fixed this PR) | harness |
+
+Extensions considered and **not** adopted without an operator decision:
+
+- Registering `afterFileEdit` to lint touched files (would add a 5th event; contradicts "four hooks" law across paste, agent.mdc, doctor, 6 tests).
+- Registering `preToolUse` to require a declaration before Write (would need conversation parsing; ARCHITECTURE.md explicitly bans conversation police).
+- Auto-injecting `ponytail.mdc` at sessionStart (ARCHITECTURE.md: law and state must not share one dump).
+
+The system's efficiency comes from what it refuses to load: 4 hooks, ~40 injected lines, 3 alwaysApply rules, everything else on path or on demand.
+
 ## Proof commands
 
 | Check | Command | Expected |
