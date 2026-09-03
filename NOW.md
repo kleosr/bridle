@@ -2,14 +2,14 @@
 
 ## Now
 
-Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
+Engineering-rules audit landed (`docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`). One `AGENTS.md`, no `CLAUDE.md` (no consumer). Hooks fail safe on unreadable input and write nothing to disk. `bash scripts/uninstall.sh` exists.
 
-Seven-role team book is retired. Identity is User Rules charter plus Cursor + Grok lock. Specialists left: hunter, cut, prove.
+Identity is User Rules charter plus Cursor + Grok lock. Specialists: hunter, cut, prove.
 
 ## State
 
-Four events. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
-`mario-engineering-team.mdc` gone from pack and `~/.cursor/rules`.
+Four events. Local `~/.cursor` install. `scan.roots` empty. No preToolUse. No `state/`.
+Removed 2026-09-03: nested `AGENTS.md` adapters, `lib/shell_fleet.sh`, `tests/conversation_state.sh`.
 
 ## Limits
 
@@ -18,18 +18,21 @@ Do not invent a new rule system. Do not thin the charter. Edit books only in thi
 
 ## Proof
 
-- `bash tests/run.sh` — 122 PASS
-- `FORCE=1 bash scripts/install.sh` + `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- `bash shared/hooks/fleet_sync.sh verify` — ok
-- install pruned `~/.cursor/rules/mario-engineering-team.mdc`
+2026-09-03, Linux runner (macOS via CI only; Windows/WSL untested):
+- `bash tests/run.sh` — exit 0, 175 PASS / 0 FAIL
+- `HOME=<tmp> FORCE=1 bash scripts/install.sh` ×2 — exit 0 both; `~/.cursor` tree identical
+- `HOME=<tmp> bash shared/hooks/fleet_sync.sh verify` — exit 0, `[ok] verify smoke`
+- `HOME=<tmp> bash scripts/doctor.sh` — exit 0, ALL CHECKS PASSED (76 ok)
+- `HOME=<tmp> bash scripts/uninstall.sh` — exit 0; only empty `agents/ rules/ skills/` dirs remain
+- `git diff --check` — exit 0; tree clean after tests
 
 ## Next
 
-Paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → Rules → User Rules. New Grok 4.6 Agent chat opened on this repo.
+Re-run `FORCE=1 bash scripts/install.sh` on the real machine to drop `shell_fleet.sh` from `~/.cursor/hooks/lib`; delete any leftover `state/` dirs. Paste charter if not already done.
 
 ## Archived
 
-2026-08-28: local pack, vernacular retired, hunter/cut/prove.
+2026-08-28: local pack, vernacular retired, hunter/cut/prove; 122 PASS baseline.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

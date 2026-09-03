@@ -34,8 +34,7 @@ Law, state, and feedback must not share one dump.
 - **Policy (wired):** `policy/secret_paths.ere` (`before_read_file.sh` via `grep -f`). Destructive/source-write is inline in `shell_gate.sh`.
 - **Law (shared core):** `shared/rules/` (canonical .mdc + paste), `shared/skills/`, `shared/agents/`, `shared/config/`. Install: GLOBAL → `~/.cursor/rules`; SHARED → pack `.cursor/rules` (types only).
 - **Platforms:** `MacOS/install.sh`, `Linux/install.sh`, `Windows/install.ps1` + `Windows/hooks/wsl-shim.ps1`. Canonical hooks are POSIX bash in `shared/hooks/`.
-- **Brain:** `NOW.md` (local). Security: `SECURITY.md`.
-- **State:** Ephemeral files in `/state/` (gitignored).
+- **Brain:** `NOW.md` (local). Security: `SECURITY.md`. Hooks write nothing to disk.
 - **Registration (single GLOBAL layer):** user hooks live in `~/.cursor/hooks.json`. Commands are native `./hooks/*.sh` (cwd is `~/.cursor`). `fleet_sync.sh install` copies `hooks.json` unchanged. `sync` is opt-in (`scan.roots` empty by default) and does **not** copy or delete other repos’ `.cursor/hooks`.
 
 ## Steel vs ask
@@ -44,3 +43,8 @@ Law, state, and feedback must not share one dump.
 - **ask:** infra/DB mutation (`terraform apply`, `kubectl delete`, `psql`, …) — Cursor approval card, not a silent deny.
 - **Read secrets:** `before_read_file.sh` (`failClosed: true`).
 - **Ungrounded Write / lean roofs / stop followups:** law in `.mdc`. Not registered events.
+- **Unreadable payload:** `before_shell.sh` → `ask`; `before_read_file.sh` → `deny`; `before_submit_prompt.sh` → `continue:false`. A hook never fabricates an allow from input it could not parse.
+
+## Instruction files (one architecture)
+
+Cursor is the only consumer. Root `AGENTS.md` = repository handbook (plain markdown, read by Cursor). `~/.cursor/rules/*.mdc` = user-layer roofs (alwaysApply: `agent`, `ponytail`, `pnpm`; glob-scoped: the rest). Pack `.cursor/rules/types.mdc` = the only project-layer rule. User Rules paste = identity charter. Skills = on-demand procedures. No `CLAUDE.md`, `.cursorrules`, or nested `AGENTS.md` (decision: `docs/engineering-rules-decision.md`).

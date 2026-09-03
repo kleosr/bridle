@@ -9,9 +9,10 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Control | Event | Fail closed | Notes |
 |---|---|---|---|
 | Secret tokens in the user prompt | `beforeSubmitPrompt` | no | `policy/secret_tokens.ere`. Parser fail → `continue: false`. Hook crash still fail-open. |
-| Secret **paths** on Read | `beforeReadFile` | **yes** | `policy/secret_paths.ere`. Timeout 10s. |
+| Secret **paths** on Read | `beforeReadFile` | **yes** | `policy/secret_paths.ere`. Timeout 10s. Non-JSON payload or missing policy file → `deny` with a message naming the fix. |
 | Secret paths / `.env` / `git show` secrets | `beforeShellExecution` | no | `git commit` / `gh pr` / `gh issue` skip path scan (PR body false hits). |
-| Destructive git/disk/SQL | `beforeShellExecution` | no | deny |
+| Destructive git/disk/SQL | `beforeShellExecution` | no | deny. `rm -r` is denied for `/`, `/*`, `.`, `..`, `~`, `$HOME`, and top-level system dirs; `rm -rf /tmp/x`, `./dist`, `node_modules` are allowed. |
+| Payload the hook cannot read | `beforeShellExecution` | no | Non-JSON or no `command` field → `ask` (Cursor card), never a silent allow. |
 | Infra/DB mutation | `beforeShellExecution` | no | `ask` |
 | Cyclomatic lint disable | `beforeShellExecution` | no | deny |
 | Shell write of source | `beforeShellExecution` | no | deny |
