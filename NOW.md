@@ -18,14 +18,15 @@ Do not invent a new rule system. Do not thin the charter. Edit books only in thi
 
 ## Proof
 
-- `bash tests/run.sh` — 122 PASS
-- `FORCE=1 bash scripts/install.sh` + `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- `bash shared/hooks/fleet_sync.sh verify` — ok
-- install pruned `~/.cursor/rules/mario-engineering-team.mdc`
+- `bash tests/run.sh` — 148 PASS, 0 FAIL (2026-09-03, PR #27)
+- `bash scripts/doctor.sh` — ALL CHECKS PASSED via isolated fixture HOME
+- `git diff --check` — clean
+- Audit: `docs/engineering-rules-audit.md`; decision: `docs/engineering-rules-decision.md`
 
 ## Next
 
 Paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → Rules → User Rules. New Grok 4.6 Agent chat opened on this repo.
+Decided: cloud agents on this pack load only `types.mdc`; law reaches cloud via User Rules paste + AGENTS.md (audit "Activation reality").
 
 ## Archived
 
