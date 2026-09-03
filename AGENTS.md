@@ -39,6 +39,7 @@ Canonical paths and operational procedures across development cycles:
   4. `bash tests/run.sh` — syntax, JSON validity, and hook fixtures.
 - **Install & Sync**:
   - `FORCE=1 bash scripts/install.sh` — writes global `~/.cursor` (hooks, rules, skills, agents).
+  - `scripts/uninstall.sh` — remove kleosrules-owned `~/.cursor` artifacts (fingerprinted).
   - Platform installers: `MacOS/install.sh`, `Linux/install.sh`, `Windows/install.ps1` (+ `Windows/hooks/wsl-shim.ps1`).
   - `scripts/sync.sh` / `shared/hooks/fleet_sync.sh` — opt-in fleet sync via `shared/config/scan.roots` (empty by default).
 - **Core Architecture & Policies**:
@@ -57,4 +58,5 @@ Agent memory in this repository is purely local and file-backed:
   - `docs/CURATOR.md`
   - `docs/TOOLCHAIN.md`
   - `docs/DECISIONS/hooks-architecture.md`
+  - `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`: audit inventory and architecture decision (2026-09).
 - **Vendor Independence**: No vendor memory features or proprietary remote context dependencies.

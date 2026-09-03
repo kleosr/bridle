@@ -27,6 +27,34 @@ Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer. User-h
 
 How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `NOW.md` so sessions persist across chats. `sessionStart` injects the active sections; the other three hooks are steel (secrets + shell). Security: `SECURITY.md`.
 
+## Install / update / uninstall
+
+**Install (global `~/.cursor` only):**
+
+```bash
+FORCE=1 bash scripts/install.sh          # or MacOS/install.sh / Linux/install.sh
+```
+
+**Update:** Re-run install — idempotent (overwrites hooks/rules/skills/agents; prunes retired names from `shared/config/retired.txt`).
+
+**Uninstall (kleosrules-owned artifacts only):**
+
+```bash
+bash scripts/uninstall.sh
+```
+
+Removes `~/.cursor/hooks.json` + hooks scripts when the fingerprint matches (`before_submit_prompt.sh`). Removes global `.mdc`, skill symlinks from `skills.txt`, and hunter/cut/prove agents. Does **not** remove unrelated files (e.g. your own `my-custom.mdc`). User Rules paste is manual in Cursor Settings.
+
+**Migration from older layouts:**
+
+- `HANDOFF.md` → `NOW.md` (retired; doctor fails if HANDOFF returns)
+- Orphan repo `.cursor/hooks.json` without scripts → healed by `heal_orphan_project_hooks` on sync/project-hooks
+- Retired rules (mario-engineering-team, vernacular, …) pruned on install
+
+**Compatibility:** macOS stock Bash 3.2 + Linux Bash 3.2+ + Windows via WSL shim (`Windows/install.ps1`). Native Windows without WSL: **unsupported**. Cloud agents: Lane-A `project-hooks` (3 events, no `sessionStart`).
+
+**Audit docs:** `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/research/agent-instructions-research.md`.
+
 ## Setup
 
 macOS — one command (preflights `jq`, installs global hooks + rules + skills + agents):
@@ -106,7 +134,7 @@ Skill routes: `/ponytail`, `/debugging`, `/testing`, `/complexity`, `/now`. Revi
 │   ├── skills/                — on-demand Cursor skills
 │   ├── agents/                — hunter, cut, prove (installed to ~/.cursor/agents)
 │   └── config/                — skills list + scan roots + retire lists
-├── scripts/                   — doctor.sh, install.sh, sync.sh
+├── scripts/                   — doctor.sh, install.sh, uninstall.sh, sync.sh
 ├── tests/                     — run.sh + fixtures/
 ├── docs/                      — ARCHITECTURE, TOOLCHAIN, CURATOR, ADR
 ├── NOW.md                     — bounded session state (compaction protocol)
