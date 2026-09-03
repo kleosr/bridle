@@ -69,8 +69,10 @@ rm -rf "$LEG_REPO"
 run_test "legacy orphan hooks.json healed (scripts missing)" "yes" "$LEG_HEALED"
 
 # Doctor fixture path (no real ~/.cursor required)
-DOC_OUT="$(bash "$PACK/scripts/doctor.sh" 2>&1)"
-DOC_EC=$?
+DOC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-doc.XXXXXX")"
+DOC_EC=0
+DOC_OUT="$(HOME="$DOC_HOME" bash "$PACK/scripts/doctor.sh" 2>&1)" || DOC_EC=$?
+rm -rf "$DOC_HOME"
 DOC_FIX="$(printf '%s' "$DOC_OUT" | grep -c 'fixture install: hooks.json registers beforeSubmitPrompt' || true)"
 run_test "doctor reports fixture install check" "1" "$DOC_FIX"
 run_test "doctor exits 0 without live ~/.cursor install" "0" "$DOC_EC"
