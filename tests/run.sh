@@ -51,6 +51,10 @@ echo "=== Hook edge cases ==="
 source "$PACK/tests/hook_edges.sh"
 
 echo ""
+echo "=== Runtime grounding probes ==="
+source "$PACK/tests/grounding.sh"
+
+echo ""
 echo "=== Install lifecycle (isolated HOME) ==="
 source "$PACK/tests/install_lifecycle.sh"
 

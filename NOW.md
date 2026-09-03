@@ -8,8 +8,9 @@ Seven-role team book is retired. Identity is User Rules charter plus Cursor + Gr
 
 ## State
 
-Four events. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
-`mario-engineering-team.mdc` gone from pack and `~/.cursor/rules`.
+Five events: sessionStart, beforeSubmitPrompt, beforeShellExecution, beforeReadFile, stop. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
+Always-on rules: agent, ponytail, pnpm, complexity, vibe (5). Path-scoped: testing, next, vite, astro, postgres, types.
+`stop.sh` + `lib/diff_gate.sh`: unrequested rewrite (>50% of tracked file, ≥80 LOC) + mass reindent (whitespace-only churn) + duplicate helper. One `followup_message`, `loop_limit: 1`. Cloud json unchanged (no stop).
 
 ## Limits
 
@@ -18,15 +19,15 @@ Do not invent a new rule system. Do not thin the charter. Edit books only in thi
 
 ## Proof
 
-- `bash tests/run.sh` — 148 PASS, 0 FAIL (2026-09-03, PR #27)
-- `bash scripts/doctor.sh` — ALL CHECKS PASSED via isolated fixture HOME
-- `git diff --check` — clean
-- Audit: `docs/engineering-rules-audit.md`; decision: `docs/engineering-rules-decision.md`
+- `bash tests/run.sh` — 177 PASS, 0 FAIL (2026-09-03 14:15, churn gates replace loc_roof)
+- `bash scripts/doctor.sh` — ALL CHECKS PASSED; live checksum match 8 files incl. stop.sh, lib/diff_gate.sh
+- `FORCE=1 bash scripts/install.sh` — live `~/.cursor/hooks.json` has 5 events
+- Audit: `docs/runtime-grounding-audit.md`; system: `docs/engineering-system.md`; ADR 2026-09-03 in `docs/DECISIONS/hooks-architecture.md`
 
 ## Next
 
-Paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → Rules → User Rules. New Grok 4.6 Agent chat opened on this repo.
-Decided: cloud agents on this pack load only `types.mdc`; law reaches cloud via User Rules paste + AGENTS.md (audit "Activation reality").
+Re-paste `shared/rules/USER-RULES.paste.txt` (Session Protocol now lists stop). Open a new chat so root AGENTS.md reloads (stale-in-session finding).
+Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
 
 ## Archived
 

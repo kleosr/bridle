@@ -80,14 +80,15 @@ run_test "before_submit does not JOB CARD nudge" "other" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/beforeSubmitPrompt_secret.json" | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r '.continue')"
 run_test "before_submit blocks secret/token patterns" "false" "$RESULT"
 
-if jq -e '.hooks.sessionStart and .hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile' "$PACK/shared/hooks/hooks.json" >/dev/null \
-  && jq -e '.hooks|keys|length == 4' "$PACK/shared/hooks/hooks.json" >/dev/null \
+if jq -e '.hooks.sessionStart and .hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile and .hooks.stop' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '.hooks|keys|length == 5' "$PACK/shared/hooks/hooks.json" >/dev/null \
   && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$PACK/shared/hooks/hooks.json" >/dev/null \
-  && jq -e '(.hooks|has("preToolUse")|not) and (.hooks|has("stop")|not)' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '.hooks.stop[0].command == "./hooks/stop.sh"' "$PACK/shared/hooks/hooks.json" >/dev/null \
+  && jq -e '(.hooks|has("preToolUse")|not) and (.hooks|has("postToolUse")|not)' "$PACK/shared/hooks/hooks.json" >/dev/null \
   && jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
   && jq -e '.hooks.beforeShellExecution and .hooks.beforeReadFile and .hooks.beforeSubmitPrompt' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null \
   && jq -e '.hooks|keys|length == 3' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null; then
-  echo "[pass] hooks.json is 4 native events; cloud is 3 (no sessionStart)"; PASS=$((PASS + 1))
+  echo "[pass] hooks.json is 5 native events; cloud is 3 (no sessionStart, no stop)"; PASS=$((PASS + 1))
 else
   echo "[fail] hooks.json / hooks.cloud.json registration wrong"; FAIL=$((FAIL + 1))
 fi

@@ -1,5 +1,5 @@
 ---
-description: "Autonomous loop capsule — before-write, file-map, four-hook harness"
+description: "Autonomous loop capsule — before-write, file-map, five-hook harness"
 alwaysApply: true
 ---
 
@@ -12,7 +12,7 @@ Git only when asked. Secrets never in code or chat. Security: `SECURITY.md`.
 Done = `docs/TOOLCHAIN.md` green with evidence.
 Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 
-## Harness (four registered events)
+## Harness (five registered events)
 
 | Event | Script | Job |
 |---|---|---|
@@ -20,8 +20,9 @@ Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
 | beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
 | beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. |
 | beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
+| stop | `stop.sh` | Ponytail diff gate on the working tree: unrequested rewrite of a tracked file (>50% lines changed, file ≥80 LOC) or mass reindent (whitespace-only churn). One `followup_message`, `loop_limit: 1`, else `{}`. |
 
-Cursor documents 21 hook events. This pack registers the four above. There is no `stop`, `postToolUse`, `preToolUse`, `beforeMCPExecution`, or LOC gate in `hooks.json` or on disk. Writes are not blocked by file size. Closing a turn does not follow up.
+Cursor documents 21 hook events. This pack registers the five above. There is no `postToolUse`, `preToolUse`, or `beforeMCPExecution`. Writes are not blocked at write time; `stop` reports Ponytail violations once after the turn and cannot refuse completion.
 
 Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there). Review specialists: `hunter`, `cut`, `prove`.
 

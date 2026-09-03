@@ -33,7 +33,7 @@ Bug fix ships a test named or described `regression: <symptom>` that fails on ol
 3. Fail closed on red.
 4. No house gauntlet: run closest real verify; name residual; never ask accept-no-gauntlet-risk.
 5. Do not invent mutation theater or Clean Architecture test trees.
-6. No stop hook. If a claim of done lacks a verify cite, run TOOLCHAIN and restate yourself.
+6. `stop.sh` checks Ponytail diff roofs only, not tests. If a claim of done lacks a verify cite, run TOOLCHAIN and restate yourself.
 
 ## Coverage
 Smoke detector, not a trophy. Prefer one hostile path over metric theater.

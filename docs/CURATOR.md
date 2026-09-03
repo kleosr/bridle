@@ -33,7 +33,7 @@ Structured state at the repo root.
 
 - **Format:** Now, State, Limits, Proof, Next, Archived.
 - **Injection:** `session_start.sh` sends Now, State, Limits, Proof, and Next (`head -n 40`). Files without those headings fall back to the last 15 lines.
-- **Update:** the agent rewrites NOW.md before claiming done. No stop hook seeds it.
+- **Update:** the agent rewrites NOW.md before claiming done. `stop.sh` does not touch it; it only reports Ponytail diff violations once.
 - **Compaction:** if active sections exceed ~150 lines, compress older context into Archived. Keep active state small.
 
 ## Durable memory
