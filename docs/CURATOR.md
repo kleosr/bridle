@@ -19,14 +19,6 @@ Injection seeds `NOW.md`. The agent reads the files first, then states the job i
 4. **Same turn** — finish those files before you claim done. No multi-prompt drip; no orphan files.
 5. **Follow-up** — re-read them; run the proof command.
 
-## Ephemeral state (`/state/`)
-
-Local context is volatile. `/state/` holds atomic files for the current run:
-
-- `current_intent.md`: unused by registered hooks (session state is `NOW.md` + `state/mode`)
-
-Clear `/state/` between jobs so old intent does not poison the next run.
-
 ## NOW.md
 
 Structured state at the repo root.
@@ -40,4 +32,4 @@ Structured state at the repo root.
 
 Local `NOW.md` is the brain — no external tools required. Security policy is `SECURITY.md`.
 
-Do not mix ephemeral scratch with durable state. If it must outlive the chat, put it in NOW.md. Never put secrets there.
+Hooks keep no state of their own (no `state/` directory since 2026-09-03). If it must outlive the chat, put it in NOW.md. Never put secrets there.

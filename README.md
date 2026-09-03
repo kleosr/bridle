@@ -23,7 +23,9 @@
 
 Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported), **Linux**, and **Windows** (PowerShell installer + WSL shim — hooks execute as bash inside WSL). Requires `bash` (v3.2+) and `jq`. No Rust. No Cargo. No Python pack tooling. No MCP dependency for core operation. Canonical hooks live in [`shared/hooks/`](shared/hooks/); platform installers in `MacOS/`, `Linux/`, `Windows/`.
 
-Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer. User-hook cwd is `~/.cursor`; `session_start.sh` finds the project via `workspace_roots[0]`. No per-repo `.cursor/hooks.json` (it fires alongside the global one and doubles every prompt injection).
+Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer. User-hook cwd is `~/.cursor`; `session_start.sh` finds the project via `workspace_roots[0]`. No per-repo `.cursor/hooks.json` for local work (it fires alongside the global one and doubles every prompt injection). Cursor Cloud Agents cannot see `~/.cursor`, so for a repo that needs steel in the cloud use `CLOUD=1 TARGET_REPO=<path> bash shared/hooks/fleet_sync.sh project-hooks` (writes `hooks.cloud.json`: shell/read/submit, no sessionStart). Never into this pack.
+
+Consumers: Cursor only. There is no Claude Code, Codex, or Copilot consumer, so there is no `CLAUDE.md`, `.cursorrules`, or nested `AGENTS.md`; the single root `AGENTS.md` is the repository handbook. Decision record: [`docs/engineering-rules-decision.md`](docs/engineering-rules-decision.md); audit: [`docs/engineering-rules-audit.md`](docs/engineering-rules-audit.md).
 
 How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `NOW.md` so sessions persist across chats. `sessionStart` injects the active sections; the other three hooks are steel (secrets + shell). Security: `SECURITY.md`.
 
@@ -70,7 +72,13 @@ bash scripts/doctor.sh
 
 # Tests (syntax + JSON + hook fixtures)
 bash tests/run.sh
+
+# Uninstall: removes only kleosrules-owned files from ~/.cursor (hooks.json, hooks/, the ten
+# pack rules, pack skill symlinks, hunter/cut/prove). Foreign rules, skills, agents stay.
+bash scripts/uninstall.sh
 ```
+
+Update = `git pull` then `FORCE=1 bash scripts/install.sh` again; install is idempotent (running it twice yields the same `~/.cursor` tree) and prunes retired names listed in `shared/config/retired*.txt`. Migrating from ≤ v18: re-run install (it stops writing `~/.cursor/state`), then delete any leftover `state/` directory the old `session_start.sh` created in your workspaces or `~/.cursor` — nothing reads it.
 
 Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under four hooks → doctor green → update NOW.md**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`. Registered steel is secrets + shell deny + NOW.md.
 
@@ -96,19 +104,25 @@ Skill routes: `/ponytail`, `/debugging`, `/testing`, `/complexity`, `/now`. Revi
 │   │   ├── before_submit_prompt.sh — secret-prompt block (failClosed:false)
 │   │   ├── before_shell.sh        — destructive / source-write deny
 │   │   ├── before_read_file.sh    — secret path deny
-│   │   ├── fleet_sync.sh          — install + verify; sync is opt-in
+│   │   ├── fleet_sync.sh          — install | verify | uninstall | sync (opt-in) | project-hooks (cloud)
 │   │   ├── lib/
-│   │   │   ├── common.sh          — shared utilities (root, deny, allow, continue)
-│   │   │   └── shell_gate.sh      — before_shell policy
-│   │   ├── policy/                — *.ere deny lists + leftover json
-│   │   └── hooks.json             — canonical 4-event registry
+│   │   │   ├── common.sh          — runtime: root resolution, NOW.md extraction, emit_* JSON
+│   │   │   ├── shell_gate.sh      — runtime: before_shell decision tables
+│   │   │   ├── fleet_install.sh   — installer: copy/prune/uninstall ~/.cursor
+│   │   │   ├── fleet_sync_repos.sh — installer: rules, skills, agents, opt-in sync
+│   │   │   ├── fleet_scan.sh      — installer: config parsing, discovery
+│   │   │   ├── fleet_verify.sh    — installer: post-install smoke
+│   │   │   └── windows_hooks_rewrite.jq — installer: WSL shim rewrite of hooks.json
+│   │   ├── policy/                — secret_paths.ere, secret_tokens.ere (grep -E -f)
+│   │   ├── hooks.json             — canonical 4-event user registry
+│   │   └── hooks.cloud.json       — 3-event project registry for cloud agents
 │   ├── rules/                 — paste capsule + always-on companions (.mdc)
 │   ├── skills/                — on-demand Cursor skills
 │   ├── agents/                — hunter, cut, prove (installed to ~/.cursor/agents)
 │   └── config/                — skills list + scan roots + retire lists
-├── scripts/                   — doctor.sh, install.sh, sync.sh
-├── tests/                     — run.sh + fixtures/
-├── docs/                      — ARCHITECTURE, TOOLCHAIN, CURATOR, ADR
+├── scripts/                   — doctor.sh, install.sh, uninstall.sh, sync.sh
+├── tests/                     — run.sh + fixtures/ + audit.sh (branch fixtures)
+├── docs/                      — ARCHITECTURE, TOOLCHAIN, CURATOR, ADR, engineering-rules-{audit,decision}, research/
 ├── NOW.md                     — bounded session state (compaction protocol)
 ├── SECURITY.md                — pnpm + cybersecurity SSOT
 ├── AGENTS.md                  — map
@@ -133,13 +147,16 @@ Recovery: `Read` the file → plan split → `Write` new modules → `StrReplace
 ## Testing
 
 ```bash
-bash tests/run.sh     # syntax + JSON validity + hook fixture tests
-bash scripts/doctor.sh  # environment + repo health (16 checks)
+bash tests/run.sh       # syntax + JSON validity + hook fixture tests (allow/deny/ask, malformed payload, missing policy, broken jq, install×2, uninstall)
+bash scripts/doctor.sh  # environment + repo health; checksums ~/.cursor/hooks against the pack when installed
 ```
+
+Platform evidence: CI runs the full suite on `ubuntu-latest` and `macos-latest` (stock `/bin/bash` 3.2). Windows/WSL is **not** exercised by CI; `Windows/install.ps1`, `uninstall.ps1`, and `hooks/wsl-shim.ps1` are correct-by-construction only.
 
 ## What is not supported
 
-- Native Windows without WSL (hooks are Bash; `Windows/install.ps1` + `wsl-shim.ps1` bridge through WSL — untested on this machine, correct-by-construction).
+- Native Windows without WSL (hooks are Bash; `Windows/install.ps1` + `wsl-shim.ps1` bridge through WSL — untested in CI, correct-by-construction).
+- Claude Code / `CLAUDE.md`, Codex, Copilot instruction files: not consumed by anything here. Add one only with a verified consumer (see `docs/engineering-rules-decision.md`).
 - MCP as a hard dependency (optional only; core works with local NOW.md).
 - Rust gate or pack Python.
 - Prompt rewriting via hooks (`updated_input` is banned).

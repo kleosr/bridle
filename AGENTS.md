@@ -5,7 +5,8 @@ Single source of truth for coding agents operating in this repository.
 ## Rules
 
 - **Law vs Handbook**: Law lives in registered hook scripts, user rules paste (`shared/rules/USER-RULES.paste.txt`), and rules (`shared/rules/*.mdc`). This file is the canonical handbook and operational contract.
-- **Pack Core**: kleosrules V2 Bash hooks + local `NOW.md` memory. Brain = `NOW.md`. Muscle = four registered hook scripts (`session_start.sh`, `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`).
+- **Pack Core**: kleosrules V2 Bash hooks + local `NOW.md` memory. Brain = `NOW.md`. Muscle = four registered hook scripts (`session_start.sh`, `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`). Hooks write nothing to disk.
+- **Consumers**: Cursor only. This file is the single `AGENTS.md`; do not add nested adapters, `CLAUDE.md`, or `.cursorrules` without a verified consumer.
 - **No Rust / No Pack Python / No Core MCP**: No Rust kleos-gate or pack Python tooling. MCP is optional, never a core dependency.
 - **Install Scope**: Local install is global-only (`FORCE=1 bash scripts/install.sh` writes `~/.cursor`). Never install Lane-A into this pack.
 - **Output Protocol**: Never emit `updated_input` (preToolUse is not registered). Inject state via `additional_context` on `sessionStart` or control flow via `continue` on `beforeSubmitPrompt`.
@@ -35,16 +36,19 @@ Canonical paths and operational procedures across development cycles:
 - **Verification Loop**:
   1. `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh`
   2. `bash -n shared/hooks/*.sh shared/hooks/lib/*.sh`
-  3. `bash scripts/doctor.sh` — 16 environment and repository health checks.
+  3. `bash scripts/doctor.sh` — environment and repository health checks.
   4. `bash tests/run.sh` — syntax, JSON validity, and hook fixtures.
 - **Install & Sync**:
-  - `FORCE=1 bash scripts/install.sh` — writes global `~/.cursor` (hooks, rules, skills, agents).
+  - `FORCE=1 bash scripts/install.sh` — writes global `~/.cursor` (hooks, rules, skills, agents). Idempotent; re-run to update.
+ - `bash scripts/uninstall.sh` — removes only pack-owned files from `~/.cursor`.
   - Platform installers: `MacOS/install.sh`, `Linux/install.sh`, `Windows/install.ps1` (+ `Windows/hooks/wsl-shim.ps1`).
   - `scripts/sync.sh` / `shared/hooks/fleet_sync.sh` — opt-in fleet sync via `shared/config/scan.roots` (empty by default).
 - **Core Architecture & Policies**:
   - `docs/ARCHITECTURE.md`: 5 layers and deterministic containment model.
   - `docs/CURATOR.md`: Context curation and pre-write plain-sentence declaration.
-  - `docs/TOOLCHAIN.md`: Toolchain requirements (Bash >= 3.2, jq) and size roofs (<=80 LOC per hook).
+  - `docs/TOOLCHAIN.md`: Toolchain requirements (Bash >= 3.2, jq), size roofs (<=80 LOC per hook), hook failure semantics.
+ - `docs/engineering-rules-decision.md`: the one instruction architecture; why there is no `CLAUDE.md`, `.cursorrules`, or nested `AGENTS.md`.
+ - `docs/engineering-rules-audit.md`: file inventory, consumer map, hook matrix, findings, traceability.
   - `SECURITY.md`: Cybersecurity rules and pnpm configuration standards.
 
 ## Memory
@@ -57,4 +61,5 @@ Agent memory in this repository is purely local and file-backed:
   - `docs/CURATOR.md`
   - `docs/TOOLCHAIN.md`
   - `docs/DECISIONS/hooks-architecture.md`
+ - `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/research/agent-instructions-research.md`
 - **Vendor Independence**: No vendor memory features or proprietary remote context dependencies.
