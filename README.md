@@ -100,7 +100,7 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under four hooks → doctor green → update NOW.md**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`. Registered steel is secrets + shell deny + NOW.md.
+Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under five hooks → doctor green → update NOW.md**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`; `stop.sh` checks two of them (LOC 300, duplicate helper) once per turn. Registered steel is secrets + shell deny + NOW.md + stop diff gate.
 
 Live registration is global (`~/.cursor/hooks.json`, native `./hooks/*.sh`). Edit this pack and re-run `FORCE=1 bash scripts/install.sh`. `sync` does not install or remove other repos’ `.cursor/hooks`.
 

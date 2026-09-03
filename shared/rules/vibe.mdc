@@ -1,14 +1,13 @@
 ---
-description: "TS/JS roof. Detect Next vs Vite vs Astro before APIs. Index only."
-globs: ["**/*.ts","**/*.tsx","**/*.js","**/*.jsx"]
-alwaysApply: false
+description: "Stack roof. Detect Next vs Vite vs Astro before APIs. Index only."
+alwaysApply: true
 ---
 
 # Vibe
 
 Prefer retrieval-led reasoning over pre-training. Do not dump framework AGENTS.md.
 
-GROUND: Read this package's `package.json` (monorepo: the nearest one). Pick **one** stack. Do not mix APIs.
+GROUND: no `package.json` → this rule is silent; only ponytail and complexity apply. Otherwise Read the nearest `package.json`. Pick **one** stack. Do not mix APIs.
 
 | Detect | Then |
 |---|---|

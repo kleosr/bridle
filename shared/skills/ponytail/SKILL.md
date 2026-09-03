@@ -8,7 +8,7 @@ description: >
 
 # Ponytail
 
-Thin roof: `shared/rules/ponytail.mdc`. This file is the quality bar. No registered lean hook.
+Thin roof: `shared/rules/ponytail.mdc`. This file is the quality bar. Only two churn patterns are hook-checked (`stop.sh`: unrequested rewrite, mass reindent); the rest is judgment.
 
 ## Ladder
 

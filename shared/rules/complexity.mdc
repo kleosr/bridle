@@ -1,7 +1,6 @@
 ---
-description: "Cyclomatic cap. Repo lint wins, else 10. Do not disable."
-globs: ["**/*.ts","**/*.tsx","**/*.js","**/*.jsx","**/*.mjs","**/*.cjs","**/*.py","**/*.go","**/*.rs"]
-alwaysApply: false
+description: "Cyclomatic cap for any language. Repo lint wins, else 10. Do not disable."
+alwaysApply: true
 ---
 
 # Complexity

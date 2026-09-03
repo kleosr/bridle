@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Native Lean
 
-Smallest diff. Zero prose comments. No registered lean hook.
+Smallest diff. Zero prose comments. `stop.sh` blocks unrequested rewrite (>50% of a tracked file changed) and mass reindent (whitespace-only churn); everything else here is law you follow, not a hook.
 
 ## Ladder
 1. No code

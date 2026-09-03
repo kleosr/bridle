@@ -71,7 +71,7 @@ scripts/doctor.sh + tests/run.sh
 | `shared/rules/agent.mdc` | Cursor rules engine | ~/.cursor/rules | alwaysApply | harness capsule | install copy | n/a | references SECURITY | ~1k tok | gauntlet install | **canonical** | keep |
 | `shared/rules/ponytail.mdc` | Cursor | global alwaysApply | always | lean ladder | install | n/a | low | ~400 tok | fixtures_more | **canonical** | keep |
 | `shared/rules/complexity.mdc` | Cursor | global | always | cyclomatic roof | install | n/a | low | ~300 tok | install test | **canonical** | keep |
-| `shared/rules/vibe.mdc` | Cursor | glob TS/JS | path match | stack router | install | n/a | low | on match | none | **scoped** | keep |
+| `shared/rules/vibe.mdc` | Cursor | global alwaysApply (since 2026-09-03) | always; silent without package.json | stack router | install | n/a | low | ~700 tok | grounding | **canonical** | keep |
 | `shared/rules/next.mdc` | Cursor | glob | next dep | Next API law | install | n/a | low | on match | none | **scoped** | keep |
 | `shared/rules/vite.mdc` | Cursor | glob | vite projects | Vite law | install | n/a | low | on match | none | **scoped** | keep |
 | `shared/rules/astro.mdc` | Cursor | glob | astro | Astro law | install | n/a | low | on match | none | **scoped** | keep |
@@ -176,6 +176,8 @@ No changed file >400 lines.
 ---
 
 ## Traceability
+
+Lifecycle traceability (`item → consumer → discovered → selected → loaded → injected → applied → enforced → reported → evidence → status`) lives in `docs/runtime-grounding-audit.md` (2026-09-03). The table below is the finding-level trace from this audit.
 
 | Finding | Sev | Decision | Files | Tests | Status |
 |---------|-----|----------|-------|-------|--------|

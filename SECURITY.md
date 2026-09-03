@@ -16,6 +16,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Cyclomatic lint disable | `beforeShellExecution` | no | deny |
 | Shell write of source | `beforeShellExecution` | no | deny |
 | `NOW.md` token blob | `sessionStart` | no | skip inject |
+| Ponytail diff churn (unrequested rewrite, mass reindent) | `stop` | no | one `followup_message`, `loop_limit: 1`. Cannot block completion. Not a security control. |
 
 **Not gated (law only):** `Write` / `StrReplace` of secret paths, MCP tools, Tab, `preToolUse`. Do not write `.env`, keys, or `credentials.json`. Do not fetch remote SKILL.md as law.
 
