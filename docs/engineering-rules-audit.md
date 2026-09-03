@@ -131,9 +131,9 @@ scripts/doctor.sh + tests/run.sh
 | File | Lines | Cyclomatic (approx) | Note |
 |------|-------|---------------------|------|
 | `scripts/doctor.sh` | ~200 | ≤10 | surgical edit; fixture block added |
-| `scripts/uninstall.sh` | ~55 | ≤5 | new |
-| `tests/hook_edges.sh` | ~45 | ≤3 | new |
-| `tests/install_lifecycle.sh` | ~55 | ≤4 | new |
+| `scripts/uninstall.sh` | ~55 | ≤5 | **fixed** `${FORCE:-0}` |
+| `tests/hook_edges.sh` | ~40 | ≤3 | removed non-deterministic interruption test |
+| `tests/install_lifecycle.sh` | ~75 | ≤5 | captured exit codes; array-derived hook count |
 | `shared/hooks/lib/shell_gate.sh` | 96 | >10 | **unchanged**; library gate; decomposition deferred |
 
 No changed file >400 lines.
@@ -144,7 +144,7 @@ No changed file >400 lines.
 
 | Platform | Tested | Evidence |
 |----------|--------|----------|
-| Linux | **yes** | This audit VM: doctor 0, tests 142 PASS |
+| Linux | **yes** | This audit VM: doctor 0; see validation section for test PASS count |
 | macOS | **CI only** | `.github/workflows/gates.yml` gauntlet-macos |
 | Windows native | **no** | Hooks require Bash; install.ps1 not executed here |
 | WSL (Windows) | **partial** | `windows_hooks_rewrite.jq` tested in gauntlet.sh |
@@ -158,7 +158,10 @@ No changed file >400 lines.
 | doctor fails without live ~/.cursor | P1 | fixture HOME + info for live | `scripts/doctor.sh` | install_lifecycle | **fixed** |
 | no uninstall | P1 | fingerprint uninstall script | `scripts/uninstall.sh` | install_lifecycle | **fixed** |
 | missing hook malformed tests | P2 | hook_edges.sh | `tests/hook_edges.sh` | run.sh | **fixed** |
-| missing install idempotency proof | P2 | lifecycle tests | `tests/install_lifecycle.sh` | run.sh | **fixed** |
+| missing install idempotency proof | P2 | lifecycle tests with captured exit codes | `tests/install_lifecycle.sh` | run.sh | **fixed** |
+| tautological lifecycle/hook tests | P1 | assert observed exit codes/counts; delete fake interruption test | `tests/install_lifecycle.sh`, `tests/hook_edges.sh` | run.sh | **fixed** |
+| uninstall aborts under set -u when FORCE unset | P1 | `${FORCE:-0}` + directory-skill test | `scripts/uninstall.sh` | install_lifecycle | **fixed** |
+| AGENTS.md as code / CODEOWNERS | P3 | record only; out of scope | — | research row 14 | **deferred** |
 | CLAUDE.md absent | — | do not add | — | rg proof | **closed** |
 | shell_gate complexity >10 | P3 | keep; single module | — | gauntlet | **accepted** |
 
@@ -172,11 +175,15 @@ Commands run on Linux audit VM after all changes:
 chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh tests/*.sh
 bash -n shared/hooks/*.sh shared/hooks/lib/*.sh   # exit 0
 bash scripts/doctor.sh                             # exit 0
-bash tests/run.sh                                  # PASS:142 FAIL:0 exit 0
+bash tests/run.sh                                  # see PASS count below; exit 0
 git diff --check                                   # exit 0 (no conflict markers)
 ```
 
 Double install + uninstall: covered in `tests/install_lifecycle.sh` via isolated `$HOME` temp dirs — **does not mutate agent `~/.cursor`**.
+
+Hook signal interruption: **not tested** — no deterministic observable outcome in this harness.
+
+Latest Linux run after PR #27 review fixes: `bash tests/run.sh` → **PASS:148 FAIL:0 exit 0** (148 = prior 142 − 2 tautological + 8 new lifecycle assertions).
 
 ---
 
@@ -186,6 +193,7 @@ Double install + uninstall: covered in `tests/install_lifecycle.sh` via isolated
 - Cursor nested AGENTS.md `@` include resolution not officially documented for all IDE versions  
 - Skill route names (`/ponytail`) depend on Cursor skill UI  
 - Live `~/.cursor` checksum drift check only runs when kleosrules fingerprint present (optional info otherwise)
+- Hook interruption under SIGTERM/SIGINT: not tested in harness (no deterministic observable)
 
 ---
 

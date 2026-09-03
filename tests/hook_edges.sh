@@ -36,16 +36,5 @@ RESULT="$(echo '{"prompt":"ghp_abcdefghijklmnopqrstuvwxyz0123456789"}' \
 rm -rf "$EDGE_HOME"
 run_test "before_submit without policy file still continues (no crash)" "true" "$RESULT"
 
-FAKE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-int.XXXXXX")"
-FAKE_C="$FAKE_HOME/.cursor"
-mkdir -p "$FAKE_C/hooks/lib"
-cp "$PACK/shared/hooks/before_submit_prompt.sh" "$FAKE_C/hooks/"
-cp "$PACK/shared/hooks/lib/common.sh" "$FAKE_C/hooks/lib/"
-cp "$PACK/shared/hooks/policy/secret_tokens.ere" "$FAKE_C/hooks/policy/" 2>/dev/null || mkdir -p "$FAKE_C/hooks/policy" && cp "$PACK/shared/hooks/policy/secret_tokens.ere" "$FAKE_C/hooks/policy/"
-( cd "$FAKE_C" && printf '%s\n' '{"prompt":"normal work"}' | HOME="$FAKE_HOME" bash "$FAKE_C/hooks/before_submit_prompt.sh" >/dev/null ) &
-BPID=$!
-sleep 0.2
-kill "$BPID" 2>/dev/null || true
-wait "$BPID" 2>/dev/null || true
-run_test "before_submit survives interruption (no set -e crash on signal)" "ok" "ok"
-rm -rf "$FAKE_HOME"
+# Hook interruption under signal is not tested here — no deterministic observable
+# outcome in this harness (see docs/engineering-rules-audit.md limitations).

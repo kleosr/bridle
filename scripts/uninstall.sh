@@ -37,7 +37,7 @@ while IFS= read -r skill; do
       rm -f "$dst"
       echo "[rm] ~/.cursor/skills/$skill (symlink)"
     fi
-  elif [[ -d "$dst" ]] && [[ "$FORCE" == "1" ]]; then
+  elif [[ -d "$dst" ]] && [[ "${FORCE:-0}" == "1" ]]; then
     rm -rf "$dst"
     echo "[rm] ~/.cursor/skills/$skill (FORCE=1 directory copy)"
   fi
