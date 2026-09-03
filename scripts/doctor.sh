@@ -83,9 +83,28 @@ done < <(jq -r '.hooks | to_entries[] | .value[]? | .command // empty' "$HOOKS_D
 if grep -q '^state/' "$PACK/.gitignore" && grep -q '\.cursor/' "$PACK/.gitignore"; then ok ".gitignore covers state/ and .cursor/"
 else fail ".gitignore missing state/ or .cursor/ coverage"; fi
 
-if grep -q 'hooks/before_submit_prompt.sh' "$HOME/.cursor/hooks.json" 2>/dev/null; then
-  ok "global hook registration (~/.cursor single layer)"
-else fail "~/.cursor/hooks.json missing beforeSubmitPrompt (run: bash shared/hooks/fleet_sync.sh install)"; fi
+DOCTOR_FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/kleos-doctor.XXXXXX")"
+if HOME="$DOCTOR_FIXTURE" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 \
+  && grep -q 'hooks/before_submit_prompt.sh' "$DOCTOR_FIXTURE/.cursor/hooks.json" 2>/dev/null; then
+  ok "fixture install: hooks.json registers beforeSubmitPrompt (isolated HOME)"
+else
+  fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
+fi
+if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
+  for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh lib/common.sh lib/shell_gate.sh; do
+    if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
+      ok "fixture install: hooks/$rel present"
+    else
+      fail "fixture install: hooks/$rel missing"
+    fi
+  done
+fi
+rm -rf "$DOCTOR_FIXTURE"
+if grep -q 'hooks/before_submit_prompt.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null; then
+  ok "live ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
+else
+  echo "[info] live ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh locally)"
+fi
 
 if jq -e '.hooks|keys|length == 4' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1; then
@@ -160,25 +179,25 @@ hash_file() {
   fi
 }
 HOME_HOOKS="${HOME}/.cursor/hooks"
-if [[ -d "$HOME_HOOKS" ]]; then
+if grep -q 'hooks/before_submit_prompt.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
   if hash_file "$HOOKS_DIR/session_start.sh" >/dev/null; then
     for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh lib/common.sh lib/shell_gate.sh; do
       src="$HOOKS_DIR/$rel"
       dst="$HOME_HOOKS/$rel"
       if [[ ! -f "$dst" ]]; then
-        fail "installed hook missing: ~/.cursor/hooks/$rel (run FORCE=1 bash scripts/install.sh)"
+        fail "live install missing: ~/.cursor/hooks/$rel (run FORCE=1 bash scripts/install.sh)"
         continue
       fi
       hs="$(hash_file "$src")"
       hd="$(hash_file "$dst")"
       if [[ -n "$hs" && "$hs" == "$hd" ]]; then
-        ok "checksum match: $rel"
+        ok "live checksum match: $rel"
       else
-        fail "checksum drift ~/.cursor/hooks/$rel (run FORCE=1 bash scripts/install.sh)"
+        fail "live checksum drift ~/.cursor/hooks/$rel (run FORCE=1 bash scripts/install.sh)"
       fi
     done
   else
-    fail "no shasum/sha256sum — cannot verify installed hook checksums"
+    echo "[warn] no shasum/sha256sum — skipping live hook checksum verification"
   fi
 fi
 

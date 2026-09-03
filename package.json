@@ -9,6 +9,7 @@
     "test": "bash tests/run.sh",
     "sync": "bash scripts/sync.sh",
     "install:macos": "bash MacOS/install.sh",
-    "install:rules": "bash scripts/install.sh"
+    "install:rules": "bash scripts/install.sh",
+    "uninstall": "bash scripts/uninstall.sh"
   }
 }
