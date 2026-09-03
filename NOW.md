@@ -26,7 +26,7 @@ Do not invent a new rule system. Do not thin the charter. Edit books only in thi
 ## Next
 
 Paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → Rules → User Rules. New Grok 4.6 Agent chat opened on this repo.
-Open decision: cloud agents on this pack load no alwaysApply `.mdc` (only `types.mdc`); see audit "Activation reality" section.
+Decided: cloud agents on this pack load only `types.mdc`; law reaches cloud via User Rules paste + AGENTS.md (audit "Activation reality").
 
 ## Archived
 

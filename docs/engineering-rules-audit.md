@@ -121,7 +121,7 @@ Defects found by this check:
 | Finding | Sev | Status |
 |---------|-----|--------|
 | `NOW.md` Proof injected stale evidence ("122 PASS") every session | P2 | **fixed** (NOW.md updated to 148) |
-| Cloud agents on the pack get no `ponytail`/`agent` law from `.mdc` | P2 | **open — operator decision.** Options: (a) accept: cloud relies on User Rules paste + AGENTS.md; (b) allow `link_pack_rules` to symlink alwaysApply `.mdc` into pack `.cursor/rules` (breaks the "no double-load locally" invariant and 2 existing tests); (c) move the grounding + ladder text into root `AGENTS.md` (duplicates canonical policy — rejected by this audit's SSOT rule). Recommendation: (a) unless cloud agents become the primary editor of this repo. |
+| Cloud agents on the pack get no `ponytail`/`agent` law from `.mdc` | P2 | **decided (a): accept.** Cloud relies on User Rules paste + root `AGENTS.md`. Rejected: (b) symlink alwaysApply into pack `.cursor/rules` — double-loads locally, breaks 2 tests; (c) copy law into `AGENTS.md` — duplicates canonical policy. Revisit only if cloud becomes the primary editor of this repo. |
 | Grounding is unenforced (no `preToolUse`/`afterFileEdit`) | P3 | by design; enforcement would require registering a new event — architecture change, not a fix |
 
 ---
