@@ -30,6 +30,14 @@ if [[ -f "$PACK/NOW.md" ]]; then
   NOW_BACKUP="$(cat "$PACK/NOW.md")"
 fi
 
+restore_now() {
+  rm -rf "$PACK/state"
+  if [[ -n "$NOW_BACKUP" ]]; then
+    printf '%s' "$NOW_BACKUP" >"$PACK/NOW.md"
+  fi
+}
+trap restore_now EXIT
+
 source "$PACK/tests/static_checks.sh"
 
 echo ""
@@ -37,6 +45,10 @@ echo "=== Hook fixture tests ==="
 source "$PACK/tests/fixtures.sh"
 source "$PACK/tests/gauntlet.sh"
 source "$PACK/tests/fixtures_more.sh"
+
+echo ""
+echo "=== Gate edges (false positives / bypasses) ==="
+source "$PACK/tests/gate_edges.sh"
 
 echo ""
 echo "=== Plan-mode regression ==="
@@ -62,10 +74,5 @@ echo ""
 echo "=== Results ==="
 echo "PASS: $PASS"
 echo "FAIL: $FAIL"
-rm -rf "$PACK/state"
-
-if [[ -n "$NOW_BACKUP" ]]; then
-  printf '%s' "$NOW_BACKUP" >"$PACK/NOW.md"
-fi
 
 [[ "$FAIL" -eq 0 ]] && exit 0 || exit 1

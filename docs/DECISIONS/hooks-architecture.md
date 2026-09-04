@@ -9,7 +9,7 @@ Context: Cursor user hooks are JSON stdio, cwd `~/.cursor`, native `./hooks/foo.
 
 ## Decision
 
-**Four registered events. Law stays in `.mdc`. Fleet does not touch other repos’ hooks.**
+**Five registered events (stop added 2026-09-03). Law stays in `.mdc`. Fleet does not touch other repos’ hooks.**
 
 | Script | Event | Job |
 |--------|-------|-----|
@@ -17,6 +17,7 @@ Context: Cursor user hooks are JSON stdio, cwd `~/.cursor`, native `./hooks/foo.
 | `before_submit_prompt.sh` | beforeSubmitPrompt | Secret-prompt block via `continue` (`failClosed: false`) |
 | `before_shell.sh` | beforeShellExecution | Destructive / source-write deny; infra/DB `ask` (`failClosed: false`) |
 | `before_read_file.sh` | beforeReadFile | Secret path deny (`failClosed: true`) |
+| `stop.sh` | stop | Ponytail churn followup (`followup_message`, `loop_limit: 1`, `failClosed: false`) |
 
 `fleet_sync.sh` copies `hooks.json` unchanged to `~/.cursor/hooks.json`. No jq path rewrite.
 

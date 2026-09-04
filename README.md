@@ -25,7 +25,7 @@ Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported), **Linux**, 
 
 Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer. User-hook cwd is `~/.cursor`; `session_start.sh` finds the project via `workspace_roots[0]`. No per-repo `.cursor/hooks.json` (it fires alongside the global one and doubles every prompt injection).
 
-How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `NOW.md` so sessions persist across chats. `sessionStart` injects the active sections; the other three hooks are steel (secrets + shell). Security: `SECURITY.md`.
+How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `NOW.md` so sessions persist across chats. `sessionStart` injects the active sections; submit/shell/read are steel (secrets + shell); `stop` reports Ponytail churn once after the turn. Security: `SECURITY.md`.
 
 ## Install / update / uninstall
 
@@ -51,7 +51,7 @@ Removes `~/.cursor/hooks.json` + hooks scripts when the fingerprint matches (`be
 - Orphan repo `.cursor/hooks.json` without scripts → healed by `heal_orphan_project_hooks` on sync/project-hooks
 - Retired rules (mario-engineering-team, vernacular, …) pruned on install
 
-**Compatibility:** macOS stock Bash 3.2 + Linux Bash 3.2+ + Windows via WSL shim (`Windows/install.ps1`). Native Windows without WSL: **unsupported**. Cloud agents: Lane-A `project-hooks` (3 events, no `sessionStart`).
+**Compatibility:** macOS stock Bash 3.2 + Linux Bash 3.2+ + Windows via WSL shim (`Windows/install.ps1`). Native Windows without WSL: **unsupported**. Cloud agents: Lane-A `project-hooks` (3 events: submit/shell/read; no `sessionStart`, no `stop` until a cloud turn is observed to receive `followup_message`).
 
 **Audit docs:** `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/research/agent-instructions-research.md`.
 
@@ -100,7 +100,7 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under five hooks → doctor green → update NOW.md**. Soft skills guide taste when invoked. Ponytail roofs live in `.mdc`; `stop.sh` checks two of them (LOC 300, duplicate helper) once per turn. Registered steel is secrets + shell deny + NOW.md + stop diff gate.
+Loop: **paste rules → `FORCE=1 bash scripts/install.sh` → work under five hooks → doctor green → update NOW.md**. Soft skills guide taste when invoked. Ponytail 300 LOC is law in `.mdc`. `stop.sh` checks unrequested rewrite (>50% of a tracked src file, ≥80 LOC), mass reindent, and duplicate helper. Registered steel is secrets + shell deny + NOW.md + stop churn gate.
 
 Live registration is global (`~/.cursor/hooks.json`, native `./hooks/*.sh`). Edit this pack and re-run `FORCE=1 bash scripts/install.sh`. `sync` does not install or remove other repos’ `.cursor/hooks`.
 
@@ -124,12 +124,14 @@ Skill routes: `/ponytail`, `/debugging`, `/testing`, `/complexity`, `/now`. Revi
 │   │   ├── before_submit_prompt.sh — secret-prompt block (failClosed:false)
 │   │   ├── before_shell.sh        — destructive / source-write deny
 │   │   ├── before_read_file.sh    — secret path deny
+│   │   ├── stop.sh                — Ponytail churn followup (loop_limit 1)
 │   │   ├── fleet_sync.sh          — install + verify; sync is opt-in
 │   │   ├── lib/
 │   │   │   ├── common.sh          — shared utilities (root, deny, allow, continue)
-│   │   │   └── shell_gate.sh      — before_shell policy
-│   │   ├── policy/                — *.ere deny lists + leftover json
-│   │   └── hooks.json             — canonical 4-event registry
+│   │   │   ├── shell_gate.sh      — before_shell policy
+│   │   │   └── diff_gate.sh       — stop.sh rewrite / format / duplicate
+│   │   ├── policy/                — *.ere deny lists
+│   │   └── hooks.json             — canonical 5-event registry
 │   ├── rules/                 — paste capsule + always-on companions (.mdc)
 │   ├── skills/                — on-demand Cursor skills
 │   ├── agents/                — hunter, cut, prove (installed to ~/.cursor/agents)
@@ -150,11 +152,11 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 1. **Prompt** — you send a message.
 2. **Inject (Layer 2)** — `session_start.sh` adds the NOW.md active sections. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
 3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then one or two sentences before Write: what will be true, which files, how you will prove it. That is `.mdc` law, not a hook followup.
-4. **Steel** — `before_shell.sh` and `before_read_file.sh` deny a small list. Conversation police is not registered.
+4. **Steel** — `before_shell.sh` and `before_read_file.sh` deny a small list. `stop.sh` may follow up once on churn. Conversation police is not registered.
 
 ## Ponytail
 
-Roofs live in `ponytail.mdc` + skill. There is **no** registered lean hook. The model follows the ladder (soft ~80 / split before 120 / hard 300 / >700 rewrite). Complexity is `complexity.mdc` + lint, not a hook deny.
+Roofs live in `ponytail.mdc` + skill (soft ~80 / split before 120 / hard 300 / >700 rewrite). `stop.sh` is the registered lean hook for **churn only** (rewrite ratio, mass reindent, duplicate helper) — not file size. Complexity is `complexity.mdc` + lint, not a hook deny.
 
 Recovery: `Read` the file → plan split → `Write` new modules → `StrReplace` imports → retry. Never use Shell to bypass.
 
