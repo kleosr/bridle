@@ -2,8 +2,8 @@
 name: complexity
 description: >
   Wire and satisfy cyclomatic complexity lint. Detect the repo's existing
-  linter, set or keep a cap (default 10), extract until green, never disable
-  the rule. Use when complexity.mdc globs match, lint reports C901/complexity,
+  linter, set or keep a cap (default 10, never 22), extract until green, never
+  disable the rule. Use when complexity.mdc applies, lint reports C901/complexity,
   or the user asks for simpler / less nested code.
 ---
 
@@ -13,7 +13,9 @@ Thin roof: `shared/rules/complexity.mdc`. The lint number is law. Nesting ≤2 i
 
 ## Cap
 
-Repo config wins. Else **10**. Do not raise a cap that already exists. Do not switch to Sonar cognitive complexity unless this repo already uses it.
+Repo config wins. Else **10**. Never above **22** — extract; do not raise a cap toward 22. Do not raise a cap that already exists below 22. Do not switch to Sonar cognitive complexity unless this repo already uses it; if it does, that cap or **22**, whichever is tighter.
+
+Cognitive / Halstead difficulty / CRAP: only if this repo already prints those numbers. Caps: cognitive **22**, Halstead difficulty **80**, CRAP **25**. Do not add those tools.
 
 ## Detect (Grep, then one tool)
 

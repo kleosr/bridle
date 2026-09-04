@@ -4,7 +4,7 @@ set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOOKS_DIR="$PACK/shared/hooks"
 HOME_C="${HOME}/.cursor"
-GLOBAL=(ponytail agent testing vibe postgres next vite astro complexity pnpm)
+GLOBAL=(ponytail agent testing vibe postgres next vite astro complexity pnpm types)
 source "$HOOKS_DIR/lib/fleet_scan.sh"
 
 is_kleosrules_hooks() {

@@ -89,7 +89,8 @@ Paste `shared/rules/USER-RULES.paste.txt` into Cursor → Settings → Rules →
 # Install / refresh global ~/.cursor (hooks, rules, skills, hunter/cut/prove)
 FORCE=1 bash scripts/install.sh
 
-# Opt-in: copy types.mdc to repos listed in shared/config/scan.roots (empty by default)
+# Opt-in: copy project-layer rules to repos listed in shared/config/scan.roots
+# (empty by default; SHARED is empty — types.mdc is global alwaysApply)
 FORCE=1 bash shared/hooks/fleet_sync.sh sync
 FORCE=1 bash shared/hooks/fleet_sync.sh verify
 
@@ -156,7 +157,7 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 
 ## Ponytail
 
-Roofs live in `ponytail.mdc` + skill (soft ~80 / split before 120 / hard 300 / >700 rewrite). `stop.sh` is the registered lean hook for **churn only** (rewrite ratio, mass reindent, duplicate helper) — not file size. Complexity is `complexity.mdc` + lint, not a hook deny.
+Roofs live in `ponytail.mdc` + skill (soft ~80 / split before 120 / hard 300 / never 500 / >700 rewrite). `stop.sh` is the registered lean hook for **churn only** (rewrite ratio, mass reindent, duplicate helper) — not file size. Complexity is `complexity.mdc` + lint, not a hook deny.
 
 Recovery: `Read` the file → plan split → `Write` new modules → `StrReplace` imports → retry. Never use Shell to bypass.
 

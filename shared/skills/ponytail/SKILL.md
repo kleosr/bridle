@@ -20,7 +20,7 @@ Stop at the first rung that still does the job after reading the ask and the tou
 4. Framework native (React/Node/platform).
 5. Already-installed dependency (new package needs one chat line why lower rungs fail).
 6. One clear line.
-7. Minimum — shortest correct private-native diff. Prefer files under soft ~80 LOC. Split before 120. Do not grow past 300. Files >700 LOC: rewrite into modules ≤300 (`Write` new, `StrReplace` original and callers to imports). Zero prose comments. One job per file.
+7. Minimum — shortest correct private-native diff. Prefer files under soft ~80 LOC. Split before 120. Do not grow past 300. Never 500. Files >700 LOC: rewrite into modules ≤300 (`Write` new, `StrReplace` original and callers to imports). Zero prose comments. One job per file.
 
 Soft Rule: skipping a rung needs one chat line naming why lower rungs fail.
 
@@ -30,9 +30,9 @@ Correct first. Then small. Then pretty.
 
 - Match 1–2 sibling files in the directory before Write (imports, naming, error idiom).
 - Named exports. Early return. Nesting depth ≤2.
-- Types: no `any`, no blind casts; prefer `type`; public signatures explicit.
+- Types: no `any`, no un-narrowed `unknown`, no blind casts; prefer `type`; public signatures explicit.
 - Zero prose comments (machine directives only: shebang, pragma, license, `@ts-expect-error`, lint directives).
-- No dead code, unused imports, empty `catch`, leftover `console.log`, `TODO` without a ticket id.
+- Zero dead code, zero redundant code. No unused imports, empty `catch`, leftover `console.log`, or `TODO` without a ticket id.
 - Infer loading from data. Do not add `isLoading` when `data` starts null.
 - Jargon: `bans.txt` next to this skill (fail-open if missing).
 - Behavior change: add or update a test when the testing skill applies. Cite TOOLCHAIN green.
@@ -76,7 +76,7 @@ export function userName(row: { name: string } | null): string {
 
 ## Floors (never skip)
 
-Trust boundaries, authz, data-loss errors, a11y, explicit user asks. Cyclomatic: `complexity.mdc` (repo cap, else 10). Do not disable lint.
+Trust boundaries, authz, data-loss errors, a11y, explicit user asks. Cyclomatic: `complexity.mdc` (repo cap, else 10, never 22). Do not disable lint.
 
 Cursor tools: Write, StrReplace, Shell, Read, Grep, Delete, Task, Glob, EditNotebook.
 

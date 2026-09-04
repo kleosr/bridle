@@ -76,11 +76,14 @@ verify_smoke() {
   if [[ ! -f "$HOME_C/rules/agent.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/agent.mdc missing after install"; bad=1
   fi
-  if [[ -e "$HOME_C/rules/types.mdc" || -L "$HOME_C/rules/types.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/types.mdc must stay project-layer"; bad=1
+  if [[ ! -f "$HOME_C/rules/types.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/types.mdc missing after install"; bad=1
   fi
   if [[ -e "$PACK/.cursor/rules/agent.mdc" || -L "$PACK/.cursor/rules/agent.mdc" ]]; then
     echo "[fail] pack .cursor/rules/agent.mdc duplicates user alwaysApply"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/rules/types.mdc" || -L "$PACK/.cursor/rules/types.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/types.mdc duplicates user alwaysApply"; bad=1
   fi
   if ! grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json" 2>/dev/null; then
     echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1

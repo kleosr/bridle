@@ -2,7 +2,7 @@
 name: testing
 description: >
   Test writing workflows: TDD order, mocks, house gauntlet, regression naming.
-  Use when writing/editing tests or when testing.mdc globs match. Thin rule =
+  Use when writing/editing tests or when testing.mdc applies. Thin rule =
   roofs; this skill = procedure.
 ---
 
@@ -36,4 +36,9 @@ Bug fix ships a test named or described `regression: <symptom>` that fails on ol
 6. `stop.sh` checks Ponytail diff roofs only, not tests. If a claim of done lacks a verify cite, run TOOLCHAIN and restate yourself.
 
 ## Coverage
-Smoke detector, not a trophy. Prefer one hostile path over metric theater.
+
+New and changed code this turn is **100%** covered when the repo already has a coverage job — cite that job green. Do not add istanbul/c8/coverage.py. Whole-repo 100% is not a reason to test getters or mock internals. Prefer one hostile path over metric theater.
+
+## Mutation
+
+If the repo already runs a mutator: **0 surviving mutants** on files you touched. Do not add Stryker, PIT, or mutmut. Do not invent mutation theater.

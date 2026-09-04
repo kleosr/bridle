@@ -19,6 +19,11 @@ run_test "double install second pass exits 0" "0" "$INSTALL2_EC"
 EVT="$(HOME="$LC_HOME" jq -r '.hooks|keys|length' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 run_test "double install keeps 5 hook events" "5" "$EVT"
 
+TYPES_HOME="$(test -f "$LC_HOME/.cursor/rules/types.mdc" && echo yes || echo no)"
+run_test "install copies types.mdc into isolated HOME rules" "yes" "$TYPES_HOME"
+PACK_TYPES_LC="$(test -e "$PACK/.cursor/rules/types.mdc" && echo yes || echo no)"
+run_test "install prunes types.mdc from pack project rules" "no" "$PACK_TYPES_LC"
+
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
 run_test "double install hook script count matches pack arrays" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
 
@@ -34,9 +39,11 @@ CUSTOM_OK="$(test -f "$LC_HOME/.cursor/rules/my-custom.mdc" && echo yes || echo 
 HOOKS_GONE="$(test -f "$LC_HOME/.cursor/hooks.json" && echo no || echo yes)"
 AGENT_GONE="$(test -f "$LC_HOME/.cursor/agents/hunter.md" && echo no || echo yes)"
 PONY_GONE="$(test -f "$LC_HOME/.cursor/rules/ponytail.mdc" && echo no || echo yes)"
+TYPES_GONE="$(test -f "$LC_HOME/.cursor/rules/types.mdc" && echo no || echo yes)"
 run_test "uninstall with FORCE unset exits 0" "0" "$UNINSTALL_EC"
 run_test "uninstall removes hooks.json" "yes" "$HOOKS_GONE"
 run_test "uninstall removes kleosrules agent.mdc rules" "yes" "$PONY_GONE"
+run_test "uninstall removes types.mdc" "yes" "$TYPES_GONE"
 run_test "uninstall removes hunter agent" "yes" "$AGENT_GONE"
 run_test "uninstall preserves unrelated my-custom.mdc" "yes" "$CUSTOM_OK"
 

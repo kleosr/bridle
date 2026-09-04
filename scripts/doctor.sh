@@ -99,6 +99,11 @@ if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
     fi
   done
 fi
+if [[ -f "$DOCTOR_FIXTURE/.cursor/rules/types.mdc" ]]; then
+  ok "fixture install: types.mdc in user rules"
+else
+  fail "fixture install: types.mdc missing from user rules"
+fi
 rm -rf "$DOCTOR_FIXTURE"
 if grep -q 'hooks/before_submit_prompt.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null; then
   ok "live ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
@@ -137,7 +142,8 @@ for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
   "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
-  "$PACK/shared/rules/pnpm.mdc" \
+  "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/testing.mdc" \
+  "$PACK/shared/rules/types.mdc" \
   "$PACK/shared/rules/USER-RULES.paste.txt" "$PACK/shared/skills/ponytail/SKILL.md" \
   "$PACK/shared/skills/testing/SKILL.md" \
   "$PACK/shared/skills/complexity/SKILL.md"; do
@@ -152,8 +158,31 @@ else fail "stale deleted-hook names in$LAW_STALE"; fi
 if [[ ! -f "$PACK/shared/rules/native-lean-autoload.mdc" && ! -f "$PACK/shared/rules/debugging.mdc" ]]; then ok "merged/retired duplicate mdc gone"
 else fail "native-lean-autoload.mdc or debugging.mdc still on disk"; fi
 
-if grep -q 'hard 300' "$PACK/shared/rules/ponytail.mdc"; then ok "ponytail.mdc has hard 300 roof"
-else fail "ponytail.mdc missing hard 300 roof"; fi
+if grep -q 'hard 300' "$PACK/shared/rules/ponytail.mdc" && grep -q 'never 500' "$PACK/shared/rules/ponytail.mdc"; then ok "ponytail.mdc has hard 300 roof and never-500 ceiling"
+else fail "ponytail.mdc missing hard 300 roof or never-500 ceiling"; fi
+
+if grep -q '^alwaysApply: true' "$PACK/shared/rules/types.mdc" \
+  && grep -q '^alwaysApply: true' "$PACK/shared/rules/testing.mdc"; then ok "types.mdc and testing.mdc are alwaysApply"
+else fail "types.mdc or testing.mdc is not alwaysApply"; fi
+
+if grep -q 'Never above \*\*22\*\*' "$PACK/shared/rules/complexity.mdc" \
+  && grep -q 'Halstead difficulty' "$PACK/shared/rules/complexity.mdc" \
+  && grep -q 'CRAP' "$PACK/shared/rules/complexity.mdc"; then ok "complexity.mdc has cyclo-22 ceiling plus cognitive/Halstead/CRAP"
+else fail "complexity.mdc missing quality-roof numbers"; fi
+
+PASTE="$PACK/shared/rules/USER-RULES.paste.txt"
+PASTE_HEADS=ok
+for h in Identity Stance Autonomy Mission Operations "Session Protocol" "Retrieval harness" "Cursor + Grok"; do
+  grep -q "## $h" "$PASTE" || PASTE_HEADS="missing:$h"
+done
+if [[ "$PASTE_HEADS" == ok ]] \
+  && grep -q 'never above 22' "$PASTE" \
+  && grep -q 'never 500' "$PASTE" \
+  && grep -q 'un-narrowed' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and quality roofs"
+else fail "USER-RULES.paste.txt missing charter heading or quality roofs ($PASTE_HEADS)"; fi
+
+if grep -q 'complexity pnpm types)' "$PACK/shared/hooks/fleet_sync.sh"; then ok "fleet_sync GLOBAL includes types"
+else fail "fleet_sync GLOBAL missing types"; fi
 
 if [[ ! -f "$PACK/shared/rules/vernacular.mdc" && ! -d "$PACK/shared/skills/vernacular" ]]; then ok "vernacular retired"
 else fail "vernacular.mdc or skills/vernacular still on disk"; fi

@@ -1,15 +1,18 @@
 ---
-description: "Cyclomatic cap for any language. Repo lint wins, else 10. Do not disable."
+description: "Complexity roofs. Cyclomatic repo-or-10, never 22. Cognitive 22, Halstead 80, CRAP 25 when measured. Do not disable."
 alwaysApply: true
 ---
 
 # Complexity
 
-Code you write must pass cyclomatic complexity lint. That is a number, not a vibe.
+Code you write must pass complexity lint. That is a number, not a vibe.
 
-- Cap: this repo's existing rule (`eslint complexity`, ruff C901, gocyclo, clippy). If none, **10**.
-- Do not disable it (`eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, clippy allow).
+- Cyclomatic: this repo's existing rule (`eslint complexity`, ruff C901, gocyclo, clippy). If none, **10**. Never above **22** — extract; do not raise a cap toward 22.
+- Cognitive complexity: if this repo already measures it (Sonar / sonarjs), that cap or **22**, whichever is tighter. Do not add Sonar to a repo that lacks it.
+- Halstead difficulty: if this repo already measures it, **< 80**. Do not add a Halstead tool.
+- CRAP: if this repo already measures it, **< 25**. Do not add a CRAP reporter.
+- Do not disable cyclomatic lint (`eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, clippy allow).
 - Extract. Early return. Flat `if`. No nested pyramids.
 - Nesting >2 (ponytail) is not a substitute for the lint number.
-- Done = cited lint command green on the files you touched.
+- Done = cited lint command green on the files you touched, plus any extra metric jobs this repo already runs.
 - Procedure when the repo has no cap, or lint is red: Read `~/.cursor/skills/complexity/SKILL.md`.
