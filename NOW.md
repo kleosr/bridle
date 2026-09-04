@@ -4,7 +4,7 @@
 
 Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
 
-Quality roofs encoded in existing alwaysApply `.mdc` + paste (not ten new files). Cyclo 10 never 22. LOC 300 never 500. types+testing alwaysApply; types is GLOBAL.
+Quality roofs encoded in existing always-on `.mdc` + paste (not ten new files). Cyclo 10 never 22. LOC 300 never 500. types+testing always-on; types is GLOBAL.
 
 ## State
 
@@ -22,8 +22,8 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — pending this change
-- `bash scripts/doctor.sh` — pending this change
+- `bash tests/run.sh` — 234 PASS, 0 FAIL (2026-09-04; quality roofs)
+- `bash scripts/doctor.sh` — ALL CHECKS PASSED
 - Audit: `docs/quality-roofs-audit.md`
 
 ## Next
