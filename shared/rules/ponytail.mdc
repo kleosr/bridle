@@ -14,10 +14,10 @@ Smallest diff. Zero prose comments. `stop.sh` blocks unrequested rewrite (>50% o
 4. Platform
 5. Installed dep
 6. One-liner
-7. Minimum (soft ~80; split before 120; hard 300; >700 rewrite modules ≤300)
+7. Minimum (soft ~80; split before 120; hard 300; never 500; >700 rewrite modules ≤300)
 
 ## Quality
-Match 1–2 siblings before Write. Named exports. Early return. Nesting ≤2. No `any` / blind casts. No dead code or empty catch.
+Match 1–2 siblings before Write. Named exports. Early return. Nesting ≤2. No `any` / un-narrowed `unknown` / blind casts. Zero dead code. Zero redundant code (third copy → extract; two copies are cheaper).
 
 ## Tools
 Read, Grep, Glob, Write, StrReplace, EditNotebook, Delete.

@@ -1,7 +1,6 @@
 ---
-description: "Testing roofs (Thin Rule). Points to testing skill."
-globs: ["**/*.test.*","**/*.spec.*","tests/**","__tests__/**","e2e/**","**/*.feature"]
-alwaysApply: false
+description: "Testing roofs. This-turn coverage 100% when a job exists. Zero surviving mutants when a mutator exists."
+alwaysApply: true
 ---
 
 # TESTING (THIN)
@@ -9,6 +8,9 @@ alwaysApply: false
 Cero bloat en tests. Public surface only. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
 House gauntlet first (TOOLCHAIN). Run verify yourself. Fail closed on red. Cite evidence.
 Bug fix ships `regression: <symptom>`. Flaky = broken.
+
+Coverage of code you added or changed this turn is **100%** when the repo already has a coverage job — cite that job. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
+Mutation: if the repo already runs a mutator, **0 surviving mutants** on files you touched. Do not add Stryker, PIT, or mutmut.
 
 ## PROCEDURE
 TDD order, mocks, gauntlet workflows:

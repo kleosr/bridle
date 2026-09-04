@@ -161,7 +161,7 @@ done
 run_test "malformed grounding: every pack .mdc has valid frontmatter" "ok" "$MDC_OK"
 
 ALWAYS_ON="$(grep -l '^alwaysApply: true' "$PACK"/shared/rules/*.mdc | wc -l | tr -d ' ')"
-run_test "always-on rule count is 5 (agent, ponytail, pnpm, complexity, vibe)" "5" "$ALWAYS_ON"
+run_test "always-on rule count is 7 (agent, ponytail, pnpm, complexity, vibe, testing, types)" "7" "$ALWAYS_ON"
 
 DUP_HEAD="$(grep -h '^# ' "$PACK"/shared/rules/*.mdc | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "duplicate channel: no two .mdc share a top heading" "0" "$DUP_HEAD"
