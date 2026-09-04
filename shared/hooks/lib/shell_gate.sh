@@ -19,8 +19,8 @@ gate_shell_command() {
   local cmd="$1"
   [[ -z "$cmd" ]] && return 0
   local wipe_tgt="${Q}?(/(/*|\./*|\.\./*)*|/[^/]+/\.\.(/*|\./*|\.\./*)*|~|\\\$HOME|\\\$\{HOME\}|\.\.?|\*)${Q}?/?${Q}?(\.|\*)?${Q}?"
-  local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&]|$)"
-  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
+  local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];|&]|$)"
+  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:];|&]|$)"
   local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|drop[[:space:]]+(database|table|schema)|truncate[[:space:]]+table|>[[:space:]]*/dev/sd|shred[[:space:]]"
   if echo "$cmd" | grep -qiE "${rm_root}|${force_push}|${wipe}"; then
     emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
@@ -48,15 +48,19 @@ gate_complexity_bypass() {
 }
 
 gate_shell_secrets() {
-  local cmd="$1" pol="${HERE}/policy/secret_paths.ere" hit=0
+  local cmd="$1" pol="${HERE}/policy/secret_paths.ere" hit=0 scanned
   shell_is_git_gh_body "$cmd" && return 1
   local env_seed='^[[:space:]]*cp[[:space:]]+\.env\.(example|sample|template)[[:space:]]+\.env[[:space:]]*$'
-  local env_tok="(^|[[:space:]=(<@]|${Q})(\./)?\.env(rc|\.(local|development|dev|production|prod|staging|stage|test|ci|secret|secrets)(\.[^[:space:]\"';|&)]*)?)?${TERM}"
+  echo "$cmd" | grep -qE "$env_seed" && return 1
+  scanned="${cmd//.env.example/}"
+  scanned="${scanned//.env.sample/}"
+  scanned="${scanned//.env.template/}"
+  local env_tok="(^|[[:space:]=(<@]|${Q})(\./)?\.env(rc)?([^[:alnum:]_]|$)"
   local readers='(cat|head|tail|less|more|bat|source|\.|grep|rg|awk|sed|cut|xxd|od|base64|openssl|strings|scp|cp)'
   local key_mat="${WORD}${readers}[[:space:]]+${SEG}([^[:space:]\"']+\.(pem|key|p12|pfx)|[^[:space:]\"']*id_(rsa|ed25519|ecdsa))(${Q}|[[:space:];|&]|$)"
   local git_leak="${WORD}git[[:space:]]+(show|cat-file|checkout|restore|archive)[[:space:]]${SEG}(\.env|\.pem|\.key|id_rsa|id_ed25519|credentials)"
-  if [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qE -f "$pol"; then hit=1
-  elif echo "$cmd" | grep -qE "$env_tok" && ! echo "$cmd" | grep -qE "$env_seed"; then hit=1
+  if [[ -f "$pol" ]] && printf '%s' "$scanned" | grep -qE -f "$pol"; then hit=1
+  elif echo "$scanned" | grep -qiE "$env_tok"; then hit=1
   elif echo "$cmd" | grep -qiE "$key_mat"; then hit=1
   elif echo "$cmd" | grep -qiE "$git_leak"; then hit=1
   fi
@@ -81,13 +85,16 @@ ${WORD}git[[:space:]]+(checkout|restore)[[:space:]]${SEG}\\.${SRC_EXT}${TERM}"
 $pats
 EOF
   flat="$(printf '%s' "$cmd" | tr '\n' ' ')"
-  echo "$flat" | grep -qiE "${WORD}(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+|-[[:space:]]|-<<).{0,250}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)" \
+  echo "$flat" | grep -qiE "${WORD}(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+|-[[:space:]]|-?<<).{0,250}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)" \
     && echo "$flat" | grep -qE "\\.${SRC_EXT}${Q}"
 }
 
 gate_shell_source_write() {
   local cmd="$1"
-  shell_is_git_gh_body "$cmd" && return 1
+  if shell_is_git_gh_body "$cmd"; then
+    [[ "$cmd" == *[\;\&\|]* ]] || return 1
+    cmd="${cmd#*[;&|]}"
+  fi
   shell_writes_source "$cmd" || return 1
   emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code. CMD: ${cmd:0:120}"
   return 0

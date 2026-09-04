@@ -39,13 +39,24 @@ for c in \
   'git push origin main -f' \
   'git push origin main --force' \
   'git push -fu origin' \
+  'git push origin main -f; echo' \
+  'git push --force; true' \
+  'rm -rf /|true' \
   'git clean --force' \
+  'git commit -m "ok" && printf x > a.ts' \
+  'gh pr create --title t --body b && echo x > a.ts' \
   'export $(cat .env | xargs)' \
   'grep API_KEY .env' \
   'awk 1 .env' \
   'cp .env.example .env && cat .env' \
   'cat .env.dev' \
   'source .env.prod' \
+  'cat .env.backup' \
+  'cat .env.qa' \
+  'cat .env*' \
+  'cat .env.local*' \
+  'cat .ENV' \
+  'source .Env' \
   'cat id_rsa' \
   'cat server.pem | head -1' \
   'cat certs/server.key; echo' \
@@ -56,10 +67,15 @@ for c in \
 done
 
 run_test "regression: gate denies python stdin heredoc writing .py" "deny" "$(gate_verdict $'python3 - <<EOF\nopen("a.py","w").write("x")\nEOF')"
+run_test "regression: gate denies python heredoc writing .py (no dash)" "deny" "$(gate_verdict $'python3 <<EOF\nopen("a.py","w").write("x")\nEOF')"
+run_test "regression: gate denies node heredoc writing .js" "deny" "$(gate_verdict $'node <<EOF\nrequire("fs").writeFileSync("a.js","x")\nEOF')"
 run_test "regression: gate asks env-prefixed psql" "ask" "$(gate_verdict 'PGPASSWORD=x psql -h db -c "select 1"')"
 
 run_test "regression: read allows .env.example" "quiet" "$(read_verdict /repo/.env.example)"
+run_test "regression: read allows .env.sample" "quiet" "$(read_verdict /repo/.env.sample)"
 run_test "regression: read denies .env.local" "deny" "$(read_verdict /repo/.env.local)"
+run_test "regression: read denies .env.backup" "deny" "$(read_verdict /repo/.env.backup)"
+run_test "regression: read denies .env.qa" "deny" "$(read_verdict /repo/.env.qa)"
 run_test "regression: read denies .p12" "deny" "$(read_verdict /repo/client.p12)"
 
 run_test "regression: prompt passes sk- inside a word" "true" "$(prompt_verdict 'tomsk-Novosibirskregionalservicecenter opened today')"
