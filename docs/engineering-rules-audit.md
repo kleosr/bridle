@@ -79,13 +79,15 @@ scripts/doctor.sh + tests/run.sh
 | `shared/rules/testing.mdc` | Cursor | glob tests | test files | test roof | install | n/a | low | on match | none | **scoped** | keep |
 | `shared/rules/pnpm.mdc` | Cursor | glob package | pnpm fields | supply chain | install | n/a | medium | on match | doctor | **scoped** | keep |
 | `shared/rules/types.mdc` | Cursor | glob types | project only | type discipline | pack `.cursor/rules` symlink | none | n/a | on match | install test | **scoped** | keep |
-| `shared/hooks/hooks.json` | Cursor | ~/.cursor | IDE load | 4-event registry | install copy | invalid JSON breaks hooks | medium | tiny | fixtures, doctor | **canonical** | keep |
+| `shared/hooks/hooks.json` | Cursor | ~/.cursor | IDE load | 5-event registry | install copy | invalid JSON breaks hooks | medium | tiny | fixtures, doctor | **canonical** | keep |
 | `shared/hooks/hooks.cloud.json` | Cursor cloud | repo `.cursor` | cloud agent | 3-event registry | project-hooks | same | medium | tiny | gauntlet | **canonical** | keep |
 | `shared/hooks/session_start.sh` | Cursor hook runner | global | sessionStart | NOW inject | writes `state/mode` | quiet on error paths | skips token-like NOW | 40 lines max inject | many | **enforcement** | keep |
 | `shared/hooks/before_submit_prompt.sh` | Cursor | global | submit | secret block | none | continue false parse/secret | blocks tokens | per prompt | many | **enforcement** | keep |
 | `shared/hooks/before_shell.sh` | Cursor | global | shell | gate wrapper | none | deny/ask/allow JSON | destructive block | per command | gauntlet | **enforcement** | keep |
-| `shared/hooks/before_read_file.sh` | Cursor | global | read | secret deny | none | failClosed true | blocks .env/pem | per read | gauntlet | **enforcement** | keep |
-| `shared/hooks/lib/shell_gate.sh` | before_shell | internal | sourced | policy logic | none | emit JSON | steel | n/a | gauntlet | **library** | keep; 96 LOC, cyclomatic >10 (justified: single gate module) |
+| `shared/hooks/before_read_file.sh` | Cursor | global | read | secret deny | none | failClosed true | blocks .env/pem; missing policy / non-JSON deny | per read | gauntlet, gate_edges | **enforcement** | keep |
+| `shared/hooks/stop.sh` | Cursor | global | stop | Ponytail churn followup | none | `{}` or `followup_message` | cannot refuse completion | per turn | grounding | **enforcement** | keep |
+| `shared/hooks/lib/diff_gate.sh` | stop.sh | internal | sourced | rewrite / format / duplicate | none | followup text | not file size | n/a | grounding | **library** | keep |
+| `shared/hooks/lib/shell_gate.sh` | before_shell | internal | sourced | policy logic | none | emit JSON | steel; separators do not bleed | n/a | gauntlet, gate_edges | **library** | keep |
 | `shared/hooks/lib/common.sh` | all hooks | internal | sourced | emit helpers, NOW extract | state paths | jq dependent | none | n/a | fixtures | **library** | keep |
 | `shared/hooks/fleet_sync.sh` | human/CI | install time | CLI | install/sync/verify | writes ~/.cursor | exit 2 usage | no network | n/a | gauntlet, lifecycle | **installer** | keep |
 | `scripts/install.sh` | human | install | exec | wrapper to fleet_sync | same | same | same | n/a | lifecycle | **installer** | keep |
@@ -143,7 +145,7 @@ Defects found by this check:
 | Conflict | Severity | Resolution |
 |----------|----------|------------|
 | Root AGENTS.md vs nested adapters | P3 | Adapters are bridges only; no duplicate policy text |
-| agent.mdc vs USER-RULES paste (four hooks) | P2 | Intentional: paste=charter, agent.mdc=operational capsule; overlapping hook list acceptable |
+| agent.mdc vs USER-RULES paste (five hooks) | P2 | Intentional: paste=charter, agent.mdc=operational capsule; overlapping hook list acceptable |
 | ponytail.mdc vs ponytail skill | P2 | By design: mdc=roof, skill=procedure |
 | Global vs project hooks double sessionStart | P1 | Pack never installs repo hooks on itself; cloud omits sessionStart |
 | doctor vs CI agent env ~/.cursor | P1 | **Fixed:** fixture HOME |
@@ -225,10 +227,10 @@ Latest Linux run after PR #27 review fixes: `bash tests/run.sh` → **PASS:148 F
 
 ## Normal engineer workflow (after)
 
-1. Clone kleosrules  
-2. Paste `USER-RULES.paste.txt` → Cursor User Rules  
-3. `FORCE=1 bash scripts/install.sh` (or platform installer)  
-4. `bash scripts/doctor.sh` — passes in CI/agent env without preinstalled hooks  
-5. Work with four hooks + NOW.md  
-6. `bash tests/run.sh` before PR  
+1. Clone kleosrules
+2. Paste `USER-RULES.paste.txt` → Cursor User Rules
+3. `FORCE=1 bash scripts/install.sh` (or platform installer)
+4. `bash scripts/doctor.sh` — passes in CI/agent env without preinstalled hooks
+5. Work with five hooks + NOW.md
+6. `bash tests/run.sh` before PR
 7. To remove: `bash scripts/uninstall.sh` (keeps unrelated `~/.cursor` files)

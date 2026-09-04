@@ -27,7 +27,8 @@ gr_repo "$GR_TMP/hunk_in_big"
 gr_lines 350 > "$GR_TMP/hunk_in_big/big.ts"
 git -C "$GR_TMP/hunk_in_big" add big.ts
 git -C "$GR_TMP/hunk_in_big" -c user.email=t@t -c user.name=t commit -q -m base
-sed -i '' '3s/.*/export const v3 = 999/' "$GR_TMP/hunk_in_big/big.ts"
+awk 'NR==3 { print "export const v3 = 999"; next } { print }' "$GR_TMP/hunk_in_big/big.ts" > "$GR_TMP/hunk_in_big/big.ts.tmp"
+mv "$GR_TMP/hunk_in_big/big.ts.tmp" "$GR_TMP/hunk_in_big/big.ts"
 RESULT="$(gr_stop "$GR_TMP/hunk_in_big" | jq -c .)"
 run_test "stop: 3-line fix in 350-line file is NOT flagged (no drive-by)" "{}" "$RESULT"
 
