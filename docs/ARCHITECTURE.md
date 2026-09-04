@@ -18,7 +18,7 @@ Cursor reasons in a window that dies. `NOW.md` keeps what must survive. `session
 
 Law, state, and feedback must not share one dump.
 
-1. **Law** — paste + user `~/.cursor/rules` alwaysApply/glob `.mdc` (once) + skills on-demand. Project `.cursor/rules` is types.mdc. Do not re-inject ponytail at sessionStart.
+1. **Law** — paste + user `~/.cursor/rules` alwaysApply/glob `.mdc` (once) + skills on-demand. No project-layer `.mdc` (`SHARED=()`; `types.mdc` is global alwaysApply). Do not re-inject ponytail at sessionStart.
 2. **State** — `session_start.sh` injects NOW.md active sections (`additional_context`).
 3. **Feedback** — the model sees tool results. `stop.sh` adds one bounded `followup_message` when the working-tree diff shows unrequested rewrite (>50% of a tracked file changed) or mass reindent (whitespace-only churn). No postToolUse scorecard.
 
@@ -32,7 +32,7 @@ Law, state, and feedback must not share one dump.
 
 - **Muscles:** Five registered event hooks under `/shared/hooks` (max 80 LOC each; macOS + Linux + WSL userland). Unregistered conversation/grounding scripts are gone.
 - **Policy (wired):** `policy/secret_paths.ere` (`before_read_file.sh` via `grep -f`). Destructive/source-write is inline in `shell_gate.sh`. Ponytail diff roofs are inline in `lib/diff_gate.sh` (`stop.sh`).
-- **Law (shared core):** `shared/rules/` (canonical .mdc + paste), `shared/skills/`, `shared/agents/`, `shared/config/`. Install: GLOBAL → `~/.cursor/rules`; SHARED → pack `.cursor/rules` (types only).
+- **Law (shared core):** `shared/rules/` (canonical .mdc + paste), `shared/skills/`, `shared/agents/`, `shared/config/`. Install: GLOBAL → `~/.cursor/rules` (includes `types.mdc`). SHARED is empty.
 - **Platforms:** `MacOS/install.sh`, `Linux/install.sh`, `Windows/install.ps1` + `Windows/hooks/wsl-shim.ps1`. Canonical hooks are POSIX bash in `shared/hooks/`.
 - **Brain:** `NOW.md` (local). Security: `SECURITY.md`.
 - **State:** Ephemeral files in `/state/` (gitignored).

@@ -5,6 +5,7 @@ Single source of truth for coding agents operating in this repository.
 ## Rules
 
 - **Law vs Handbook**: Law lives in registered hook scripts, user rules paste (`shared/rules/USER-RULES.paste.txt`), and rules (`shared/rules/*.mdc`). This file is the canonical handbook and operational contract.
+- **Quality roofs**: encoded in existing alwaysApply `.mdc` (complexity, ponytail, testing, types) plus the User Rules paste. Cyclomatic: repo cap else 10, never 22. Cognitive 22 / Halstead difficulty 80 / CRAP 25 only when the repo already measures them. File LOC: hard 300, never 500. Coverage 100% of this turn when a coverage job exists; 0 surviving mutants when a mutator exists. Zero dead/redundant code. No `any`; no un-narrowed `unknown`. Do not add those tools. Audit: `docs/quality-roofs-audit.md`.
 - **Pack Core**: kleosrules V2 Bash hooks + local `NOW.md` memory. Brain = `NOW.md`. Muscle = five registered hook scripts (`session_start.sh`, `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`, `stop.sh`).
 - **No Rust / No Pack Python / No Core MCP**: No Rust kleos-gate or pack Python tooling. MCP is optional, never a core dependency.
 - **Install Scope**: Local install is global-only (`FORCE=1 bash scripts/install.sh` writes `~/.cursor`). Never install Lane-A into this pack.
@@ -20,7 +21,7 @@ Reusable task recipes and specialist definitions for this pack:
   - `shared/skills/ponytail/`: Native Lean quality bar, code roofs, split recovery.
   - `shared/skills/debugging/`: Systematic reproduce → hypothesis → evidence → fix.
   - `shared/skills/testing/`: Test-first red-green-refactor; verify toolchain before Done.
-  - `shared/skills/complexity/`: Cyclomatic cap (repo lint or 10); extract until lint passes.
+  - `shared/skills/complexity/`: Cyclomatic cap (repo lint or 10, never 22); extract until lint passes.
   - `shared/skills/now/`: Local session state management in `NOW.md`.
   - `shared/skills/design-stack/`, `premium-ui-craft/`, `landing-page-design/`, `redesign-existing-projects/`, `ux-web-research/`: UI and design craft.
 - **Specialist Review Agents**:
@@ -59,5 +60,6 @@ Agent memory in this repository is purely local and file-backed:
   - `docs/TOOLCHAIN.md`
   - `docs/DECISIONS/hooks-architecture.md`
   - `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`: audit inventory and architecture decision (2026-09).
+  - `docs/quality-roofs-audit.md`: ten quality metrics mapped onto existing alwaysApply roofs (2026-09-04).
   - `docs/runtime-grounding-audit.md`, `docs/engineering-system.md`: lifecycle matrix, runtime probes, GROUND→STOP loop (2026-09-03).
 - **Vendor Independence**: No vendor memory features or proprietary remote context dependencies.

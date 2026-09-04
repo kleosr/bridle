@@ -24,7 +24,7 @@ Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>
 - No barrel-import of a whole UI kit.
 - Derived state, not mirrored `useState` + `useEffect`.
 - Named exports. Early return. Nesting >2 banned.
-- Cyclomatic: `complexity.mdc`. Repo cap, else 10. Do not disable the rule.
+- Cyclomatic: `complexity.mdc`. Repo cap, else 10, never 22. Do not disable the rule.
 - Match 1–2 siblings in the directory before Write.
 - Do not invent RSC, `getServerSideProps`, or `client:*` unless this stack has them.
 

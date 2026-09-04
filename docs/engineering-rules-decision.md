@@ -20,8 +20,8 @@ One coherent system: **Cursor-only runtime enforcement** via five global Bash ho
 | Layer | Before (untrusted claim) | After (verified) |
 |-------|--------------------------|------------------|
 | Handbook | Root `AGENTS.md` + 4 nested adapters | **Canonical:** root `AGENTS.md`. **Bridges:** `shared/{hooks,rules,skills,config}/AGENTS.md` point to root; consumed when agents open those trees, not by hooks. |
-| User law | Paste + 10 global `.mdc` | Unchanged. Paste = User Rules (manual). Global `.mdc` installed by `fleet_sync.sh install`. |
-| Project law | `types.mdc` only in pack `.cursor/rules` | Unchanged. Glob-scoped; not copied to `~/.cursor/rules`. |
+| User law | Paste + 11 global `.mdc` | Unchanged topology. Paste = User Rules (manual). Global `.mdc` installed by `fleet_sync.sh install`. |
+| Project law | none (`SHARED=()`) | `types.mdc` moved GLOBAL alwaysApply 2026-09-04. |
 | Enforcement | 5 hooks global `~/.cursor` | Local: sessionStart, beforeSubmitPrompt, beforeShellExecution, beforeReadFile, stop. Cloud Lane-A: 3 hooks via `hooks.cloud.json` (no `sessionStart`, no `stop`). |
 | Skills | 10 symlinks under `~/.cursor/skills` | On-demand; listed in `shared/config/skills.txt`. |
 | Specialists | hunter/cut/prove → `~/.cursor/agents` | Invoked by name; not always-on. |
@@ -32,8 +32,8 @@ One coherent system: **Cursor-only runtime enforcement** via five global Bash ho
 
 1. **User chat prompt** (highest for a turn)  
 2. **User Rules paste** (charter floor per `USER-RULES.paste.txt`)  
-3. **Always-apply `.mdc`** in `~/.cursor/rules/` (`agent.mdc`, `ponytail.mdc`, …)  
-4. **Glob `.mdc`** when path matches (`types.mdc`, `vibe.mdc`, stack rules)  
+3. **Always-apply `.mdc`** in `~/.cursor/rules/` (`agent.mdc`, `ponytail.mdc`, `pnpm.mdc`, `complexity.mdc`, `vibe.mdc`, `testing.mdc`, `types.mdc`)  
+4. **Glob `.mdc`** when path matches (`next.mdc`, `vite.mdc`, `astro.mdc`, `postgres.mdc`)  
 5. **Skills** when task/glob matches (`Read SKILL.md` or `/name`)  
 6. **Root `AGENTS.md`** — handbook for agents working *in this pack repo*; Cursor cloud may inject via `cloud_instructions`; not installed to `~/.cursor`  
 7. **Hook outputs** — `additional_context` (sessionStart), `continue` (beforeSubmitPrompt), `permission` (shell/read)
@@ -46,10 +46,10 @@ Hooks do **not** inject `.mdc` or rewrite prompts (`updated_input` banned).
 FORCE=1 bash scripts/install.sh
   → fleet_sync.sh install
     → ~/.cursor/hooks.json + hooks/*
-    → ~/.cursor/rules/{GLOBAL}.mdc
+    → ~/.cursor/rules/{GLOBAL}.mdc (includes types)
     → ~/.cursor/skills/* (symlinks)
     → ~/.cursor/agents/{hunter,cut,prove}.md
-    → pack/.cursor/rules/types.mdc (symlink only)
+    → pack `.cursor/rules` pruned of GLOBAL names (SHARED empty)
 ```
 
 **Uninstall:** `bash scripts/uninstall.sh` removes kleosrules fingerprint only (`before_submit_prompt.sh` in hooks.json). User Rules paste remains manual.
@@ -76,7 +76,7 @@ FORCE=1 bash scripts/install.sh
 | Write | Ladder: no code → reuse → stdlib → platform → dep → one-liner → minimum | Diff size; no new dependency without a ladder step cited | `ponytail.mdc` + skill |
 | Write | Cyclomatic ≤ repo cap (else 10); never disable lint | `before_shell.sh` denies `complexity:off`, `noqa: C901`, clippy allow | **hook-enforced** |
 | Write | No Shell source-write; use Write/StrReplace | `before_shell.sh` denies `> x.ts`, `sed -i`, `tee`, heredoc | **hook-enforced** |
-| Write | Types: no `any`/blind cast/unwrap | `types.mdc` on path match | law |
+| Write | Types: no `any` / un-narrowed `unknown` / blind cast / unwrap | `types.mdc` alwaysApply | law |
 | Read | No secrets into model context | `before_read_file.sh` failClosed | **hook-enforced** |
 | Prompt | No tokens in prompts | `before_submit_prompt.sh` `continue:false` | **hook-enforced** |
 | Test | Red → green; cite the command and exit code | `bash tests/run.sh` PASS count in chat and NOW.md | harness |
@@ -89,7 +89,17 @@ Extensions considered and **not** adopted without an operator decision:
 - Registering `preToolUse` to require a declaration before Write (would need conversation parsing; ARCHITECTURE.md explicitly bans conversation police).
 - Auto-injecting `ponytail.mdc` at sessionStart (ARCHITECTURE.md: law and state must not share one dump).
 
-The system's efficiency comes from what it refuses to load: 5 hooks, ~40 injected lines, 5 alwaysApply rules (complexity and vibe joined 2026-09-03 by operator request), everything else on path or on demand.
+The system's efficiency comes from what it refuses to load: 5 hooks, ~40 injected lines, 7 alwaysApply rules (testing and types joined 2026-09-04; complexity and vibe joined 2026-09-03), everything else on path or on demand.
+
+## 2026-09-04 — Quality roofs
+
+Operator asked for ten metrics as always-on law. Full audit: `docs/quality-roofs-audit.md`.
+
+Adopted: extend `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`, and the Retrieval harness paragraph in `USER-RULES.paste.txt`. Flip `testing.mdc` and `types.mdc` to `alwaysApply: true`. Move `types.mdc` from SHARED/project to GLOBAL.
+
+Rejected: ten new `.mdc` files; raising cyclomatic 10→22; raising file roof 300→500; a total ban on `unknown`; adding coverage/mutation/Sonar/Halstead tools to this Bash pack; hook-enforcing LOC or coverage.
+
+Working numbers: cyclo repo-or-10 never 22; cognitive 22 / Halstead 80 / CRAP 25 when already measured; LOC hard 300 never 500; this-turn coverage 100% when a job exists; 0 surviving mutants when a mutator exists; zero dead/redundant; no `any`; no un-narrowed `unknown`.
 
 ## Proof commands
 

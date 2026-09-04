@@ -6,7 +6,7 @@ One loop, seven stages, each owned by the lightest mechanism that reliably perfo
 
 | stage | job | owner mechanism | layer type | when it runs | failure behavior |
 |---|---|---|---|---|---|
-| GROUND | smallest correct repo/dir/task/state context | `session_start.sh` → `additional_context` (NOW.md Now/State/Limits/Proof/Next, ≤40 lines); Cursor rules engine loads 5 alwaysApply `.mdc` once; glob `.mdc` on path match; nested `AGENTS.md` on Read | hook (state) + rule (law) | session start / on Read | no NOW.md → `{}`; token blob → `{}`; plan mode → `{}` |
+| GROUND | smallest correct repo/dir/task/state context | `session_start.sh` → `additional_context` (NOW.md Now/State/Limits/Proof/Next, ≤40 lines); Cursor rules engine loads 7 alwaysApply `.mdc` once; glob `.mdc` on path match; nested `AGENTS.md` on Read | hook (state) + rule (law) | session start / on Read | no NOW.md → `{}`; token blob → `{}`; plan mode → `{}` |
 | BOUND | scope, protected paths, allowed ops, validation commands, hard stops | `before_read_file.sh` (secret paths, failClosed) · `before_shell.sh`/`shell_gate.sh` (destructive deny, source-write deny, complexity-lint-disable deny, secret-path deny, infra/DB ask) · `SECURITY.md` (SSOT text) | hook (steel) + canonical file | before every Read / Shell | deny/ask JSON with `user_message`; hook crash on shell = fail-open, on read = fail-closed |
 | PLAN | smallest coherent change + tests; risk without speculative architecture | `agent.mdc` "Before you write" (one or two sentences: outcome, files, proof) · `ponytail.mdc` ladder · `complexity.mdc` cap | rule | before Write | judgment; not hook-enforced (no `preToolUse` by decision) |
 | CHANGE | surgical complete edits | agent Write/StrReplace · `before_shell.sh` denies Shell writes to source so edits go through tool diffs | tool + hook | during turn | Shell source-write → `LEAN BYPASS BLOCK` |
@@ -26,12 +26,12 @@ One loop, seven stages, each owned by the lightest mechanism that reliably perfo
 
 | you open Cursor on a repo | loads | because |
 |---|---|---|
-| any repo | `agent.mdc`, `ponytail.mdc`, `pnpm.mdc`, `complexity.mdc`, `vibe.mdc` | `alwaysApply: true` in `~/.cursor/rules`; vibe is silent without `package.json` |
+| any repo | `agent.mdc`, `ponytail.mdc`, `pnpm.mdc`, `complexity.mdc`, `vibe.mdc`, `testing.mdc`, `types.mdc` | `alwaysApply: true` in `~/.cursor/rules`; vibe is silent without `package.json`; types is silent on untyped files |
 | any repo | User Rules charter | pasted once in Settings |
 | repo with `NOW.md` | its Now/State/Limits/Proof/Next | `session_start.sh` |
 | repo with `AGENTS.md` | root file; nested ones when you Read in that dir | Cursor workspace instructions (may lag disk until new chat) |
-| edit `*.ts` | `types.mdc` (project) | glob |
-| edit `tests/**` | `testing.mdc` | glob |
+| edit `*.sql` / schema paths | `postgres.mdc` | glob |
+| edit Next/Vite/Astro app files | `next.mdc` / `vite.mdc` / `astro.mdc` | glob |
 | never automatically | any `SKILL.md`, hunter/cut/prove | on demand only |
 | each Shell / Read | `before_shell.sh` / `before_read_file.sh` | registered events |
 | each completed turn | `stop.sh` | registered event; `{}` unless a roof is broken |

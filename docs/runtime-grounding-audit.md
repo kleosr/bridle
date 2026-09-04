@@ -1,6 +1,7 @@
 # Runtime Grounding Audit — kleosrules
 
 **Base commit:** `4abf279` (2026-09-03). **Machine:** macOS, bash 3.2, jq 1.7.1, Cursor Agent (local `~/.cursor` install).
+**Follow-up:** 2026-09-04 quality roofs flipped `testing.mdc` and `types.mdc` to alwaysApply (count 7) and moved `types.mdc` GLOBAL. Scorecard below is the 2026-09-03 snapshot; current count is `tests/grounding.sh`.
 **Method:** stdin/stdout probes against the hook scripts, isolated `mktemp` git repos, and in-session tool-result observations. No hidden prompt or model context was inspected; loader-side claims are inferred from tool-result attachments and labeled by confidence.
 
 Confidence labels: **det** = deterministic, reproducible by `bash tests/run.sh`; **obs** = observed in this Cursor session from tool results (single session); **n/a** = the platform exposes no trace; a documented proxy is named.
