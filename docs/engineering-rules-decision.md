@@ -6,7 +6,7 @@
 
 ## Summary
 
-One coherent system: **Cursor-only runtime enforcement** via four global Bash hooks; **law** in User Rules paste + `~/.cursor/rules/*.mdc` (alwaysApply/glob); **on-demand skills**; **local session state** in `NOW.md`; **handbook** in root `AGENTS.md`. No duplicate canonical policy. No vendor files without verified consumers.
+One coherent system: **Cursor-only runtime enforcement** via five global Bash hooks; **law** in User Rules paste + `~/.cursor/rules/*.mdc` (alwaysApply/glob); **on-demand skills**; **local session state** in `NOW.md`; **handbook** in root `AGENTS.md`. No duplicate canonical policy. No vendor files without verified consumers.
 
 ## CLAUDE.md decision
 
@@ -22,7 +22,7 @@ One coherent system: **Cursor-only runtime enforcement** via four global Bash ho
 | Handbook | Root `AGENTS.md` + 4 nested adapters | **Canonical:** root `AGENTS.md`. **Bridges:** `shared/{hooks,rules,skills,config}/AGENTS.md` point to root; consumed when agents open those trees, not by hooks. |
 | User law | Paste + 10 global `.mdc` | Unchanged. Paste = User Rules (manual). Global `.mdc` installed by `fleet_sync.sh install`. |
 | Project law | `types.mdc` only in pack `.cursor/rules` | Unchanged. Glob-scoped; not copied to `~/.cursor/rules`. |
-| Enforcement | 4 hooks global `~/.cursor` | Unchanged. Cloud Lane-A: 3 hooks via `hooks.cloud.json` (no `sessionStart`). |
+| Enforcement | 5 hooks global `~/.cursor` | Local: sessionStart, beforeSubmitPrompt, beforeShellExecution, beforeReadFile, stop. Cloud Lane-A: 3 hooks via `hooks.cloud.json` (no `sessionStart`, no `stop`). |
 | Skills | 10 symlinks under `~/.cursor/skills` | On-demand; listed in `shared/config/skills.txt`. |
 | Specialists | hunter/cut/prove → `~/.cursor/agents` | Invoked by name; not always-on. |
 | Memory | `NOW.md` + `state/` | Injected by `session_start.sh`; not duplicated in hooks. |
@@ -62,7 +62,7 @@ FORCE=1 bash scripts/install.sh
 
 - No `CLAUDE.md`, `.cursorrules`, or `GLOBAL-RULES.md`
 - No Rust gate, pack Python, MCP as core
-- No registered `preToolUse` / `stop` / lean LOC hooks
+- No registered `preToolUse` / lean LOC-size hooks. `stop` is registered locally for churn only (not file size). Cloud `hooks.cloud.json` still omits `stop`.
 - No per-repo hooks in the pack itself (global-only for local dev)
 - No mutating real `~/.cursor` in CI/doctor (fixture HOME instead)
 

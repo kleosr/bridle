@@ -8,8 +8,8 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 
 | Control | Event | Fail closed | Notes |
 |---|---|---|---|
-| Secret tokens in the user prompt | `beforeSubmitPrompt` | no | `policy/secret_tokens.ere`. Parser fail → `continue: false`. Hook crash still fail-open. |
-| Secret **paths** on Read | `beforeReadFile` | **yes** | `policy/secret_paths.ere`. Timeout 10s. |
+| Secret tokens in the user prompt | `beforeSubmitPrompt` | no | `policy/secret_tokens.ere` (word-bounded prefixes). Parser fail → `continue: false`. Hook crash still fail-open. |
+| Secret **paths** on Read | `beforeReadFile` | **yes** | `policy/secret_paths.ere`. Timeout 10s. Missing policy or non-JSON → deny. `.env.example` is readable. |
 | Secret paths / `.env` / `git show` secrets | `beforeShellExecution` | no | `git commit` / `gh pr` / `gh issue` skip path scan (PR body false hits). |
 | Destructive git/disk/SQL | `beforeShellExecution` | no | deny |
 | Infra/DB mutation | `beforeShellExecution` | no | `ask` |
