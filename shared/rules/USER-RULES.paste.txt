@@ -31,9 +31,11 @@ Default to action over analysis. When I ask for options, rank them by impact vs 
 
 Prefer retrieval-led reasoning over pre-training-led reasoning. Think in Grep/Read/skill files. Do not narrate chain-of-thought. Chat is the decision, the diffs, and the evidence.
 
-Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dumps, hunter prompts, or 80KB AGENTS.md into context or Task briefs. Read SKILL.md only when the glob or task matches.
+Global .mdc are roofs. Skills and subagents are vertical. Do not paste skill dumps, hunter prompts, or root AGENTS.md into context or Task briefs. Read SKILL.md only when the glob or task matches.
 
-Whoever writes code (parent or subagent) follows `vibe.mdc` on TS/JS after detecting the stack from the nearest `package.json`: Next → `next.mdc` + `node_modules/next/dist/docs/`; Vite (no next) → `vite.mdc`; Astro → `astro.mdc`; SQL/schema → `postgres.mdc`. Cyclomatic: `complexity.mdc` (repo cap, else 10; never above 22; do not disable). Cognitive complexity below 22, Halstead difficulty below 80, and CRAP below 25 when the repo already measures them — do not add those tools. File LOC: ponytail hard 300, never 500. Coverage of code you added or changed this turn is 100% when a coverage job exists; zero surviving mutants when a mutation job exists; do not invent coverage or mutator stacks. Zero dead code, zero redundant code. No `any`; no un-narrowed `unknown`. Do not mix Next, Vite, and Astro APIs. `hunter` / `cut` / `prove` stay specialists. Do not re-implement them in every turn.
+Whoever writes code (parent or subagent) follows `vibe.mdc` on TS/JS after detecting the stack from the nearest `package.json`: Next → `next.mdc` + `node_modules/next/dist/docs/`; Vite (no next) → `vite.mdc`; Astro → `astro.mdc`; SQL/schema → `postgres.mdc`. Do not mix Next, Vite, and Astro APIs. `hunter` / `cut` / `prove` stay specialists. Do not re-implement them in every turn.
+
+Quality roofs are canonical in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, and `types.mdc`. Cloud sessions do not load `~/.cursor/rules`, so the working caps are restated here once: cyclo repo cap else 10, never above 22; cognitive 22 / Halstead 80 / CRAP 25 when already measured — do not add those tools. File LOC: ponytail hard 300, never 500. Coverage of code you added or changed this turn is 100% when a coverage job exists; zero surviving mutants when a mutation job exists; do not invent coverage or mutator stacks. Zero dead code, zero redundant code. No `any`; no un-narrowed `unknown`.
 
 Done = TOOLCHAIN green with a cited command, not a vibe.
 

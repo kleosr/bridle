@@ -1,9 +1,8 @@
 ---
 name: ux-web-research
-description: >-
-  Live UX/UI research via Exa before inventing layouts. Use when Product Designer
-  or @Design starts a visual pass, dashboard/sidebar/nav work, or the user asks
-  how current products ship chrome. Prefer Exa MCP over guessing HIG.
+description: >
+  Live UX research via Exa before inventing chrome. Use for dashboard,
+  sidebar, or nav visual passes.
 ---
 
 # UX web research

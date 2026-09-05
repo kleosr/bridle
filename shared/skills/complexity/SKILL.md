@@ -1,10 +1,8 @@
 ---
 name: complexity
 description: >
-  Wire and satisfy cyclomatic complexity lint. Detect the repo's existing
-  linter, set or keep a cap (default 10, never 22), extract until green, never
-  disable the rule. Use when complexity.mdc applies, lint reports C901/complexity,
-  or the user asks for simpler / less nested code.
+  Satisfy cyclomatic lint; never disable. Use when complexity.mdc applies,
+  lint is red, or the user asks for simpler code.
 ---
 
 # Complexity
