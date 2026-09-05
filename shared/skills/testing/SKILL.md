@@ -1,9 +1,8 @@
 ---
 name: testing
 description: >
-  Test writing workflows: TDD order, mocks, house gauntlet, regression naming.
-  Use when writing/editing tests or when testing.mdc applies. Thin rule =
-  roofs; this skill = procedure.
+  TDD, mocks, gauntlet, regression naming. Use when writing tests or when
+  testing.mdc applies.
 ---
 
 # Testing (fat skill)

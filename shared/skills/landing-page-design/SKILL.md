@@ -1,15 +1,13 @@
 ---
 name: landing-page-design
-description: >-
-  Elaya landing-page system: one offer, conversion structure, type scale, spacing
-  tokens, nested radius, no Inter/lorem, Phosphor icons, 700ms motion. Use for
-  marketing sites, landing pages, campaign pages. Product apps defer to
-  premium-ui-craft. Upstream https://github.com/elayadesign/ai-design-skills
+description: >
+  Marketing, landing, and campaign pages (Elaya). Product apps use
+  premium-ui-craft instead.
 ---
 
 # Landing page design (Elaya)
 
-MIT. Upstream (reference only, do not fetch at runtime): [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills). This file is the law. Mario ban wins: never Scandinavian, Nordic, Japandi, or hygge (parchment, oatmeal, linen, sage-on-cream, pale wood).
+MIT. Upstream URLs only in [SOURCE.md](SOURCE.md) (do not fetch at runtime). This file is the law. Mario ban wins: never Scandinavian, Nordic, Japandi, or hygge (parchment, oatmeal, linen, sage-on-cream, pale wood).
 
 **Product / in-app UX:** do not apply island nav, 700ms springs, Phosphor-only, or no-serif. Use `premium-ui-craft`. Keep copy rules (no lorem, no Elevate/Seamless, real CTAs, full states).
 
