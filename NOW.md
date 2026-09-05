@@ -21,8 +21,8 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — pending this turn
-- `bash scripts/doctor.sh` — pending this turn
+- `bash tests/run.sh` — 236 PASS, 0 FAIL (2026-09-05; Astra slim)
+- `bash scripts/doctor.sh` — ALL CHECKS PASSED
 - Audit: `docs/quality-roofs-audit.md`, `docs/astra-slim.md`
 
 ## Next
