@@ -101,6 +101,14 @@ Rejected: ten new `.mdc` files; raising cyclomatic 10→22; raising file roof 30
 
 Working numbers: cyclo repo-or-10 never 22; cognitive 22 / Halstead 80 / CRAP 25 when already measured; LOC hard 300 never 500; this-turn coverage 100% when a job exists; 0 surviving mutants when a mutator exists; zero dead/redundant; no `any`; no un-narrowed `unknown`.
 
+## 2026-09-05 — Nested AGENTS.md deleted
+
+Sept 3 kept four `shared/*/AGENTS.md` bridges. `agents.md` nearest-file precedence means a nested file shadows root, and Cursor re-attaches it on every Read in that tree (observed this session and in `docs/runtime-grounding-audit.md`). The adapters restated the root map. Deleted. Root `AGENTS.md` is the only handbook. Do not re-add.
+
+## 2026-09-05 — Astra article (pvncher)
+
+[Rethinking skills and prompts for GPT-6 Astra](https://x.com/i/article/2095989703967125509): skill descriptions must not say “when this alwaysApply `.mdc` applies” (pick-me). Grounding is the files you will change, not a repo map. Proof is the command this change can break; local fixtures run without asking. Hook steel and irreversible-approval stay.
+
 ## Proof commands
 
 | Check | Command | Expected |

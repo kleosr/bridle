@@ -1,8 +1,8 @@
 ---
 name: complexity
 description: >
-  Satisfy cyclomatic lint; never disable. Use when complexity.mdc applies,
-  lint is red, or the user asks for simpler code.
+  Satisfy cyclomatic lint; never disable. Use when lint is red or the user
+  asks for simpler code.
 ---
 
 # Complexity

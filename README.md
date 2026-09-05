@@ -53,7 +53,7 @@ Removes `~/.cursor/hooks.json` + hooks scripts when the fingerprint matches (`be
 
 **Compatibility:** macOS stock Bash 3.2 + Linux Bash 3.2+ + Windows via WSL shim (`Windows/install.ps1`). Native Windows without WSL: **unsupported**. Cloud agents: Lane-A `project-hooks` (3 events: submit/shell/read; no `sessionStart`, no `stop` until a cloud turn is observed to receive `followup_message`).
 
-**Audit docs:** `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/quality-roofs-audit.md`, `docs/astra-slim.md`, `docs/research/agent-instructions-research.md`.
+**Audit docs:** `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/quality-roofs-audit.md`, `docs/research/agent-instructions-research.md`.
 
 ## Setup
 
@@ -152,7 +152,7 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 
 1. **Prompt** — you send a message.
 2. **Inject (Layer 2)** — `session_start.sh` adds the NOW.md active sections. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
-3. **Ground then declare (Layer 1)** — Grep/Glob/Read this codebase first (do not invent paths). Then one or two sentences before Write: what will be true, which files, how you will prove it. That is `.mdc` law, not a hook followup.
+3. **Ground then declare (Layer 1)** — Open the files you will change (do not invent paths; do not map the repo for a typo). Then one or two sentences before Write: what will be true, which files, how you will prove it. That is `.mdc` law, not a hook followup.
 4. **Steel** — `before_shell.sh` and `before_read_file.sh` deny a small list. `stop.sh` may follow up once on churn. Conversation police is not registered.
 
 ## Ponytail

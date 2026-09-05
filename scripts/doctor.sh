@@ -196,7 +196,7 @@ else fail "pnpm.mdc or shared/agents/hunter.md missing"; fi
 if [[ ! -f "$PACK/shared/rules/lean-code.mdc" && ! -d "$PACK/shared/skills/lean-code" ]]; then ok "no lean-code duplicate"
 else fail "Duplicate found: lean-code (use ponytail instead)"; fi
 
-if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/shared/config/skills.txt" "$PACK/shared/skills/AGENTS.md" "$PACK/shared/rules/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
+if ! grep -RqE '(lean-code|codebase-memory|architecture-fitness|domain-architecture|improve-codebase-architecture|eval-pass|unconditional-counterexample|create-pr|git-commit|ship-loop|cursor-research|grill-me|harness-retro|design-taste-frontend|design-tokens|frontend-design|ui-structure|ui-ux-audit|formulary|no-hardcode|humanizer|system-wiring|workspace-scope|agents-map|benln-write|breakthrough-deepen)' "$HOOKS_DIR/fleet_sync.sh" "$PACK/shared/config/skills.txt" "$PACK/AGENTS.md" "$PACK/README.md" 2>/dev/null; then ok "no stale references to deleted skills"
 else fail "Stale reference to deleted skill found in config files"; fi
 
 hash_file() {

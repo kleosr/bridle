@@ -57,4 +57,4 @@ After: GLOBAL / `~/.cursor/rules` / `alwaysApply: true`. Pack `.cursor/rules` mu
 
 ## 2026-09-05 — Astra slim (no roof change)
 
-Root `AGENTS.md` no longer restates these numbers. Caps stay in the four `.mdc` files. The paste restates them once as the cloud floor. `testing.mdc` stays `alwaysApply: true`: coverage/mutant roofs apply to production code changed this turn, not only test files. Note: `docs/astra-slim.md`.
+Root `AGENTS.md` no longer restates these numbers. Caps stay in the four `.mdc` files. The paste restates them once as the cloud floor. `testing.mdc` stays `alwaysApply: true`: coverage/mutant roofs apply to production code changed this turn, not only test files. Nested `shared/*/AGENTS.md` adapters deleted 2026-09-05 (root file wins).

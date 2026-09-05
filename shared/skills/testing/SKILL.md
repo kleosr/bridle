@@ -1,8 +1,8 @@
 ---
 name: testing
 description: >
-  TDD, mocks, gauntlet, regression naming. Use when writing tests or when
-  testing.mdc applies.
+  TDD, mocks, gauntlet, regression naming. Use when writing or expanding
+  tests, not because testing.mdc is on.
 ---
 
 # Testing (fat skill)
@@ -28,11 +28,11 @@ Bug fix ships a test named or described `regression: <symptom>` that fails on ol
 
 ## House gauntlet (Martin)
 1. Prefer `docs/TOOLCHAIN.md` / package test scripts already wired.
-2. ACT NOW — run them yourself; cite green evidence before claiming done (`bash tests/run.sh`, `scripts/doctor.sh`, or package test).
-3. Fail closed on red.
+2. Run the verify this change can break. Hooks/scripts/tests → `bash tests/run.sh` and `scripts/doctor.sh`. Docs-only → skip.
+3. Fail closed on red. Local fixtures: run without asking.
 4. No house gauntlet: run closest real verify; name residual; never ask accept-no-gauntlet-risk.
 5. Do not invent mutation theater or Clean Architecture test trees.
-6. `stop.sh` checks Ponytail diff roofs only, not tests. If a claim of done lacks a verify cite, run TOOLCHAIN and restate yourself.
+6. `stop.sh` checks Ponytail diff roofs only, not tests.
 
 ## Coverage
 

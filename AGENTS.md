@@ -9,7 +9,6 @@ Law lives elsewhere. This file is a map.
 - **Charter (User Rules paste, cloud floor):** `shared/rules/USER-RULES.paste.txt`
 - **Roofs (caps and quality floors):** `shared/rules/complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`
 - **Map of those numbers:** `docs/quality-roofs-audit.md`
-- **Why this file is thin:** `docs/astra-slim.md`
 - **Steel (do not slim):** five registered hooks — `session_start.sh`, `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`, `stop.sh`
 - **Secrets:** `SECURITY.md`. Never put secret values in paste, hooks, chat, or `NOW.md`.
 
@@ -29,7 +28,7 @@ Stored in `shared/skills/` (not `.agents/skills`). Read `SKILL.md` only when the
 
 ## Workflows
 
-- **Verify:** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `bash scripts/doctor.sh` → `bash tests/run.sh`
+- **Verify (hooks/scripts/tests/rules):** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `bash scripts/doctor.sh` → `bash tests/run.sh`. Local fixtures; no approval. Docs-only: skip.
 - **Install:** `FORCE=1 bash scripts/install.sh` (global). `scripts/uninstall.sh` (fingerprinted). Platform: `MacOS/`, `Linux/`, `Windows/`. Fleet sync opt-in via empty-by-default `shared/config/scan.roots`.
 - **Docs:** `docs/ARCHITECTURE.md`, `docs/CURATOR.md`, `docs/TOOLCHAIN.md` (hook ≤80 LOC), `SECURITY.md`.
 

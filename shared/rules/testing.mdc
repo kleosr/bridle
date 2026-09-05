@@ -6,7 +6,8 @@ alwaysApply: true
 # TESTING (THIN)
 
 Cero bloat en tests. Public surface only. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
-House gauntlet first (TOOLCHAIN). Run verify yourself. Fail closed on red. Cite evidence.
+Run the verify this change can break. Fail closed on red. Cite evidence.
+Docs or NOW.md only: no house gauntlet. Hooks, scripts, or tests: `bash tests/run.sh` and `bash scripts/doctor.sh`. Those fixtures are disposable — run them without asking.
 Bug fix ships `regression: <symptom>`. Flaky = broken.
 
 Coverage of code you added or changed this turn is **100%** when the repo already has a coverage job — cite that job. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
@@ -14,4 +15,4 @@ Mutation: if the repo already runs a mutator, **0 surviving mutants** on files y
 
 ## PROCEDURE
 TDD order, mocks, gauntlet workflows:
-**Read `~/.cursor/skills/testing/SKILL.md`** before writing or expanding tests.
+**Read `~/.cursor/skills/testing/SKILL.md`** when writing or expanding a test workflow, not before a one-line assertion.
