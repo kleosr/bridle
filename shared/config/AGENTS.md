@@ -2,7 +2,7 @@
 
 @../../AGENTS.md
 
-Thin adapter pointing to canonical repository agent handbook at [`../../AGENTS.md`](../../AGENTS.md).
+Thin adapter pointing to the repository agent navigator at [`../../AGENTS.md`](../../AGENTS.md). Law is paste + `.mdc` + hooks.
 Specific operational notes:
 - `skills.txt`: Active skills list installed to `~/.cursor/skills`.
 - `scan.roots`: Opt-in repository roots for `fleet_sync.sh sync` (empty by default).

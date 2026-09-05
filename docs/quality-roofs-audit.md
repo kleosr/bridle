@@ -54,3 +54,7 @@ After: GLOBAL / `~/.cursor/rules` / `alwaysApply: true`. Pack `.cursor/rules` mu
 - Adding coverage, mutation, Sonar, or Halstead tooling to this Bash pack.
 - Registering a hook for LOC / complexity / coverage (rejected 2026-09-03 for LOC; still judgment + lint).
 - Putting alwaysApply `.mdc` into this pack's `.cursor/rules` (double-load locally; 2026-09-03 decision (a)).
+
+## 2026-09-05 — Astra slim (no roof change)
+
+Root `AGENTS.md` no longer restates these numbers. Caps stay in the four `.mdc` files. The paste restates them once as the cloud floor. `testing.mdc` stays `alwaysApply: true`: coverage/mutant roofs apply to production code changed this turn, not only test files. Note: `docs/astra-slim.md`.

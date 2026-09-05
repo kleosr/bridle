@@ -3,8 +3,7 @@
 ## Now
 
 Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
-
-Quality roofs encoded in existing always-on `.mdc` + paste (not ten new files). Cyclo 10 never 22. LOC 300 never 500. types+testing always-on; types is GLOBAL.
+Root `AGENTS.md` is a navigator. Quality caps live in `complexity.mdc` / `ponytail.mdc` / `testing.mdc` / `types.mdc`. Paste restates them once for cloud. `testing.mdc` stays always-on. Note: `docs/astra-slim.md`.
 
 ## State
 
@@ -16,19 +15,19 @@ Always-on rules: agent, ponytail, pnpm, complexity, vibe, testing, types (7). Pa
 ## Limits
 
 Never Lane-A into this pack. No `updated_input`. Secrets never in this file, chat, or paste.
-Do not invent a new rule system. Do not thin the charter. Edit books only in this repo.
+Do not invent a new rule system. Do not thin charter headings, hook steel, or roof text in the four `.mdc` files.
 Do not copy `stop` into `hooks.cloud.json` until a cloud turn is seen to receive `followup_message`.
 Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — 234 PASS, 0 FAIL (2026-09-04; quality roofs)
+- `bash tests/run.sh` — 236 PASS, 0 FAIL (2026-09-05; Astra slim)
 - `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- Audit: `docs/quality-roofs-audit.md`
+- Audit: `docs/quality-roofs-audit.md`, `docs/astra-slim.md`
 
 ## Next
 
-Re-paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → User Rules (Retrieval harness now carries the quality roofs). Open a new chat so root AGENTS.md reloads.
+Re-paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → User Rules. Open a new chat so root `AGENTS.md` reloads.
 Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
 GitHub repo description still says HANDOFF (API is read-only here).
 

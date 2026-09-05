@@ -1,13 +1,13 @@
 ---
 name: design-stack
-description: >-
-  Router for Mario's Design agent. Picks one UI skill plus premium-ui-craft.
-  Use at the start of any Product Designer / @Design / UX/UI turn.
+description: >
+  Router for design turns. Picks one UI skill plus premium-ui-craft.
+  Use at Product Designer / @Design / UX start.
 ---
 
 # Design stack
 
-Read **premium-ui-craft** every design turn. Then read **one** winner. Do not load all five.
+Read **premium-ui-craft** every design turn. Then read **one** winner. Do not load all five. Winner `SKILL.md` is the law; read that skill's `SOURCE.md` / `sources.md` only when stuck.
 
 | Work | Winner (also Read) |
 |---|---|

@@ -1,16 +1,13 @@
 ---
 name: redesign-existing-projects
-description: >-
-  Elaya audit for existing sites/apps that look generic, cheap, or AI-made.
-  Diagnose first, then fix in place (fonts, color, states, layout, motion).
-  Use when Mario says polish, audit, upgrade, or it looks horrible. Product apps
-  apply diagnosis through premium-ui-craft values, not Elaya black/Geist/700ms.
-  Upstream https://github.com/elayadesign/redesign-skill
+description: >
+  Audit then fix generic or AI-looking sites in place. Product apps apply
+  findings through premium-ui-craft.
 ---
 
 # Redesign existing projects (Elaya)
 
-MIT. Upstream (reference only, do not fetch at runtime): [elayadesign/redesign-skill](https://github.com/elayadesign/redesign-skill). This file is the law.
+MIT. Upstream URLs only in [SOURCE.md](SOURCE.md) (do not fetch at runtime). This file is the law.
 
 Report diagnosis before fixing. Do not rewrite the stack.
 

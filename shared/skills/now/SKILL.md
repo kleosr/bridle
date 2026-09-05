@@ -1,9 +1,8 @@
 ---
 name: now
 description: >
-  Write or resume NOW.md (session state). Use when continuing tomorrow,
-  switching chats/models, pausing a feature, or the user mentions NOW.md,
-  session continuity, or the old name handoff.
+  Write or resume NOW.md. Use when switching chats, pausing a feature, or
+  the user mentions NOW.md, session continuity, or handoff.
 ---
 
 # Now

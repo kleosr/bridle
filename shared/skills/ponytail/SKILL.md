@@ -1,9 +1,8 @@
 ---
 name: ponytail
 description: >
-  Native Lean quality bar: no code → reuse → stdlib → platform → installed dep
-  → one line → minimum. Split recovery, neighbor match, types, trust floors.
-  Use when writing app code or when thin ponytail.mdc points here.
+  Native Lean ladder and split recovery. Use when writing app code or when
+  ponytail.mdc points here.
 ---
 
 # Ponytail

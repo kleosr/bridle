@@ -1,10 +1,8 @@
 ---
 name: premium-ui-craft
-description: >-
-  Ships Linear/Stripe/Apple-grade UI craft: type hierarchy, color restraint,
-  microstates, hairlines, designed motion, empty/error/focus. Use when Mario
-  @mentions @Design, when Product Designer runs, or when UI looks generic SaaS,
-  cramped, or over-decorated (dashboards, sidebars, shadcn, Tailwind, CSS tokens).
+description: >
+  Linear/Stripe/Apple-grade UI craft. Use for Product Designer / @Design,
+  dashboards, shadcn, or generic SaaS UI.
 ---
 
 # Premium UI craft

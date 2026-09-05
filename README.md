@@ -53,7 +53,7 @@ Removes `~/.cursor/hooks.json` + hooks scripts when the fingerprint matches (`be
 
 **Compatibility:** macOS stock Bash 3.2 + Linux Bash 3.2+ + Windows via WSL shim (`Windows/install.ps1`). Native Windows without WSL: **unsupported**. Cloud agents: Lane-A `project-hooks` (3 events: submit/shell/read; no `sessionStart`, no `stop` until a cloud turn is observed to receive `followup_message`).
 
-**Audit docs:** `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/research/agent-instructions-research.md`.
+**Audit docs:** `docs/engineering-rules-audit.md`, `docs/engineering-rules-decision.md`, `docs/quality-roofs-audit.md`, `docs/astra-slim.md`, `docs/research/agent-instructions-research.md`.
 
 ## Setup
 
