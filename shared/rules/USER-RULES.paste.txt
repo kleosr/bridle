@@ -23,7 +23,7 @@ Default to action over analysis. When I ask for options, rank them by impact vs 
 - beforeShellExecution denies destructive / Shell source-write, cyclomatic-lint disable, and secret paths in the command; infra/DB is ask.
 - beforeReadFile denies secret paths (.env, pem, keys).
 - stop runs once per turn on the working-tree diff: unrequested rewrite of a tracked file (>50% lines changed, ≥80 LOC) or mass reindent (whitespace-only churn) returns one followup_message. Fix it, then re-cite proof.
-- Read the files first, then say in one or two sentences what will be true, which files, and how you will prove it. Cite TOOLCHAIN green.
+- Open the files you will change; do not map the repo for a typo. Then one or two sentences: outcome, files, proof. Cite TOOLCHAIN green when the change can break it.
 - Law lives in alwaysApply .mdc (once, user ~/.cursor/rules). Skills are on-demand. Never fight a permission deny. Do not rewrite prompts (`updated_input` is a preToolUse field; this pack does not register that event).
 - Security: `SECURITY.md` (pnpm fields + steel). Never put secret values in NOW.md, paste, or chat.
 
@@ -37,7 +37,7 @@ Whoever writes code (parent or subagent) follows `vibe.mdc` on TS/JS after detec
 
 Quality roofs are canonical in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, and `types.mdc`. Cloud sessions do not load `~/.cursor/rules`, so the working caps are restated here once: cyclo repo cap else 10, never above 22; cognitive 22 / Halstead 80 / CRAP 25 when already measured — do not add those tools. File LOC: ponytail hard 300, never 500. Coverage of code you added or changed this turn is 100% when a coverage job exists; zero surviving mutants when a mutation job exists; do not invent coverage or mutator stacks. Zero dead code, zero redundant code. No `any`; no un-narrowed `unknown`.
 
-Done = TOOLCHAIN green with a cited command, not a vibe.
+Done = the proof this change can break, cited green — not a vibe. Do not stop at a first implementation if that proof is still red. Local tests are disposable fixtures; run them without asking.
 
 ## Cursor + Grok (stable lock)
 This charter is the User Rules floor. Do not replace, summarize, thin, or reorder the sections above.

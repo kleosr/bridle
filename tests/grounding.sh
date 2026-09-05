@@ -176,9 +176,11 @@ run_test "skill discovery: every catalog skill has a description routing contrac
 AGENTS_SLIM=ok
 grep -q 'quality-roofs-audit.md' "$PACK/AGENTS.md" || AGENTS_SLIM="missing-audit"
 grep -q 'USER-RULES.paste.txt' "$PACK/AGENTS.md" || AGENTS_SLIM="missing-paste"
-grep -q 'astra-slim.md' "$PACK/AGENTS.md" || AGENTS_SLIM="missing-astra"
 if grep -qE 'Halstead|CRAP' "$PACK/AGENTS.md"; then AGENTS_SLIM="restates-roofs"; fi
-run_test "AGENTS.md is a navigator (points to paste/audit; does not restate Halstead/CRAP)" "ok" "$AGENTS_SLIM"
+for d in hooks rules skills config; do
+  [[ -f "$PACK/shared/$d/AGENTS.md" ]] && AGENTS_SLIM="nested-$d"
+done
+run_test "AGENTS.md is a navigator (points to paste/audit; no nested adapters; no Halstead/CRAP)" "ok" "$AGENTS_SLIM"
 
 PASTE_SSOT=ok
 grep -q 'canonical in `complexity.mdc`' "$PACK/shared/rules/USER-RULES.paste.txt" || PASTE_SSOT="missing-canonical"

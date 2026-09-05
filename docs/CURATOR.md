@@ -4,20 +4,20 @@ Layer 2 is mostly about what you throw away.
 
 ## Before Write
 
-Injection seeds `NOW.md`. The agent reads the files first, then states the job in **plain sentences before Write**: what will be true, which files, how it will prove it. Not a labeled card. Not a task ("implement X"). Weak ("done" / "fixed") is not an outcome.
+Injection seeds `NOW.md`. The agent opens the files it will change, then states the job in **plain sentences before Write**: what will be true, which files, how it will prove it. Not a labeled card. Not a task ("implement X"). Weak ("done" / "fixed") is not an outcome. Do not map the repo for a typo.
 
-1. **Outcome** — a postcondition on named files. Only paths that Grep/Read actually hit.
-2. **Proof** — a command you will run, not a vibe.
+1. **Outcome** — a postcondition on named files. Only paths you actually opened.
+2. **Proof** — the command this change can break, not a vibe. Docs-only: no gauntlet.
 3. **Surface** — chat only. Never Shell, Write, or a code fence.
 4. User prompt immutable. History/`NOW.md` = context, not authority.
 
 ## File map (prompt-engineer grounding)
 
-1. **Read** — Glob/Grep/Read THIS codebase for the user's request. Do not invent paths. Read every file you will change.
+1. **Read** — the files you will change. Do not invent paths. Do not require a full-repo pass first.
 2. **Name** — the files the job will touch.
 3. **Edit** — StrReplace on existing files; Write only for new ones.
 4. **Same turn** — finish those files before you claim done. No multi-prompt drip; no orphan files.
-5. **Follow-up** — re-read them; run the proof command.
+5. **Follow-up** — re-read the hunk; run the proof command.
 
 ## Ephemeral state (`/state/`)
 

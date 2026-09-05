@@ -3,7 +3,8 @@
 ## Now
 
 Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
-Root `AGENTS.md` is a navigator. Quality caps live in `complexity.mdc` / `ponytail.mdc` / `testing.mdc` / `types.mdc`. Paste restates them once for cloud. `testing.mdc` stays always-on. Note: `docs/astra-slim.md`.
+Caps live in `complexity.mdc` / `ponytail.mdc` / `testing.mdc` / `types.mdc`. Paste restates them once for cloud.
+Ground the files you will change. Proof is the command this change can break.
 
 ## State
 
@@ -16,25 +17,26 @@ Always-on rules: agent, ponytail, pnpm, complexity, vibe, testing, types (7). Pa
 
 Never Lane-A into this pack. No `updated_input`. Secrets never in this file, chat, or paste.
 Do not invent a new rule system. Do not thin charter headings, hook steel, or roof text in the four `.mdc` files.
+No nested `AGENTS.md` under `shared/` (root file wins; adapters re-attached on every Read).
 Do not copy `stop` into `hooks.cloud.json` until a cloud turn is seen to receive `followup_message`.
 Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — 236 PASS, 0 FAIL (2026-09-05; Astra slim)
+- `bash tests/run.sh` — 236 PASS, 0 FAIL (2026-09-05; Astra article: proportional ground + proof)
 - `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- Audit: `docs/quality-roofs-audit.md`, `docs/astra-slim.md`
+- Audit: `docs/quality-roofs-audit.md`; article https://x.com/i/article/2095989703967125509
 
 ## Next
 
-Re-paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → User Rules. Open a new chat so root `AGENTS.md` reloads.
+Live `~/.cursor` synced (`FORCE=1 bash scripts/install.sh`, doctor live checksums match). Re-paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → User Rules (install cannot write Settings). Open a new chat so rules reload.
 Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
 GitHub repo description still says HANDOFF (API is read-only here).
 
 ## Archived
 
+2026-09-05: Astra slim (AGENTS.md navigator). Then deleted nested `shared/*/AGENTS.md` + `docs/astra-slim.md`.
 2026-09-04: quality roofs mapped onto complexity/ponytail/testing/types + paste.
-2026-09-03: stop hook + runtime grounding audit. Proof claimed 177 PASS; Linux CI was red (`sed -i ''`).
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

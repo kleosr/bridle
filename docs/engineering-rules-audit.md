@@ -65,7 +65,7 @@ scripts/doctor.sh + tests/run.sh
 | Path | Consumer | Scope | Activation | Purpose | Side effects | Failure behavior | Security | Context cost | Tests | Status | Decision |
 |------|----------|-------|------------|---------|--------------|------------------|----------|--------------|-------|--------|----------|
 | `AGENTS.md` | Cursor cloud agent, humans, CI | repo root | session / clone | Handbook SSOT | none | n/a | none | ~2–3k tok if injected | CI existence | **canonical** | keep |
-| `shared/*/AGENTS.md` | agents browsing subtrees | nested | on open | bridge `@../../AGENTS.md` | none | n/a | none | minimal | none | **bridge** | keep |
+| `shared/*/AGENTS.md` | — | — | — | — | — | — | — | — | grounding forbids | **absent** | deleted 2026-09-05; do not re-add |
 | `CLAUDE.md` | — | — | — | — | — | — | — | — | — | **absent** | do not add |
 | `.cursorrules` | — | — | — | — | — | — | — | — | — | **absent** | do not add |
 | `shared/rules/USER-RULES.paste.txt` | human → Cursor User Rules | global user | manual paste | charter floor | none | n/a | no secrets in file | ~1.5k tok always | doctor grep | **canonical** | keep |
@@ -113,7 +113,7 @@ Commands: `grep -m1 alwaysApply shared/rules/*.mdc`; `ls ~/.cursor/rules .cursor
 |---------|--------------------------------------|-------------------------------------|-------------|
 | `ponytail.mdc`, `agent.mdc`, `pnpm.mdc` (alwaysApply) | loaded from `~/.cursor/rules` | **not loaded** — `~/.cursor/rules` absent; pack `.cursor/rules` holds only `types.mdc` by design (test: "install prunes alwaysApply from pack .cursor/rules") | Cursor rules engine |
 | Glob rules (`vibe`, `complexity`, `types`, …) | on path match | only `types.mdc` on path match | Cursor rules engine |
-| Grounding ("Read this codebase first, then declare") | `agent.mdc` + User Rules paste | **User Rules paste only** (if the operator pasted it) + root `AGENTS.md` | law, not hook |
+| Grounding (open files you will change, then declare) | `agent.mdc` + User Rules paste | **User Rules paste only** (if the operator pasted it) + root `AGENTS.md` | law, not hook. 2026-09-05: not a full-repo map before every edit (pvncher Astra article). |
 | Skills (`ponytail`, `testing`, …) | on demand: Cursor lists SKILL.md `description`; agent reads when task matches, or `/name` | same, only if `~/.cursor/skills` exists → **not available on cloud** | agent judgment; no hook |
 | `sessionStart` injection | NOW.md active sections only | n/a (cloud has no sessionStart) | `session_start.sh` |
 | Hooks inject `.mdc` or skills? | **No** (ARCHITECTURE.md: "Do not re-inject ponytail at sessionStart") | no | — |
@@ -145,7 +145,7 @@ Defects found by this check:
 
 | Conflict | Severity | Resolution |
 |----------|----------|------------|
-| Root AGENTS.md vs nested adapters | P3 | Adapters are bridges only; no duplicate policy text |
+| Root AGENTS.md vs nested adapters | P3 | **Resolved 2026-09-05:** nested files deleted. Nearest-file precedence shadowed root and re-attached on Read. |
 | agent.mdc vs USER-RULES paste (five hooks) | P2 | Intentional: paste=charter, agent.mdc=operational capsule; overlapping hook list acceptable |
 | ponytail.mdc vs ponytail skill | P2 | By design: mdc=roof, skill=procedure |
 | Global vs project hooks double sessionStart | P1 | Pack never installs repo hooks on itself; cloud omits sessionStart |
