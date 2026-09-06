@@ -1,5 +1,7 @@
 # Engineering Rules Audit — kleosrules
 
+Archived snapshot. Living map: `docs/README.md`.
+
 **Repository:** kleosr/kleosrules v18.0.0  
 **Audit date:** 2026-09-03  
 **Follow-up:** 2026-09-04 quality roofs — `docs/quality-roofs-audit.md` (always-on count is now 7; `types.mdc` is GLOBAL). Inventory rows below are the 2026-09-03 snapshot.  

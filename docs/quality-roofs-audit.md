@@ -21,7 +21,7 @@
 ## Why not ten new alwaysApply files
 
 - NOW.md Limits: do not invent a new rule system.
-- `docs/engineering-rules-decision.md`: efficiency is what the pack refuses to load. Five alwaysApply files was the 2026-09-03 ceiling; this change adds two (`testing`, `types`) by flipping flags, not by creating `quality.mdc` / `halstead.mdc` / `crap.mdc`.
+- `docs/_archive/engineering-rules-decision.md`: efficiency is what the pack refuses to load. Five alwaysApply files was the 2026-09-03 ceiling; this change adds two (`testing`, `types`) by flipping flags, not by creating `quality.mdc` / `halstead.mdc` / `crap.mdc`.
 - Duplicate headings are banned (`tests/grounding.sh`). Ten new files would either collide (`# Complexity`, `# Types`) or dump the same numbers in two canons.
 - Cognitive / Halstead / CRAP / mutants / coverage have **no consumer in this pack's TOOLCHAIN**. Encoding them as "install this linter" would violate "no pack Python" and the complexity skill's "do not add a linter stack the repo does not have."
 

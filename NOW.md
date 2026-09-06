@@ -24,9 +24,10 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — 249 PASS, 0 FAIL (2026-09-06; always-on lean + token budget)
+- `bash tests/run.sh` — 261 PASS, 0 FAIL (2026-09-06; full lean rewrite + repo layout)
 - `bash scripts/doctor.sh` — ALL CHECKS PASSED
 - Always-on: `docs/token-budget.md` (session ~11.6kB / ~2.9k tok; was ~15.7kB / ~3.9k tok)
+- On-demand: skill bodies 22k→10k; hunter/cut/prove 15k→6k. Docs: living index + `_archive/`.
 - Audit: `docs/quality-roofs-audit.md`; article https://x.com/i/article/2095989703967125509
 
 ## Next
@@ -37,7 +38,7 @@ GitHub repo description still says HANDOFF (API is read-only here).
 
 ## Archived
 
-2026-09-06: always-on lean — path-only NOW inject, slim agent.mdc/paste, `tests/token_budget.sh`.
+2026-09-06: full pack lean — skills/agents rewritten, docs/_archive, SOURCE.md, budget+install caps.
 2026-09-05: Astra slim (AGENTS.md navigator). Then deleted nested `shared/*/AGENTS.md` + `docs/astra-slim.md`.
 2026-09-04: quality roofs mapped onto complexity/ponytail/testing/types + paste.
 

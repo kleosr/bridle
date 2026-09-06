@@ -7,40 +7,20 @@ description: >
 
 # Bug hunt
 
-No thin `.mdc`. This skill is the debugging roof.
+No thin `.mdc`. Prove the cause. Do not change code to generate hypotheses.
 
-Prove the cause; do not change code to generate hypotheses.
+Diagnose → findings only. Fix requested → investigate, then the smallest proven fix.
 
-## Mode
+1. Symptom, expected, scope, known-good.
+2. Smallest deterministic repro. Cannot reproduce → stop and say what is missing.
+3. Read the full error, logs, stack, inputs, state.
+4. Classify: logic, data, state, concurrency, cache, config, contract, env, integration.
+5. Trace backward from the first wrong value.
+6. One falsifiable hypothesis. Evidence for or against.
+7. Callers / contracts / history when evidence points there.
+8. Prove root cause before edit. Three misses → STUCK + evidence.
+9. If asked: one cause, regression test, rerun repro + TOOLCHAIN.
 
-- Diagnose/assess → findings only.
-- Fix requested → investigate first, then apply the smallest proven fix.
+No catch/sleep/retry/mock/assert weakening. No two competing fixes at once. Cross-boundary: `NOW.md`. Never expose secrets.
 
-## Workflow
-
-1. State the exact symptom, expected behavior, scope, and known-good baseline.
-2. Reproduce with the smallest deterministic case. Cannot reproduce → report
-   the missing signal and stop.
-3. Read the complete error, logs, stack, inputs, and relevant state.
-4. Classify the likely boundary: logic, data, state, concurrency, cache,
-   configuration, contract, environment, or integration.
-5. Trace backward from the first wrong observable value; compare failing and
-   working paths.
-6. Write one falsifiable hypothesis and gather evidence for or against it.
-7. Inspect callers, contracts, and recent history when evidence points there.
-8. Prove the root cause before editing. After three misses, send STUCK with
-   evidence and ask for the missing information.
-9. If authorized, fix one cause, add a regression test, and rerun the original
-   reproduction plus affected TOOLCHAIN checks.
-
-## Guardrails
-
-- No catch/sleep/retry, mock, assertion, or test weakening to hide failure.
-- No simultaneous fixes for competing hypotheses.
-- Cross-boundary symptoms use `NOW.md` (`/now`).
-- Preserve logs/artifacts needed to explain the result; never expose secrets.
-
-## Report
-
-Symptom → proven cause → evidence → changed or recommended fix → regression
-and original-repro results. Label anything unverified.
+Report: symptom → cause → evidence → fix → repro results. Label unverified.

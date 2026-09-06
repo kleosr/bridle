@@ -1,21 +1,29 @@
-# Always-on token budget
+# Token budget
 
-Ponytail counterexample: this pack refuses to dump law and state into every turn. Caps live in `tests/token_budget.sh`. Rough tokens = bytes / 4.
+Caps live in `tests/token_budget.sh`. Rough tokens = bytes / 4.
 
-## What loads every local session
+## Always-on (every local session)
 
-| Surface | Why it loads | What the test locks |
-|---------|--------------|---------------------|
-| `USER-RULES.paste.txt` | Cursor User Rules (manual paste; cloud floor) | byte cap + labeled roof restatement only |
-| 7 alwaysApply `.mdc` | `~/.cursor/rules` after install | count = 7; sum + `agent.mdc` caps |
-| `session_start.sh` inject | `additional_context` | path to NOW.md; no body dump |
-| `AGENTS.md` | this repo / cloud handbook | byte cap (navigator) |
+| Surface | Why | Lock |
+|---------|-----|------|
+| `USER-RULES.paste.txt` | User Rules; cloud floor | byte cap + labeled roof restatement |
+| 7 alwaysApply `.mdc` | `~/.cursor/rules` | count 7; sum + `agent.mdc` |
+| `session_start.sh` | `additional_context` | path to NOW.md |
+| `AGENTS.md` | this repo / cloud handbook | navigator cap |
 
-Skill `description` lines are routers (catalog tax). Bodies load on demand. `tests/token_budget.sh` caps each description.
+Other hooks emit `continue` / `permission` / one `followup_message`. Not always-on prose.
 
-Hooks other than sessionStart do **not** inject always-on context. They emit `continue` / `permission` / one `followup_message` on violation. Steel stays.
+## On-demand
 
-## Caps (regression)
+| Surface | When | Lock |
+|---------|------|------|
+| skill `description` | catalog | ≤ 200 B each |
+| `SKILL.md` body | task match | ≤ 1800 B; sum ≤ 12000 |
+| hunter / cut / prove | invoke | ≤ 2500 / 2300 / 2300 |
+| `SOURCE.md` | stuck on design | not always-on |
+| `docs/_archive/` | audit trail | not installed, not injected |
+
+## Caps
 
 | Meter | Cap |
 |-------|-----|
@@ -28,34 +36,43 @@ Hooks other than sessionStart do **not** inject always-on context. They emit `co
 | paste + mdc + inject | 12500 |
 | paste roof paragraph | 480 |
 | skill description | 200 |
+| skill body | 1800 |
+| skill body sum | 12000 |
+| hunter / cut / prove | 2500 / 2300 / 2300 |
+| README | 3200 |
 
-Fail if someone adds an alwaysApply rule, fattens paste/`agent.mdc`, copies a roof `.mdc` body into paste, or dumps NOW.md again.
+## Before → after (master 2026-09-05 → this PR)
 
-## Before → after (2026-09-06, master vs this change)
+Always-on:
 
 | Surface | Before B | ~tok | After B | ~tok |
 |---------|----------|------|---------|------|
 | paste | 4324 | 1081 | 3813 | 954 |
 | alwaysApply sum | 9334 | 2334 | 7727 | 1932 |
 | `agent.mdc` | 3040 | 760 | 1545 | 387 |
-| `vibe.mdc` | 1267 | 317 | 1155 | 289 |
-| NOW.md file | 2648 | 662 | not injected | — |
 | sessionStart inject | 2038 | 510 | 57 | 15 |
-| `AGENTS.md` | 2183 | 546 | 2201 | 551 |
-| **session always-on** (paste+mdc+inject) | **15696** | **3924** | **11597** | **2900** |
+| `AGENTS.md` | 2183 | 546 | 2213 | 554 |
+| **session always-on** | **15696** | **3924** | **11597** | **2900** |
 
-Re-run: `bash tests/run.sh` (prints the after table).
+On-demand + handbook:
 
-## pnpm.mdc stays alwaysApply
+| Surface | Before B | After B |
+|---------|----------|---------|
+| 10 skill bodies | 21988 | 10478 |
+| hunter + cut + prove | 15314 | 6140 |
+| README | 9555 | 2574 |
+| living `docs/*.md` | 83557 | ~25k + `_archive/` |
 
-`pnpm.mdc` is ~894 B on every turn, including Bash/docs. Glob/intelligent apply would be nicer **if** we could prove Cursor still fires it on `pnpm add` when `package.json` is not already in context. This harness cannot observe the rules engine. A missed apply would silently allow npm. Leave `alwaysApply: true`. Do not flip it without an observable fire test.
+## Layout
 
-## Cloud vs local
+Living: `docs/README.md` → ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit, engineering-system, DECISIONS. Snapshots: `docs/_archive/`. Design sources: `SOURCE.md` only.
 
-Cloud on this pack does not load `~/.cursor/rules`. Paste is the cloud floor: charter headings stay; roof numbers are a labeled restatement of the four `.mdc` files. Local pays paste + `.mdc`. That double-tax is the short restatement, not a second copy of the roof bodies.
+## pnpm.mdc
+
+Stays `alwaysApply: true`. This harness cannot prove Cursor glob fire on a bare `pnpm add`. A miss would allow npm.
 
 ## Reinstall
 
 `git pull && FORCE=1 bash scripts/install.sh`
 
-Re-paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → User Rules (install cannot write Settings). New chat so rules reload.
+Re-paste `shared/rules/USER-RULES.paste.txt`. New chat.

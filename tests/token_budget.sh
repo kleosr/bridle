@@ -23,6 +23,12 @@ SESSION_INJECT_BYTES_MAX=220
 ALWAYS_ON_SESSION_BYTES_MAX=12500
 PASTE_ROOF_PARA_BYTES_MAX=480
 SKILL_DESC_BYTES_MAX=200
+SKILL_BODY_BYTES_MAX=1800
+SKILL_BODY_SUM_MAX=12000
+HUNTER_BYTES_MAX=2500
+CUT_BYTES_MAX=2300
+PROVE_BYTES_MAX=2300
+README_BYTES_MAX=3200
 
 COUNT=0
 MDC_BYTES=0
@@ -105,3 +111,47 @@ while IFS= read -r skill; do
   fi
 done < <(grep -v '^#' "$PACK/shared/config/skills.txt" | grep -v '^[[:space:]]*$')
 run_test "skill descriptions stay tight routers (≤ $SKILL_DESC_BYTES_MAX B)" "ok" "$SK_OK"
+
+SK_BODY_SUM=0
+SK_BODY_OK=ok
+while IFS= read -r skill; do
+  [[ -z "$skill" ]] && continue
+  f="$PACK/shared/skills/$skill/SKILL.md"
+  b="$(bytes_of "$f")"
+  SK_BODY_SUM=$((SK_BODY_SUM + b))
+  echo "  skill body $skill  $b B  ~$(tok_est "$b") tok"
+  if [[ "$b" -gt "$SKILL_BODY_BYTES_MAX" ]]; then
+    SK_BODY_OK="fat:$skill:$b"
+    break
+  fi
+done < <(grep -v '^#' "$PACK/shared/config/skills.txt" | grep -v '^[[:space:]]*$')
+echo "  skill body sum     $SK_BODY_SUM B  ~$(tok_est "$SK_BODY_SUM") tok"
+run_test "each skill body ≤ $SKILL_BODY_BYTES_MAX B" "ok" "$SK_BODY_OK"
+run_test "skill body sum ≤ $SKILL_BODY_SUM_MAX" "ok" "$(le_cap "$SK_BODY_SUM" "$SKILL_BODY_SUM_MAX")"
+
+HUNTER_B="$(bytes_of "$PACK/shared/agents/hunter.md")"
+CUT_B="$(bytes_of "$PACK/shared/agents/cut.md")"
+PROVE_B="$(bytes_of "$PACK/shared/agents/prove.md")"
+README_B="$(bytes_of "$PACK/README.md")"
+echo "  hunter.md           $HUNTER_B B  ~$(tok_est "$HUNTER_B") tok"
+echo "  cut.md              $CUT_B B  ~$(tok_est "$CUT_B") tok"
+echo "  prove.md            $PROVE_B B  ~$(tok_est "$PROVE_B") tok"
+echo "  README.md           $README_B B  ~$(tok_est "$README_B") tok"
+run_test "hunter.md bytes ≤ $HUNTER_BYTES_MAX" "ok" "$(le_cap "$HUNTER_B" "$HUNTER_BYTES_MAX")"
+run_test "cut.md bytes ≤ $CUT_BYTES_MAX" "ok" "$(le_cap "$CUT_B" "$CUT_BYTES_MAX")"
+run_test "prove.md bytes ≤ $PROVE_BYTES_MAX" "ok" "$(le_cap "$PROVE_B" "$PROVE_BYTES_MAX")"
+run_test "README.md bytes ≤ $README_BYTES_MAX" "ok" "$(le_cap "$README_B" "$README_BYTES_MAX")"
+
+LAYOUT=ok
+[[ -f "$PACK/docs/_archive/README.md" ]] || LAYOUT="missing-archive-index"
+[[ -f "$PACK/docs/README.md" ]] || LAYOUT="missing-docs-index"
+[[ -f "$PACK/docs/engineering-rules-audit.md" ]] && LAYOUT="audit-not-archived"
+[[ -f "$PACK/docs/research/agent-instructions-research.md" ]] && LAYOUT="research-not-archived"
+run_test "docs layout: living index + _archive, old audit paths gone" "ok" "$LAYOUT"
+
+SOURCE_OK=ok
+[[ -f "$PACK/shared/skills/premium-ui-craft/SOURCE.md" ]] || SOURCE_OK="missing-premium-SOURCE"
+[[ -f "$PACK/shared/skills/landing-page-design/SOURCE.md" ]] || SOURCE_OK="missing-landing-SOURCE"
+[[ -f "$PACK/shared/skills/redesign-existing-projects/SOURCE.md" ]] || SOURCE_OK="missing-redesign-SOURCE"
+[[ -e "$PACK/shared/skills/premium-ui-craft/sources.md" ]] && SOURCE_OK="legacy-sources-md"
+run_test "design skills use SOURCE.md (not sources.md)" "ok" "$SOURCE_OK"

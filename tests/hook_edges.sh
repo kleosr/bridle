@@ -37,4 +37,4 @@ rm -rf "$EDGE_HOME"
 run_test "before_submit without policy file still continues (no crash)" "true" "$RESULT"
 
 # Hook interruption under signal is not tested here — no deterministic observable
-# outcome in this harness (see docs/engineering-rules-audit.md limitations).
+# outcome in this harness (see docs/_archive/engineering-rules-audit.md limitations).

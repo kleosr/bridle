@@ -54,4 +54,4 @@ Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.s
 
 **Uninstall:** `bash scripts/uninstall.sh` — removes fingerprinted kleosrules artifacts from `~/.cursor` only.
 
-**Audit:** See `docs/engineering-rules-audit.md` for hook matrix and inventory; `docs/quality-roofs-audit.md` for the 2026-09-04 metric mapping; `docs/token-budget.md` for always-on caps; `docs/runtime-grounding-audit.md` for the lifecycle matrix, runtime probes, and scorecard; `docs/engineering-system.md` for the GROUND→STOP loop.
+**Audit:** `docs/quality-roofs-audit.md` (roof numbers); `docs/token-budget.md` (always-on caps); `docs/engineering-system.md` (GROUND→STOP). Snapshots: `docs/_archive/`.

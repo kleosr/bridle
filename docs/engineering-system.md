@@ -1,6 +1,6 @@
 # Engineering System — GROUND → BOUND → PLAN → CHANGE → VERIFY → REVIEW → STOP
 
-One loop, seven stages, each owned by the lightest mechanism that reliably performs it. Nothing is stated in two canonical layers; a later layer may verify an earlier one. Evidence: `docs/runtime-grounding-audit.md`.
+One loop, seven stages, each owned by the lightest mechanism that reliably performs it. Nothing is stated in two canonical layers; a later layer may verify an earlier one. Snapshot: `docs/_archive/runtime-grounding-audit.md`.
 
 ## Stage ownership
 
@@ -52,7 +52,7 @@ One loop, seven stages, each owned by the lightest mechanism that reliably perfo
 
 ## Idempotency
 
-`FORCE=1 bash scripts/install.sh` twice → same 5 events, same script count, no duplicate basenames. `bash scripts/uninstall.sh` removes `hooks.json`, `hooks/`, owned `.mdc`, owned skills, agents; preserves unrelated files; second run is a no-op. Re-install after uninstall registers hooks. All in `tests/install_lifecycle.sh` (18 assertions, isolated `HOME`).
+`FORCE=1 bash scripts/install.sh` twice → same 5 events, same script count, no duplicate basenames. `bash scripts/uninstall.sh` removes `hooks.json`, `hooks/`, owned `.mdc`, owned skills, agents; preserves unrelated files; second run is a no-op. Re-install after uninstall registers hooks. All in `tests/install_lifecycle.sh` (isolated `HOME`).
 
 ## Hard stops
 
