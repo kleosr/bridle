@@ -25,7 +25,7 @@ Platform: **macOS** (stock Bash 3.2 + BSD userland fully supported), **Linux**, 
 
 Hooks register **globally** (`~/.cursor/hooks.json`) as the single layer. User-hook cwd is `~/.cursor`; `session_start.sh` finds the project via `workspace_roots[0]`. No per-repo `.cursor/hooks.json` (it fires alongside the global one and doubles every prompt injection).
 
-How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `NOW.md` so sessions persist across chats. `sessionStart` injects the active sections; submit/shell/read are steel (secrets + shell); `stop` reports Ponytail churn once after the turn. Security: `SECURITY.md`.
+How it fits Cursor: Cursor is where you build. Chats are focused and finite by design. This pack pairs that with a local `NOW.md` so sessions persist across chats. `sessionStart` points at `NOW.md` (path only); submit/shell/read are steel (secrets + shell); `stop` reports Ponytail churn once after the turn. Security: `SECURITY.md`.
 
 ## Install / update / uninstall
 
@@ -121,7 +121,7 @@ Skill routes: `/ponytail`, `/debugging`, `/testing`, `/complexity`, `/now`. Revi
 │       └── wsl-shim.ps1       — per-event PowerShell→WSL shim (stdin/stdout passthrough)
 ├── shared/
 │   ├── hooks/                 — canonical Bash hooks, macOS + Linux + WSL safe
-│   │   ├── session_start.sh      — inject NOW.md active sections
+│   │   ├── session_start.sh      — point at NOW.md (path only)
 │   │   ├── before_submit_prompt.sh — secret-prompt block (failClosed:false)
 │   │   ├── before_shell.sh        — destructive / source-write deny
 │   │   ├── before_read_file.sh    — secret path deny
@@ -151,7 +151,7 @@ Single pack topology — not an app monorepo. Edit this pack and re-run `FORCE=1
 ## The loop (injection vs declaration)
 
 1. **Prompt** — you send a message.
-2. **Inject (Layer 2)** — `session_start.sh` adds the NOW.md active sections. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
+2. **Inject (Layer 2)** — `session_start.sh` points at NOW.md. `before_submit_prompt.sh` may block a secret-looking prompt. Never mutates the user prompt.
 3. **Ground then declare (Layer 1)** — Open the files you will change (do not invent paths; do not map the repo for a typo). Then one or two sentences before Write: what will be true, which files, how you will prove it. That is `.mdc` law, not a hook followup.
 4. **Steel** — `before_shell.sh` and `before_read_file.sh` deny a small list. `stop.sh` may follow up once on churn. Conversation police is not registered.
 

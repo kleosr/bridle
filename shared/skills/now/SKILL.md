@@ -26,6 +26,6 @@ Keep Now, State, Limits, Proof, Next. Compact into Archived when active sections
 
 ## Rules
 
-- Assessment-only until the user asked for changes (per `agent.mdc`).
+- Assessment-only until the user asked for changes.
 - Never invent residual features; append open items here.
 - Pair with testing for feature execution; debugging if Next is ambiguous.

@@ -115,7 +115,7 @@ Commands: `grep -m1 alwaysApply shared/rules/*.mdc`; `ls ~/.cursor/rules .cursor
 | Glob rules (`vibe`, `complexity`, `types`, …) | on path match | only `types.mdc` on path match | Cursor rules engine |
 | Grounding (open files you will change, then declare) | `agent.mdc` + User Rules paste | **User Rules paste only** (if the operator pasted it) + root `AGENTS.md` | law, not hook. 2026-09-05: not a full-repo map before every edit (pvncher Astra article). |
 | Skills (`ponytail`, `testing`, …) | on demand: Cursor lists SKILL.md `description`; agent reads when task matches, or `/name` | same, only if `~/.cursor/skills` exists → **not available on cloud** | agent judgment; no hook |
-| `sessionStart` injection | NOW.md active sections only | n/a (cloud has no sessionStart) | `session_start.sh` |
+| `sessionStart` injection | path to NOW.md (body not injected; 2026-09-06) | n/a (cloud has no sessionStart) | `session_start.sh` |
 | Hooks inject `.mdc` or skills? | **No** (ARCHITECTURE.md: "Do not re-inject ponytail at sessionStart") | no | — |
 | "unslop" skill | **not in this pack** — `premium-ui-craft/sources.md` cites an external pstack plugin path only | — | — |
 

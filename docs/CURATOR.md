@@ -4,7 +4,7 @@ Layer 2 is mostly about what you throw away.
 
 ## Before Write
 
-Injection seeds `NOW.md`. The agent opens the files it will change, then states the job in **plain sentences before Write**: what will be true, which files, how it will prove it. Not a labeled card. Not a task ("implement X"). Weak ("done" / "fixed") is not an outcome. Do not map the repo for a typo.
+`session_start.sh` points at `NOW.md`. The agent Reads it, opens the files it will change, then states the job in **plain sentences before Write**: what will be true, which files, how it will prove it. Not a labeled card. Not a task ("implement X"). Weak ("done" / "fixed") is not an outcome. Do not map the repo for a typo.
 
 1. **Outcome** — a postcondition on named files. Only paths you actually opened.
 2. **Proof** — the command this change can break, not a vibe. Docs-only: no gauntlet.
@@ -32,7 +32,7 @@ Clear `/state/` between jobs so old intent does not poison the next run.
 Structured state at the repo root.
 
 - **Format:** Now, State, Limits, Proof, Next, Archived.
-- **Injection:** `session_start.sh` sends Now, State, Limits, Proof, and Next (`head -n 40`). Files without those headings fall back to the last 15 lines.
+- **Injection:** `session_start.sh` points at `NOW.md` (path only). Token-like NOW → quiet. Plan mode → quiet. Read Now, State, Limits, Proof, Next on demand.
 - **Update:** the agent rewrites NOW.md before claiming done. `stop.sh` does not touch it; it only reports Ponytail diff violations once.
 - **Compaction:** if active sections exceed ~150 lines, compress older context into Archived. Keep active state small.
 

@@ -58,3 +58,7 @@ After: GLOBAL / `~/.cursor/rules` / `alwaysApply: true`. Pack `.cursor/rules` mu
 ## 2026-09-05 — Astra slim (no roof change)
 
 Root `AGENTS.md` no longer restates these numbers. Caps stay in the four `.mdc` files. The paste restates them once as the cloud floor. `testing.mdc` stays `alwaysApply: true`: coverage/mutant roofs apply to production code changed this turn, not only test files. Nested `shared/*/AGENTS.md` adapters deleted 2026-09-05 (root file wins).
+
+## 2026-09-06 — Always-on lean (no roof-number change)
+
+Numbers stay SSOT in the four `.mdc` files. Paste keeps a **labeled cloud restatement** (cloud does not load `~/.cursor/rules`). Local double-tax is that short paragraph plus the `.mdc` files — `tests/token_budget.sh` fails if the paragraph fattens or copies roof bodies. `session_start.sh` now points at `NOW.md` instead of dumping it. Caps and before/after: `docs/token-budget.md`.

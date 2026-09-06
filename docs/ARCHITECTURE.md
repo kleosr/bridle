@@ -5,26 +5,26 @@ kleosrules V2 uses the 5 Layers framework. Layers nest; they do not replace each
 | # | Layer | Unit | kleosrules Implementation |
 |---|-------|------|---------------------------|
 | 1 | Prompt | Input | User message. The model remembers nothing before this call. |
-| 2 | Context | Window | `NOW.md` active sections via `session_start.sh`. |
+| 2 | Context | Window | Path to `NOW.md` via `session_start.sh` (Read on demand). |
 | 3 | Harness | Pass | Cursor + five Bash user hooks. Law lives in `.mdc` / skills. |
 | 4 | Loop | Run | The agent states the job in chat. Hooks do not police conversation. |
 | 5 | Graph | Job | Local Markdown files (`NOW.md`, `SECURITY.md`). |
 
 ## Preventive Amnesia
 
-Cursor reasons in a window that dies. `NOW.md` keeps what must survive. `session_start.sh` injects the active sections so the next chat is not blank.
+Cursor reasons in a window that dies. `NOW.md` keeps what must survive. `session_start.sh` points at that file so the next chat is not blank.
 
 ## Three channels (context engineering)
 
 Law, state, and feedback must not share one dump.
 
 1. **Law** — paste + user `~/.cursor/rules` alwaysApply/glob `.mdc` (once) + skills on-demand. No project-layer `.mdc` (`SHARED=()`; `types.mdc` is global alwaysApply). Do not re-inject ponytail at sessionStart.
-2. **State** — `session_start.sh` injects NOW.md active sections (`additional_context`).
+2. **State** — `session_start.sh` injects a path to NOW.md (`additional_context`). Read the file; do not invent state.
 3. **Feedback** — the model sees tool results. `stop.sh` adds one bounded `followup_message` when the working-tree diff shows unrequested rewrite (>50% of a tracked file changed) or mass reindent (whitespace-only churn). No postToolUse scorecard.
 
 ## Injection vs Declaration
 
-1. **Injection (Layer 2):** `session_start.sh` injects NOW.md active sections through `additional_context`. `before_submit_prompt.sh` returns `continue` (secret prompts may be `continue:false`). This pack does not register `preToolUse`, so it never emits `updated_input`.
+1. **Injection (Layer 2):** `session_start.sh` injects a path to NOW.md through `additional_context`. `before_submit_prompt.sh` returns `continue` (secret prompts may be `continue:false`). This pack does not register `preToolUse`, so it never emits `updated_input`.
 2. **Declaration (Layer 1):** GROUND first (Grep/Glob/Read this codebase — do not invent paths). Then one or two sentences in chat before Write (never Shell/fence). That is law in `.mdc`, not a hook followup.
 3. **Steel (Layer 3):** `before_shell.sh` denies a small destructive/source-write list (infra/DB is `ask`). `before_read_file.sh` denies secret paths. `beforeSubmitPrompt.failClosed` is false so a submit-hook crash cannot freeze chat.
 

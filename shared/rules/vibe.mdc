@@ -23,9 +23,6 @@ Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>
 - No `useEffect` data-fetch waterfalls. Parallel independent awaits.
 - No barrel-import of a whole UI kit.
 - Derived state, not mirrored `useState` + `useEffect`.
-- Named exports. Early return. Nesting >2 banned.
-- Cyclomatic: `complexity.mdc`. Do not disable the rule.
-- Match 1–2 siblings in the directory before Write.
 - Do not invent RSC, `getServerSideProps`, or `client:*` unless this stack has them.
 
-Subagents inherit this. Do not paste into Task prompts.
+Subagents inherit this. Do not paste into Task prompts. Ladder/cyclo: `ponytail.mdc` / `complexity.mdc`.

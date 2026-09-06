@@ -13,7 +13,7 @@ Context: Cursor user hooks are JSON stdio, cwd `~/.cursor`, native `./hooks/foo.
 
 | Script | Event | Job |
 |--------|-------|-----|
-| `session_start.sh` | sessionStart | Inject NOW.md active sections (`additional_context`) |
+| `session_start.sh` | sessionStart | Point at NOW.md (`additional_context`; path only) |
 | `before_submit_prompt.sh` | beforeSubmitPrompt | Secret-prompt block via `continue` (`failClosed: false`) |
 | `before_shell.sh` | beforeShellExecution | Destructive / source-write deny; infra/DB `ask` (`failClosed: false`) |
 | `before_read_file.sh` | beforeReadFile | Secret path deny (`failClosed: true`) |
@@ -58,3 +58,5 @@ Single source: `shared/hooks/hooks.json`. User commands are `./hooks/*.sh`. Wind
 **2026-09-03 — fifth event: `stop`.** Runtime grounding audit (`docs/runtime-grounding-audit.md`) proved Ponytail was rule + skill with no enforcement at completion. Operator chose a deterministic Stop gate over agent self-review. `stop.sh` + `lib/diff_gate.sh`: unrequested rewrite of a tracked file (>50% lines changed, file ≥80 LOC) and mass reindent (whitespace-only churn). Platform contract (cursor.com/docs/hooks): input `status`, `loop_count`, `workspace_roots`; output `{}` or `followup_message`; cannot block completion. Bounded by `loop_count == 0` in-script and `loop_limit: 1` in `hooks.json`. First draft used a 300-LOC roof; operator rejected it as a drive-by trigger (3-line fix in a 350-line file would demand a split). Replaced with churn detection that only fires when the agent rewrites or reindents beyond the hunk. Differs from the deleted 2026-08 `stop_gate.sh`: no conversation parsing, no failClosed, no NOW.md writes. Cloud `hooks.cloud.json` unchanged (stop support on cloud unverified).
 
 **2026-09-04 — quality roofs.** Operator asked for ten metrics as always-on law. Encoded in existing `.mdc` (not ten new files). `testing.mdc` and `types.mdc` are `alwaysApply: true`. `types.mdc` moved GLOBAL; `SHARED=()`. Cyclomatic working cap stays 10 (never-exceed 22). File roof stays 300 (never-exceed 500). Coverage/mutation/cognitive/Halstead/CRAP apply only when the repo already measures them. User Rules paste Retrieval harness carries the same numbers (cloud floor). Audit: `docs/quality-roofs-audit.md`.
+
+**2026-09-06 — path-only sessionStart.** `session_start.sh` injects a path to `NOW.md`, not the file body. Token-like NOW and plan mode stay quiet. Budget lock: `tests/token_budget.sh` / `docs/token-budget.md`.
