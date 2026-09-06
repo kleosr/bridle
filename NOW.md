@@ -24,7 +24,7 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — run after this change (token budget + path-only sessionStart)
+- `bash tests/run.sh` — 249 PASS, 0 FAIL (2026-09-06; always-on lean + token budget)
 - `bash scripts/doctor.sh` — ALL CHECKS PASSED
 - Always-on: `docs/token-budget.md` (session ~11.6kB / ~2.9k tok; was ~15.7kB / ~3.9k tok)
 - Audit: `docs/quality-roofs-audit.md`; article https://x.com/i/article/2095989703967125509
