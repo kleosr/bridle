@@ -1,44 +1,44 @@
-# Engineering System — GROUND → BOUND → PLAN → CHANGE → VERIFY → REVIEW → STOP
+# Engineering System — GROUND → STOP
 
-One loop, seven stages, each owned by the lightest mechanism that reliably performs it. Nothing is stated in two canonical layers; a later layer may verify an earlier one. Evidence: `docs/runtime-grounding-audit.md`.
+One loop. Snapshot: `docs/_archive/runtime-grounding-audit.md`.
 
 ## Stage ownership
 
-| stage | job | owner mechanism | layer type | when it runs | failure behavior |
-|---|---|---|---|---|---|
-| GROUND | smallest correct repo/dir/task/state context | `session_start.sh` → `additional_context` (NOW.md Now/State/Limits/Proof/Next, ≤40 lines); Cursor rules engine loads 7 alwaysApply `.mdc` once; glob `.mdc` on path match; root `AGENTS.md` | hook (state) + rule (law) | session start / on Read | no NOW.md → `{}`; token blob → `{}`; plan mode → `{}` |
-| BOUND | scope, protected paths, allowed ops, validation commands, hard stops | `before_read_file.sh` (secret paths, failClosed) · `before_shell.sh`/`shell_gate.sh` (destructive deny, source-write deny, complexity-lint-disable deny, secret-path deny, infra/DB ask) · `SECURITY.md` (SSOT text) | hook (steel) + canonical file | before every Read / Shell | deny/ask JSON with `user_message`; hook crash on shell = fail-open, on read = fail-closed |
-| PLAN | smallest coherent change + tests; risk without speculative architecture | `agent.mdc` "Before you write" (open the files you will change; one or two sentences: outcome, files, proof) · `ponytail.mdc` ladder · `complexity.mdc` cap | rule | before Write | judgment; not hook-enforced (no `preToolUse` by decision) |
-| CHANGE | surgical complete edits | agent Write/StrReplace · `before_shell.sh` denies Shell writes to source so edits go through tool diffs | tool + hook | during turn | Shell source-write → `LEAN BYPASS BLOCK` |
-| VERIFY | focused tests then repo validation, exact exit codes | `bash tests/run.sh` · `bash scripts/doctor.sh` · `prove` subagent for independent re-run | tests + on-demand agent | before "done" | `[fail]` lines name the test; doctor names the missing file and the recovery command |
-| REVIEW | diff correctness, security, complexity, scope drift, duplication, Ponytail | `hunter` (security) · `cut` (simplicity) · `complexity` skill · `ponytail` skill | on-demand skills/agents | when invoked | judgment |
-| STOP | refuse completion if checks failed or evidence missing; else concise proof | `stop.sh` + `lib/diff_gate.sh`: unrequested rewrite of a tracked file (>50% lines changed, ≥80 LOC) or mass reindent (whitespace-only churn) → one `followup_message` (`loop_limit: 1`) · agent cites green command + updates NOW.md (`agent.mdc`) | hook (deterministic subset) + rule (report) | after each completed turn | platform cannot refuse completion; hook re-prompts once; second pass is quiet |
+| stage | job | owner | when | failure |
+|---|---|---|---|---|
+| GROUND | smallest repo/task/state | `session_start.sh` path to NOW.md; 7 alwaysApply; glob `.mdc`; root AGENTS.md | session start / Read | no NOW / token / plan → `{}` |
+| BOUND | scope + steel | `before_read_file.sh` (secrets, failClosed); `before_shell.sh` (destructive / source-write / lint-disable / secret deny; infra/DB ask); `SECURITY.md` | every Read / Shell | deny/ask JSON; shell crash fail-open; read fail-closed |
+| PLAN | smallest change + proof | paste / `agent.mdc` (open files; outcome, files, proof); `ponytail.mdc`; `complexity.mdc` | before Write | judgment; no `preToolUse` |
+| CHANGE | surgical edits | Write/StrReplace; Shell source-write denied | during turn | `LEAN BYPASS BLOCK` |
+| VERIFY | exact exit codes | `bash tests/run.sh`; `bash scripts/doctor.sh`; `prove` | before done | `[fail]` / doctor names recovery |
+| REVIEW | security, simplicity, roofs | `hunter` `cut` complexity/ponytail skills | on demand | judgment |
+| STOP | refuse "done" without proof | `stop.sh` + `diff_gate.sh`: rewrite (>50%, ≥80 LOC) or mass reindent → one `followup_message` (`loop_limit: 1`) | after turn | cannot refuse completion; second pass quiet |
 
 ## Precedence
 
-1. Hook deny/ask (steel) beats any instruction. Never fight a deny.
-2. User Rules charter (`USER-RULES.paste.txt`) is the floor; `agent.mdc` is the operational capsule; they list the same five events but only the capsule holds the harness table.
-3. `.mdc` law beats `NOW.md` state. NOW.md is context, not authority.
-4. Skills and subagents are vertical: read or invoke on match; never auto-injected.
-5. `AGENTS.md` is handbook/navigation. Law is hooks + paste + `.mdc`.
+1. Hook deny/ask beats any instruction. Never fight a deny.
+2. Paste is the floor; `agent.mdc` holds the harness table.
+3. `.mdc` law beats `NOW.md` state.
+4. Skills and subagents on match only.
+5. `AGENTS.md` is navigation.
 
-## What loads, and why (new-engineer view)
+## What loads
 
-| you open Cursor on a repo | loads | because |
+| surface | loads | why |
 |---|---|---|
-| any repo | `agent.mdc`, `ponytail.mdc`, `pnpm.mdc`, `complexity.mdc`, `vibe.mdc`, `testing.mdc`, `types.mdc` | `alwaysApply: true` in `~/.cursor/rules`; vibe is silent without `package.json`; types is silent on untyped files |
-| any repo | User Rules charter | pasted once in Settings |
-| repo with `NOW.md` | its Now/State/Limits/Proof/Next | `session_start.sh` |
-| repo with `AGENTS.md` | root file only | Cursor workspace instructions (may lag disk until new chat) |
-| edit `*.sql` / schema paths | `postgres.mdc` | glob |
-| edit Next/Vite/Astro app files | `next.mdc` / `vite.mdc` / `astro.mdc` | glob |
-| never automatically | any `SKILL.md`, hunter/cut/prove | on demand only |
-| each Shell / Read | `before_shell.sh` / `before_read_file.sh` | registered events |
-| each completed turn | `stop.sh` | registered event; `{}` unless a roof is broken |
+| any repo | 7 alwaysApply `.mdc` | `~/.cursor/rules` |
+| any repo | User Rules charter | Settings paste |
+| repo with NOW.md | path (Read on demand) | `session_start.sh` |
+| this pack | root `AGENTS.md` | workspace instructions |
+| `*.sql` / schema | `postgres.mdc` | glob |
+| Next / Vite / Astro | matching glob `.mdc` | glob |
+| never auto | SKILL.md, hunter/cut/prove | on demand |
+| each Shell / Read | `before_shell.sh` / `before_read_file.sh` | registered |
+| each completed turn | `stop.sh` | `{}` unless a roof is broken |
 
 ## Failure messages
 
-| gate | message prefix | recovery named |
+| gate | message prefix | recovery |
 |---|---|---|
 | destructive shell | `AUTONOMY BLOCK: destructive command denied` | — (stop) |
 | shell source write | `LEAN BYPASS BLOCK: Shell must not create/overwrite source` | Use Write or StrReplace |
@@ -52,12 +52,12 @@ One loop, seven stages, each owned by the lightest mechanism that reliably perfo
 
 ## Idempotency
 
-`FORCE=1 bash scripts/install.sh` twice → same 5 events, same script count, no duplicate basenames. `bash scripts/uninstall.sh` removes `hooks.json`, `hooks/`, owned `.mdc`, owned skills, agents; preserves unrelated files; second run is a no-op. Re-install after uninstall registers hooks. All in `tests/install_lifecycle.sh` (18 assertions, isolated `HOME`).
+`FORCE=1 bash scripts/install.sh` twice → same 5 events, same script count, no duplicate basenames. `bash scripts/uninstall.sh` removes `hooks.json`, `hooks/`, owned `.mdc`, owned skills, agents; preserves unrelated files; second run is a no-op. Re-install after uninstall registers hooks. All in `tests/install_lifecycle.sh` (isolated `HOME`).
 
 ## Hard stops
 
-No `updated_input` (no `preToolUse`). No Rust or pack Python. No MCP core dependency. Event hooks ≤80 LOC (`stop.sh` 16, `diff_gate.sh` 69 in lib). BSD grep/sed only. No secrets in NOW.md, paste, hooks, chat. `stop` never writes files, never parses conversation, never emits on `aborted`/`error`, never emits when `loop_count > 0`.
+No `updated_input` (no `preToolUse`). No Rust or pack Python. No MCP core. Event hooks ≤80 LOC. BSD grep/sed only. No secrets in NOW.md, paste, hooks, chat. `stop` never writes files, never parses conversation, never emits on `aborted`/`error`, never emits when `loop_count > 0`.
 
-## Not in scope (by decision)
+## Not in scope
 
-Judgment roofs (needless abstraction, speculative architecture, unused deps) stay with `cut` and the ponytail skill. `stop` on cloud agents is unregistered until verified. Precedence between two alwaysApply rules is not observable on this platform; the pack guarantees no two rules share a canonical heading instead.
+Judgment roofs stay with `cut` and the ponytail skill. `stop` on cloud is unregistered until verified. Two alwaysApply rules do not share a canonical heading.

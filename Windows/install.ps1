@@ -13,10 +13,11 @@ if ($LASTEXITCODE -ne 0) { throw 'jq missing inside WSL. Run: wsl sudo apt-get i
 
 $src = Join-Path $Pack 'shared\hooks'
 New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
-foreach ($s in 'session_start.sh', 'before_submit_prompt.sh', 'before_shell.sh', 'before_read_file.sh') {
+# Must match HOOK_SCRIPTS / RUNTIME_LIBS in shared/hooks/lib/fleet_install.sh
+foreach ($s in 'session_start.sh', 'before_submit_prompt.sh', 'before_shell.sh', 'before_read_file.sh', 'stop.sh') {
   Copy-Item (Join-Path $src $s) $HooksD -Force
 }
-foreach ($s in 'common.sh', 'shell_gate.sh', 'shell_fleet.sh') {
+foreach ($s in 'common.sh', 'shell_gate.sh', 'shell_fleet.sh', 'diff_gate.sh') {
   Copy-Item (Join-Path $src "lib\$s") (Join-Path $HooksD 'lib') -Force
 }
 Copy-Item "$src\policy\*" "$HooksD\policy" -Force

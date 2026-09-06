@@ -7,55 +7,28 @@ description: >
 
 # Premium UI craft
 
-Read this **in full** before proposing or shipping UI. Then apply. Do not invent a second aesthetic.
-
-Sources (read when stuck): [sources.md](sources.md)
+Law for product UI. Do not invent a second aesthetic. Sources when stuck: [SOURCE.md](SOURCE.md).
 
 ## Doctrine
 
-Interaction-dense, visually sparse. Color means something (one accent for primary/complete, one for danger). Never a rainbow of card accents.
+Interaction-dense, visually sparse. One accent for primary/complete, one for danger. Never a rainbow of card accents.
 
-Never Scandinavian, Nordic, Japandi, or hygge. No parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige fields, or default serif-on-paper titles. This skill is Linear/Stripe/Apple.
+Never Scandinavian, Nordic, Japandi, or hygge. No parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige, or serif-on-paper titles. Linear/Stripe/Apple.
 
-Typography is the brand. One UI sans. 4–6 sizes. Tabular nums for counts. No decorative second font unless Mario asks.
+Typography is the brand. One UI sans. 4–6 sizes. Tabular nums. No decorative second font unless Mario asks.
 
-Motion: one curve, one duration. Apple-like `300ms` / `cubic-bezier(0.22, 1, 0.36, 1)`. No bounce, no card lift on hover. `prefers-reduced-motion` zeros duration.
+Motion: one curve, one duration. `300ms` / `cubic-bezier(0.22, 1, 0.36, 1)`. No bounce, no card lift. `prefers-reduced-motion` zeros duration.
 
 ## Hierarchy
 
-Every screen: one primary job. Eye hits title, then the action (check, save), then chrome.
-
-- Kickers: 11px, wide tracking, muted, sentence or uppercase meta
-- Titles: same sans as body, tight tracking, real copy (names, not ISO dates)
-- Body: 15px-ish, muted for secondary
-- Hairlines: 1px at low alpha. Not `<hr>` soup
+One primary job per screen. Title → action → chrome. Kickers 11px muted. Titles same sans, real copy. Hairlines 1px low alpha.
 
 ## Chrome
 
-- Desktop: persistent left rail (~220px), active = hairline/marker + text, not a filled gray pill
-- Mobile with ≤5 destinations: bottom dock, equal slots, `safe-area-inset-bottom`, content padded so it is not hidden
-- Do not wrap a hamburger + Sheet if five tabs already exist
-- Do not put `data-bezel` on the full viewport
+Desktop: left rail ~220px; active = marker + text, not a gray pill. Mobile ≤5 destinations: bottom dock, `safe-area-inset-bottom`. No hamburger+Sheet if five tabs exist. No `data-bezel` on the viewport.
 
 ## Components
 
-Prefer shadcn primitives (Card, Tabs `variant="line"`, Checkbox, Field, Progress, Empty, sonner). Semantic tokens (`bg-background`, `text-muted-foreground`, `bg-primary`). No raw `bg-blue-500`.
+shadcn primitives. Semantic tokens. No raw `bg-blue-500`. Pages are structure (header + list), not stacked generic cards.
 
-Compose pages as **structure** (header + list), not stacked generic cards with badges on every row.
-
-## Microstates (required)
-
-Every control: default, hover, focus (visible ring, designed), active, disabled. Empty and error are designed copy, not "No data".
-
-## Access
-
-Keyboard: every action reachable without a pointer. Focus ring is designed, not `outline: none` with no replacement. Hit targets ≥44px on touch. Contrast: body text vs surface must read as primary, not gray-on-gray. `prefers-reduced-motion` already zeros duration — do not add a second motion system.
-
-## Checklist before handoff
-
-- [ ] Primary action obvious without decoration
-- [ ] One palette; accent and danger only as meaning
-- [ ] No hover translate on surfaces
-- [ ] Lists are full-row hit targets
-- [ ] Dates/human language, not `YYYY-MM-DD` in heroes
-- [ ] Reduced motion respected
+Every control: default, hover, focus ring, active, disabled. Empty/error are designed copy. Keyboard: every action without a pointer. Touch targets ≥44px. Contrast must read as primary.

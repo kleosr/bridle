@@ -136,8 +136,8 @@ run_test "pre-action gate: repo proof command allowed" "allow" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("## Ladder") or test("alwaysApply") or test("Harness \\(")')"
 run_test "duplicate channel: sessionStart does not re-inject .mdc bodies" "false" "$RESULT"
 
-RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("## Now")')"
-run_test "hook context: sessionStart carries NOW.md Now section" "true" "$RESULT"
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | (test("NOW\\.md") and (test("## Now")|not))')"
+run_test "hook context: sessionStart points at NOW.md without dumping body" "true" "$RESULT"
 
 # --- Missing grounding ---
 
@@ -183,7 +183,7 @@ done
 run_test "AGENTS.md is a navigator (points to paste/audit; no nested adapters; no Halstead/CRAP)" "ok" "$AGENTS_SLIM"
 
 PASTE_SSOT=ok
-grep -q 'canonical in `complexity.mdc`' "$PACK/shared/rules/USER-RULES.paste.txt" || PASTE_SSOT="missing-canonical"
+grep -q 'Quality roofs are only in `complexity.mdc`' "$PACK/shared/rules/USER-RULES.paste.txt" || PASTE_SSOT="missing-canonical"
 run_test "paste names complexity.mdc as quality SSOT" "ok" "$PASTE_SSOT"
 
 rm -rf "$GR_TMP"

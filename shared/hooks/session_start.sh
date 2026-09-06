@@ -14,18 +14,12 @@ if [[ "$MODE" == "plan" ]]; then
   emit_quiet; exit 0
 fi
 NOW="$ROOT/NOW.md"
-TAIL=""
-if [[ -f "$NOW" ]]; then
-  TAIL="$(extract_now "$NOW")"
+if [[ ! -f "$NOW" ]]; then
+  emit_quiet; exit 0
 fi
 POL="$HERE/policy/secret_tokens.ere"
-if [[ -n "$TAIL" && -f "$POL" ]] && printf '%s' "$TAIL" | grep -qE -f "$POL"; then
+if [[ -f "$POL" ]] && grep -qE -f "$POL" "$NOW"; then
   emit_quiet
   exit 0
 fi
-if [[ -n "$TAIL" ]]; then
-  emit_context "NOW:
-${TAIL}"
-else
-  emit_quiet
-fi
+emit_context "Read ${NOW} (Now, State, Limits, Proof, Next)."

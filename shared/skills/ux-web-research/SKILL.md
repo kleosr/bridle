@@ -7,13 +7,13 @@ description: >
 
 # UX web research
 
-Use after `design-stack` picks this row. Always also Read `premium-ui-craft`.
+Use after `design-stack` picks this row. Also Read `premium-ui-craft`.
 
-Before a visual overhaul or new chrome (sidebar, dock, dashboard shell):
+Before new chrome (sidebar, dock, dashboard shell):
 
-1. Inspect Exa tools (`web_search_exa`, `web_fetch_exa`) if that MCP is connected.
-2. Search for the **specific problem** (e.g. persistent dashboard sidebar vs bottom tab bar, five destinations, Apple HIG), not generic "best UI".
-3. Fetch the 1–2 URLs that actually describe layout/craft.
-4. Apply findings through **premium-ui-craft**. Do not paste a SaaS template. Do not apply Scandinavian/Nordic/Japandi palettes.
+1. Inspect Exa (`web_search_exa`, `web_fetch_exa`) if connected.
+2. Search the **specific** problem, not "best UI".
+3. Fetch the 1–2 URLs that describe layout/craft.
+4. Apply through **premium-ui-craft**. No SaaS-template paste. Palette ban stays.
 
-If Exa is down, use Apple HIG + shadcn docs and say the search was skipped. Do not invent a second aesthetic.
+If Exa is down: Apple HIG + shadcn docs, and say search was skipped.
