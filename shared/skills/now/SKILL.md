@@ -7,25 +7,10 @@ description: >
 
 # Now
 
-Persist state in the **repo**. Cursor chats die.
+Persist state in the **repo**. Cursor chats die. One file: `NOW.md` at repo root.
 
-## Path
+Resume: Read it. Re-run listed TOOLCHAIN/CI before claiming green. Do **one** Next unless the user said autopilot/`sigue`. Open only listed paths.
 
-One file: `NOW.md` at repo root.
+Update: Now, State, Limits, Proof, Next. Compact into Archived past ~150 active lines. English. No secrets.
 
-## Resume
-
-1. Read `NOW.md` if it exists.
-2. Re-run listed TOOLCHAIN/CI commands before claiming prior work is green.
-3. Do **one** Next action unless the user said autopilot/`sigue`.
-4. Do not re-discover the whole codebase; open only paths listed or needed.
-
-## Update
-
-Keep Now, State, Limits, Proof, Next. Compact into Archived when active sections exceed ~150 lines. English labels. No secrets.
-
-## Rules
-
-- Assessment-only until the user asked for changes (per `agent.mdc`).
-- Never invent residual features; append open items here.
-- Pair with testing for feature execution; debugging if Next is ambiguous.
+Assessment-only until the user asked for changes. Never invent residual features. Pair with testing for feature work; debugging if Next is ambiguous.

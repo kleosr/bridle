@@ -67,6 +67,10 @@ echo "=== Runtime grounding probes ==="
 source "$PACK/tests/grounding.sh"
 
 echo ""
+echo "=== Always-on token budget ==="
+source "$PACK/tests/token_budget.sh"
+
+echo ""
 echo "=== Install lifecycle (isolated HOME) ==="
 source "$PACK/tests/install_lifecycle.sh"
 

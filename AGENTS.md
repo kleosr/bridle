@@ -16,7 +16,7 @@ Law lives elsewhere. This file is a map.
 
 - Brain = `NOW.md`. Muscle = the five hooks. Local install only (`FORCE=1 bash scripts/install.sh` → `~/.cursor`). Never Lane-A into this pack.
 - No Rust kleos-gate. No pack Python. MCP is optional, never core.
-- Output: never `updated_input` (no `preToolUse`). `sessionStart` → `additional_context`. `beforeSubmitPrompt` → `continue`. `stop` → one `followup_message`.
+- Output: never `updated_input` (no `preToolUse`). `sessionStart` → path to NOW.md. `beforeSubmitPrompt` → `continue`. `stop` → one `followup_message`.
 
 ## Skills (on demand)
 
@@ -30,7 +30,7 @@ Stored in `shared/skills/` (not `.agents/skills`). Read `SKILL.md` only when the
 
 - **Verify (hooks/scripts/tests/rules):** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `bash scripts/doctor.sh` → `bash tests/run.sh`. Local fixtures; no approval. Docs-only: skip.
 - **Install:** `FORCE=1 bash scripts/install.sh` (global). `scripts/uninstall.sh` (fingerprinted). Platform: `MacOS/`, `Linux/`, `Windows/`. Fleet sync opt-in via empty-by-default `shared/config/scan.roots`.
-- **Docs:** `docs/ARCHITECTURE.md`, `docs/CURATOR.md`, `docs/TOOLCHAIN.md` (hook ≤80 LOC), `SECURITY.md`.
+- **Docs:** `docs/README.md` (index). Living: ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit, engineering-system, DECISIONS. Snapshots: `docs/_archive/`.
 
 ## Memory
 

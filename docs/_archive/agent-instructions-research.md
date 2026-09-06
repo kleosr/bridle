@@ -1,5 +1,7 @@
 # Agent Instructions — Bounded Research Notes
 
+Archived snapshot. Living map: `docs/README.md`.
+
 **Date:** 2026-09-03  
 **Purpose:** Hypothesis input for kleosrules audit. **Not exhaustive.** Recommendations adopted only where local repo proof exists (see `docs/engineering-rules-decision.md`).
 

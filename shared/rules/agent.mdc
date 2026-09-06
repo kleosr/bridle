@@ -1,50 +1,27 @@
 ---
-description: "Autonomous loop capsule — proportional ground, five-hook harness"
+description: "Five-hook harness capsule. NOW.md + SECURITY.md. No preToolUse."
 alwaysApply: true
 ---
 
 # AGENT CAPSULE
 
 Bash hooks + local `NOW.md`. One model per conversation.
-Read `NOW.md` for multi-session work. Prefer NO CODE. Smallest Diff. Zero prose comments.
-Start: read NOW.md. Stop with tools: update NOW.md.
+Read `NOW.md` when sessionStart points at it. Prefer NO CODE. Smallest Diff. Zero prose comments.
 Git only when asked. Secrets never in code or chat. Security: `SECURITY.md`.
-Done = `docs/TOOLCHAIN.md` green with evidence.
-Never fight a deny. Never reintroduce Rust kleos-gate or pack Python.
+Done = cited proof, green. Never fight a deny.
+Never reintroduce Rust kleos-gate or pack Python.
 
 ## Harness (five registered events)
 
 | Event | Script | Job |
 |---|---|---|
-| sessionStart | `session_start.sh` | `additional_context`: NOW.md active sections. Quiet in plan mode. |
+| sessionStart | `session_start.sh` | `additional_context`: path to NOW.md. Quiet in plan mode. |
 | beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
 | beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. |
 | beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
-| stop | `stop.sh` | Ponytail diff gate on the working tree: unrequested rewrite of a tracked file (>50% lines changed, file ≥80 LOC) or mass reindent (whitespace-only churn). One `followup_message`, `loop_limit: 1`, else `{}`. |
+| stop | `stop.sh` | Ponytail diff gate: unrequested rewrite (>50% lines, file ≥80 LOC) or mass reindent. One `followup_message`, `loop_limit: 1`, else `{}`. |
 
-Cursor documents 21 hook events. This pack registers the five above. There is no `postToolUse`, `preToolUse`, or `beforeMCPExecution`. Writes are not blocked at write time; `stop` reports Ponytail violations once after the turn and cannot refuse completion.
+This pack registers the five above. No `postToolUse`, `preToolUse`, or `beforeMCPExecution`. Writes are not blocked at write time; `stop` cannot refuse completion.
 
-Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand (`Read SKILL.md` or `/name`). Hooks never inject `.mdc`. This pack does not register `preToolUse`, so it never emits `updated_input` (Cursor only consumes that field there). Review specialists: `hunter`, `cut`, `prove`.
-
-## Before you write
-
-Open the files you will change. Do not invent paths. Do not map the repo for a one-line fix.
-Then, in one or two normal sentences, say what will be true when you stop, which files you will change, and how you will prove it. Never declare that via Shell, Write, or a code fence.
-
-## File map
-
-Change only files you actually opened. Finish them this turn. No drip, no orphan files.
-Proof is the command this change can break. Hooks, scripts, tests, or rules → `bash tests/run.sh` and `bash scripts/doctor.sh`. Docs or NOW.md only → no gauntlet.
-
-## State
-
-`NOW.md` is durable. `/state/` is ephemeral (`mode` from sessionStart). Law: `docs/ARCHITECTURE.md` + `docs/CURATOR.md` + `SECURITY.md`.
-
-## Autonomous loop
-
-1. Open the files you will change. Do not invent paths.
-2. One or two sentences in chat before Write: outcome, files, proof.
-3. If that proof is missing, do it now. Local tests are disposable fixtures — run them without asking.
-4. No partial NOW.md. No drip. Do not stop at a first implementation if the stated proof is still red.
-5. Write/StrReplace those files. Fix callers.
-6. Re-read the hunk. Run the proof from File map. Cite green. Update NOW.md.
+Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand. Hooks never inject `.mdc`. No `updated_input`. Review: `hunter`, `cut`, `prove`.
+Open the files you will change. One or two sentences: outcome, files, proof.

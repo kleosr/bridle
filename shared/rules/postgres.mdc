@@ -6,8 +6,6 @@ alwaysApply: false
 
 # Postgres
 
-Prefer retrieval-led reasoning over pre-training. Do not dump skill AGENTS.md.
-
 Before Write SQL/schema/RLS: Read **one** file from `supabase-postgres-best-practices` (`query-` / `conn-` / `security-` / `schema-`). Product/auth/SSR: Read the `supabase` skill SKILL.md.
 
 ## Hard (cheap)

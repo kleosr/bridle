@@ -5,39 +5,24 @@ description: >
   tests, not because testing.mdc is on.
 ---
 
-# Testing (fat skill)
+# Testing
 
-Thin roof: `shared/rules/testing.mdc`. This file = how to run the loop.
+Thin roof: `testing.mdc`. This file is the loop.
 
-## Order (TDD-ish)
-1. Business logic pure paths.
-2. Boundaries (auth, validation, trust edges).
-3. Money-path / irreversible integration last.
-Skip: framework internals, getters, styling.
+## Order
 
-## Native tools
-Use Cursor `Read` / `Grep` / `Write` / `StrReplace` for test files.
-Do not Shell-hack fixtures with sed/echo redirects when a gate denies.
+1. Pure business paths.
+2. Boundaries (auth, validation, trust).
+3. Money / irreversible integration last.
 
-## Mocks
-Mock true externals only (network, clock, FS outside fixture).
-Prefer hand oracles for seam asserts. Flaky = broken: fix or delete same day.
+Skip framework internals, getters, styling.
 
-## Regression
-Bug fix ships a test named or described `regression: <symptom>` that fails on old code.
+## Practice
 
-## House gauntlet (Martin)
-1. Prefer `docs/TOOLCHAIN.md` / package test scripts already wired.
-2. Run the verify this change can break. Hooks/scripts/tests → `bash tests/run.sh` and `scripts/doctor.sh`. Docs-only → skip.
-3. Fail closed on red. Local fixtures: run without asking.
-4. No house gauntlet: run closest real verify; name residual; never ask accept-no-gauntlet-risk.
-5. Do not invent mutation theater or Clean Architecture test trees.
-6. `stop.sh` checks Ponytail diff roofs only, not tests.
+Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flaky = broken. Bug fix ships `regression: <symptom>` that fails on old code.
 
-## Coverage
+## Gauntlet
 
-New and changed code this turn is **100%** covered when the repo already has a coverage job — cite that job green. Do not add istanbul/c8/coverage.py. Whole-repo 100% is not a reason to test getters or mock internals. Prefer one hostile path over metric theater.
+Prefer `docs/TOOLCHAIN.md` / package scripts. Hooks/scripts/tests → `bash tests/run.sh` and `scripts/doctor.sh`. Docs-only: skip. Fail closed. No house gauntlet: closest real verify; name residual. Do not invent mutation theater. `stop.sh` does not gate tests.
 
-## Mutation
-
-If the repo already runs a mutator: **0 surviving mutants** on files you touched. Do not add Stryker, PIT, or mutmut. Do not invent mutation theater.
+Coverage / mutants: roofs in `testing.mdc`. Do not add coverage or mutator stacks.

@@ -1,5 +1,7 @@
 # Engineering Rules — Selected Architecture
 
+Archived snapshot. Living map: `docs/README.md`.
+
 **Date:** 2026-09-03  
 **Scope:** kleosr/kleosrules (Cursor harness pack v18.0.0)  
 **Status:** Adopted by this audit PR

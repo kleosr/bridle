@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RESULT="$(cat "$PACK/tests/fixtures/preToolUse_shell_destructive.json" | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+RESULT="$(cat "$PACK/tests/fixtures/beforeShell_destructive.json" | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution blocks destructive command" "deny" "$RESULT"
 
 RESULT="$(echo '{"command":"ls -la","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"

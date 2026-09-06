@@ -7,30 +7,16 @@ description: >
 
 # Redesign existing projects (Elaya)
 
-MIT. Upstream URLs only in [SOURCE.md](SOURCE.md) (do not fetch at runtime). This file is the law.
+MIT. Upstream in [SOURCE.md](SOURCE.md). Report diagnosis before fixing. Do not rewrite the stack.
 
-Report diagnosis before fixing. Do not rewrite the stack.
+**Product apps:** audit checklist here; values from `premium-ui-craft`. Do not force island nav or Phosphor on an existing shadcn app unless Mario wants a marketing site.
 
-**Product apps:** keep the audit checklist. Replace values using `premium-ui-craft` (semantic tokens, 300ms Apple curve, lucide/shadcn, rail+dock). Do not force floating island nav or Phosphor on an existing shadcn app unless Mario asks for a marketing site. Never Scandinavian/Nordic/Japandi palettes.
+## Diagnose (list before edits)
 
-## Diagnose (must list before edits)
+Generic cards, equal three columns, purple AI gradients. Inter/Roboto/Open Sans. Missing hover/focus/active. Dead `#` links. No empty/error/loading. Lorem or fake stats. Hover lift. Rainbow accents.
 
-- Generic cards, equal three columns, purple AI gradients
-- Inter/Roboto/Open Sans, missing type scale
-- Missing hover/focus/active, dead `#` links
-- No empty/error/loading, lorem or fake stats
-- Hover lift on cards, rainbow accents
+## Order
 
-## Order of fixes
+Font → color/surfaces → hover/focus/active → layout/spacing → motion → generic components → loading/empty/error → copy → type polish.
 
-1. Font and type scale
-2. Color and surfaces (kill background gradients)
-3. Hover / focus / active
-4. Layout, spacing, nested radius
-5. Motion (custom curve, no scroll listeners)
-6. Generic components
-7. Loading / empty / error
-8. Copy
-9. Type polish
-
-Work in the current stack. Do not break behavior. Ask before inventing a token not in the active design system.
+Stay in the current stack. Ask before inventing a token not in the active design system.
