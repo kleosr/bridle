@@ -26,7 +26,7 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 - `bash tests/run.sh` — 266 PASS, 0 FAIL (2026-09-06; living-docs + Windows stop parity)
 - `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- Always-on: paste 3813→1314 B. Session ~9.1kB / ~2.3k tok (was ~15.7kB / ~3.9k tok).
+- Always-on: paste 3813→2528 B (Astra body). Session ~10.3kB / ~2.6k tok (was ~15.7kB / ~3.9k tok).
 - On-demand: skill bodies 22k→10k; hunter/cut/prove 15k→6k. Living docs 84k→13k (`_archive/`).
 - Windows `install.ps1` copies `stop.sh` + `diff_gate.sh` (same set as `fleet_install.sh`).
 - Audit: `docs/quality-roofs-audit.md`; article https://x.com/i/article/2095989703967125509
