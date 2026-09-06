@@ -1,6 +1,6 @@
 # Quality roofs
 
-Numbers are SSOT in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`. Paste restates them once (cloud floor). Do not add ten rule files.
+Numbers are SSOT in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`. Paste points at those files. Do not add ten rule files.
 
 | Metric | Law |
 |--------|-----|

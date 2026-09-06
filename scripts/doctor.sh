@@ -180,10 +180,8 @@ for h in Identity Stance Autonomy Mission Operations "Session Protocol" "Retriev
   grep -q "## $h" "$PASTE" || PASTE_HEADS="missing:$h"
 done
 if [[ "$PASTE_HEADS" == ok ]] \
-  && grep -q 'never above 22' "$PASTE" \
-  && grep -q 'never 500' "$PASTE" \
-  && grep -q 'un-narrowed' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and quality roofs"
-else fail "USER-RULES.paste.txt missing charter heading or quality roofs ($PASTE_HEADS)"; fi
+  && grep -q 'canonical in `complexity.mdc`' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and roof pointers"
+else fail "USER-RULES.paste.txt missing charter heading or roof pointer ($PASTE_HEADS)"; fi
 
 if grep -q 'complexity pnpm types)' "$PACK/shared/hooks/fleet_sync.sh"; then ok "fleet_sync GLOBAL includes types"
 else fail "fleet_sync GLOBAL missing types"; fi

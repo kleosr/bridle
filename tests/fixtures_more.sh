@@ -32,7 +32,7 @@ run_test "complexity.mdc states never above 22" "1" "$(grep -c 'Never above \*\*
 run_test "types.mdc is alwaysApply" "true" "$(awk '/^alwaysApply:/{print $2; exit}' "$PACK/shared/rules/types.mdc")"
 run_test "testing.mdc is alwaysApply" "true" "$(awk '/^alwaysApply:/{print $2; exit}' "$PACK/shared/rules/testing.mdc")"
 run_test "paste charter still has Cursor + Grok lock" "1" "$(grep -c '## Cursor + Grok' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
-run_test "paste states never above 22" "1" "$(grep -c 'never above 22' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
+run_test "paste does not restate cyclo-22 (lives in complexity.mdc)" "0" "$(grep -c 'never above 22' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
 
 LOC_OK=1
 for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do

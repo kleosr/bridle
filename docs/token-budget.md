@@ -6,7 +6,7 @@ Caps live in `tests/token_budget.sh`. Rough tokens = bytes / 4.
 
 | Surface | Why | Lock |
 |---------|-----|------|
-| `USER-RULES.paste.txt` | User Rules; cloud floor | byte cap + labeled roof restatement |
+| `USER-RULES.paste.txt` | User Rules charter | byte cap; roof *paths*, not numbers |
 | 7 alwaysApply `.mdc` | `~/.cursor/rules` | count 7; sum + `agent.mdc` |
 | `session_start.sh` | `additional_context` | path to NOW.md |
 | `AGENTS.md` | this repo / cloud handbook | navigator cap |
@@ -30,11 +30,10 @@ Other hooks emit `continue` / `permission` / one `followup_message`. Not always-
 | alwaysApply count | 7 |
 | alwaysApply bytes | 8200 |
 | `agent.mdc` | 1900 |
-| paste | 3900 |
+| paste | 1600 |
 | `AGENTS.md` | 2400 |
 | sessionStart inject | 220 |
-| paste + mdc + inject | 12500 |
-| paste roof paragraph | 480 |
+| paste + mdc + inject | 10000 |
 | skill description | 200 |
 | skill body | 1800 |
 | skill body sum | 12000 |
@@ -48,12 +47,12 @@ Always-on:
 
 | Surface | Before B | ~tok | After B | ~tok |
 |---------|----------|------|---------|------|
-| paste | 4324 | 1081 | 3813 | 954 |
+| paste | 4324 | 1081 | 1314 | 329 |
 | alwaysApply sum | 9334 | 2334 | 7727 | 1932 |
 | `agent.mdc` | 3040 | 760 | 1545 | 387 |
 | sessionStart inject | 2038 | 510 | 57 | 15 |
 | `AGENTS.md` | 2183 | 546 | 2244 | 561 |
-| **session always-on** | **15696** | **3924** | **11597** | **2900** |
+| **session always-on** | **15696** | **3924** | **9098** | **2275** |
 
 On-demand + handbook:
 

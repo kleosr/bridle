@@ -17,11 +17,10 @@ le_cap() {
 ALWAYS_APPLY_COUNT_MAX=7
 ALWAYS_APPLY_BYTES_MAX=8200
 AGENT_MDC_BYTES_MAX=1900
-PASTE_BYTES_MAX=3900
+PASTE_BYTES_MAX=1600
 AGENTS_MD_BYTES_MAX=2400
 SESSION_INJECT_BYTES_MAX=220
-ALWAYS_ON_SESSION_BYTES_MAX=12500
-PASTE_ROOF_PARA_BYTES_MAX=480
+ALWAYS_ON_SESSION_BYTES_MAX=10000
 SKILL_DESC_BYTES_MAX=200
 SKILL_BODY_BYTES_MAX=1800
 SKILL_BODY_SUM_MAX=12000
@@ -67,18 +66,12 @@ run_test "always-on session bytes ≤ $ALWAYS_ON_SESSION_BYTES_MAX" "ok" "$(le_c
 PNPM_AA="$(awk '/^alwaysApply:/{print $2; exit}' "$PACK/shared/rules/pnpm.mdc")"
 run_test "pnpm.mdc stays alwaysApply (glob fire is not observable here)" "true" "$PNPM_AA"
 
-ROOF_PARA="$(awk '/^Quality roofs/{p=1} p{print} p && /^$/{exit}' "$PASTE")"
-ROOF_B="$(printf '%s' "$ROOF_PARA" | wc -c | tr -d ' ')"
-echo "  paste roof para     $ROOF_B B  ~$(tok_est "$ROOF_B") tok"
-run_test "paste roof restatement bytes ≤ $PASTE_ROOF_PARA_BYTES_MAX" "ok" "$(le_cap "$ROOF_B" "$PASTE_ROOF_PARA_BYTES_MAX")"
-
-ROOF_LABEL=ok
-printf '%s' "$ROOF_PARA" | grep -qi 'restatement' || ROOF_LABEL="missing-label"
-printf '%s' "$ROOF_PARA" | grep -q 'complexity.mdc' || ROOF_LABEL="missing-complexity"
-printf '%s' "$ROOF_PARA" | grep -q 'ponytail.mdc' || ROOF_LABEL="missing-ponytail"
-printf '%s' "$ROOF_PARA" | grep -q 'testing.mdc' || ROOF_LABEL="missing-testing"
-printf '%s' "$ROOF_PARA" | grep -q 'types.mdc' || ROOF_LABEL="missing-types"
-run_test "paste roof paragraph is a labeled restatement of the four .mdc files" "ok" "$ROOF_LABEL"
+POINT=ok
+grep -q 'canonical in `complexity.mdc`' "$PASTE" || POINT="missing-canonical"
+grep -q 'ponytail.mdc' "$PASTE" || POINT="missing-ponytail"
+grep -q 'testing.mdc' "$PASTE" || POINT="missing-testing"
+grep -q 'types.mdc' "$PASTE" || POINT="missing-types"
+run_test "paste points at the four roof .mdc files" "ok" "$POINT"
 
 DUMP=ok
 printf '%s' "$CTX" | grep -q '## Now' && DUMP="dumped-now"
@@ -86,12 +79,15 @@ printf '%s' "$CTX" | grep -q 'Session file is' && DUMP="dumped-body"
 printf '%s' "$CTX" | grep -q 'NOW.md' || DUMP="missing-path"
 run_test "sessionStart injects NOW.md path, not NOW body" "ok" "$DUMP"
 
-VERBATIM=ok
-grep -q 'Code you write must pass complexity lint' "$PASTE" && VERBATIM="complexity-body"
-grep -q 'Cero bloat en tests' "$PASTE" && VERBATIM="testing-body"
-grep -q 'Silent on untyped files' "$PASTE" && VERBATIM="types-body"
-grep -q 'Escape hatch = design bug' "$PASTE" && VERBATIM="types-hatch"
-run_test "paste does not copy roof .mdc bodies (cloud floor numbers only)" "ok" "$VERBATIM"
+NUMS=ok
+grep -q 'never above 22' "$PASTE" && NUMS="has-22"
+grep -q 'never 500' "$PASTE" && NUMS="has-500"
+grep -q 'un-narrowed' "$PASTE" && NUMS="has-unknown"
+grep -q 'Code you write must pass complexity lint' "$PASTE" && NUMS="complexity-body"
+grep -q 'Cero bloat en tests' "$PASTE" && NUMS="testing-body"
+grep -q 'Silent on untyped files' "$PASTE" && NUMS="types-body"
+grep -q 'Escape hatch = design bug' "$PASTE" && NUMS="types-hatch"
+run_test "paste does not restate roof numbers or .mdc bodies" "ok" "$NUMS"
 
 SK_OK=ok
 while IFS= read -r skill; do
