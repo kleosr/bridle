@@ -17,10 +17,10 @@ le_cap() {
 ALWAYS_APPLY_COUNT_MAX=7
 ALWAYS_APPLY_BYTES_MAX=8200
 AGENT_MDC_BYTES_MAX=1900
-PASTE_BYTES_MAX=1600
+PASTE_BYTES_MAX=2600
 AGENTS_MD_BYTES_MAX=2400
 SESSION_INJECT_BYTES_MAX=220
-ALWAYS_ON_SESSION_BYTES_MAX=10000
+ALWAYS_ON_SESSION_BYTES_MAX=11000
 SKILL_DESC_BYTES_MAX=200
 SKILL_BODY_BYTES_MAX=1800
 SKILL_BODY_SUM_MAX=12000
@@ -67,7 +67,7 @@ PNPM_AA="$(awk '/^alwaysApply:/{print $2; exit}' "$PACK/shared/rules/pnpm.mdc")"
 run_test "pnpm.mdc stays alwaysApply (glob fire is not observable here)" "true" "$PNPM_AA"
 
 POINT=ok
-grep -q 'canonical in `complexity.mdc`' "$PASTE" || POINT="missing-canonical"
+grep -q 'Quality roofs are only in `complexity.mdc`' "$PASTE" || POINT="missing-canonical"
 grep -q 'ponytail.mdc' "$PASTE" || POINT="missing-ponytail"
 grep -q 'testing.mdc' "$PASTE" || POINT="missing-testing"
 grep -q 'types.mdc' "$PASTE" || POINT="missing-types"

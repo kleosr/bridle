@@ -30,10 +30,10 @@ Other hooks emit `continue` / `permission` / one `followup_message`. Not always-
 | alwaysApply count | 7 |
 | alwaysApply bytes | 8200 |
 | `agent.mdc` | 1900 |
-| paste | 1600 |
+| paste | 2600 |
 | `AGENTS.md` | 2400 |
 | sessionStart inject | 220 |
-| paste + mdc + inject | 10000 |
+| paste + mdc + inject | 11000 |
 | skill description | 200 |
 | skill body | 1800 |
 | skill body sum | 12000 |
@@ -47,12 +47,12 @@ Always-on:
 
 | Surface | Before B | ~tok | After B | ~tok |
 |---------|----------|------|---------|------|
-| paste | 4324 | 1081 | 1314 | 329 |
+| paste | 4324 | 1081 | 2528 | 632 |
 | alwaysApply sum | 9334 | 2334 | 7727 | 1932 |
 | `agent.mdc` | 3040 | 760 | 1545 | 387 |
 | sessionStart inject | 2038 | 510 | 57 | 15 |
 | `AGENTS.md` | 2183 | 546 | 2244 | 561 |
-| **session always-on** | **15696** | **3924** | **9098** | **2275** |
+| **session always-on** | **15696** | **3924** | **10312** | **2578** |
 
 On-demand + handbook:
 

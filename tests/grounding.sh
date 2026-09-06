@@ -183,7 +183,7 @@ done
 run_test "AGENTS.md is a navigator (points to paste/audit; no nested adapters; no Halstead/CRAP)" "ok" "$AGENTS_SLIM"
 
 PASTE_SSOT=ok
-grep -q 'canonical in `complexity.mdc`' "$PACK/shared/rules/USER-RULES.paste.txt" || PASTE_SSOT="missing-canonical"
+grep -q 'Quality roofs are only in `complexity.mdc`' "$PACK/shared/rules/USER-RULES.paste.txt" || PASTE_SSOT="missing-canonical"
 run_test "paste names complexity.mdc as quality SSOT" "ok" "$PASTE_SSOT"
 
 rm -rf "$GR_TMP"

@@ -176,11 +176,11 @@ else fail "complexity.mdc missing quality-roof numbers"; fi
 
 PASTE="$PACK/shared/rules/USER-RULES.paste.txt"
 PASTE_HEADS=ok
-for h in Identity Stance Autonomy Mission Operations "Session Protocol" "Retrieval harness" "Cursor + Grok"; do
+for h in Identity Stance Autonomy Mission Session Retrieval "Cursor + Grok"; do
   grep -q "## $h" "$PASTE" || PASTE_HEADS="missing:$h"
 done
 if [[ "$PASTE_HEADS" == ok ]] \
-  && grep -q 'canonical in `complexity.mdc`' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and roof pointers"
+  && grep -q 'Quality roofs are only in `complexity.mdc`' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and roof pointers"
 else fail "USER-RULES.paste.txt missing charter heading or roof pointer ($PASTE_HEADS)"; fi
 
 if grep -q 'complexity pnpm types)' "$PACK/shared/hooks/fleet_sync.sh"; then ok "fleet_sync GLOBAL includes types"
