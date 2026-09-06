@@ -30,7 +30,7 @@ Stored in `shared/skills/` (not `.agents/skills`). Read `SKILL.md` only when the
 
 - **Verify (hooks/scripts/tests/rules):** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `bash scripts/doctor.sh` → `bash tests/run.sh`. Local fixtures; no approval. Docs-only: skip.
 - **Install:** `FORCE=1 bash scripts/install.sh` (global). `scripts/uninstall.sh` (fingerprinted). Platform: `MacOS/`, `Linux/`, `Windows/`. Fleet sync opt-in via empty-by-default `shared/config/scan.roots`.
-- **Docs:** `docs/README.md` (index). Living: ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit. Snapshots: `docs/_archive/`.
+- **Docs:** `docs/README.md` (index). Living: ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit, engineering-system, DECISIONS. Snapshots: `docs/_archive/`.
 
 ## Memory
 

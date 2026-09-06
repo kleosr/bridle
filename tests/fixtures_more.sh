@@ -41,6 +41,11 @@ for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/before_submi
 done
 run_test "event hooks LOC ≤ 80" "1" "$LOC_OK"
 
+WIN_STOP="$(grep -c "stop.sh" "$PACK/Windows/install.ps1" | tr -d ' ')"
+WIN_DIFF="$(grep -c "diff_gate.sh" "$PACK/Windows/install.ps1" | tr -d ' ')"
+run_test "Windows install.ps1 lists stop.sh" "1" "$WIN_STOP"
+run_test "Windows install.ps1 lists diff_gate.sh" "1" "$WIN_DIFF"
+
 RESULT="$(HERE="$PACK/shared/hooks" bash -c 'source "$0/lib/common.sh" && type emit_ask >/dev/null && type emit_allow >/dev/null && echo ok' "$PACK/shared/hooks" 2>/dev/null || echo fail)"
 run_test "lib/common.sh emit_ask available" "ok" "$RESULT"
 

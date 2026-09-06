@@ -117,6 +117,10 @@ if jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   ok "hooks.json is 5 native ./hooks/ events (stop bounded loop_limit 1)"
 else fail "hooks.json must be 5 events with ./hooks/ commands and stop.loop_limit 1"; fi
 
+if grep -q "stop.sh" "$PACK/Windows/install.ps1" && grep -q "diff_gate.sh" "$PACK/Windows/install.ps1"; then
+  ok "Windows install copies stop.sh + diff_gate.sh"
+else fail "Windows/install.ps1 missing stop.sh or diff_gate.sh (must match fleet_install.sh)"; fi
+
 if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
   fail "pack has repo-level hooks (never Lane-A into this pack)"
 else ok "no repo-level hooks in pack (local global-only mode)"; fi

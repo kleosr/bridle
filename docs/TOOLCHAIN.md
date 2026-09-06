@@ -1,57 +1,23 @@
-# Toolchain: Bash & jq Validation
+# Toolchain
 
-No Rust. No Cargo. No Python. Mechanical checks are Bash.
+Bash + jq. No Rust. No pack Python.
 
-## Prerequisites
-
-- `bash` (v3.2+ — stock macOS bash works; hooks avoid GNU-only utils: no `flock`, `mapfile`, `realpath`, `stat -c`, awk `\<` boundaries)
-- `jq` (JSON parsing in hooks; macOS: `brew install jq`)
-- Cursor IDE (runs the hooks)
-
-## Syntax check
+Need `bash` 3.2+ (no `flock`, `mapfile`, `realpath`, `stat -c`, awk `\<`) and `jq`.
 
 ```bash
-chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh
-
-bash -n shared/hooks/session_start.sh
-bash -n shared/hooks/before_submit_prompt.sh
-bash -n shared/hooks/before_shell.sh
-bash -n shared/hooks/before_read_file.sh
-bash -n shared/hooks/stop.sh
-bash -n shared/hooks/fleet_sync.sh
-```
-
-## Smoke test
-
-```bash
-echo '{"prompt": "test code", "hook_event_name": "beforeSubmitPrompt"}' \
-  | bash shared/hooks/before_submit_prompt.sh
-```
-
-Expect JSON with Cursor-native keys: `continue` from beforeSubmitPrompt, `additional_context` from sessionStart, `permission` from beforeShellExecution / beforeReadFile, `{}` or `followup_message` from stop. `beforeSubmitPrompt.failClosed` must be false. `beforeReadFile.failClosed` is true. `stop.loop_limit` is 1.
-
-## Doctor + Tests
-
-```bash
-bash scripts/doctor.sh    # environment + repo health checks
-bash tests/run.sh         # syntax + JSON + hook fixtures
-```
-
-## Fleet install / sync
-
-```bash
+chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh
+bash -n shared/hooks/session_start.sh shared/hooks/before_submit_prompt.sh \
+  shared/hooks/before_shell.sh shared/hooks/before_read_file.sh \
+  shared/hooks/stop.sh shared/hooks/fleet_sync.sh
+bash scripts/doctor.sh
+bash tests/run.sh
 FORCE=1 bash scripts/install.sh
-FORCE=1 bash shared/hooks/fleet_sync.sh verify
 ```
 
-Installs `~/.cursor` hooks+rules+skills+agents (global single registration layer). `hooks.json` commands stay `./hooks/*.sh` (user-hook cwd is `~/.cursor`). `sync` is opt-in (`shared/config/scan.roots` empty by default) and does **not** install or remove those projects’ `.cursor/hooks`. User hooks spawn with cwd = `~/.cursor`.
+Smoke: `echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' | bash shared/hooks/before_submit_prompt.sh`
 
-## Size roofs
+Expect: `continue` (submit), `additional_context` (sessionStart), `permission` (shell/read), `{}` or `followup_message` (stop). Submit `failClosed` false. Read `failClosed` true. `stop.loop_limit` 1.
 
-Keep each **registered** event hook under 80 LOC (`session_start`, `before_submit_prompt`, `before_shell`, `before_read_file`, `stop`). Core logic lives in `shared/hooks/lib/`. `fleet_sync.sh` is install tooling, not an event hook. `beforeReadFile` is failClosed; the other four are not.
+Event hooks ≤80 LOC. Policy: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`. LOC 300 is `ponytail.mdc`, not a hook. SSOT: `SECURITY.md`. Doctor uses an isolated HOME.
 
-Wired policy: `policy/secret_paths.ere` (`before_read_file.sh` + `before_shell.sh` via `grep -f`). `policy/secret_tokens.ere` (`before_submit_prompt.sh`). Destructive, Shell source-write, and cyclomatic-lint disable lists live inline in `lib/shell_gate.sh`. Ponytail churn (unrequested rewrite of a tracked src file >50% / ≥80 LOC, mass reindent, duplicate helper) lives inline in `lib/diff_gate.sh`. The 300 LOC roof is law in `ponytail.mdc` (never 500), not a hook trigger. Human-readable SSOT: `SECURITY.md`. `bash scripts/doctor.sh` verifies the pack using an **isolated fixture HOME** (passes in CI/agent env without a live `~/.cursor` install). When your machine has a kleosrules install, doctor also reports live hook checksum drift.
-
-**Uninstall:** `bash scripts/uninstall.sh` — removes fingerprinted kleosrules artifacts from `~/.cursor` only.
-
-**Audit:** `docs/quality-roofs-audit.md` (roof numbers); `docs/token-budget.md` (always-on caps); `docs/engineering-system.md` (GROUND→STOP). Snapshots: `docs/_archive/`.
+Uninstall: `bash scripts/uninstall.sh`. Caps: `docs/token-budget.md`. Roofs: `docs/quality-roofs-audit.md`.

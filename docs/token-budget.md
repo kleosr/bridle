@@ -21,7 +21,7 @@ Other hooks emit `continue` / `permission` / one `followup_message`. Not always-
 | `SKILL.md` body | task match | ≤ 1800 B; sum ≤ 12000 |
 | hunter / cut / prove | invoke | ≤ 2500 / 2300 / 2300 |
 | `SOURCE.md` | stuck on design | not always-on |
-| `docs/_archive/` | audit trail | not installed, not injected |
+| living `docs/*.md` | Read when pointed | sum ≤ 16000; `_archive/` excluded |
 
 ## Caps
 
@@ -40,6 +40,7 @@ Other hooks emit `continue` / `permission` / one `followup_message`. Not always-
 | skill body sum | 12000 |
 | hunter / cut / prove | 2500 / 2300 / 2300 |
 | README | 3200 |
+| living docs | 16000 |
 
 ## Before → after (master 2026-09-05 → this PR)
 
@@ -51,7 +52,7 @@ Always-on:
 | alwaysApply sum | 9334 | 2334 | 7727 | 1932 |
 | `agent.mdc` | 3040 | 760 | 1545 | 387 |
 | sessionStart inject | 2038 | 510 | 57 | 15 |
-| `AGENTS.md` | 2183 | 546 | 2213 | 554 |
+| `AGENTS.md` | 2183 | 546 | 2244 | 561 |
 | **session always-on** | **15696** | **3924** | **11597** | **2900** |
 
 On-demand + handbook:
@@ -61,7 +62,7 @@ On-demand + handbook:
 | 10 skill bodies | 21988 | 10478 |
 | hunter + cut + prove | 15314 | 6140 |
 | README | 9555 | 2574 |
-| living `docs/*.md` | 83557 | ~25k + `_archive/` |
+| living `docs/*.md` | 83557 | 13256 + `_archive/` |
 
 ## Layout
 

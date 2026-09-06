@@ -9,10 +9,10 @@ Map. Do not paste this file into Task briefs.
 | `ARCHITECTURE.md` | Five layers, steel vs ask |
 | `CURATOR.md` | NOW.md + grounding before Write |
 | `TOOLCHAIN.md` | doctor / tests / hook LOC |
-| `token-budget.md` | Always-on + skill/agent caps |
+| `token-budget.md` | Always-on + skill/agent/docs caps |
 | `quality-roofs-audit.md` | Roof numbers → four `.mdc` files |
 | `engineering-system.md` | GROUND → STOP |
-| `DECISIONS/hooks-architecture.md` | ADR |
+| `DECISIONS/hooks-architecture.md` | ADR (current) |
 
 ## Archive
 

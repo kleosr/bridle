@@ -29,6 +29,7 @@ HUNTER_BYTES_MAX=2500
 CUT_BYTES_MAX=2300
 PROVE_BYTES_MAX=2300
 README_BYTES_MAX=3200
+LIVING_DOCS_BYTES_MAX=16000
 
 COUNT=0
 MDC_BYTES=0
@@ -142,12 +143,37 @@ run_test "cut.md bytes ≤ $CUT_BYTES_MAX" "ok" "$(le_cap "$CUT_B" "$CUT_BYTES_M
 run_test "prove.md bytes ≤ $PROVE_BYTES_MAX" "ok" "$(le_cap "$PROVE_B" "$PROVE_BYTES_MAX")"
 run_test "README.md bytes ≤ $README_BYTES_MAX" "ok" "$(le_cap "$README_B" "$README_BYTES_MAX")"
 
+LIVING_B=0
+while IFS= read -r f; do
+  [[ -z "$f" ]] && continue
+  n="$(bytes_of "$f")"
+  LIVING_B=$((LIVING_B + n))
+  echo "  living doc ${f#$PACK/}  $n B  ~$(tok_est "$n") tok"
+done < <(find "$PACK/docs" -name '*.md' -not -path '*/_archive/*' | sort)
+echo "  living docs sum     $LIVING_B B  ~$(tok_est "$LIVING_B") tok"
+run_test "living docs bytes ≤ $LIVING_DOCS_BYTES_MAX" "ok" "$(le_cap "$LIVING_B" "$LIVING_DOCS_BYTES_MAX")"
+
 LAYOUT=ok
 [[ -f "$PACK/docs/_archive/README.md" ]] || LAYOUT="missing-archive-index"
 [[ -f "$PACK/docs/README.md" ]] || LAYOUT="missing-docs-index"
+[[ -f "$PACK/docs/_archive/hooks-architecture-2026-09.md" ]] || LAYOUT="missing-adr-archive"
 [[ -f "$PACK/docs/engineering-rules-audit.md" ]] && LAYOUT="audit-not-archived"
 [[ -f "$PACK/docs/research/agent-instructions-research.md" ]] && LAYOUT="research-not-archived"
+[[ -f "$PACK/tests/fixtures/preToolUse_shell_destructive.json" ]] && LAYOUT="legacy-preToolUse-fixture"
+[[ -f "$PACK/tests/fixtures/beforeShell_destructive.json" ]] || LAYOUT="missing-beforeShell-fixture"
 run_test "docs layout: living index + _archive, old audit paths gone" "ok" "$LAYOUT"
+
+ROOF_MAP=ok
+grep -q 'Never above \*\*22\*\*' "$PACK/docs/quality-roofs-audit.md" || ROOF_MAP="missing-22"
+grep -q 'Never \*\*500\*\*' "$PACK/docs/quality-roofs-audit.md" || ROOF_MAP="missing-500"
+grep -q 'un-narrowed' "$PACK/docs/quality-roofs-audit.md" || ROOF_MAP="missing-unknown"
+grep -q 'AlwaysApply count is \*\*7\*\*' "$PACK/docs/quality-roofs-audit.md" || ROOF_MAP="missing-7"
+run_test "quality-roofs-audit keeps the roof number map" "ok" "$ROOF_MAP"
+
+WIN_OK=ok
+grep -q "stop.sh" "$PACK/Windows/install.ps1" || WIN_OK="missing-stop"
+grep -q "diff_gate.sh" "$PACK/Windows/install.ps1" || WIN_OK="missing-diff-gate"
+run_test "Windows install copies stop.sh + diff_gate.sh" "ok" "$WIN_OK"
 
 SOURCE_OK=ok
 [[ -f "$PACK/shared/skills/premium-ui-craft/SOURCE.md" ]] || SOURCE_OK="missing-premium-SOURCE"

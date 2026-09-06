@@ -24,10 +24,11 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — 261 PASS, 0 FAIL (2026-09-06; full lean rewrite + repo layout)
-- `bash scripts/doctor.sh` — ALL CHECKS PASSED
+- `bash tests/run.sh` — recount after living-docs + Windows stop parity (was 261 PASS)
+- `bash scripts/doctor.sh` — run with this revision
 - Always-on: `docs/token-budget.md` (session ~11.6kB / ~2.9k tok; was ~15.7kB / ~3.9k tok)
-- On-demand: skill bodies 22k→10k; hunter/cut/prove 15k→6k. Docs: living index + `_archive/`.
+- On-demand: skill bodies 22k→10k; hunter/cut/prove 15k→6k. Living docs 84k→13k (`_archive/`).
+- Windows `install.ps1` copies `stop.sh` + `diff_gate.sh` (same set as `fleet_install.sh`).
 - Audit: `docs/quality-roofs-audit.md`; article https://x.com/i/article/2095989703967125509
 
 ## Next
