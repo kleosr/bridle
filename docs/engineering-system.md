@@ -31,6 +31,7 @@ One loop. Snapshot: `docs/_archive/runtime-grounding-audit.md`.
 | repo with NOW.md | path (Read on demand) | `session_start.sh` |
 | this pack | root `AGENTS.md` | workspace instructions |
 | `*.sql` / schema | `postgres.mdc` | glob |
+| Supabase paths | `supabase.mdc` | glob |
 | Next / Vite / Astro | matching glob `.mdc` | glob |
 | never auto | SKILL.md, hunter/cut/prove | on demand |
 | each Shell / Read | `before_shell.sh` / `before_read_file.sh` | registered |

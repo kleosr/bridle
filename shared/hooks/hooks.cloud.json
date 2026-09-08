@@ -5,7 +5,7 @@
       {
         "command": ".cursor/hooks/before_shell.sh",
         "timeout": 30,
-        "failClosed": false
+        "failClosed": true
       }
     ],
     "beforeReadFile": [
@@ -17,7 +17,7 @@
     "beforeSubmitPrompt": [
       {
         "command": ".cursor/hooks/before_submit_prompt.sh",
-        "failClosed": false
+        "failClosed": true
       }
     ]
   }

@@ -88,7 +88,7 @@ RESULT="$(echo '{"prompt":"key ntn_abcdefghijklmnopqrstuvwxyz0123","hook_event_n
 run_test "before_submit blocks Notion ntn token" "false" "$RESULT"
 
 SUBMIT_FC="$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/shared/hooks/hooks.json")"
-run_test "beforeSubmitPrompt failClosed is false" "false" "$SUBMIT_FC"
+run_test "beforeSubmitPrompt failClosed is true" "true" "$SUBMIT_FC"
 
 CLOUD_SHELL="$(jq -e '.hooks.beforeShellExecution' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null && echo ok || echo no)"
 run_test "hooks.cloud.json registers beforeShellExecution" "ok" "$CLOUD_SHELL"
@@ -97,7 +97,7 @@ READ_FC="$(jq -r '.hooks.beforeReadFile[0].failClosed' "$PACK/shared/hooks/hooks
 run_test "beforeReadFile failClosed is true" "true" "$READ_FC"
 
 SHELL_FC="$(jq -r '.hooks.beforeShellExecution[0].failClosed' "$PACK/shared/hooks/hooks.json")"
-run_test "beforeShellExecution failClosed is false" "false" "$SHELL_FC"
+run_test "beforeShellExecution failClosed is true" "true" "$SHELL_FC"
 
 RESULT="$(echo '{"file_path":"/tmp/x.pem"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "allow"')"
 run_test "before_read_file blocks pem" "deny" "$RESULT"
@@ -105,11 +105,11 @@ run_test "before_read_file blocks pem" "deny" "$RESULT"
 RESULT="$(echo '{"file_path":"/home/user/.env","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "allow"')"
 run_test "before_read_file blocks .env from model context" "deny" "$RESULT"
 
-RESULT="$(echo '{"file_path":"/home/user/src/app.ts","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r 'if . == {} then "allow" else (.permission // "allow") end')"
+RESULT="$(echo '{"file_path":"/home/user/src/app.ts","hook_event_name":"beforeReadFile"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "before_read_file allows normal source" "allow" "$RESULT"
 
 CLOUD_FC="$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/shared/hooks/hooks.cloud.json")"
-run_test "cloud beforeSubmitPrompt failClosed is false" "false" "$CLOUD_FC"
+run_test "cloud beforeSubmitPrompt failClosed is true" "true" "$CLOUD_FC"
 
 FS_HOME2="$(mktemp -d)"
 TMP_REPO="$(mktemp -d)"

@@ -8,13 +8,13 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 
 | Control | Event | Fail closed | Notes |
 |---|---|---|---|
-| Secret tokens in the user prompt | `beforeSubmitPrompt` | no | `policy/secret_tokens.ere` (word-bounded prefixes). Parser fail → `continue: false`. Hook crash still fail-open. |
-| Secret **paths** on Read | `beforeReadFile` | **yes** | `policy/secret_paths.ere`. Timeout 10s. Missing policy or non-JSON → deny. `.env.example` is readable. |
-| Secret paths / `.env` / `git show` secrets | `beforeShellExecution` | no | `git commit` / `gh pr` / `gh issue` skip path scan (PR body false hits). |
-| Destructive git/disk/SQL | `beforeShellExecution` | no | deny |
-| Infra/DB mutation | `beforeShellExecution` | no | `ask` |
-| Cyclomatic lint disable | `beforeShellExecution` | no | deny |
-| Shell write of source | `beforeShellExecution` | no | deny |
+| Secret tokens in the user prompt | `beforeSubmitPrompt` | **yes** | `policy/secret_tokens.ere` (word-bounded prefixes). Missing policy, parser fail, or hook crash → `continue: false`. |
+| Secret **paths** on Read | `beforeReadFile` | **yes** | `policy/secret_paths.ere` (case-insensitive). Timeout 10s. Missing policy or non-JSON → deny. Else `{"permission":"allow"}`. `.env.example` is readable. |
+| Secret paths / `.env` / `git show` secrets | `beforeShellExecution` | **yes** | `git commit` / `gh pr` / `gh issue` skip prose path scan. `$(` / `-F` / `--body-file` on secret names deny. Case-insensitive. Non-JSON or non-string command → deny. |
+| Destructive git/disk/SQL | `beforeShellExecution` | **yes** | deny |
+| Infra/DB mutation | `beforeShellExecution` | **yes** | `ask` (timeout/crash still deny) |
+| Cyclomatic lint disable | `beforeShellExecution` | **yes** | deny |
+| Shell write of source | `beforeShellExecution` | **yes** | deny |
 | `NOW.md` token blob | `sessionStart` | no | skip inject |
 | Ponytail diff churn (unrequested rewrite, mass reindent) | `stop` | no | one `followup_message`, `loop_limit: 1`. Cannot block completion. Not a security control. |
 
@@ -57,7 +57,7 @@ Lifecycle: do not run `curl \| sh`, `wget \| sh`, or a package `postinstall` fro
 | Prompt / `NOW.md` | No live keys, JWTs, `-----BEGIN PRIVATE KEY-----`. |
 | Supply chain | pnpm table above. `hunter` flags new install scripts. |
 | Injection | SQL parameterized; no `eval`, no `innerHTML` with untrusted input, no Shell interpolation of untrusted strings. |
-| Authz | Tenant data behind `auth.uid()` / RLS (`postgres.mdc`). No IDOR via unchecked ids. |
+| Authz | Tenant data behind `auth.uid()` / RLS when the repo is Supabase (`supabase.mdc`). No IDOR via unchecked ids. |
 | XSS | Framework escaping. No `dangerouslySetInnerHTML` with untrusted HTML. |
 | CSRF / cookies | Cookie-auth mutations need origin/CSRF as the app already does; do not strip it. |
 | SSRF / path traversal | Do not pass user URLs/paths to fetch/fs without an allowlist. |

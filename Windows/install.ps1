@@ -23,7 +23,9 @@ Copy-Item "$src\policy\*" "$HooksD\policy" -Force
 Copy-Item (Join-Path $PSScriptRoot 'hooks\bash-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
-foreach ($name in 'ponytail', 'agent', 'testing', 'vibe', 'postgres', 'next', 'vite', 'astro', 'complexity', 'pnpm', 'types') {
+Get-Content (Join-Path $Pack 'shared\config\rules.global.txt') | ForEach-Object {
+  $name = $_.Trim()
+  if (-not $name -or $name.StartsWith('#')) { return }
   Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
 }
 Get-Content (Join-Path $Pack 'shared\config\retired.txt') | ForEach-Object {

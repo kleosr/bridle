@@ -1,6 +1,6 @@
 ---
 description: "Next.js roof. Bundled docs for THIS next version. App vs Pages from the tree."
-globs: ["next.config.*","middleware.ts","middleware.js","**/app/**/*.{ts,tsx,js,jsx}","**/pages/**/*.{ts,tsx,js,jsx}","**/src/app/**/*.{ts,tsx,js,jsx}","**/src/pages/**/*.{ts,tsx,js,jsx}"]
+globs: next.config.*, middleware.ts, middleware.js, **/app/**, **/pages/**, **/src/app/**, **/src/pages/**
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 
 This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos: not the repo root if `next` is nested). Heed deprecations.
 
-If that folder is missing: Next <16.2. Use project `AGENTS.md` / `.next-docs/` or `npx @next/codemod@canary agents-md`. Do not guess APIs.
+If that folder is missing: Next <16.2. Use project `AGENTS.md` / `.next-docs/`, or ask for the installed version. Do not guess APIs. Do not run a codemod unless the user asked.
 
 Detect router from the tree: `app/` → App Router only. `pages/` without `app/` → Pages only. Never mix.
 

@@ -13,8 +13,8 @@ if [[ ! -f "$POL" ]]; then
   exit 0
 fi
 FILE_PATH="$(posix_slashes "$FILE_PATH")"
-if [[ -n "$FILE_PATH" ]] && printf '%s' "$FILE_PATH" | grep -qE -f "$POL"; then
+if [[ -n "$FILE_PATH" ]] && printf '%s' "$FILE_PATH" | grep -qiE -f "$POL"; then
   emit_deny "AUTONOMY BLOCK: reading sensitive file '$FILE_PATH' blocked to protect secrets from model context. Read it yourself if needed."
   exit 0
 fi
-emit_quiet
+emit_allow

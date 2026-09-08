@@ -8,5 +8,4 @@ design-stack
 landing-page-design
 premium-ui-craft
 redesign-existing-projects
-ux-web-research
 writing-pr

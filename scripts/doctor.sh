@@ -114,9 +114,16 @@ fi
 
 if jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.stop[0].command == "./hooks/stop.sh" and .hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1; then
-  ok "hooks.json is 5 native ./hooks/ events (stop bounded loop_limit 1)"
-else fail "hooks.json must be 5 events with ./hooks/ commands and stop.loop_limit 1"; fi
+  && jq -e '.hooks.stop[0].command == "./hooks/stop.sh" and .hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.cloud.json" >/dev/null 2>&1; then
+  ok "hooks.json is 5 native ./hooks/ events (stop bounded; security failClosed)"
+else fail "hooks.json must be 5 events with ./hooks/ commands, stop.loop_limit 1, and security failClosed"; fi
+
+if jq empty "$PACK/shared/config/manifest.json" >/dev/null 2>&1 \
+  && [[ -f "$HOOKS_DIR/lib/hooks_json.jq" && -f "$HOOKS_DIR/lib/hooks_json.sh" ]]; then
+  ok "manifest.json + hooks_json merge/strip present"
+else fail "manifest.json or hooks_json merge helpers missing"; fi
 
 if grep -q "stop.sh" "$PACK/Windows/install.ps1" && grep -q "diff_gate.sh" "$PACK/Windows/install.ps1"; then
   ok "Windows install copies stop.sh + diff_gate.sh"
@@ -149,6 +156,7 @@ else fail "unregistered event scripts still on disk"; fi
 LAW_STALE=""
 for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
   "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
+  "$PACK/shared/rules/supabase.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
   "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/testing.mdc" \
@@ -188,8 +196,11 @@ if [[ "$PASTE_HEADS" == ok ]] \
   && grep -q 'Quality roofs are only in `complexity.mdc`' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and roof pointers"
 else fail "USER-RULES.paste.txt missing charter heading or roof pointer ($PASTE_HEADS)"; fi
 
-if grep -q 'complexity pnpm types)' "$PACK/shared/hooks/fleet_sync.sh"; then ok "fleet_sync GLOBAL includes types"
-else fail "fleet_sync GLOBAL missing types"; fi
+if grep -q '^types$' "$PACK/shared/config/rules.global.txt" \
+  && grep -q '^complexity$' "$PACK/shared/config/rules.global.txt" \
+  && grep -q '^pnpm$' "$PACK/shared/config/rules.global.txt" \
+  && grep -q '^supabase$' "$PACK/shared/config/rules.global.txt"; then ok "rules.global.txt includes types, complexity, pnpm, supabase"
+else fail "rules.global.txt missing types, complexity, pnpm, or supabase"; fi
 
 if [[ ! -f "$PACK/shared/rules/vernacular.mdc" && ! -d "$PACK/shared/skills/vernacular" ]]; then ok "vernacular retired"
 else fail "vernacular.mdc or skills/vernacular still on disk"; fi
@@ -237,6 +248,36 @@ if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOM
     echo "[warn] no shasum/sha256sum — skipping live hook checksum verification"
   fi
 fi
+
+REF_BAD=""
+# shellcheck source=shared/hooks/lib/fleet_scan.sh
+source "$PACK/shared/hooks/lib/fleet_scan.sh"
+while IFS= read -r name; do
+  [[ -z "$name" ]] && continue
+  [[ -f "$PACK/shared/rules/${name}.mdc" ]] || REF_BAD="$REF_BAD missing-rule:$name"
+done < <(load_lines "$PACK/shared/config/rules.global.txt")
+while IFS= read -r skill; do
+  [[ -z "$skill" ]] && continue
+  [[ -f "$PACK/shared/skills/$skill/SKILL.md" ]] || REF_BAD="$REF_BAD missing-skill:$skill"
+done < <(load_lines "$PACK/shared/config/skills.txt")
+while IFS= read -r skill; do
+  [[ -z "$skill" ]] && continue
+  [[ -d "$PACK/shared/skills/$skill" ]] && REF_BAD="$REF_BAD retired-present:$skill"
+done < <(load_lines "$PACK/shared/config/retired-skills.txt")
+if grep -q 'npx @next/codemod' "$PACK/shared/rules/next.mdc"; then REF_BAD="$REF_BAD next-npx"; fi
+if grep -q 'supabase-postgres-best-practices' "$PACK/shared/rules/postgres.mdc"; then REF_BAD="$REF_BAD pg-supabase-skill"; fi
+if grep -q 'vercel-react-best-practices' "$PACK/shared/rules/vibe.mdc" \
+  && ! grep -qiE 'if (that skill is )?installed|if present' "$PACK/shared/rules/vibe.mdc"; then
+  REF_BAD="$REF_BAD vibe-undeclared"
+fi
+if grep -qE 'rm -rf "\$HOME_C/hooks"' "$PACK/scripts/uninstall.sh" \
+  || grep -qE 'rm -f "\$HOME_C/hooks.json"' "$PACK/scripts/uninstall.sh"; then
+  fail "uninstall.sh must not wipe ~/.cursor/hooks.json or hooks/ wholesale"
+else ok "uninstall.sh does not wholesale-delete hooks.json or hooks/"
+fi
+
+if [[ -z "$REF_BAD" ]]; then ok "rule/skill references resolve; optional deps are conditional"
+else fail "unresolved or undeclared references:$REF_BAD"; fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
