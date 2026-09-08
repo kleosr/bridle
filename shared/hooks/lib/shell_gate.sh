@@ -49,19 +49,36 @@ gate_complexity_bypass() {
 
 gate_shell_secrets() {
   local cmd="$1" pol="${HERE}/policy/secret_paths.ere" hit=0
-  shell_is_git_gh_body "$cmd" && return 1
+  local secret_name='(\.env|id_rsa|id_ed25519|id_ecdsa|\.pem|\.key|credentials\.json)'
+  if shell_is_git_gh_body "$cmd"; then
+    if echo "$cmd" | grep -qE '\$\(|`'; then
+      if echo "$cmd" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qiE -f "$pol"; }; then
+        emit_deny "AUTONOMY BLOCK: shell must not read secret paths."
+        return 0
+      fi
+      emit_ask "Command substitution in git/gh may read secrets. Approve if intended."
+      return 0
+    fi
+    if echo "$cmd" | grep -qiE '(^|[[:space:]])(-F|--file|--body-file|--notes-file)[[:space:]=]'; then
+      if echo "$cmd" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qiE -f "$pol"; }; then
+        emit_deny "AUTONOMY BLOCK: shell must not read secret paths."
+        return 0
+      fi
+    fi
+    return 1
+  fi
   local env_seed='^[[:space:]]*cp[[:space:]]+\.env\.(example|sample|template)[[:space:]]+\.env[[:space:]]*$'
   local env_tok="(^|[[:space:]=(<@]|${Q})(\./)?\.env(rc|\.(local|development|dev|production|prod|staging|stage|test|ci|secret|secrets)(\.[^[:space:]\"';|&)]*)?)?${TERM}"
   local readers='(cat|head|tail|less|more|bat|source|\.|grep|rg|awk|sed|cut|xxd|od|base64|openssl|strings|scp|cp)'
   local key_mat="${WORD}${readers}[[:space:]]+${SEG}([^[:space:]\"']+\.(pem|key|p12|pfx)|[^[:space:]\"']*id_(rsa|ed25519|ecdsa))(${Q}|[[:space:];|&]|$)"
   local git_leak="${WORD}git[[:space:]]+(show|cat-file|checkout|restore|archive)[[:space:]]${SEG}(\.env|\.pem|\.key|id_rsa|id_ed25519|credentials)"
-  if [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qE -f "$pol"; then hit=1
-  elif echo "$cmd" | grep -qE "$env_tok" && ! echo "$cmd" | grep -qE "$env_seed"; then hit=1
+  if [[ -f "$pol" ]] && printf '%s' "$cmd" | grep -qiE -f "$pol"; then hit=1
+  elif echo "$cmd" | grep -qiE "$env_tok" && ! echo "$cmd" | grep -qE "$env_seed"; then hit=1
   elif echo "$cmd" | grep -qiE "$key_mat"; then hit=1
   elif echo "$cmd" | grep -qiE "$git_leak"; then hit=1
   fi
   [[ "$hit" -eq 0 ]] && return 1
-  emit_deny "AUTONOMY BLOCK: shell must not read secret paths. CMD: ${cmd:0:120}"
+  emit_deny "AUTONOMY BLOCK: shell must not read secret paths."
   return 0
 }
 

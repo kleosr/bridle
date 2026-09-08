@@ -1,7 +1,6 @@
 # Domain code — `domains/` trees only
 
-Apply only under a `domains/` folder (e.g. `backend/src/domains/**`).
-Full DDD / event-modeling is required here — the core "no unrequested abstractions" rule does not exempt you.
+Apply only under a `domains/` folder (e.g. `backend/src/domains/**`), and only when the repo already follows this model or the task needs domain invariants. A directory name alone is not a license to add DDD.
 Never import this ceremony into scripts, CLIs, or one-off tools.
 
 ## Naming (strict)

@@ -2,18 +2,15 @@
 
 ## Now
 
-Session file is `NOW.md`. Security SSOT is `SECURITY.md`. Skill `/now`.
-Caps live in `complexity.mdc` / `ponytail.mdc` / `testing.mdc` / `types.mdc`. Paste points at those files.
-Ground the files you will change. Proof is the command this change can break.
+Security hooks fail closed. Uninstall is manifest-owned (preserves other `hooks.json` keys). `sessionStart` emits the NOW.md path only. `stop` is an advisory follow-up.
 
 ## State
 
-Five events: sessionStart, beforeSubmitPrompt, beforeShellExecution, beforeReadFile, stop. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
-Always-on rules: agent, ponytail, pnpm, complexity, vibe, testing, types (7). Path-scoped: next, vite, astro, postgres.
-`session_start.sh` points at NOW.md (path only). Token-like NOW → quiet. Plan mode → quiet.
-`stop.sh` + `lib/diff_gate.sh`: unrequested rewrite (>50% of tracked src file, ≥80 LOC) + mass reindent + duplicate helper. One `followup_message`, `loop_limit: 1`. Cloud json unchanged (no stop).
-`.env.example` readable. Token prefixes word-bounded. `beforeReadFile` denies missing policy / non-JSON.
-Windows host is Git Bash + jq (`Windows/hooks/bash-shim.ps1`, UTF-8 stdin). WSL is fallback only. `scripts/install.sh` refuses MINGW.
+Five events. Local `~/.cursor` install. `scan.roots` empty. No preToolUse.
+Always-on: 7. Path-scoped: next, vite, astro, postgres, supabase.
+GLOBAL SSOT: `shared/config/rules.global.txt`. Ownership: `shared/config/manifest.json`.
+`beforeSubmitPrompt` / `beforeShellExecution` / `beforeReadFile` failClosed. Malformed shell payload denies.
+Windows: Git Bash + jq shim; install merges hooks.json. `scripts/install.sh` refuses MINGW.
 
 ## Limits
 
@@ -22,26 +19,22 @@ Do not invent a new rule system. Do not thin charter headings, hook steel, or ro
 No nested `AGENTS.md` under `shared/` (root file wins; adapters re-attached on every Read).
 Do not copy `stop` into `hooks.cloud.json` until a cloud turn is seen to receive `followup_message`.
 Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
+Do not remove the User Rules charter from the base pack unless Mario edits User Rules.
 
 ## Proof
 
-- `bash tests/run.sh` — 272 PASS, 0 FAIL (2026-09-07; Git Bash + jq on this machine)
-- `bash scripts/doctor.sh` — ALL CHECKS PASSED (live checksums match)
-- `powershell -File Windows/install.ps1` — `[done] ... Windows via Git Bash + jq shim` (no WSL)
-- Live `beforeReadFile` allowed `~/.cursor/hooks.json` through `bash-shim.ps1` (UTF-8 stdin)
-- `winget install jqlang.jq` — jq 1.8.2 on this machine
+- `bash tests/run.sh` — 304 PASS, 0 FAIL (2026-09-08; Git Bash + jq)
+- `bash scripts/doctor.sh` — ALL CHECKS PASSED
+- Live `~/.cursor` reinstalled via `Windows/install.ps1` (checksums match)
 
 ## Next
 
-This Cursor has a live global install (`~/.cursor` rules + skills + hunter/cut/prove + `/writing-pr` + five hooks). User Rules paste is still Settings-only.
-Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
-Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
-GitHub repo description still says HANDOFF (API is read-only here).
+Charter/always-on reduction and core/fleet split stay out of scope unless Mario edits User Rules. Observe failClosed + merge install in a real Cursor session.
 
 ## Archived
 
-2026-09-06: full pack lean — skills/agents rewritten, docs/_archive, SOURCE.md, budget+install caps. Tests 266 PASS.
-2026-09-05: Astra slim (AGENTS.md navigator). Then deleted nested `shared/*/AGENTS.md` + `docs/astra-slim.md`.
+2026-09-07: 272 PASS; factory local; Windows Git Bash + jq.
+2026-09-06: full pack lean. Tests 266 PASS.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:

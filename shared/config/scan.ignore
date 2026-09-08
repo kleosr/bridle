@@ -1,4 +1,2 @@
 # Basename or path substring to skip during discovery (one per line).
-rules
-RECUPERADOS_PDF
 node_modules

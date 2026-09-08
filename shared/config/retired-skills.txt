@@ -6,3 +6,4 @@ spec-kit
 speckit-adhd
 vernacular
 session-handoff
+ux-web-research
