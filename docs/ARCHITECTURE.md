@@ -24,7 +24,7 @@ Five layers. Fix the layer that failed.
 
 ## Runtime
 
-Event hooks ≤80 LOC in `shared/hooks/`. Policy in `lib/` + `policy/*.ere`. Install: GLOBAL `.mdc` → `~/.cursor/rules`. Platforms: `MacOS/`, `Linux/`, `Windows/` (WSL shim). Registration: `~/.cursor/hooks.json`, commands `./hooks/*.sh`. `sync` is opt-in.
+Event hooks ≤80 LOC in `shared/hooks/`. Policy in `lib/` + `policy/*.ere`. Install: GLOBAL `.mdc` → `~/.cursor/rules`. Platforms: `MacOS/`, `Linux/`, `Windows/` (Git Bash shim; WSL fallback). Registration: `~/.cursor/hooks.json`, commands `./hooks/*.sh`. `sync` is opt-in.
 
 ## Steel vs ask
 

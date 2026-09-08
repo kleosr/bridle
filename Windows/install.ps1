@@ -1,15 +1,14 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'lib\host.ps1')
 
-$Pack   = Split-Path -Parent $PSScriptRoot
-$HomeC  = Join-Path $env:USERPROFILE '.cursor'
+$Pack = Split-Path -Parent $PSScriptRoot
+$HomeC = Join-Path $env:USERPROFILE '.cursor'
 $HooksD = Join-Path $HomeC 'hooks'
 
-if (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
-  throw 'WSL not found. Install first: wsl --install'
+if (-not (Get-GitBashPath) -and -not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
+  throw 'Install Git for Windows (https://git-scm.com) or WSL. Then: winget install jqlang.jq'
 }
-wsl.exe bash -lc 'command -v jq >/dev/null'
-if ($LASTEXITCODE -ne 0) { throw 'jq missing inside WSL. Run: wsl sudo apt-get install jq' }
 
 $src = Join-Path $Pack 'shared\hooks'
 New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
@@ -21,7 +20,7 @@ foreach ($s in 'common.sh', 'shell_gate.sh', 'shell_fleet.sh', 'diff_gate.sh') {
   Copy-Item (Join-Path $src "lib\$s") (Join-Path $HooksD 'lib') -Force
 }
 Copy-Item "$src\policy\*" "$HooksD\policy" -Force
-Copy-Item (Join-Path $PSScriptRoot 'hooks\wsl-shim.ps1') $HooksD -Force
+Copy-Item (Join-Path $PSScriptRoot 'hooks\bash-shim.ps1') $HooksD -Force
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
 foreach ($name in 'ponytail', 'agent', 'testing', 'vibe', 'postgres', 'next', 'vite', 'astro', 'complexity', 'pnpm', 'types') {
@@ -60,17 +59,11 @@ foreach ($a in 'hunter', 'cut', 'prove') {
   Copy-Item (Join-Path $Pack "shared\agents\$a.md") (Join-Path $HomeC "agents\$a.md") -Force
 }
 
-# ConvertTo-Json unwraps singleton arrays. Keep [{...}] via jq (WSL).
 $srcJson = Join-Path $src 'hooks.json'
 $jqFile = Join-Path $src 'lib\windows_hooks_rewrite.jq'
 $dstJson = Join-Path $HomeC 'hooks.json'
-$srcWsl = (wsl.exe wslpath -a $srcJson).Trim()
-$jqWsl = (wsl.exe wslpath -a $jqFile).Trim()
-$dstWsl = (wsl.exe wslpath -a $dstJson).Trim()
-$shim = Join-Path $HooksD 'wsl-shim.ps1'
-$shimQ = $shim.Replace("'", "'\''")
-wsl.exe bash -lc "jq --arg shim '$shimQ' -f '$jqWsl' '$srcWsl' > '$dstWsl'"
-if ($LASTEXITCODE -ne 0) { throw 'jq rewrite of hooks.json failed (need jq inside WSL)' }
+$shim = Join-Path $HooksD 'bash-shim.ps1'
+$rewriteHost = Invoke-HooksJsonRewrite -SrcJson $srcJson -JqFile $jqFile -DstJson $dstJson -Shim $shim
 
-Write-Host '[done] kleosrules installed (Windows via WSL shim — same Cursor hooks as macOS/Linux)'
+Write-Host "[done] kleosrules installed (Windows via $rewriteHost shim)"
 Write-Host 'Next: paste shared/rules/USER-RULES.paste.txt into Cursor Settings -> User Rules, then start a NEW agent chat.'

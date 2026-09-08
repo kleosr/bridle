@@ -13,6 +13,7 @@ Always-on rules: agent, ponytail, pnpm, complexity, vibe, testing, types (7). Pa
 `session_start.sh` points at NOW.md (path only). Token-like NOW → quiet. Plan mode → quiet.
 `stop.sh` + `lib/diff_gate.sh`: unrequested rewrite (>50% of tracked src file, ≥80 LOC) + mass reindent + duplicate helper. One `followup_message`, `loop_limit: 1`. Cloud json unchanged (no stop).
 `.env.example` readable. Token prefixes word-bounded. `beforeReadFile` denies missing policy / non-JSON.
+Windows host is Git Bash + jq (`Windows/hooks/bash-shim.ps1`, UTF-8 stdin). WSL is fallback only. `scripts/install.sh` refuses MINGW.
 
 ## Limits
 
@@ -24,24 +25,23 @@ Do not add coverage/mutation/Sonar/Halstead tools to this Bash pack.
 
 ## Proof
 
-- `bash tests/run.sh` — 266 PASS, 0 FAIL (2026-09-06; living-docs + Windows stop parity)
-- `bash scripts/doctor.sh` — ALL CHECKS PASSED
-- Always-on: paste 3813→2528 B (Astra body). Session ~10.3kB / ~2.6k tok (was ~15.7kB / ~3.9k tok).
-- On-demand: skill bodies 22k→10k; hunter/cut/prove 15k→6k. Living docs 84k→13k (`_archive/`).
-- Windows `install.ps1` copies `stop.sh` + `diff_gate.sh` (same set as `fleet_install.sh`).
-- Audit: `docs/quality-roofs-audit.md`; article https://x.com/i/article/2095989703967125509
+- `bash tests/run.sh` — 272 PASS, 0 FAIL (2026-09-07; Git Bash + jq on this machine)
+- `bash scripts/doctor.sh` — ALL CHECKS PASSED (live checksums match)
+- `powershell -File Windows/install.ps1` — `[done] ... Windows via Git Bash + jq shim` (no WSL)
+- Live `beforeReadFile` allowed `~/.cursor/hooks.json` through `bash-shim.ps1` (UTF-8 stdin)
+- `winget install jqlang.jq` — jq 1.8.2 on this machine
 
 ## Next
 
-Reinstall: `git pull && FORCE=1 bash scripts/install.sh`. Re-paste `shared/rules/USER-RULES.paste.txt` (install cannot write Settings). New chat so rules reload.
+This Cursor has a live global install (`~/.cursor` rules + skills + hunter/cut/prove + `/writing-pr` + five hooks). User Rules paste is still Settings-only.
+Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
 Open: observe a positive glob-rule activation in a TS/JS repo; verify `stop` on cloud before adding it to `hooks.cloud.json`.
 GitHub repo description still says HANDOFF (API is read-only here).
 
 ## Archived
 
-2026-09-06: full pack lean — skills/agents rewritten, docs/_archive, SOURCE.md, budget+install caps.
+2026-09-06: full pack lean — skills/agents rewritten, docs/_archive, SOURCE.md, budget+install caps. Tests 266 PASS.
 2026-09-05: Astra slim (AGENTS.md navigator). Then deleted nested `shared/*/AGENTS.md` + `docs/astra-slim.md`.
-2026-09-04: quality roofs mapped onto complexity/ponytail/testing/types + paste.
 
 <!-- COMPACTION PROTOCOL
 When the active sections above (before this line) exceed ~150 lines:
