@@ -43,8 +43,16 @@ run_test "event hooks LOC ≤ 80" "1" "$LOC_OK"
 
 WIN_STOP="$(grep -c "stop.sh" "$PACK/Windows/install.ps1" | tr -d ' ')"
 WIN_DIFF="$(grep -c "diff_gate.sh" "$PACK/Windows/install.ps1" | tr -d ' ')"
+CRFILE="$(mktemp "${TMPDIR:-/tmp}/kleos-cr.XXXXXX")"
+printf 'product-designer-skills.mdc\r\n' >"$CRFILE"
+CR_GOT="$(bash -c 'source "$1"; load_lines "$2"' bash "$PACK/shared/hooks/lib/fleet_scan.sh" "$CRFILE" | tr -d '\n')"
+rm -f "$CRFILE"
+run_test "regression: load_lines strips CR" "product-designer-skills.mdc" "$CR_GOT"
+
+WIN_SHIM="$(grep -q "bash-shim.ps1" "$PACK/Windows/install.ps1" && echo 1 || echo 0)"
 run_test "Windows install.ps1 lists stop.sh" "1" "$WIN_STOP"
 run_test "Windows install.ps1 lists diff_gate.sh" "1" "$WIN_DIFF"
+run_test "Windows install.ps1 lists bash-shim.ps1" "1" "$WIN_SHIM"
 
 RESULT="$(HERE="$PACK/shared/hooks" bash -c 'source "$0/lib/common.sh" && type emit_ask >/dev/null && type emit_allow >/dev/null && echo ok' "$PACK/shared/hooks" 2>/dev/null || echo fail)"
 run_test "lib/common.sh emit_ask available" "ok" "$RESULT"

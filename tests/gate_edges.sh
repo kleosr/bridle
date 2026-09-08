@@ -61,6 +61,8 @@ run_test "regression: gate asks env-prefixed psql" "ask" "$(gate_verdict 'PGPASS
 run_test "regression: read allows .env.example" "quiet" "$(read_verdict /repo/.env.example)"
 run_test "regression: read denies .env.local" "deny" "$(read_verdict /repo/.env.local)"
 run_test "regression: read denies .p12" "deny" "$(read_verdict /repo/client.p12)"
+run_test "regression: read denies Windows backslash .env" "deny" "$(read_verdict 'C:\Users\x\.env')"
+run_test "regression: read denies Windows drive .env" "deny" "$(read_verdict 'C:/Users/x/.env')"
 
 run_test "regression: prompt passes sk- inside a word" "true" "$(prompt_verdict 'tomsk-Novosibirskregionalservicecenter opened today')"
 run_test "regression: prompt blocks bare sk- key" "false" "$(prompt_verdict 'key sk-abcdefghijklmnopqrstuvwxyz0123')"

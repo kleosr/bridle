@@ -73,6 +73,7 @@ for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/s
 done
 
 while IFS= read -r cmd; do
+  cmd="${cmd%$'\r'}"
   [[ -z "$cmd" ]] && continue
   script="${cmd#./hooks/}"
   script="${script%% *}"
@@ -105,10 +106,10 @@ else
   fail "fixture install: types.mdc missing from user rules"
 fi
 rm -rf "$DOCTOR_FIXTURE"
-if grep -q 'hooks/before_submit_prompt.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null; then
+if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOME}/.cursor/hooks.json" 2>/dev/null; then
   ok "live ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
 else
-  echo "[info] live ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh locally)"
+  echo "[info] live ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh or Windows/install.ps1)"
 fi
 
 if jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
@@ -120,6 +121,10 @@ else fail "hooks.json must be 5 events with ./hooks/ commands and stop.loop_limi
 if grep -q "stop.sh" "$PACK/Windows/install.ps1" && grep -q "diff_gate.sh" "$PACK/Windows/install.ps1"; then
   ok "Windows install copies stop.sh + diff_gate.sh"
 else fail "Windows/install.ps1 missing stop.sh or diff_gate.sh (must match fleet_install.sh)"; fi
+
+if grep -q "bash-shim.ps1" "$PACK/Windows/install.ps1" && [[ -f "$PACK/Windows/hooks/bash-shim.ps1" ]]; then
+  ok "Windows Git Bash shim present"
+else fail "Windows/install.ps1 must copy bash-shim.ps1 (Git Bash host; WSL fallback)"; fi
 
 if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
   fail "pack has repo-level hooks (never Lane-A into this pack)"
@@ -211,7 +216,7 @@ hash_file() {
   fi
 }
 HOME_HOOKS="${HOME}/.cursor/hooks"
-if grep -q 'hooks/before_submit_prompt.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
+if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
   if hash_file "$HOOKS_DIR/session_start.sh" >/dev/null; then
     for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
       src="$HOOKS_DIR/$rel"

@@ -12,6 +12,7 @@ if [[ ! -f "$POL" ]]; then
   emit_deny "kleosrules: policy/secret_paths.ere is missing; read denied (failClosed). Run FORCE=1 bash scripts/install.sh."
   exit 0
 fi
+FILE_PATH="$(posix_slashes "$FILE_PATH")"
 if [[ -n "$FILE_PATH" ]] && printf '%s' "$FILE_PATH" | grep -qE -f "$POL"; then
   emit_deny "AUTONOMY BLOCK: reading sensitive file '$FILE_PATH' blocked to protect secrets from model context. Read it yourself if needed."
   exit 0

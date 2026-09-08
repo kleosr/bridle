@@ -4,6 +4,7 @@ load_lines() {
   local f="$1" line
   [[ -f "$f" ]] || return 0
   while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
     line="${line#"${line%%[![:space:]]*}"}"
     [[ -z "$line" ]] && continue
     [[ "${line:0:1}" == "$(printf '#')" ]] && continue
@@ -50,7 +51,15 @@ canon() { (cd "$1" 2>/dev/null && pwd -P) || printf '%s\n' "$1"; }
 symlink_force() {
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
-  ln -sfn "$src" "$dst"
+  if ln -sfn "$src" "$dst" 2>/dev/null && [[ -e "$dst" || -L "$dst" ]]; then
+    return 0
+  fi
+  rm -rf "$dst"
+  if [[ -d "$src" ]]; then
+    cp -R "$src" "$dst"
+  else
+    cp -f "$src" "$dst"
+  fi
 }
 
 discover() {

@@ -24,7 +24,7 @@ Stored in `shared/skills/` (not `.agents/skills`). Read `SKILL.md` only when the
 
 - Core: `ponytail`, `debugging`, `testing`, `complexity`, `now`
 - Design: `design-stack` → one of `premium-ui-craft`, `landing-page-design`, `redesign-existing-projects`, `ux-web-research`
-- Specialists: `shared/agents/hunter.md`, `cut.md`, `prove.md`
+- Specialists: `writing-pr`. Review: `shared/agents/hunter.md`, `cut.md`, `prove.md`
 
 ## Workflows
 

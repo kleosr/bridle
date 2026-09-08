@@ -2,7 +2,7 @@
 
 Bash + jq. No Rust. No pack Python.
 
-Need `bash` 3.2+ (no `flock`, `mapfile`, `realpath`, `stat -c`, awk `\<`) and `jq`.
+Need `bash` 3.2+ (no `flock`, `mapfile`, `realpath`, `stat -c`, awk `\<`) and `jq`. Windows: Git for Windows + `jq` (`winget install jqlang.jq`); `powershell -File Windows/install.ps1`.
 
 ```bash
 chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh

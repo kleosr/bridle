@@ -6,7 +6,7 @@ source "$HERE/lib/diff_gate.sh"
 INPUT="$(cat)"
 STATUS="$(printf '%s' "$INPUT" | jq -r '.status // empty' 2>/dev/null || true)"
 LOOP="$(printf '%s' "$INPUT" | jq -r '.loop_count // 0' 2>/dev/null || echo 0)"
-WR="$(printf '%s' "$INPUT" | jq -r '.workspace_roots[0] // empty' 2>/dev/null || true)"
+WR="$(posix_slashes "$(printf '%s' "$INPUT" | jq -r '.workspace_roots[0] // empty' 2>/dev/null || true)")"
 if [[ "$STATUS" != "completed" || "$LOOP" != "0" || -z "$WR" || ! -d "$WR" ]]; then
   emit_quiet; exit 0
 fi
