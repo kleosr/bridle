@@ -9,6 +9,9 @@ run_test "session_start emits additional_context" "true" "$RESULT"
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("NOW")')"
 run_test "session_start injects NOW" "true" "$RESULT"
 
+RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("^Read ")')"
+run_test "session_start additional_context is path-only" "false" "$RESULT"
+
 RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("DEBERES:")')"
 run_test "session_start does not inject DEBERES duty" "false" "$RESULT"
 
@@ -104,6 +107,7 @@ fi
 LAW_STALE=no
 for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
   "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
+  "$PACK/shared/rules/supabase.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
   "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/testing.mdc" \

@@ -1,25 +1,20 @@
 #!/usr/bin/env bash
-# Remove kleosrules-owned artifacts from ~/.cursor only. Does not touch unrelated Cursor config.
+# Remove kleosrules-owned artifacts from ~/.cursor only. Preserves unknown hooks.json keys and entries.
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOOKS_DIR="$PACK/shared/hooks"
 HOME_C="${HOME}/.cursor"
-GLOBAL=(ponytail agent testing vibe postgres next vite astro complexity pnpm types)
 source "$HOOKS_DIR/lib/fleet_scan.sh"
+source "$HOOKS_DIR/lib/hooks_json.sh"
+GLOBAL=()
+while IFS= read -r _g; do
+  GLOBAL+=("$_g")
+done < <(load_lines "$PACK/shared/config/rules.global.txt")
 
-is_kleosrules_hooks() {
-  [[ -f "$HOME_C/hooks.json" ]] \
-    && grep -qE '(hooks[/\\]before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1)' "$HOME_C/hooks.json" 2>/dev/null
-}
-
-if ! is_kleosrules_hooks; then
-  echo "[skip] ~/.cursor/hooks.json is not a kleosrules install — nothing removed"
-  exit 0
+if [[ -f "$HOME_C/hooks.json" ]]; then
+  strip_owned_hooks_json "$HOME_C/hooks.json"
 fi
-
-rm -f "$HOME_C/hooks.json"
-rm -rf "$HOME_C/hooks"
-echo "[rm] ~/.cursor/hooks.json + hooks/"
+remove_owned_hook_files "$HOME_C/hooks"
 
 for name in "${GLOBAL[@]}"; do
   if [[ -f "$HOME_C/rules/${name}.mdc" ]]; then

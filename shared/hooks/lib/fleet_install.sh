@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# shellcheck source=shared/hooks/lib/hooks_json.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hooks_json.sh"
+
 HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh)
 CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
 RUNTIME_LIBS=(common.sh shell_gate.sh shell_fleet.sh diff_gate.sh)
@@ -19,12 +22,13 @@ prune_hook_scripts() {
 }
 
 copy_runtime_libs() {
-  local dest="$1" s b keep k
+  local dest="$1" prune="${2:-1}" s b keep k
   mkdir -p "$dest/lib"
   for s in "${RUNTIME_LIBS[@]}"; do
     cp -f "$HOOKS_DIR/lib/$s" "$dest/lib/$s"
     chmod +x "$dest/lib/$s"
   done
+  [[ "$prune" == 1 ]] || return 0
   for s in "$dest/lib"/*.sh; do
     [[ -f "$s" ]] || continue
     b="$(basename "$s")"
@@ -43,16 +47,15 @@ copy_hook_scripts() {
     cp -f "$HOOKS_DIR/$s" "$dest/$s"
     chmod +x "$dest/$s"
   done
-  copy_runtime_libs "$dest"
+  copy_runtime_libs "$dest" 0
   for p in "$HOOKS_DIR"/policy/*; do
     [[ -f "$p" ]] || continue
     cp -f "$p" "$dest/policy/$(basename "$p")"
   done
-  prune_hook_scripts "$dest" "${HOOK_SCRIPTS[@]}"
 }
 
 write_home_hooks_json() {
-  cp -f "$HOOKS_DIR/hooks.json" "$HOME_C/hooks.json"
+  merge_hooks_json "$HOME_C/hooks.json" "$HOOKS_DIR/hooks.json"
 }
 
 heal_orphan_project_hooks() {

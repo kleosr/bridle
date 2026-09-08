@@ -1,8 +1,8 @@
 ---
 name: ponytail
 description: >
-  Native Lean ladder and split recovery. Use when writing app code that
-  needs the ladder or a file split.
+  Native Lean ladder and split recovery. Use when writing, editing, or
+  splitting any app code.
 ---
 
 # Ponytail

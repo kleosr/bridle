@@ -20,7 +20,7 @@ Five layers. Fix the layer that failed.
 
 - Inject: path to NOW.md. `beforeSubmitPrompt` → `continue` (secret → false). No `preToolUse`, no `updated_input`.
 - Declare: open the files you will change. One or two sentences: outcome, files, proof.
-- Steel: `before_shell.sh` deny destructive/source-write/lint-disable/secret paths; infra/DB `ask`. `before_read_file.sh` deny secret paths (`failClosed: true`).
+- Steel: `before_shell.sh` and `before_submit_prompt.sh` fail closed. Deny destructive/source-write/lint-disable/secret paths; infra/DB `ask`. `before_read_file.sh` deny secret paths.
 
 ## Runtime
 

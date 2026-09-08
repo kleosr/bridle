@@ -20,7 +20,7 @@
 
 ---
 
-macOS (stock Bash 3.2), Linux, Windows via Git Bash shim (WSL fallback). Requires `bash` 3.2+ and `jq`. No Rust. No pack Python. No MCP core. Hooks register globally (`~/.cursor/hooks.json`). `sessionStart` points at `NOW.md`. Steel: secrets + shell + stop churn. Law: `SECURITY.md`.
+macOS (stock Bash 3.2), Linux, Windows via Git Bash shim (WSL fallback). Requires `bash` 3.2+ and `jq`. No Rust. No pack Python. No MCP core. Hooks register globally (`~/.cursor/hooks.json`). `sessionStart` points at `NOW.md` (path only). Steel: secrets + shell fail-closed; stop is an advisory rewrite warning. Law: `SECURITY.md`.
 
 ## Install
 
@@ -34,7 +34,7 @@ FORCE=1 bash scripts/install.sh          # or MacOS/install.sh / Linux/install.s
 
 Paste `shared/rules/USER-RULES.paste.txt` → Cursor Settings → User Rules. New chat.
 
-Update: re-run install (idempotent). Uninstall: `bash scripts/uninstall.sh` (fingerprinted; keeps your custom `.mdc`). Cloud Lane-A: 3 events (no `sessionStart`, no `stop`).
+Update: re-run install (merges `hooks.json`; keeps unknown entries). Uninstall: `bash scripts/uninstall.sh` (owned commands and files only). Cloud Lane-A: 3 events (no `sessionStart`, no `stop`).
 
 `HANDOFF.md` is retired (`NOW.md`). Doctor fails if it returns.
 
@@ -55,7 +55,7 @@ shared/hooks/              five events + lib + policy + fleet_sync
 shared/rules/              paste + alwaysApply/glob .mdc
 shared/skills/             on-demand SKILL.md + SOURCE.md
 shared/agents/             hunter, cut, prove
-shared/config/             skills.txt, retired*, scan.roots
+shared/config/             manifest.json, skills.txt, retired*, scan.roots
 scripts/                   install, uninstall, doctor, sync
 tests/                     run.sh + fixtures
 docs/                      living map; _archive/ = 2026-09 snapshots

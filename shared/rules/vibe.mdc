@@ -16,7 +16,7 @@ GROUND: no `package.json` → this rule is silent; only ponytail and complexity 
 | `"vite"` and no `next` | `vite.mdc`. |
 | none of the above | Neighbors only. No Next/Astro/Vite APIs. |
 
-Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>.md` if the stack is React.
+Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>.md` if that skill is installed and the stack is React. If it is missing, stay on ponytail.
 
 ## Hard (all JS/TS)
 

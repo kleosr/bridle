@@ -16,10 +16,10 @@ Never reintroduce Rust kleos-gate or pack Python.
 | Event | Script | Job |
 |---|---|---|
 | sessionStart | `session_start.sh` | `additional_context`: path to NOW.md. Quiet in plan mode. |
-| beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. |
-| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. |
+| beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. `failClosed: true`. |
+| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. `failClosed: true`. |
 | beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
-| stop | `stop.sh` | Ponytail diff gate: unrequested rewrite (>50% lines, file ≥80 LOC) or mass reindent. One `followup_message`, `loop_limit: 1`, else `{}`. |
+| stop | `stop.sh` | Advisory rewrite warning: unrequested rewrite (>50% lines, file ≥80 LOC) or mass reindent. One `followup_message`, `loop_limit: 1`, else `{}`. |
 
 This pack registers the five above. No `postToolUse`, `preToolUse`, or `beforeMCPExecution`. Writes are not blocked at write time; `stop` cannot refuse completion.
 

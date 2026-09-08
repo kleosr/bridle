@@ -1,0 +1,13 @@
+# Installed to ~/.cursor/rules. SSOT for fleet_sync.sh, uninstall.sh, Windows/install.ps1.
+ponytail
+agent
+testing
+vibe
+postgres
+supabase
+next
+vite
+astro
+complexity
+pnpm
+types

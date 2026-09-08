@@ -14,7 +14,7 @@ Numbers are SSOT in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`
 | Dead / redundant | Zero. Third copy → extract. `cut` on demand. |
 | `any` / `unknown` | No `any`. No un-narrowed `unknown`. `types.mdc` alwaysApply GLOBAL. |
 
-AlwaysApply count is **7** (agent, ponytail, pnpm, complexity, vibe, testing, types). Glob: next, vite, astro, postgres.
+AlwaysApply count is **7** (agent, ponytail, pnpm, complexity, vibe, testing, types). Glob: next, vite, astro, postgres, supabase.
 
 Not adopted: raising cyclo to 22 or LOC to 500; a total `unknown` ban; adding coverage/mutation/Sonar/Halstead to this Bash pack; a LOC hook; alwaysApply copies in this pack's `.cursor/rules`.
 

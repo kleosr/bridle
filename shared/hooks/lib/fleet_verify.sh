@@ -97,8 +97,10 @@ verify_smoke() {
   if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
     echo "[fail] pack has repo-level hooks (never Lane-A into this pack)"; bad=1
   fi
-  jq -e '.hooks.beforeSubmitPrompt[0].failClosed == false' "$HOOKS_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] beforeSubmitPrompt must failClosed:false"; bad=1; }
+  jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeSubmitPrompt must failClosed:true"; bad=1; }
+  jq -e '.hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeShellExecution must failClosed:true"; bad=1; }
   jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null \
     || { echo "[fail] hooks.json must register exactly 5 events"; bad=1; }
   jq -e '.hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null \
