@@ -9,8 +9,11 @@ PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 TARGET_REPO="${TARGET_REPO:-}"
 CMD="${1:-all}"
 SHARED=()
-GLOBAL=(ponytail agent testing vibe postgres next vite astro complexity pnpm types)
 source "$HOOKS_DIR/lib/fleet_scan.sh"
+GLOBAL=()
+while IFS= read -r _g; do
+  GLOBAL+=("$_g")
+done < <(load_lines "$PACK/shared/config/rules.global.txt")
 source "$HOOKS_DIR/lib/fleet_install.sh"
 source "$HOOKS_DIR/lib/fleet_sync_repos.sh"
 source "$HOOKS_DIR/lib/fleet_verify.sh"

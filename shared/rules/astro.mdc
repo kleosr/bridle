@@ -1,12 +1,12 @@
 ---
 description: "Astro roof. HTML first, islands explicit. Docs over training."
-globs: ["**/*.astro","astro.config.*","**/src/content.config.*","**/src/content/**"]
+globs: astro.config.*, **/*.astro, **/src/content.config.*, **/src/content/**
 alwaysApply: false
 ---
 
 # Astro
 
-Training is stale (actions, sessions, content collections). Before Write: current Astro docs (Docs MCP if connected, else docs.astro.build). Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
+Training is stale (actions, sessions, content collections). Before Write: current Astro docs (Docs MCP if connected, else docs.astro.build). If neither is available, say so and do not invent APIs. Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
 
 ## Hard
 

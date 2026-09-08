@@ -22,4 +22,4 @@ if [[ -f "$POL" ]] && grep -qE -f "$POL" "$NOW"; then
   emit_quiet
   exit 0
 fi
-emit_context "Read ${NOW} (Now, State, Limits, Proof, Next)."
+emit_context "$NOW"

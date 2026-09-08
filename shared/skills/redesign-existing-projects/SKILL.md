@@ -9,11 +9,11 @@ description: >
 
 MIT. Upstream in [SOURCE.md](SOURCE.md). Report diagnosis before fixing. Do not rewrite the stack.
 
-**Product apps:** audit checklist here; values from `premium-ui-craft`. Do not force island nav or Phosphor on an existing shadcn app unless Mario wants a marketing site.
+**Product apps:** audit checklist here; values from `premium-ui-craft`. Marketing tokens: `landing-page-design`. Do not force island nav or Phosphor on an existing shadcn app unless the user wants a marketing site.
 
 ## Diagnose (list before edits)
 
-Generic cards, equal three columns, purple AI gradients. Inter/Roboto/Open Sans. Missing hover/focus/active. Dead `#` links. No empty/error/loading. Lorem or fake stats. Hover lift. Rainbow accents.
+Generic cards, equal three columns, purple AI gradients. Missing hover/focus/active. Dead `#` links. No empty/error/loading. Lorem or fake stats. Hover lift. Rainbow accents. Fonts and palette: `premium-ui-craft`.
 
 ## Order
 

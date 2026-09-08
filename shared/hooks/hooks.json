@@ -12,14 +12,14 @@
       {
         "command": "./hooks/before_submit_prompt.sh",
         "timeout": 10,
-        "failClosed": false
+        "failClosed": true
       }
     ],
     "beforeShellExecution": [
       {
         "command": "./hooks/before_shell.sh",
         "timeout": 30,
-        "failClosed": false
+        "failClosed": true
       }
     ],
     "beforeReadFile": [

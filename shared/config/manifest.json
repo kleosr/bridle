@@ -1,0 +1,36 @@
+{
+  "owner": "kleosrules",
+  "hookScripts": [
+    "session_start.sh",
+    "before_submit_prompt.sh",
+    "before_shell.sh",
+    "before_read_file.sh",
+    "stop.sh"
+  ],
+  "hookLibs": [
+    "common.sh",
+    "shell_gate.sh",
+    "shell_fleet.sh",
+    "diff_gate.sh"
+  ],
+  "windowsShims": [
+    "bash-shim.ps1",
+    "wsl-shim.ps1"
+  ],
+  "hookPolicy": [
+    "secret_paths.ere",
+    "secret_tokens.ere"
+  ],
+  "agents": [
+    "hunter",
+    "cut",
+    "prove"
+  ],
+  "rulesGlobal": "shared/config/rules.global.txt",
+  "skills": "shared/config/skills.txt",
+  "optionalSkills": [
+    "vercel-react-best-practices",
+    "supabase",
+    "supabase-postgres-best-practices"
+  ]
+}

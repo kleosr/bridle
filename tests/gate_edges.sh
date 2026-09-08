@@ -4,7 +4,7 @@ gate_verdict() {
   jq -n --arg c "$1" '{command:$c}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"'
 }
 read_verdict() {
-  jq -n --arg p "$1" '{file_path:$p}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "quiet"'
+  jq -n --arg p "$1" '{file_path:$p}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "none"'
 }
 prompt_verdict() {
   jq -n --arg p "$1" '{prompt:$p}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r '.continue'
@@ -58,11 +58,17 @@ done
 run_test "regression: gate denies python stdin heredoc writing .py" "deny" "$(gate_verdict $'python3 - <<EOF\nopen("a.py","w").write("x")\nEOF')"
 run_test "regression: gate asks env-prefixed psql" "ask" "$(gate_verdict 'PGPASSWORD=x psql -h db -c "select 1"')"
 
-run_test "regression: read allows .env.example" "quiet" "$(read_verdict /repo/.env.example)"
+run_test "regression: read allows .env.example" "allow" "$(read_verdict /repo/.env.example)"
 run_test "regression: read denies .env.local" "deny" "$(read_verdict /repo/.env.local)"
 run_test "regression: read denies .p12" "deny" "$(read_verdict /repo/client.p12)"
 run_test "regression: read denies Windows backslash .env" "deny" "$(read_verdict 'C:\Users\x\.env')"
 run_test "regression: read denies Windows drive .env" "deny" "$(read_verdict 'C:/Users/x/.env')"
+run_test "regression: read denies uppercase .ENV" "deny" "$(read_verdict /repo/.ENV)"
+run_test "regression: read denies ID_RSA" "deny" "$(read_verdict /repo/ID_RSA)"
+run_test "regression: gate denies cat .ENV" "deny" "$(gate_verdict 'cat .ENV')"
+run_test "regression: gate denies git commit -m \$(cat .env)" "deny" "$(gate_verdict $'git commit -m "$(cat .env)"')"
+run_test "regression: gate denies git commit -F .env" "deny" "$(gate_verdict 'git commit -F .env')"
+run_test "regression: gate denies gh pr --body-file .env" "deny" "$(gate_verdict 'gh pr create --body-file .env')"
 
 run_test "regression: prompt passes sk- inside a word" "true" "$(prompt_verdict 'tomsk-Novosibirskregionalservicecenter opened today')"
 run_test "regression: prompt blocks bare sk- key" "false" "$(prompt_verdict 'key sk-abcdefghijklmnopqrstuvwxyz0123')"
@@ -81,4 +87,4 @@ RESULT="$(printf '%s' 'not json' | bash "$PACK/shared/hooks/before_read_file.sh"
 run_test "regression: before_read_file non-JSON denies" "deny" "$RESULT"
 
 RESULT="$(printf '%s' 'not json' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
-run_test "regression: before_shell non-JSON asks" "ask" "$RESULT"
+run_test "regression: before_shell non-JSON denies" "deny" "$RESULT"

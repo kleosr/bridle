@@ -112,6 +112,9 @@ run_test "stop: non-git workspace emits {} (explicit fallback)" "{}" "$RESULT"
 RESULT="$(gr_stop "$GR_TMP/rewrite" | jq -r '.followup_message | test("stop.sh, runs once") and test("Touch only the hunk")')"
 run_test "stop: failure names the gate and the recovery action" "true" "$RESULT"
 
+RESULT="$(gr_stop "$GR_TMP/rewrite" | jq -r 'has("followup_message") and (has("permission")|not) and (has("continue")|not)')"
+run_test "stop: rewrite warning is advisory followup, not refusal" "true" "$RESULT"
+
 # --- Hooks.json shape ---
 
 STOP_LL="$(jq -r '.hooks.stop[0].loop_limit' "$PACK/shared/hooks/hooks.json")"
@@ -165,6 +168,22 @@ run_test "always-on rule count is 7 (agent, ponytail, pnpm, complexity, vibe, te
 
 DUP_HEAD="$(grep -h '^# ' "$PACK"/shared/rules/*.mdc | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "duplicate channel: no two .mdc share a top heading" "0" "$DUP_HEAD"
+
+GLOB_OK=ok
+for f in next vite astro postgres supabase; do
+  line="$(grep '^globs:' "$PACK/shared/rules/${f}.mdc" || true)"
+  echo "$line" | grep -q '^globs: \[' && GLOB_OK="array:$f"
+  echo "$line" | grep -q '^globs: "' && GLOB_OK="quoted:$f"
+  echo "$line" | grep -q '^globs: [^["]' || GLOB_OK="missing:$f"
+done
+run_test "scoped rules use bare-string globs (not YAML arrays)" "ok" "$GLOB_OK"
+
+SSOT=ok
+[[ -f "$PACK/shared/config/rules.global.txt" ]] || SSOT="missing-rules.global"
+grep -q 'rules.global.txt' "$PACK/shared/hooks/fleet_sync.sh" || SSOT="fleet-sync"
+grep -q 'rules.global.txt' "$PACK/scripts/uninstall.sh" || SSOT="uninstall"
+grep -q 'rules.global.txt' "$PACK/Windows/install.ps1" || SSOT="windows"
+run_test "GLOBAL list has one SSOT (rules.global.txt)" "ok" "$SSOT"
 
 SK_DESC=ok
 while IFS= read -r skill; do

@@ -1,6 +1,6 @@
 ---
 description: "Vite roof. SPA/SSR from this repo's plugins. Not Next, not Astro."
-globs: ["vite.config.*","vitest.config.*","src/main.ts","src/main.tsx","src/main.js","src/entry-client.*","src/entry-server.*"]
+globs: vite.config.*, vitest.config.*, **/src/main.ts, **/src/main.tsx, **/src/main.js, **/src/entry-client.*, **/src/entry-server.*, **/index.html
 alwaysApply: false
 ---
 
