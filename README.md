@@ -20,7 +20,7 @@
 
 ---
 
-macOS (stock Bash 3.2), Linux, Windows via WSL shim. Requires `bash` 3.2+ and `jq`. No Rust. No pack Python. No MCP core. Hooks register globally (`~/.cursor/hooks.json`). `sessionStart` points at `NOW.md`. Steel: secrets + shell + stop churn. Law: `SECURITY.md`.
+macOS (stock Bash 3.2), Linux, Windows via Git Bash shim (WSL fallback). Requires `bash` 3.2+ and `jq`. No Rust. No pack Python. No MCP core. Hooks register globally (`~/.cursor/hooks.json`). `sessionStart` points at `NOW.md`. Steel: secrets + shell + stop churn. Law: `SECURITY.md`.
 
 ## Install
 
@@ -29,7 +29,7 @@ FORCE=1 bash scripts/install.sh          # or MacOS/install.sh / Linux/install.s
 ```
 
 ```powershell
-.\Windows\install.ps1                    # WSL + jq inside WSL; native Windows unsupported
+.\Windows\install.ps1                    # Git for Windows + jq (winget install jqlang.jq); WSL optional
 ```
 
 Paste `shared/rules/USER-RULES.paste.txt` → Cursor Settings → User Rules. New chat.
@@ -45,12 +45,12 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Skills: `/ponytail` `/debugging` `/testing` `/complexity` `/now`. Review: `hunter` `cut` `prove`. Map: `AGENTS.md`. Caps: `docs/token-budget.md`. Docs index: `docs/README.md`.
+Skills: `/ponytail` `/debugging` `/testing` `/complexity` `/now` `/writing-pr`. Review: `hunter` `cut` `prove`. Map: `AGENTS.md`. Caps: `docs/token-budget.md`. Docs index: `docs/README.md`.
 
 ## Layout
 
 ```
-MacOS/ Linux/ Windows/     platform installers (WSL shim on Windows)
+MacOS/ Linux/ Windows/     platform installers (Git Bash shim on Windows)
 shared/hooks/              five events + lib + policy + fleet_sync
 shared/rules/              paste + alwaysApply/glob .mdc
 shared/skills/             on-demand SKILL.md + SOURCE.md

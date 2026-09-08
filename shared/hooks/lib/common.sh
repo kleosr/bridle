@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
+posix_slashes() {
+  printf '%s' "${1//\\//}"
+}
+
 resolve_root() {
   local d wr
-  wr="$(printf '%s' "${1:-}" | jq -r '.workspace_roots[0] // empty' 2>/dev/null || true)"
+  wr="$(posix_slashes "$(printf '%s' "${1:-}" | jq -r '.workspace_roots[0] // empty' 2>/dev/null || true)")"
   [[ "$wr" == "null" ]] && wr=""
   if [[ -n "$wr" && ( -f "$wr/NOW.md" || -f "$wr/AGENTS.md" ) ]]; then
     ROOT="$(cd "$wr" && pwd)"; return 0

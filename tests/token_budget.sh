@@ -169,6 +169,10 @@ run_test "quality-roofs-audit keeps the roof number map" "ok" "$ROOF_MAP"
 WIN_OK=ok
 grep -q "stop.sh" "$PACK/Windows/install.ps1" || WIN_OK="missing-stop"
 grep -q "diff_gate.sh" "$PACK/Windows/install.ps1" || WIN_OK="missing-diff-gate"
+grep -q "bash-shim.ps1" "$PACK/Windows/install.ps1" || WIN_OK="missing-shim"
+[[ -f "$PACK/Windows/hooks/bash-shim.ps1" ]] || WIN_OK="missing-shim-file"
+grep -q "UTF8Encoding" "$PACK/Windows/hooks/bash-shim.ps1" || WIN_OK="missing-utf8"
+grep -q "BaseStream" "$PACK/Windows/hooks/bash-shim.ps1" || WIN_OK="missing-utf8-stdin"
 run_test "Windows install copies stop.sh + diff_gate.sh" "ok" "$WIN_OK"
 
 SOURCE_OK=ok

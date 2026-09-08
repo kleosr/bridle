@@ -9,7 +9,7 @@ source "$HOOKS_DIR/lib/fleet_scan.sh"
 
 is_kleosrules_hooks() {
   [[ -f "$HOME_C/hooks.json" ]] \
-    && grep -qE '(hooks/before_submit_prompt\.sh|hooks\\before_submit_prompt\.sh)' "$HOME_C/hooks.json" 2>/dev/null
+    && grep -qE '(hooks[/\\]before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1)' "$HOME_C/hooks.json" 2>/dev/null
 }
 
 if ! is_kleosrules_hooks; then

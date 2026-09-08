@@ -76,6 +76,16 @@ run_test "uninstall with directory skill and FORCE unset completes" "0" "$UNINST
 run_test "uninstall skips directory skill without FORCE=1" "yes" "$DEBUGGING_REMAIN"
 run_test "second uninstall with FORCE unset is idempotent (skip)" "0" "$UNINSTALL2_EC"
 
+WIN_U_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-winu.XXXXXX")"
+mkdir -p "$WIN_U_HOME/.cursor/hooks"
+printf '%s\n' '{"hooks":{"beforeSubmitPrompt":[{"command":"powershell -File C:\\Users\\x\\.cursor\\hooks\\bash-shim.ps1 before_submit_prompt.sh"}]}}' > "$WIN_U_HOME/.cursor/hooks.json"
+WIN_U_EC=0
+HOME="$WIN_U_HOME" bash "$PACK/scripts/uninstall.sh" >/dev/null 2>&1 || WIN_U_EC=$?
+WIN_U_GONE="$(test -f "$WIN_U_HOME/.cursor/hooks.json" && echo no || echo yes)"
+rm -rf "$WIN_U_HOME"
+run_test "uninstall recognizes Windows bash-shim hooks.json" "0" "$WIN_U_EC"
+run_test "uninstall removes Windows bash-shim hooks.json" "yes" "$WIN_U_GONE"
+
 # Legacy orphan hooks.json without scripts → heal on project-hooks path
 LEG_REPO="$(mktemp -d "${TMPDIR:-/tmp}/kleos-leg.XXXXXX")"
 mkdir -p "$LEG_REPO/.git" "$LEG_REPO/.cursor/hooks"
