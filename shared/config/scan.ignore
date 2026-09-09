@@ -1,2 +1,0 @@
-# Basename or path substring to skip during discovery (one per line).
-node_modules

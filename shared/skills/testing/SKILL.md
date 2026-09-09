@@ -19,7 +19,7 @@ Skip framework internals, getters, styling.
 
 ## Practice
 
-Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flaky = broken. Bug fix ships `regression: <symptom>` that fails on old code.
+Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flakiness and `regression:` roofs in `testing.mdc`. Bug fix ships `regression: <symptom>` that fails on old code. Proof = passing tests, verified behavior, or built artifacts; compiles alone is not proof; non-testable changes cite manual verification.
 
 ## Gauntlet
 

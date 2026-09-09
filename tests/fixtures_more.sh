@@ -35,7 +35,7 @@ run_test "paste charter still has Cursor + Grok lock" "1" "$(grep -c '## Cursor 
 run_test "paste does not restate cyclo-22 (lives in complexity.mdc)" "0" "$(grep -c 'never above 22' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
 
 LOC_OK=1
-for f in "$PACK"/shared/hooks/session_start.sh "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
+for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done

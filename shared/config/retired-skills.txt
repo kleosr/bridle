@@ -1,4 +1,4 @@
-# Retired personal Skill names that must remain absent.
+# Listed skill names must remain absent (this list stays).
 memory
 monorepo
 package-scope
@@ -7,3 +7,4 @@ speckit-adhd
 vernacular
 session-handoff
 ux-web-research
+now

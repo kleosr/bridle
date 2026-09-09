@@ -6,12 +6,12 @@ alwaysApply: false
 
 # Astro
 
-Training is stale (actions, sessions, content collections). Before Write: current Astro docs (Docs MCP if connected, else docs.astro.build). If neither is available, say so and do not invent APIs. Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
+Confirm `astro` in the owning `package.json`; globs are candidates. Training is stale (actions, sessions, content collections). Before Write: version-matched docs for the installed version (Docs MCP if connected, else docs.astro.build); latest may mismatch a pinned project. If neither is available, say so and do not invent APIs. Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
 
 ## Hard
 
 - HTML first. Client JS only with an explicit `client:*` directive. Do not wrap the whole page in React/Vue.
-- Official integrations: `pnpm astro add <name>`. Do not hand-edit `astro.config` for those.
+- Official integrations: prefer `pnpm astro add <name>`; inspect its diff. Hand-edit only when the tool cannot express the config.
 - Content: use Content Collections if this repo already has `src/content`. Do not invent a parallel glob CMS.
 - Routing and `output` (static vs server) from **this** `astro.config.*`. No `getServerSideProps`. No `app/` directory as Next.
 - Islands: pass only the props the island needs. No fetching in `useEffect` for data the `.astro` frontmatter already has.

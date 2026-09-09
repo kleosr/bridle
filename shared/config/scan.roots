@@ -1,5 +1,0 @@
-# Opt-in roots for `fleet_sync.sh sync` only.
-# Empty (comments only) = clean local install; do not touch other repos.
-# One path per line. Portable: ~, $HOME, ${HOME}. Never hardcode /Users/<name>.
-# Example:
-# $HOME/src/myapp

@@ -5,11 +5,11 @@ alwaysApply: true
 
 # Types
 
-Silent on untyped files (Bash, JSON, CSS, Markdown). On typed languages: fix the design; don't silence the compiler.
+Silent on untyped files (Bash, JSON, CSS, Markdown). On typed files: fix the design; don't silence the compiler.
 
-- No `any`.
-- No `unknown` as a public signature, return type, or stored field. Catch / JSON / IO may bind `unknown` only if the next statements narrow it before it is used or passed on.
-- No blind casts, unwrap, or ignored errors.
+- No TS `any` (Go `any` differs).
+- No un-narrowed `unknown` stored/passed. Bind at untrusted boundaries only if narrowed before use/pass.
+- No blind casts or ignored errors; unwrap only in tests/proven invariants.
 - Do not add suppressions just to pass CI (`@ts-ignore`, `# type: ignore` without a one-line why).
 - Prefer: sum types over parallel booleans; the repo's fallible-op idiom; explicit public signatures; schema-inferred types when schemas exist; one nullish convention per repo.
 

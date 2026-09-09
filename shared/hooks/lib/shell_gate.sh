@@ -27,13 +27,17 @@ gate_shell_command() {
     return 1
   fi
   local db="(^|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(sudo[[:space:]]+|env[[:space:]]+)?(psql|mysql|mongosh)([[:space:]]|$)"
+  local infra=1
   if echo "$cmd" | grep -qiE "${db}|supabase[[:space:]]+db|terraform[[:space:]]+apply|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)"; then
+    infra=0
+  fi
+  if gate_complexity_bypass "$cmd"; then return 1; fi
+  if gate_shell_source_write "$cmd"; then return 1; fi
+  if gate_shell_secrets "$cmd"; then return 1; fi
+  if [[ "$infra" -eq 0 ]]; then
     emit_ask "Command mutates infra/DB. Approve in the Cursor card to proceed. CMD: ${cmd:0:120}"
     return 1
   fi
-  gate_complexity_bypass "$cmd" && return 1
-  gate_shell_source_write "$cmd" && return 1
-  gate_shell_secrets "$cmd" && return 1
   return 0
 }
 
