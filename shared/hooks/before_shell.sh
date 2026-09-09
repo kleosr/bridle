@@ -20,7 +20,14 @@ CMD="$(printf '%s' "$INPUT" | jq -r '.command // .tool_input.command // .tool_in
   exit 0
 }
 [[ -z "$CMD" ]] && { emit_allow; exit 0; }
-if shell_is_fleet_sync "$CMD"; then emit_allow; exit 0; fi
+if shell_is_fleet_sync "$CMD"; then
+  if [[ -f "shared/config/manifest.json" && -f "shared/hooks/fleet_sync.sh" && -f "scripts/install.sh" ]]; then
+    emit_ask "Harness activation request: a relative installer path is not proof of trust. Approve only if this checkout is the trusted kleosrules pack. CMD: ${CMD:0:120}"
+  else
+    emit_deny "kleosrules: installer path without pack markers denied. Run from the pack root."
+  fi
+  exit 0
+fi
 if ! gate_shell_command "$CMD"; then
   exit 0
 fi

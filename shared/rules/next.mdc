@@ -6,11 +6,11 @@ alwaysApply: false
 
 # Next.js
 
-This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos: not the repo root if `next` is nested). Heed deprecations.
+Confirm `next` in the owning `package.json` first; globs are candidates, not proof. This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos: not the repo root if `next` is nested). Heed deprecations.
 
-If that folder is missing: Next <16.2. Use project `AGENTS.md` / `.next-docs/`, or ask for the installed version. Do not guess APIs. Do not run a codemod unless the user asked.
+If that folder is missing, inspect the installed version + lockfile; missing files do not prove a version. Use project `AGENTS.md` / `.next-docs/`, or ask. Do not guess APIs. Do not run a codemod unless the user asked.
 
-Detect router from the tree: `app/` → App Router only. `pages/` without `app/` → Pages only. Never mix.
+Route by the file you touch: `app/` files use App Router; `pages/` files use Pages. Hybrids exist during migrations; never mix routers in one file.
 
 ## Hard
 

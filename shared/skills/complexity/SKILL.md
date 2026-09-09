@@ -11,7 +11,7 @@ Thin roof: `complexity.mdc`. Nesting ≤2 is not a substitute.
 
 ## Cap
 
-Repo lint wins. Else **10**. Never above **22**. Do not raise a cap toward 22. Cognitive **22** / Halstead **80** / CRAP **25** only when this repo already measures them. Do not add those tools.
+Caps live in `complexity.mdc`. This skill is detection + reduction only.
 
 ## Detect
 
@@ -26,4 +26,4 @@ TS/JS: repo `complexity` option (legacy or flat). Run **repo** lint on touched f
 
 Early return. Flatten `if`. `else if` → table. One-job extracts. Nested ternary → `if` or lookup. Never disable complexity lint — `before_shell.sh` denies it.
 
-Done = cited lint command green on the files you touched.
+Done: per `complexity.mdc` (green when a job exists; else report unmeasured).

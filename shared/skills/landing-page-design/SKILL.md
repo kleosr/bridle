@@ -17,7 +17,7 @@ One offer → one audience → one primary action. Hero, benefits, how it works,
 
 ## Visual (marketing only)
 
-- Fonts: Geist, Manrope, Geist Mono, Poppins. Never Inter, Roboto, Arial, Open Sans, Helvetica. No italics. No 900. One typeface. Tailwind scale only.
+- Fonts: default Geist, Manrope, Geist Mono, Poppins; brand fonts win. No italics. No 900. One typeface. Tailwind scale only.
 - Spacing: 0, 2, 4, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96px. Nested radius: inner = outer − gap when gap < 32 and result > 2.
 - Dark: `#000000` `#181818` `#1F1F1F` `#272727` `#313131` `#131209`. No background gradients. Hero heading may gradient white→gray.
 - Icons: Phosphor, Solar, Iconamoon. Motion: `duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]`. Scroll via IntersectionObserver. `prefers-reduced-motion` zeros duration.

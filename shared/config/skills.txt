@@ -3,7 +3,6 @@ ponytail
 debugging
 testing
 complexity
-now
 design-stack
 landing-page-design
 premium-ui-craft

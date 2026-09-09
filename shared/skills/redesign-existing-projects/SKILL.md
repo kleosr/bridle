@@ -19,4 +19,4 @@ Generic cards, equal three columns, purple AI gradients. Missing hover/focus/act
 
 Font → color/surfaces → hover/focus/active → layout/spacing → motion → generic components → loading/empty/error → copy → type polish.
 
-Stay in the current stack. Ask before inventing a token not in the active design system.
+Stay in the current stack; migrate frameworks only when asked. Design tokens (shared colors/spacing/fonts): propose, ask before changing shared systems.

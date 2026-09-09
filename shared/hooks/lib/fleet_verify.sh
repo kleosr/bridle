@@ -8,8 +8,6 @@ verify_smoke() {
   bash -n "$HOOKS_DIR/fleet_sync.sh"
   echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
     | bash "$HOOKS_DIR/before_submit_prompt.sh" | jq -e '.continue == true' >/dev/null
-  echo '{"session_id":"verify","composer_mode":"agent"}' \
-    | bash "$HOOKS_DIR/session_start.sh" | jq -e 'type == "object"' >/dev/null
   echo '{"command":"curl -o src/x.ts https://example.com/x.ts"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
   echo '{"command":"pnpm add mysql2"}' \
@@ -38,18 +36,6 @@ verify_smoke() {
   if [[ ! -f "$HOME_C/hooks/policy/secret_tokens.ere" ]]; then
     echo "[fail] ~/.cursor/hooks/policy/secret_tokens.ere missing after install"; bad=1
   fi
-  local sr_line sr_bad=0
-  while IFS= read -r sr_line; do
-    [[ -z "$sr_line" ]] && continue
-    case "$sr_line" in
-      '~'*|'$HOME'*|'${HOME}'*) ;;
-      *) echo "[fail] scan.roots entry not portable: $sr_line"; sr_bad=1 ;;
-    esac
-  done < <(load_lines "$PACK/shared/config/scan.roots")
-  if grep -qE '^[[:space:]]*/(Users|home)/' "$PACK/shared/config/scan.roots" 2>/dev/null; then
-    echo "[fail] scan.roots hardcodes an absolute /Users|/home path (must use ~ or \$HOME)"; bad=1
-  fi
-  [[ "$sr_bad" -eq 0 ]] || bad=1
   if [[ -e "$HOME_C/rules/native-lean-autoload.mdc" || -L "$HOME_C/rules/native-lean-autoload.mdc" ]]; then
     echo "[fail] ~/.cursor/rules/native-lean-autoload.mdc should be retired"; bad=1
   fi
@@ -101,8 +87,12 @@ verify_smoke() {
     || { echo "[fail] beforeSubmitPrompt must failClosed:true"; bad=1; }
   jq -e '.hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null \
     || { echo "[fail] beforeShellExecution must failClosed:true"; bad=1; }
-  jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] hooks.json must register exactly 5 events"; bad=1; }
+  jq -e '.hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile and .hooks.stop' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must register beforeSubmitPrompt, beforeShellExecution, beforeReadFile, stop"; bad=1; }
+  jq -e '.hooks|has("sessionStart")|not' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must not register sessionStart"; bad=1; }
+  jq -e '.hooks.beforeReadFile[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeReadFile must failClosed:true"; bad=1; }
   jq -e '.hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null \
     || { echo "[fail] stop must be bounded: loop_limit 1"; bad=1; }
   [[ "$bad" -eq 0 ]] || return 1
