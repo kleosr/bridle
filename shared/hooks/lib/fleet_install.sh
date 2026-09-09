@@ -3,7 +3,7 @@
 # shellcheck source=shared/hooks/lib/hooks_json.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hooks_json.sh"
 
-HOOK_SCRIPTS=(session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh)
+HOOK_SCRIPTS=(before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh)
 CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
 RUNTIME_LIBS=(common.sh shell_gate.sh shell_fleet.sh diff_gate.sh)
 
@@ -78,7 +78,7 @@ assert_dest_hook_scripts() {
 install_home_hooks() {
   mkdir -p "$HOME_C/hooks/policy" "$HOME_C/state"
   copy_hook_scripts "$HOME_C/hooks"
-  for orphan in ask-gated-shell.sh backlog-on-read.sh block-dangerous-git.sh capture-mistake.sh deny-danger.sh install-user-hooks.sh; do
+  for orphan in session_start.sh ask-gated-shell.sh backlog-on-read.sh block-dangerous-git.sh capture-mistake.sh deny-danger.sh install-user-hooks.sh; do
     rm -f "$HOME_C/hooks/$orphan"
   done
   rm -rf "$HOME_C/hooks/bin" "$HOME_C/hooks/__pycache__"
@@ -120,7 +120,7 @@ install_project_hooks() {
       echo "[rm] $label/.cursor/rules/$orphan"
     fi
   done < <(load_lines "$PACK/shared/config/retired.txt")
-  echo "[ok] project Lane-A hooks + .mdc → $label (no sessionStart; cloud-safe)"
+  echo "[ok] project Lane-A hooks + .mdc → $label (cloud-safe)"
 }
 
 remove_project_hooks() {

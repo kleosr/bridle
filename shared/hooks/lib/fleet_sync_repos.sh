@@ -21,11 +21,26 @@ prune_user_layer_from_project() {
 }
 
 install_global_rules() {
-  local name orphan
+  local name orphan src dst h
   mkdir -p "$HOME_C/rules"
+  : >"$HOME_C/kleosrules-owned.txt"
   for name in "${GLOBAL[@]}"; do
-    cp -f "$PACK/shared/rules/${name}.mdc" "$HOME_C/rules/${name}.mdc"
+    src="$PACK/shared/rules/${name}.mdc"
+    dst="$HOME_C/rules/${name}.mdc"
+    if [[ -f "$dst" ]] && ! cmp -s "$src" "$dst" 2>/dev/null; then
+      if [[ "$FORCE" != "1" ]]; then
+        echo "[warn] skip differing $dst (FORCE=1 to replace; backup kept)"
+        continue
+      fi
+      if [[ ! -f "$dst.pre-kleos-bak" ]]; then
+        cp -f "$dst" "$dst.pre-kleos-bak"
+        echo "[bak] $dst.pre-kleos-bak"
+      fi
+    fi
+    cp -f "$src" "$dst"
     echo "[ok] ~/.cursor/rules/${name}.mdc"
+    h="$(owned_hash "$dst")"
+    [[ -n "$h" ]] && printf 'rules/%s.mdc %s\n' "$name" "$h" >>"$HOME_C/kleosrules-owned.txt"
   done
   prune_project_names_from_home
   while IFS= read -r orphan; do
@@ -61,20 +76,36 @@ install_skills() {
     [[ -z "$skill" ]] && continue
     dst="$HOME_C/skills/$skill"
     if [[ -L "$dst" ]]; then
-      rm -f "$dst"
-      echo "[rm] retired skill $skill"
+      tgt="$(readlink "$dst" 2>/dev/null || true)"
+      if [[ "$tgt" == *"/kleosrules/"* || "$tgt" == "$PACK/shared/skills/$skill" ]]; then
+        rm -f "$dst"
+        echo "[rm] retired skill $skill"
+      else
+        echo "[keep] $dst (symlink not owned by this pack)"
+      fi
     fi
   done < <(load_lines "$PACK/shared/config/retired-skills.txt")
   return 0
 }
 
 install_agents() {
-  local a
+  local a src dst h
   mkdir -p "$HOME_C/agents"
   for a in hunter cut prove; do
-    [[ -f "$PACK/shared/agents/${a}.md" ]] || { echo "[fail] missing shared/agents/${a}.md"; return 1; }
-    cp -f "$PACK/shared/agents/${a}.md" "$HOME_C/agents/${a}.md"
+    src="$PACK/shared/agents/${a}.md"
+    dst="$HOME_C/agents/${a}.md"
+    [[ -f "$src" ]] || { echo "[fail] missing shared/agents/${a}.md"; return 1; }
+    if [[ -f "$dst" ]] && ! cmp -s "$src" "$dst" 2>/dev/null; then
+      if [[ "$FORCE" != "1" ]]; then
+        echo "[warn] skip differing $dst (FORCE=1 to replace)"
+        continue
+      fi
+      [[ -f "$dst.pre-kleos-bak" ]] || cp -f "$dst" "$dst.pre-kleos-bak"
+    fi
+    cp -f "$src" "$dst"
     echo "[ok] ~/.cursor/agents/${a}.md"
+    h="$(owned_hash "$dst")"
+    [[ -n "$h" ]] && printf 'agents/%s.md %s\n' "$a" "$h" >>"$HOME_C/kleosrules-owned.txt"
   done
 }
 
@@ -94,53 +125,4 @@ link_pack_rules() {
     fi
   done < <(load_lines "$PACK/shared/config/retired.txt")
   echo "[ok] pack .cursor/rules → shared/rules (project layer)"
-}
-
-gitignore_state() {
-  local repo="$1" gi="$repo/.gitignore"
-  [[ -f "$gi" ]] || touch "$gi"
-  grep -qxF 'state/' "$gi" || printf '\n# kleosrules runtime state (velocity log, intent snapshots)\nstate/\n' >>"$gi"
-}
-
-sync_repo_hooks() {
-  local repo="$1" label="$2"
-  if [[ "$(canon "$repo")" == "$(canon "$PACK")" ]]; then
-    remove_project_hooks "$repo" "$label"
-    gitignore_state "$repo"
-  fi
-}
-
-sync_repo_rules() {
-  local repo="$1" label="$2" dest name orphan
-  dest="$repo/.cursor/rules"
-  mkdir -p "$dest"
-  prune_user_layer_from_project "$dest"
-  for name in ${SHARED[@]+"${SHARED[@]}"}; do
-    [[ -f "$PACK/shared/rules/${name}.mdc" ]] || continue
-    rm -f "$dest/${name}.mdc"
-    cp -f "$PACK/shared/rules/${name}.mdc" "$dest/${name}.mdc"
-  done
-  while IFS= read -r orphan; do
-    [[ -z "$orphan" ]] && continue
-    if [[ -e "$dest/$orphan" || -L "$dest/$orphan" ]]; then
-      rm -f "$dest/$orphan"
-      echo "[rm] $label/$orphan"
-    fi
-  done < <(load_lines "$PACK/shared/config/retired.txt")
-  echo "[ok] rules → $label (project layer)"
-}
-
-sync_fleet() {
-  local pack_c repos=() repo label line
-  pack_c="$(canon "$PACK")"
-  while IFS= read -r line; do repos+=("$line"); done < <(discover)
-  echo "[scan] ${#repos[@]} project(s)"
-  link_pack_rules
-  sync_repo_hooks "$PACK" "pack"
-  for repo in ${repos[@]+"${repos[@]}"}; do
-    [[ "$repo" == "$pack_c" ]] && continue
-    label="$(basename "$repo")"
-    sync_repo_rules "$repo" "$label"
-    sync_repo_hooks "$repo" "$label"
-  done
 }

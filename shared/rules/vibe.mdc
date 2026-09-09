@@ -7,7 +7,7 @@ alwaysApply: true
 
 Prefer retrieval-led reasoning over pre-training. Do not dump framework AGENTS.md.
 
-GROUND: no `package.json` → this rule is silent; only ponytail and complexity apply. Otherwise Read the nearest `package.json`. Pick **one** stack. Do not mix APIs.
+GROUND: no `package.json` → stack pick silent; other rules still apply. Otherwise Read the nearest `package.json`. Pick **one** owning package. Do not mix APIs there.
 
 | Detect | Then |
 |---|---|
@@ -18,11 +18,11 @@ GROUND: no `package.json` → this rule is silent; only ponytail and complexity 
 
 Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>.md` if that skill is installed and the stack is React. If it is missing, stay on ponytail.
 
-## Hard (all JS/TS)
+## Hard (JS/TS)
 
-- No `useEffect` data-fetch waterfalls. Parallel independent awaits.
+- React: no `useEffect` fetch waterfalls; parallelize unless truly sequential.
 - No barrel-import of a whole UI kit.
-- Derived state, not mirrored `useState` + `useEffect`.
+- React: derived state, not mirrored `useState` + `useEffect`.
 - Do not invent RSC, `getServerSideProps`, or `client:*` unless this stack has them.
 
 Subagents inherit this. Do not paste into Task prompts. Ladder/cyclo: `ponytail.mdc` / `complexity.mdc`.

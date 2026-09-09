@@ -13,9 +13,10 @@ if (-not (Get-GitBashPath) -and -not (Get-Command wsl.exe -ErrorAction SilentlyC
 $src = Join-Path $Pack 'shared\hooks'
 New-Item -ItemType Directory -Force "$HooksD\lib", "$HooksD\policy" | Out-Null
 # Must match HOOK_SCRIPTS / RUNTIME_LIBS in shared/hooks/lib/fleet_install.sh
-foreach ($s in 'session_start.sh', 'before_submit_prompt.sh', 'before_shell.sh', 'before_read_file.sh', 'stop.sh') {
+foreach ($s in 'before_submit_prompt.sh', 'before_shell.sh', 'before_read_file.sh', 'stop.sh') {
   Copy-Item (Join-Path $src $s) $HooksD -Force
 }
+Remove-Item (Join-Path $HooksD 'session_start.sh') -Force -ErrorAction SilentlyContinue
 foreach ($s in 'common.sh', 'shell_gate.sh', 'shell_fleet.sh', 'diff_gate.sh') {
   Copy-Item (Join-Path $src "lib\$s") (Join-Path $HooksD 'lib') -Force
 }
@@ -26,7 +27,13 @@ New-Item -ItemType Directory -Force (Join-Path $HomeC 'rules') | Out-Null
 Get-Content (Join-Path $Pack 'shared\config\rules.global.txt') | ForEach-Object {
   $name = $_.Trim()
   if (-not $name -or $name.StartsWith('#')) { return }
-  Copy-Item (Join-Path $Pack "shared\rules\$name.mdc") (Join-Path $HomeC 'rules') -Force
+  $from = Join-Path $Pack "shared\rules\$name.mdc"
+  $to = Join-Path (Join-Path $HomeC 'rules') "$name.mdc"
+  if ((Test-Path $to) -and (Test-Path $from)) {
+    $a = (Get-FileHash $to -Algorithm SHA256).Hash; $b = (Get-FileHash $from -Algorithm SHA256).Hash
+    if (($a -ne $b) -and (-not (Test-Path "$to.pre-kleos-bak"))) { Copy-Item $to "$to.pre-kleos-bak" -Force }
+  }
+  Copy-Item $from (Join-Path $HomeC 'rules') -Force
 }
 Get-Content (Join-Path $Pack 'shared\config\retired.txt') | ForEach-Object {
   $line = $_.Trim()
@@ -53,12 +60,20 @@ Get-Content (Join-Path $Pack 'shared\config\retired-skills.txt') | ForEach-Objec
   $line = $_.Trim()
   if (-not $line -or $line.StartsWith('#')) { return }
   $orphan = Join-Path $skillsDst $line
-  if (Test-Path $orphan) { Remove-Item $orphan -Recurse -Force }
+  if (Test-Path $orphan) {
+    if (-not (Test-Path "$orphan.pre-kleos-bak")) { Move-Item $orphan "$orphan.pre-kleos-bak" -Force }
+  }
 }
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'agents') | Out-Null
 foreach ($a in 'hunter', 'cut', 'prove') {
-  Copy-Item (Join-Path $Pack "shared\agents\$a.md") (Join-Path $HomeC "agents\$a.md") -Force
+  $from = Join-Path $Pack "shared\agents\$a.md"
+  $to = Join-Path $HomeC "agents\$a.md"
+  if ((Test-Path $to) -and (Test-Path $from)) {
+    $x = (Get-FileHash $to -Algorithm SHA256).Hash; $y = (Get-FileHash $from -Algorithm SHA256).Hash
+    if (($x -ne $y) -and (-not (Test-Path "$to.pre-kleos-bak"))) { Copy-Item $to "$to.pre-kleos-bak" -Force }
+  }
+  Copy-Item $from $to -Force
 }
 
 $srcJson = Join-Path $src 'hooks.json'

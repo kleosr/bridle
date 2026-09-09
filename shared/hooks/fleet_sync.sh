@@ -26,9 +26,6 @@ case "$CMD" in
     install_agents
     link_pack_rules
     ;;
-  sync)
-    sync_fleet
-    ;;
   project-hooks)
     PROJECT_HOOKS=1
     if [[ -z "$TARGET_REPO" ]]; then
@@ -40,7 +37,7 @@ case "$CMD" in
       exit 2
     fi
     install_project_hooks "$TARGET_REPO" "target"
-    echo "[done] project-hooks (Lane-A; no sessionStart). Cloud got full .mdc set."
+    echo "[done] project-hooks (Lane-A). Cloud got full .mdc set."
     ;;
   verify)
     verify_smoke
@@ -52,11 +49,11 @@ case "$CMD" in
     install_agents
     link_pack_rules
     verify_smoke
-    echo "[done] fleet_sync all FORCE=$FORCE (local ~/.cursor only; no fleet scan)"
+    echo "[done] fleet_sync all FORCE=$FORCE (local ~/.cursor only)"
     echo "Manual: paste $PACK/shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
     ;;
   *)
-    echo "usage: FORCE=1 $0 {install|sync|project-hooks|verify|all}" >&2
+    echo "usage: FORCE=1 $0 {install|project-hooks|verify|all}" >&2
     exit 2
     ;;
 esac

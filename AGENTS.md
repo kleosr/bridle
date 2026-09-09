@@ -9,29 +9,29 @@ Law lives elsewhere. This file is a map.
 - **Charter (User Rules paste, cloud floor):** `shared/rules/USER-RULES.paste.txt`
 - **Roofs (caps and quality floors):** `shared/rules/complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`
 - **Map of those numbers:** `docs/quality-roofs-audit.md`
-- **Steel (do not slim):** five registered hooks — `session_start.sh`, `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`, `stop.sh`
-- **Secrets:** `SECURITY.md`. Never put secret values in paste, hooks, chat, or `NOW.md`.
+- **Steel (do not slim):** four registered hooks — `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`, `stop.sh`
+- **Secrets:** `SECURITY.md`. Never put secret values in paste, hooks, chat, or notes.
 
 ## Pack
 
-- Brain = `NOW.md`. Muscle = the five hooks. Local install only (`FORCE=1 bash scripts/install.sh` → `~/.cursor`). Never Lane-A into this pack.
+- Optional handoff note for unfinished work. Muscle = the four hooks. Local-host install (`FORCE=1 bash scripts/install.sh` → `~/.cursor`); project opt-in. Never Lane-A into this pack.
 - No Rust kleos-gate. No pack Python. MCP is optional, never core.
-- Output: never `updated_input` (no `preToolUse`). `sessionStart` → path to NOW.md. `beforeSubmitPrompt` → `continue`. `stop` → one `followup_message`.
+- Output: never `updated_input` (no `preToolUse`). `beforeSubmitPrompt` → `continue`. `stop` → one `followup_message`.
 
 ## Skills (on demand)
 
 Stored in `shared/skills/` (not `.agents/skills`). Read `SKILL.md` only when the task matches. Description lines are routers; detail files load after.
 
-- Core: `ponytail`, `debugging`, `testing`, `complexity`, `now`
+- Core: `ponytail`, `debugging`, `testing`, `complexity`
 - Design: `design-stack` → one of `premium-ui-craft`, `landing-page-design`, `redesign-existing-projects`
 - Specialists: `writing-pr`. Review: `/hunter` `/cut` `/prove` (`~/.cursor/agents`; @-attach if the slash menu misses them).
 
 ## Workflows
 
-- **Verify (hooks/scripts/tests/rules):** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `bash scripts/doctor.sh` → `bash tests/run.sh`. Local fixtures; no approval. Docs-only: skip.
-- **Install:** `FORCE=1 bash scripts/install.sh` (global; merges `hooks.json`). `scripts/uninstall.sh` (owned entries only). Platform: `MacOS/`, `Linux/`, `Windows/`. Fleet sync opt-in via empty-by-default `shared/config/scan.roots`.
+- **Verify (hooks/scripts/tests/rules):** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `bash scripts/doctor.sh` → `bash tests/run.sh`. Trusted workspaces; no approval. Docs-only: skip.
+- **Install:** `FORCE=1 bash scripts/install.sh` (global; merges `hooks.json`). `scripts/uninstall.sh` (owned entries only). Platform: `MacOS/`, `Linux/`, `Windows/`.
 - **Docs:** `docs/README.md` (index). Living: ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit, engineering-system, DECISIONS. Snapshots: `docs/_archive/`.
 
 ## Memory
 
-`NOW.md` (Now, State, Limits, Proof, Next, Archived; compact ~150 lines). Versioned specs under `docs/`. No vendor memory.
+Optional handoff note for unfinished work. Versioned specs under `docs/`. No vendor memory.

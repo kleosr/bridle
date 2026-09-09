@@ -16,10 +16,36 @@ if [[ -f "$HOME_C/hooks.json" ]]; then
 fi
 remove_owned_hook_files "$HOME_C/hooks"
 
+owned_ok() {
+  local rel="$1" dst="$2" want have
+  want="$(awk -v k="$rel" '$1==k{print $2; exit}' "$HOME_C/kleosrules-owned.txt" 2>/dev/null || true)"
+  have="$(owned_hash "$dst" 2>/dev/null || true)"
+  if [[ -n "$want" && -n "$have" ]]; then
+    [[ "$want" == "$have" ]]
+    return $?
+  fi
+  cmp -s "$PACK/shared/rules/$(basename "$rel")" "$dst" 2>/dev/null \
+    || cmp -s "$PACK/shared/agents/$(basename "$rel")" "$dst" 2>/dev/null
+}
+
+restore_bak() {
+  local dst="$1"
+  if [[ -f "$dst.pre-kleos-bak" ]]; then
+    mv -f "$dst.pre-kleos-bak" "$dst"
+    echo "[restore] $dst from pre-kleos backup"
+  fi
+}
+
 for name in "${GLOBAL[@]}"; do
-  if [[ -f "$HOME_C/rules/${name}.mdc" ]]; then
-    rm -f "$HOME_C/rules/${name}.mdc"
-    echo "[rm] ~/.cursor/rules/${name}.mdc"
+  dst="$HOME_C/rules/${name}.mdc"
+  if [[ -f "$dst" ]]; then
+    if owned_ok "rules/${name}.mdc" "$dst"; then
+      rm -f "$dst"
+      echo "[rm] ~/.cursor/rules/${name}.mdc"
+      restore_bak "$dst"
+    else
+      echo "[keep] differing ~/.cursor/rules/${name}.mdc (not owned)"
+    fi
   fi
 done
 
@@ -39,10 +65,18 @@ while IFS= read -r skill; do
 done < <(load_lines "$PACK/shared/config/skills.txt")
 
 for a in hunter cut prove; do
-  if [[ -f "$HOME_C/agents/${a}.md" ]]; then
-    rm -f "$HOME_C/agents/${a}.md"
-    echo "[rm] ~/.cursor/agents/${a}.md"
+  dst="$HOME_C/agents/${a}.md"
+  if [[ -f "$dst" ]]; then
+    if owned_ok "agents/${a}.md" "$dst"; then
+      rm -f "$dst"
+      echo "[rm] ~/.cursor/agents/${a}.md"
+      restore_bak "$dst"
+    else
+      echo "[keep] differing ~/.cursor/agents/${a}.md (not owned)"
+    fi
   fi
 done
+
+rm -f "$HOME_C/kleosrules-owned.txt"
 
 echo "[done] kleosrules uninstall complete (User Rules paste in Cursor Settings is manual)"

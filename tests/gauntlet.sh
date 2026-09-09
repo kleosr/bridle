@@ -75,12 +75,6 @@ run_test "beforeShellExecution denies git show .env" "deny" "$RESULT"
 RESULT="$(echo '{"command":"git status","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution allows git status" "allow" "$RESULT"
 
-HH="$(mktemp -d)"
-printf '%s\n' '## Now' 'ntn_abcdefghijklmnopqrstuvwxyz0123' > "$HH/NOW.md"
-RESULT="$(echo "{\"composer_mode\":\"agent\",\"workspace_roots\":[\"$HH\"]}" | bash "$PACK/shared/hooks/session_start.sh" | jq -c .)"
-rm -rf "$HH"
-run_test "sessionStart skips NOW.md that looks like a live token" "{}" "$RESULT"
-
 RESULT="$(echo '{"prompt":"deploy with glpat-abcdefghijklmnopqrstuvwx","hook_event_name":"beforeSubmitPrompt"}' | bash "$PACK/shared/hooks/before_submit_prompt.sh" | jq -r '.continue')"
 run_test "before_submit blocks GitLab glpat token" "false" "$RESULT"
 
@@ -127,7 +121,7 @@ CLOUD_DESIGN="$(test -e "$TMP_REPO/.cursor/rules/product-designer-skills.mdc" &&
 if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then PACK_LEFT=yes; else PACK_LEFT=no; fi
 rm -rf "$FS_HOME2" "$TMP_REPO"
 run_test "fleet_sync project-hooks completes" "0" "$RESULT"
-run_test "project-hooks omits sessionStart (no double HANDOFF inject)" "yes" "$CLOUD_OK"
+run_test "project-hooks omits sessionStart (cloud has no sessionStart)" "yes" "$CLOUD_OK"
 run_test "project-hooks includes before_shell" "1" "$CLOUD_SH"
 run_test "project-hooks copies secret_paths.ere" "yes" "$CLOUD_VERN"
 run_test "project-hooks copies secret_tokens.ere" "yes" "$CLOUD_TOK"
@@ -154,8 +148,8 @@ HEALED="$(
 rm -rf "$ORPH"
 run_test "heal_orphan removes hooks.json when scripts missing" "no" "$HEALED"
 
-RESULT="$(echo '{"command":"FORCE=1 bash shared/hooks/fleet_sync.sh install"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "allow"')"
-run_test "beforeShellExecution allows fleet_sync.sh install" "allow" "$RESULT"
+RESULT="$(cd "$PACK" && echo '{"command":"FORCE=1 bash shared/hooks/fleet_sync.sh install"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "allow"')"
+run_test "beforeShellExecution asks for fleet_sync.sh install (privileged activation)" "ask" "$RESULT"
 
 RESULT="$(jq -n --arg cmd $'FORCE=1 bash shared/hooks/fleet_sync.sh install\nrm -rf /' '{command:$cmd}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "regression: multiline after fleet_sync does not skip destructive deny" "deny" "$RESULT"
@@ -163,11 +157,16 @@ run_test "regression: multiline after fleet_sync does not skip destructive deny"
 RESULT="$(jq -n --arg cmd $'FORCE=1 bash scripts/install.sh\nrm -rf /' '{command:$cmd}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "regression: multiline after scripts/install.sh does not skip destructive deny" "deny" "$RESULT"
 
+NOPACK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/kleos-nopack.XXXXXX")"
+RESULT="$(cd "$NOPACK_DIR" && echo '{"command":"bash scripts/install.sh"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+rm -rf "$NOPACK_DIR"
+run_test "regression: installer path without pack markers denied" "deny" "$RESULT"
+
 WIN_JSON="$(jq --arg shim 'C:\Users\x\.cursor\hooks\bash-shim.ps1' -f "$PACK/shared/hooks/lib/windows_hooks_rewrite.jq" "$PACK/shared/hooks/hooks.json")"
-run_test "windows rewrite keeps sessionStart as array" "array" "$(printf '%s' "$WIN_JSON" | jq -r '.hooks.sessionStart | type')"
+run_test "windows rewrite keeps stop as array" "array" "$(printf '%s' "$WIN_JSON" | jq -r '.hooks.stop | type')"
 run_test "windows rewrite keeps beforeShellExecution as array" "array" "$(printf '%s' "$WIN_JSON" | jq -r '.hooks.beforeShellExecution | type')"
-run_test "windows rewrite sessionStart[0].failClosed stays false" "false" "$(printf '%s' "$WIN_JSON" | jq -r '.hooks.sessionStart[0].failClosed')"
-run_test "windows rewrite sessionStart command uses bash-shim" "yes" "$(printf '%s' "$WIN_JSON" | jq -r 'if (.hooks.sessionStart[0].command | test("bash-shim")) then "yes" else "no" end')"
+run_test "windows rewrite stop loop_limit stays 1" "1" "$(printf '%s' "$WIN_JSON" | jq -r '.hooks.stop[0].loop_limit')"
+run_test "windows rewrite stop command uses bash-shim" "yes" "$(printf '%s' "$WIN_JSON" | jq -r 'if (.hooks.stop[0].command | test("bash-shim")) then "yes" else "no" end')"
 
 FS_HOME3="$(mktemp -d)"
 mkdir -p "$FS_HOME3/.cursor/rules"
@@ -178,7 +177,7 @@ REL_CMD="$(jq -r '.hooks[][]?.command // empty' "$FS_HOME3/.cursor/hooks.json" 2
 REL_CMD="${REL_CMD//[!0-9]}"; [[ -z "$REL_CMD" ]] && REL_CMD=0
 DOT_CMD="$(jq -r '.hooks[][]?.command // empty' "$FS_HOME3/.cursor/hooks.json" 2>/dev/null | grep -c '^\./hooks/' || true)"
 DOT_CMD="${DOT_CMD//[!0-9]}"; [[ -z "$DOT_CMD" ]] && DOT_CMD=0
-HOME_EVT="$(jq -r '.hooks|keys|length' "$FS_HOME3/.cursor/hooks.json" 2>/dev/null || echo 0)"
+HOME_EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile"),has("stop")] | map(select(.)) | length' "$FS_HOME3/.cursor/hooks.json" 2>/dev/null || echo 0)"
 HOME_AGENT="$(test -f "$FS_HOME3/.cursor/rules/agent.mdc" && echo yes || echo no)"
 HOME_MARIO="$(test -f "$FS_HOME3/.cursor/rules/mario-engineering-team.mdc" && echo yes || echo no)"
 HOME_CYCLO="$(test -f "$FS_HOME3/.cursor/rules/complexity.mdc" && echo yes || echo no)"
@@ -193,8 +192,8 @@ HOME_LEAN="$(test -e "$FS_HOME3/.cursor/rules/native-lean-autoload.mdc" && echo 
 PACK_DEBUG="$(test -e "$PACK/.cursor/rules/debugging.mdc" && echo yes || echo no)"
 rm -rf "$FS_HOME3"
 run_test "home hooks.json has no project-relative .cursor/hooks/ commands" "0" "$REL_CMD"
-run_test "home hooks.json uses ./hooks/ commands" "5" "$DOT_CMD"
-run_test "home hooks.json has 5 events" "5" "$HOME_EVT"
+run_test "home hooks.json uses ./hooks/ commands" "4" "$DOT_CMD"
+run_test "home hooks.json registers the 4 required events" "4" "$HOME_EVT"
 run_test "install copies agent.mdc to user rules" "yes" "$HOME_AGENT"
 run_test "regression: install prunes leftover mario-engineering-team.mdc" "no" "$HOME_MARIO"
 run_test "install copies complexity.mdc to user rules" "yes" "$HOME_CYCLO"
