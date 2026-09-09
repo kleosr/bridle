@@ -10,8 +10,8 @@ Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Generic 
 
 ## Hard
 
-- RLS on every tenant table. `auth.uid()` in policies. No app-only `WHERE user_id =`.
-- Views: `security_invoker = true` (PG15+). No `SECURITY DEFINER` to "fix" RLS.
+- Tenant isolation per the repo's model (often RLS + `auth.uid()`); verify membership/org/service identities. No app-only `WHERE user_id =` without a matching policy.
+- Views: `security_invoker = true` (PG15+). Avoid `SECURITY DEFINER` to bypass RLS; allowed only with safe `search_path` + least privilege + review.
 - Service role never in client bundles. User JWT for user data.
 - Pooler-aware connections. No connection-per-request in serverless without the pooler.
 

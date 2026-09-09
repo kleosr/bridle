@@ -7,7 +7,7 @@ description: >
 
 # Premium UI craft
 
-Law for product UI. Do not invent a second aesthetic. Sources when stuck: [SOURCE.md](SOURCE.md).
+Law for product UI. User brand and a11y override this profile. Sources when stuck: [SOURCE.md](SOURCE.md).
 
 ## Doctrine
 
@@ -15,7 +15,7 @@ Interaction-dense, visually sparse. One accent for primary/complete, one for dan
 
 ## Palette ban
 
-Never Scandinavian, Nordic, Japandi, or hygge. No parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige, or serif-on-paper titles. Linear/Stripe/Apple.
+Default profile avoids Scandinavian, Nordic, Japandi, hygge: no parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige, or serif-on-paper titles. Linear/Stripe/Apple.
 
 Typography is the brand. One UI sans. 4–6 sizes. Tabular nums. No decorative second font unless the user explicitly asks.
 
@@ -27,7 +27,7 @@ One primary job per screen. Title → action → chrome. Kickers 11px muted. Tit
 
 ## Chrome
 
-Desktop: left rail ~220px; active = marker + text, not a gray pill. Mobile ≤5 destinations: bottom dock, `safe-area-inset-bottom`. No hamburger+Sheet if five tabs exist. No framed-device viewport wrappers.
+Defaults: desktop left rail ~220px; active = marker + text, not a gray pill. Mobile ≤5 destinations: bottom dock, `safe-area-inset-bottom`. No hamburger+Sheet if five tabs exist. No framed-device viewport wrappers.
 
 ## Components
 

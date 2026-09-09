@@ -61,7 +61,7 @@ B_HITS="$(grep -Rn --include='*.sh' --include='*.txt' -F '\b' "$HOOKS_DIR/" 2>/d
 if [[ -z "$B_HITS" ]]; then ok "no GNU grep \\\\b (stock macOS BSD grep safe)"
 else fail "GNU grep \\\\b found (breaks stock macOS): $B_HITS"; fi
 
-for f in "$HOOKS_DIR"/session_start.sh "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh "$HOOKS_DIR"/stop.sh; do
+for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh "$HOOKS_DIR"/stop.sh; do
   n="$(wc -l < "$f")"
   if [[ "$n" -le 80 ]]; then ok "LOC ≤ 80: ${f#$PACK/} ($n)"
   else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
@@ -92,7 +92,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -112,13 +112,15 @@ else
   echo "[info] live ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh or Windows/install.ps1)"
 fi
 
-if jq -e '.hooks|keys|length == 5' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.sessionStart[0].command == "./hooks/session_start.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+if jq -e '.hooks.beforeSubmitPrompt[0].command == "./hooks/before_submit_prompt.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeShellExecution[0].command == "./hooks/before_shell.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeReadFile[0].command == "./hooks/before_read_file.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.stop[0].command == "./hooks/stop.sh" and .hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks|has("sessionStart")|not' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true and .hooks.beforeReadFile[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.cloud.json" >/dev/null 2>&1; then
-  ok "hooks.json is 5 native ./hooks/ events (stop bounded; security failClosed)"
-else fail "hooks.json must be 5 events with ./hooks/ commands, stop.loop_limit 1, and security failClosed"; fi
+  ok "hooks.json registers submit+shell+read+stop (no sessionStart; security failClosed)"
+else fail "hooks.json must register submit+shell+read+stop with ./hooks/ commands, stop.loop_limit 1, no sessionStart, and security failClosed"; fi
 
 if jq empty "$PACK/shared/config/manifest.json" >/dev/null 2>&1 \
   && [[ -f "$HOOKS_DIR/lib/hooks_json.jq" && -f "$HOOKS_DIR/lib/hooks_json.sh" ]]; then
@@ -140,14 +142,14 @@ else ok "no repo-level hooks in pack (local global-only mode)"; fi
 if ! grep -RqiE 'CallMcpTool|user-obsidian' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
 else fail "MCP core dependency found in hooks (should be optional, not core)"; fi
 
-if [[ -f "$PACK/NOW.md" ]] && grep -q 'COMPACTION' "$PACK/NOW.md"; then ok "NOW.md with compaction protocol"
-else fail "NOW.md missing or lacks compaction protocol"; fi
+if [[ -f "$PACK/NOW.md" ]]; then ok "NOW.md present (optional handoff note)"
+else echo "[info] no NOW.md (optional; only for unfinished multi-session work)"; fi
 
 if [[ -f "$PACK/SECURITY.md" ]] && grep -q 'onlyBuiltDependencies' "$PACK/SECURITY.md"; then ok "SECURITY.md present"
 else fail "SECURITY.md missing or incomplete"; fi
 
 if [[ ! -f "$PACK/HANDOFF.md" && ! -d "$PACK/shared/skills/session-handoff" ]]; then ok "HANDOFF.md and session-handoff retired"
-else fail "HANDOFF.md or skills/session-handoff still on disk (use NOW.md and /now)"; fi
+else fail "HANDOFF.md or skills/session-handoff still on disk (use NOW.md)"; fi
 
 if [[ ! -f "$HOOKS_DIR/stop_gate.sh" && ! -f "$HOOKS_DIR/lean_gate.sh" && ! -f "$HOOKS_DIR/pre_tool_use.sh" ]]; then
   ok "unregistered event scripts removed"
@@ -169,7 +171,7 @@ for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
     LAW_STALE="$LAW_STALE ${f#$PACK/}"
   fi
 done
-if [[ -z "$LAW_STALE" ]]; then ok "law/skills match five-hook harness (no deleted 2026-08 gate names)"
+if [[ -z "$LAW_STALE" ]]; then ok "law/skills match four-hook harness (no deleted 2026-08 gate names)"
 else fail "stale deleted-hook names in$LAW_STALE"; fi
 
 if [[ ! -f "$PACK/shared/rules/native-lean-autoload.mdc" && ! -f "$PACK/shared/rules/debugging.mdc" ]]; then ok "merged/retired duplicate mdc gone"
@@ -228,8 +230,8 @@ hash_file() {
 }
 HOME_HOOKS="${HOME}/.cursor/hooks"
 if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
-  if hash_file "$HOOKS_DIR/session_start.sh" >/dev/null; then
-    for rel in session_start.sh before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
+  if hash_file "$HOOKS_DIR/before_submit_prompt.sh" >/dev/null; then
+    for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
       src="$HOOKS_DIR/$rel"
       dst="$HOME_HOOKS/$rel"
       if [[ ! -f "$dst" ]]; then

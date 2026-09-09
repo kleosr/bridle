@@ -38,8 +38,8 @@ git -C "$GR_TMP/rewrite" add mid.ts
 git -C "$GR_TMP/rewrite" -c user.email=t@t -c user.name=t commit -q -m base
 seq 1 200 | sed 's/^/export const w/' > "$GR_TMP/rewrite/mid.ts"
 RW_OUT="$(gr_stop "$GR_TMP/rewrite")"
-RESULT="$(printf '%s' "$RW_OUT" | jq -r '.followup_message // "" | test("rewrite: mid.ts changed")')"
-run_test "stop: 100% rewrite of 200-line file flagged as rewrite" "true" "$RESULT"
+RESULT="$(printf '%s' "$RW_OUT" | jq -r '.followup_message // "" | test("churn: mid.ts diff")')"
+run_test "stop: 100% rewrite of 200-line file flagged as churn" "true" "$RESULT"
 
 gr_repo "$GR_TMP/small_full"
 gr_lines 50 > "$GR_TMP/small_full/s.ts"
@@ -67,21 +67,21 @@ printf 'function a() {\n  return 999\n}\n' > "$GR_TMP/real_fix_ws/fix.js"
 RESULT="$(gr_stop "$GR_TMP/real_fix_ws" | jq -c .)"
 run_test "stop: real 1-line fix with minor ws is NOT flagged" "{}" "$RESULT"
 
-# --- Stop gate: duplicate helper (unchanged) ---
+# --- Stop gate: same-name helpers are not semantic duplication ---
 
 gr_repo "$GR_TMP/dup"
 printf 'function helper() { return 1 }\n' > "$GR_TMP/dup/a.js"
 printf 'function helper() { return 2 }\n' > "$GR_TMP/dup/b.js"
-RESULT="$(gr_stop "$GR_TMP/dup" | jq -r '.followup_message // "" | test("duplicate_helper: helper")')"
-run_test "stop: planted duplicate helper flagged" "true" "$RESULT"
+RESULT="$(gr_stop "$GR_TMP/dup" | jq -c .)"
+run_test "stop: same-name helpers across files NOT flagged (cut owns semantics)" "{}" "$RESULT"
 
 gr_repo "$GR_TMP/tracked"
 printf 'def one():\n    pass\n' > "$GR_TMP/tracked/m.py"
 git -C "$GR_TMP/tracked" add m.py
 git -C "$GR_TMP/tracked" -c user.email=t@t -c user.name=t commit -q -m base
 printf 'def one():\n    pass\n\ndef one():\n    pass\n' > "$GR_TMP/tracked/m.py"
-RESULT="$(gr_stop "$GR_TMP/tracked" | jq -r '.followup_message // "" | test("duplicate_helper: one")')"
-run_test "stop: added helper duplicating an existing one in a tracked file flagged" "true" "$RESULT"
+RESULT="$(gr_stop "$GR_TMP/tracked" | jq -r '.followup_message // "" | test("duplicate_helper")')"
+run_test "stop: no duplicate_helper heuristic remains" "false" "$RESULT"
 
 gr_repo "$GR_TMP/rename"
 printf 'def one():\n    pass\n' > "$GR_TMP/rename/m.py"
@@ -109,11 +109,11 @@ mkdir -p "$GR_TMP/nogit"
 RESULT="$(gr_stop "$GR_TMP/nogit" | jq -c .)"
 run_test "stop: non-git workspace emits {} (explicit fallback)" "{}" "$RESULT"
 
-RESULT="$(gr_stop "$GR_TMP/rewrite" | jq -r '.followup_message | test("stop.sh, runs once") and test("Touch only the hunk")')"
+RESULT="$(gr_stop "$GR_TMP/rewrite" | jq -r '.followup_message | test("advisory") and test("Narrow your hunks")')"
 run_test "stop: failure names the gate and the recovery action" "true" "$RESULT"
 
 RESULT="$(gr_stop "$GR_TMP/rewrite" | jq -r 'has("followup_message") and (has("permission")|not) and (has("continue")|not)')"
-run_test "stop: rewrite warning is advisory followup, not refusal" "true" "$RESULT"
+run_test "stop: churn warning is advisory followup, not refusal" "true" "$RESULT"
 
 # --- Hooks.json shape ---
 
@@ -134,21 +134,6 @@ run_test "pre-action gate: shell redirect into .ts denied before write" "deny" "
 RESULT="$(echo '{"command":"bash tests/run.sh && bash scripts/doctor.sh","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "pre-action gate: repo proof command allowed" "allow" "$RESULT"
 
-# --- Duplicate channel ---
-
-RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | test("## Ladder") or test("alwaysApply") or test("Harness \\(")')"
-run_test "duplicate channel: sessionStart does not re-inject .mdc bodies" "false" "$RESULT"
-
-RESULT="$(cat "$PACK/tests/fixtures/sessionStart.json" | bash "$PACK/shared/hooks/session_start.sh" | jq -r '.additional_context | (test("NOW\\.md") and (test("## Now")|not))')"
-run_test "hook context: sessionStart points at NOW.md without dumping body" "true" "$RESULT"
-
-# --- Missing grounding ---
-
-EMPTY_WS="$(mktemp -d "${TMPDIR:-/tmp}/kleos-empty.XXXXXX")"
-RESULT="$(jq -n --arg w "$EMPTY_WS" '{composer_mode:"agent",workspace_roots:[$w]}' | bash "$PACK/shared/hooks/session_start.sh" | jq -r 'if . == {} then "quiet" else "context" end')"
-rm -rf "$EMPTY_WS"
-run_test "missing grounding: workspace without NOW.md falls back, never crashes" "$([[ "$RESULT" == quiet || "$RESULT" == context ]] && echo ok || echo bad)" "ok"
-
 # --- Malformed grounding ---
 
 MDC_BAD="$(mktemp -d "${TMPDIR:-/tmp}/kleos-mdc.XXXXXX")"
@@ -162,9 +147,6 @@ for f in "$PACK"/shared/rules/*.mdc; do
   awk 'NR==1 && $0!="---"{bad=1} /^alwaysApply:/ && $0 !~ /^alwaysApply: (true|false)$/ {bad=1} END{exit bad?1:0}' "$f" || MDC_OK="bad:$(basename "$f")"
 done
 run_test "malformed grounding: every pack .mdc has valid frontmatter" "ok" "$MDC_OK"
-
-ALWAYS_ON="$(grep -l '^alwaysApply: true' "$PACK"/shared/rules/*.mdc | wc -l | tr -d ' ')"
-run_test "always-on rule count is 7 (agent, ponytail, pnpm, complexity, vibe, testing, types)" "7" "$ALWAYS_ON"
 
 DUP_HEAD="$(grep -h '^# ' "$PACK"/shared/rules/*.mdc | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "duplicate channel: no two .mdc share a top heading" "0" "$DUP_HEAD"

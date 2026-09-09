@@ -88,3 +88,13 @@ run_test "regression: before_read_file non-JSON denies" "deny" "$RESULT"
 
 RESULT="$(printf '%s' 'not json' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_shell non-JSON denies" "deny" "$RESULT"
+
+run_test "regression: read denies bare .env" "deny" "$(read_verdict '.env')"
+run_test "regression: read denies bare id_rsa" "deny" "$(read_verdict 'id_rsa')"
+run_test "regression: read denies traversal to .env" "deny" "$(read_verdict '/repo/a/../.env')"
+run_test "regression: read denies dot-slash .env" "deny" "$(read_verdict './.env')"
+run_test "regression: deny wins over infra ask" "deny" "$(gate_verdict 'psql -c "select 1" && cat .env')"
+run_test "regression: deny wins over infra ask (source-write)" "deny" "$(gate_verdict 'psql -c "select 1"; echo x > a.ts')"
+run_test "regression: installer with shell metachars denied" "deny" "$(gate_verdict 'bash scripts/install.sh; rm -rf /')"
+run_test "regression: installer with pipe denied" "deny" "$(gate_verdict 'bash shared/hooks/fleet_sync.sh install | cat .env')"
+run_test "regression: fleet_sync unknown arg is not privileged" "allow" "$(gate_verdict 'bash shared/hooks/fleet_sync.sh --evil')"

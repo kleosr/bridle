@@ -1,27 +1,26 @@
 ---
-description: "Five-hook harness capsule. NOW.md + SECURITY.md. No preToolUse."
+description: "Four-hook harness capsule. Handoff note + SECURITY.md. No preToolUse."
 alwaysApply: true
 ---
 
 # AGENT CAPSULE
 
-Bash hooks + local `NOW.md`. One model per conversation.
-Read `NOW.md` when sessionStart points at it. Prefer NO CODE. Smallest Diff. Zero prose comments.
+Bash hooks + optional handoff note. One model per conversation.
+Prefer NO CODE. Smallest Diff. Rationale comments allowed; no prose noise.
 Git only when asked. Secrets never in code or chat. Security: `SECURITY.md`.
 Done = cited proof, green. Never fight a deny.
 Never reintroduce Rust kleos-gate or pack Python.
 
-## Harness (five registered events)
+## Harness (four registered events)
 
 | Event | Script | Job |
 |---|---|---|
-| sessionStart | `session_start.sh` | `additional_context`: path to NOW.md. Quiet in plan mode. |
-| beforeSubmitPrompt | `before_submit_prompt.sh` | Secret/token in prompt → `continue: false`. Else `continue: true`. `failClosed: true`. |
-| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Secret path in command deny. Complexity-lint disable deny. Infra/DB `ask`. `failClosed: true`. |
-| beforeReadFile | `before_read_file.sh` | Secret paths deny (`failClosed: true`). |
-| stop | `stop.sh` | Advisory rewrite warning: unrequested rewrite (>50% lines, file ≥80 LOC) or mass reindent. One `followup_message`, `loop_limit: 1`, else `{}`. |
+| beforeSubmitPrompt | `before_submit_prompt.sh` | Known secret/token in prompt → `continue: false`. Else `continue: true`. `failClosed: true`. |
+| beforeShellExecution | `before_shell.sh` | Destructive / source-write deny. Sensitive-path screening deny. Complexity-lint disable deny. Infra/DB + activation `ask`. Deny > ask > allow. `failClosed: true`. |
+| beforeReadFile | `before_read_file.sh` | Sensitive-path screening deny (`failClosed: true`). |
+| stop | `stop.sh` | Advisory churn note: diff added+deleted ≥50% vs HEAD (file ≥80 LOC) or mass reindent. One `followup_message`, `loop_limit: 1`, else `{}`. |
 
-This pack registers the five above. No `postToolUse`, `preToolUse`, or `beforeMCPExecution`. Writes are not blocked at write time; `stop` cannot refuse completion.
+This pack registers the four above. No `postToolUse`, `preToolUse`, or `beforeMCPExecution`. Writes are not blocked at write time; `stop` cannot refuse completion. Regex gates are not a sandbox.
 
-Brain = `NOW.md`. Local install only (`~/.cursor`). Skills on demand. Hooks never inject `.mdc`. No `updated_input`. Review: `hunter`, `cut`, `prove`.
-Open the files you will change. One or two sentences: outcome, files, proof.
+Handoff note when useful, never secrets. Local-host install (`~/.cursor`); project deploy is opt-in. Skills on demand. Hooks never inject `.mdc`. No `updated_input`. Review: `hunter`, `cut`, `prove`.
+Avoid extra tabs; contextual reads allowed. Default 1–2 sentences: outcome, files, proof; expand for architecture/risks.

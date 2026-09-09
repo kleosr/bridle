@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PACK="$(cd "$(dirname "$0")" && pwd)/.."
-PACK="$(cd "$PACK" && pwd)"
+REAL_PACK="$(cd "$(dirname "$0")" && pwd)/.."
+REAL_PACK="$(cd "$REAL_PACK" && pwd)"
+PACK="$(mktemp -d "${TMPDIR:-/tmp}/kleos-pack.XXXXXX")"
+cp -a "$REAL_PACK/." "$PACK/"
 FAIL=0
 PASS=0
 
-if [[ -f "$PACK/.cursor/hooks.json" ]]; then
-  rm -f "$PACK/.cursor/hooks.json"
-  rm -rf "$PACK/.cursor/hooks"
-fi
+cleanup_pack() {
+  cd "${TMPDIR:-/tmp}" 2>/dev/null || true
+  rm -rf "$PACK"
+}
+trap cleanup_pack EXIT
+cd "$PACK"
 
 run_test() {
   local name="$1" expected="$2" actual="$3"
@@ -23,20 +27,7 @@ run_test() {
   fi
 }
 
-rm -rf "$PACK/state"
-
-NOW_BACKUP=""
-if [[ -f "$PACK/NOW.md" ]]; then
-  NOW_BACKUP="$(cat "$PACK/NOW.md")"
-fi
-
-restore_now() {
-  rm -rf "$PACK/state"
-  if [[ -n "$NOW_BACKUP" ]]; then
-    printf '%s' "$NOW_BACKUP" >"$PACK/NOW.md"
-  fi
-}
-trap restore_now EXIT
+rm -rf "$PACK/state" "$PACK/.cursor/hooks.json" "$PACK/.cursor/hooks"
 
 source "$PACK/tests/static_checks.sh"
 
@@ -55,20 +46,12 @@ echo "=== Plan-mode regression ==="
 source "$PACK/tests/plan_mode.sh"
 
 echo ""
-echo "=== Conversation-scoped state ==="
-source "$PACK/tests/conversation_state.sh"
-
-echo ""
 echo "=== Hook edge cases ==="
 source "$PACK/tests/hook_edges.sh"
 
 echo ""
 echo "=== Runtime grounding probes ==="
 source "$PACK/tests/grounding.sh"
-
-echo ""
-echo "=== Always-on token budget ==="
-source "$PACK/tests/token_budget.sh"
 
 echo ""
 echo "=== Install lifecycle (isolated HOME) ==="

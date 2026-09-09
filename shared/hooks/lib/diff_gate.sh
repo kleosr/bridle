@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DIFF_SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs)'
+DIFF_SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs)'
 DIFF_REWRITE_MIN=80
 DIFF_REWRITE_RATIO=50
 DIFF_FORMAT_MIN=20
@@ -21,39 +21,6 @@ diff_tracked_src() {
   done
 }
 
-diff_changed_files() {
-  local root="$1"
-  if diff_has_head "$root"; then
-    git -C "$root" diff --name-only HEAD -- 2>/dev/null
-  else
-    git -C "$root" diff --name-only --cached -- 2>/dev/null
-  fi
-  git -C "$root" ls-files --others --exclude-standard 2>/dev/null
-}
-
-diff_additions() {
-  local root="$1" f
-  if diff_has_head "$root"; then
-    git -C "$root" diff HEAD -- 2>/dev/null | grep -E '^\+[^+]' || true
-  fi
-  while IFS= read -r f; do
-    [[ -n "$f" && -f "$root/$f" ]] || continue
-    sed 's/^/+/' "$root/$f"
-  done < <(git -C "$root" ls-files --others --exclude-standard 2>/dev/null)
-}
-
-diff_def_names() {
-  sed -nE 's/^\+?(export[[:space:]]+)?(async[[:space:]]+)?(function|def|func|fn)[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\4/p; s/^\+?([A-Za-z_][A-Za-z0-9_]*)\(\)[[:space:]]*\{.*/\1/p'
-}
-
-diff_changed_content() {
-  local root="$1" f
-  while IFS= read -r f; do
-    [[ -n "$f" && -f "$root/$f" ]] || continue
-    cat "$root/$f"
-  done < <(diff_changed_files "$root")
-}
-
 gate_rewrite() {
   local root="$1" f out="" stat a d changed total
   while IFS= read -r f; do
@@ -66,7 +33,7 @@ gate_rewrite() {
     total="$(git -C "$root" show HEAD:"$f" 2>/dev/null | wc -l | tr -d ' ')"
     [[ -n "$total" && "$total" -ge "$DIFF_REWRITE_MIN" ]] || continue
     [[ "$changed" -ge $((total * DIFF_REWRITE_RATIO / 100)) ]] || continue
-    out="${out}rewrite: $f changed $changed of $total lines. Touch only the hunk of the defect (ponytail.mdc: reducing edits allowed, growth not).
+    out="${out}churn: $f diff $changed lines vs $total baseline (added+deleted). Baseline is HEAD; may include pre-existing changes. Narrow your hunks; never revert others.
 "
   done < <(diff_tracked_src "$root")
   printf '%s' "$out"
@@ -84,26 +51,15 @@ gate_format_churn() {
     aw="${sw%% *}"; dw="${sw##* }"; aw="${aw:-0}"; dw="${dw:-0}"
     total=$((a + d)); real=$((aw + dw))
     [[ "$total" -ge "$DIFF_FORMAT_MIN" && "$real" -le $((total * DIFF_FORMAT_RATIO / 100)) ]] || continue
-    out="${out}format_churn: $f has $total diff lines but only $real are real (non-whitespace). Reindent is unrequested churn; revert to the hunk only.
+    out="${out}format_churn: $f has $total diff lines but only $real non-whitespace. Advisory only; if the reindent is yours narrow it, else leave others.
 "
   done < <(diff_tracked_src "$root")
   printf '%s' "$out"
 }
 
-gate_duplicate_helper() {
-  local root="$1" name all dups=""
-  all="$(diff_changed_content "$root" | diff_def_names | sort)"
-  while IFS= read -r name; do
-    [[ -n "$name" ]] || continue
-    if [[ "$(printf '%s\n' "$all" | grep -cx "$name")" -ge 2 ]]; then dups="$dups $name"; fi
-  done < <(diff_additions "$root" | diff_def_names | sort -u)
-  [[ -n "$dups" ]] || return 0
-  printf 'duplicate_helper:%s defined more than once across changed files. Keep one definition and import it (ponytail Refactor).\n' "$dups"
-}
-
 gate_diff() {
   local root="$1" out
-  out="$(gate_rewrite "$root")$(gate_format_churn "$root")$(gate_duplicate_helper "$root")"
+  out="$(gate_rewrite "$root")$(gate_format_churn "$root")"
   [[ -n "$out" ]] || return 0
-  printf 'PONYTAIL STOP (stop.sh, runs once per turn). Fix, then run the repo proof.\n%s' "$out"
+  printf 'PONYTAIL STOP (advisory, once per turn). Fix your hunks, then run the repo proof.\n%s' "$out"
 }

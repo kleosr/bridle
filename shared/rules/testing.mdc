@@ -6,12 +6,12 @@ alwaysApply: true
 # TESTING (THIN)
 
 Cero bloat en tests. Public surface only. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
-Run the verify this change can break. Fail closed on red. Cite evidence.
-Docs or NOW.md only: no house gauntlet. Hooks, scripts, or tests: `bash tests/run.sh` and `bash scripts/doctor.sh`. Those fixtures are disposable — run them without asking.
+Run the verify this change can break. Fail closed on red; report pre-existing/env blockers, do not loop forever. Cite evidence.
+Docs or NOW.md only: no house gauntlet. Hooks, scripts, or tests: `bash tests/run.sh` and `bash scripts/doctor.sh`. Trusted workspace: run those fixtures without asking.
 Bug fix ships `regression: <symptom>`. Flaky = broken.
 
-Coverage of code you added or changed this turn is **100%** when the repo already has a coverage job — cite that job. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
-Mutation: if the repo already runs a mutator, **0 surviving mutants** on files you touched. Do not add Stryker, PIT, or mutmut.
+Coverage of code you added or changed this turn is **100%** when the repo already has a coverage job — cite that job; risk-based, genuine exclusions ok. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
+Mutation: if the repo already runs a mutator, **0 surviving mutants** on files you touched; documented equivalent/unreachable ok. Do not add Stryker, PIT, or mutmut.
 
 ## PROCEDURE
 TDD order, mocks, gauntlet workflows:
