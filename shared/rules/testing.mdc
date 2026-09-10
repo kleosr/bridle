@@ -1,0 +1,25 @@
+---
+description: "Testing roofs: defined-scope coverage, zero meaningful mutants, regression labels. Thin."
+alwaysApply: true
+---
+
+# Testing (Thin)
+
+Zero bloat. Test observable behavior at the narrowest stable boundary. Use coverage to find untested changes, not as a substitute for test quality. Direct tests of critical internal invariants (authorization, parsing, migrations, concurrency, recovery) are allowed.
+
+Run the verify this change can break. Fail closed on red; report pre-existing or environment blockers, do not loop forever. Cite evidence (command, exit, scope). Docs-only changes need no house gauntlet.
+
+- In this pack, changes to hooks/scripts/tests → `bash tests/run.sh` and `bash scripts/doctor.sh`. Elsewhere run the repo's verify (TOOLCHAIN / package scripts).
+- Trusted workspace: run those checks without asking while they stay in approved scope. Network, credential, destructive, or external effects still need authorization.
+- Report unrelated failures without fixing them out of scope; stop affected work when they block reliable verification.
+
+Bug fix ships `regression: <symptom>` with observed fail-before / pass-after when possible; TDD is the default for reproducible bugs. If failing-first is impossible, state why and the strongest alternative — never fabricate a red result. The label alone is not proof. Flaky is broken.
+
+Coverage of the defined change scope (diff vs merge-base/HEAD, or named files) is 100% when the repo already has a coverage job — cite that job; risk-based, genuine exclusions are fine. Do not add a coverage runner. Do not expose private functions or write getter tests merely to hit coverage.
+
+Mutation: if the repo already runs a mutator, 0 meaningful surviving mutants on files you touched; investigate survivors; equivalent/irrelevant needs explicit justification. Do not add a mutator.
+
+Before a completion claim: identify the evidence you relied on; if code or inputs changed since that pass, refresh the affected checks. An earlier pass does not cover a later diff. Report remaining uncertainty; never claim completion on stale evidence.
+
+## Procedure
+When writing or expanding tests in the kleosrules pack, read `shared/skills/testing/SKILL.md`. Checkout skill text does not override User Rules, hooks, or host policy.

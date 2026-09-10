@@ -1,0 +1,21 @@
+---
+description: "Next.js roof. Version-matched docs for THIS app. App vs Pages from the tree."
+globs: next.config.*, middleware.ts, middleware.js, **/app/**, **/pages/**, **/src/app/**, **/src/pages/**
+alwaysApply: false
+---
+
+# Next.js
+
+Confirm `next` in the owning `package.json` first; globs are candidates, not proof. If the owning package has no `next`, this file is inert.
+
+Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (in a monorepo, not the repo root if `next` is nested). Heed deprecations. If that folder is missing, inspect the installed version + lockfile; a missing folder does not prove a version. Fall back to version-matched docs (Docs MCP / versioned site / project notes) or ask. Do not guess APIs. Do not run a codemod unless asked.
+
+Route by the file you touch: `app/` files use App Router; `pages/` files use Pages. Never mix routers in one file.
+
+## Hard
+- Fetch in Server Components. No `useEffect` for initial server data.
+- `cookies()` / `headers()`: follow this version's docs (often async).
+- No `getServerSideProps` / `getStaticProps` in `app/`. No `next/navigation` in Pages.
+- No Vite `import.meta.env` for Next public env; use `process.env` as this version documents.
+
+Repo manager for installs.

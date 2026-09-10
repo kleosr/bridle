@@ -1,0 +1,6 @@
+# Local runtime state (never committed)
+state/
+.cursor/
+# Editor / OS noise
+.DS_Store
+Thumbs.db

@@ -1,0 +1,13 @@
+# .mdc names that must be absent from every install target. Absence list; keep even when empty.
+debugging
+native-lean-autoload
+now
+handoff
+vernacular
+mario-engineering-team
+product-designer-skills
+memory
+naming
+compile
+prompt
+context-curator

@@ -1,0 +1,10 @@
+# Skills installed by fleet_sync. One skill name per line (folder under shared/skills/).
+ponytail
+testing
+debugging
+complexity
+design-stack
+premium-ui-craft
+landing-page-design
+redesign-existing-projects
+writing-pr

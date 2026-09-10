@@ -1,0 +1,34 @@
+---
+description: "Stack roof: detect Next vs Vite vs Astro and the package manager before using APIs. Index only."
+alwaysApply: true
+---
+
+# Vibe (Stack)
+
+Use project- and version-matched evidence for version-sensitive decisions. Report missing evidence. Do not dump a framework's `AGENTS.md`.
+
+## Ground
+No `package.json` → the stack pick is silent; other rules still apply. Otherwise resolve ownership per touched file:
+1. Identify the owning package/workspace.
+2. Read its manifest and relevant config.
+3. Determine framework + package manager from evidence.
+4. Apply only that guidance.
+5. Avoid app-specific assumptions in shared packages.
+6. Report unresolved ambiguity.
+
+Multi-package changes are allowed; never mix package-specific APIs within one owner. Companion `.mdc` files self-check the owning package and are inert when unmatched. Host globs are candidates, not proof.
+
+| Detect | Then |
+|---|---|
+| `"next"` | `next.mdc`. Docs: `node_modules/next/dist/docs/` resolved from the app package. |
+| `"astro"` | `astro.mdc`. Version-matched docs, not training. |
+| `"vite"` and no `next` | `vite.mdc`. |
+| none of the above | Neighbors only. No Next/Astro/Vite APIs. |
+
+## Hard (JS/TS)
+- No `useEffect` fetch waterfalls; parallelize unless truly sequential.
+- Do not barrel-import a whole UI kit.
+- Derived state, not mirrored `useState` + `useEffect`.
+- Do not invent RSC, `getServerSideProps`, or `client:*` unless this stack has them.
+
+Ladder and complexity: `ponytail.mdc` / `complexity.mdc`. SQL in an ORM still follows `postgres.mdc` when you touch SQL.

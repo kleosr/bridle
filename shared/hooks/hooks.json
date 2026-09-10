@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "./hooks/before_submit_prompt.sh",
+        "timeout": 10,
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "./hooks/before_shell.sh",
+        "timeout": 30,
+        "failClosed": true
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "./hooks/before_read_file.sh",
+        "timeout": 10,
+        "failClosed": true
+      }
+    ],
+    "stop": [
+      {
+        "command": "./hooks/stop.sh",
+        "timeout": 30,
+        "failClosed": false,
+        "loop_limit": 1
+      }
+    ]
+  }
+}

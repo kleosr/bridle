@@ -1,0 +1,15 @@
+---
+description: "Postgres roof: parameterized SQL, forward-only migrations, measured indexes. Index only."
+globs: migrations/**, **/*.sql, **/prisma/**, **/*.prisma
+alwaysApply: false
+---
+
+# Postgres
+
+Confirm the Postgres engine, not SQLite or MySQL; a Prisma provider must be `postgres`. Composable with `supabase.mdc`: when the repo uses Supabase Postgres, apply both (generic SQL here, RLS/auth/pooler there).
+
+## Hard
+- Parameterized SQL only. No string-concatenated queries.
+- Migrations are forward-only, named, and live in the repo's existing folder. No drive-by schema in app code. Each migration still needs a recovery strategy, lock-impact review, and compatibility plan. Never run production queries to "verify" without approval.
+- Performance indexes need a measured benefit: run a representative `EXPLAIN` (plan only) on representative data. Constraint-supporting indexes follow integrity requirements, not a perf plan. `EXPLAIN ANALYZE` executes the statement — never on production writes without approval. Indexes cost writes and storage.
+- Do not invent RLS or `auth.uid()` unless this repo already uses that model.
