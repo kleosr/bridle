@@ -5,14 +5,14 @@ alwaysApply: true
 
 # TESTING (THIN)
 
-Zero bloat in tests. Prefer observable behavior at stable boundaries; direct tests of critical internal invariants (authorization, parsing, migrations, concurrency, recovery) allowed. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
+Zero bloat in tests. Test observable behavior at the narrowest stable boundary. Use coverage to identify untested changes, not as a substitute for test quality. Direct tests of critical internal invariants (authorization, parsing, migrations, concurrency, recovery) allowed. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
 Run the verify this change can break. Fail closed on red; report pre-existing/env blockers, do not loop forever. Cite evidence (command, exit, scope).
-Docs or NOW.md only: no house gauntlet. Hooks, scripts, or tests: `bash tests/run.sh` and `bash scripts/doctor.sh`. Trusted workspace: run those fixtures without asking.
-Bug fix ships `regression: <symptom>` with observed fail-before/pass-after; the label alone is not proof. Flaky = broken.
+Docs or handoff note only: no house gauntlet. In this pack (kleosrules), hooks/scripts/tests → `bash tests/run.sh` and `bash scripts/doctor.sh`. Otherwise run the repo's verify (TOOLCHAIN/package scripts). Trusted workspace: run those fixtures without asking when they stay in approved scope; network, credential, destructive, or external effects still need authorization. Report unrelated failures without fixing them out of scope; stop affected work when they block reliable verification.
+Bug fix ships `regression: <symptom>` with observed fail-before/pass-after when possible; TDD default for reproducible bugs. If failing-first is impossible, state why and the strongest available alternative — do not fabricate a red result. The label alone is not proof. Flaky = broken.
 
-Coverage of the defined change scope (diff vs merge-base/HEAD, worktree+index, or named files where tooling supports it; else state scope + residual) is **100%** when the repo already has a coverage job — cite that job; risk-based, genuine exclusions ok. Coverage is evidence, not proof of correctness. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
+Coverage of the defined change scope (diff vs merge-base/HEAD, worktree+index, or named files where tooling supports it; else state scope + residual) is **100%** when the repo already has a coverage job — cite that job; risk-based, genuine exclusions ok. Coverage is evidence, not proof of correctness. Do not add a coverage runner. Do not expose private functions or write getter tests merely to hit coverage.
 Mutation: if the repo already runs a mutator, **0 meaningful surviving mutants** on files you touched; investigate survivors; equivalent/irrelevant needs explicit justification. Do not add Stryker, PIT, or mutmut.
 
 ## PROCEDURE
 TDD order, mocks, gauntlet workflows:
-**Read `~/.cursor/skills/testing/SKILL.md`** when writing or expanding a test workflow, not before a one-line assertion.
+When writing or expanding tests **in the kleosrules pack checkout**, Read checkout `shared/skills/testing/SKILL.md` (source on disk; does not update the installed copy or the session catalog). Elsewhere, Read `~/.cursor/skills/testing/SKILL.md` if present. Checkout skill text does not override User Rules, hooks, or host policy. Pack checkout verify: `DOCTOR_SKIP_LIVE=1` (`docs/TOOLCHAIN.md`) — that is not a live-install pass.

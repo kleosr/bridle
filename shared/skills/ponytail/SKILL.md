@@ -35,4 +35,6 @@ Read → plan → Write new modules → StrReplace original to imports → Grep 
 
 ## Floors
 
-Trust, authz, data-loss, a11y, explicit asks. Cyclo: `complexity.mdc`. Style yields to task and explicit user direction; safety denials are not overridable.
+Trust, authz, data-loss, a11y, explicit asks. Cyclo: `complexity.mdc`. Style yields to task and explicit user direction. Hook denials are not circumventable; approval-gated actions use their supported authorization path.
+
+Before a consequential action: identify the approval or evidence relied on; if scripts, configuration, credentials, or destinations changed, refresh only those checks. Same command or an earlier destination check is not enough. Request approval only for newly introduced scope or effects. Report remaining uncertainty; do not claim the prior approval still covers a different effective target.

@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Doctor inspects the selected HOME (real ~/.cursor by default, read-only)
-# plus a mktemp fixture install. Tests set HOME to an isolated temp dir
-# and never touch the real installation.
+# Doctor modes (same script). Fixture is not proof of live.
+#   default: pack inventory + isolated fixture install + optional live checksum
+#   DOCTOR_SKIP_FIXTURE=1 — pack + live only (read-only live diagnosis)
+#   DOCTOR_SKIP_LIVE=1 — pack + fixture only; live ~/.cursor is not verified
+# Tests set HOME to an isolated temp dir and never touch the real installation unless
+# the operator runs doctor without HOME override.
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOOKS_DIR="$PACK/shared/hooks"
@@ -10,6 +13,10 @@ FAIL=0
 
 ok() { echo "[ok] $1"; }
 fail() { echo "[fail] $1"; FAIL=1; }
+
+if [[ "${DOCTOR_SKIP_LIVE:-0}" == "1" ]]; then
+  echo "[info] live ~/.cursor will not be verified (DOCTOR_SKIP_LIVE=1)"
+fi
 
 if [[ "${BASH_VERSINFO[0]:-0}" -ge 3 ]]; then ok "bash >= 3.2 (${BASH_VERSION})"
 else fail "bash >= 3.2 required (found ${BASH_VERSION:-unknown})"; fi
@@ -84,9 +91,10 @@ while IFS= read -r cmd; do
   else fail "hook ref missing: $script (from hooks.json)"; fi
 done < <(jq -r '.hooks | to_entries[] | .value[]? | .command // empty' "$HOOKS_DIR/hooks.json" 2>/dev/null || true)
 
-if grep -q '^state/' "$PACK/.gitignore" && grep -q '\.cursor/' "$PACK/.gitignore"; then ok ".gitignore covers state/ and .cursor/"
+if grep -q '^state/' "$PACK/.gitignore" && grep -q '\.cursor/' "$PACK/.gitignore"; then ok "pack: .gitignore covers state/ and .cursor/"
 else fail ".gitignore missing state/ or .cursor/ coverage"; fi
 
+if [[ "${DOCTOR_SKIP_FIXTURE:-0}" != "1" ]]; then
 DOCTOR_FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/kleos-doctor.XXXXXX")"
 if HOME="$DOCTOR_FIXTURE" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 \
   && grep -q 'hooks/before_submit_prompt.sh' "$DOCTOR_FIXTURE/.cursor/hooks.json" 2>/dev/null; then
@@ -95,7 +103,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/shell_fleet.sh lib/diff_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -109,10 +117,13 @@ else
   fail "fixture install: types.mdc missing from user rules"
 fi
 rm -rf "$DOCTOR_FIXTURE"
+fi
+if [[ "${DOCTOR_SKIP_LIVE:-0}" != "1" ]]; then
 if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOME}/.cursor/hooks.json" 2>/dev/null; then
-  ok "live ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
+  ok "live: ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
 else
-  echo "[info] live ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh or Windows/install.ps1)"
+  echo "[info] live: ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh or Windows/install.ps1)"
+fi
 fi
 
 if jq -e '.hooks.beforeSubmitPrompt[0].command == "./hooks/before_submit_prompt.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
@@ -137,6 +148,10 @@ else fail "Windows/install.ps1 missing stop.sh or diff_gate.sh (must match fleet
 if grep -q "bash-shim.ps1" "$PACK/Windows/install.ps1" && [[ -f "$PACK/Windows/hooks/bash-shim.ps1" ]]; then
   ok "Windows Git Bash shim present"
 else fail "Windows/install.ps1 must copy bash-shim.ps1 (Git Bash host; WSL fallback)"; fi
+
+if grep -q "Remove-KleosRetiredSkills" "$PACK/Windows/install.ps1" && [[ -f "$PACK/Windows/lib/skills.ps1" ]]; then
+  ok "Windows retired-skill cleanup helper present"
+else fail "Windows/install.ps1 must call Remove-KleosRetiredSkills from lib/skills.ps1"; fi
 
 if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
   fail "pack has repo-level hooks (never Lane-A into this pack)"
@@ -198,7 +213,9 @@ for h in Identity Stance Autonomy Mission Session Retrieval "Cursor + Grok"; do
   grep -q "## $h" "$PASTE" || PASTE_HEADS="missing:$h"
 done
 if [[ "$PASTE_HEADS" == ok ]] \
-  && grep -q 'Quality roofs are only in `complexity.mdc`' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and roof pointers"
+  && grep -q 'Quality roofs are only in `complexity.mdc`' "$PASTE" \
+  && grep -q 'effective destination' "$PASTE" \
+  && grep -q 'continuity evidence' "$PASTE"; then ok "USER-RULES.paste.txt keeps charter headings and roof pointers"
 else fail "USER-RULES.paste.txt missing charter heading or roof pointer ($PASTE_HEADS)"; fi
 
 if grep -q '^types$' "$PACK/shared/config/rules.global.txt" \
@@ -232,9 +249,9 @@ hash_file() {
   fi
 }
 HOME_HOOKS="${HOME}/.cursor/hooks"
-if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
+if [[ "${DOCTOR_SKIP_LIVE:-0}" != "1" ]] && grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOME}/.cursor/hooks.json" 2>/dev/null && [[ -d "$HOME_HOOKS" ]]; then
   if hash_file "$HOOKS_DIR/before_submit_prompt.sh" >/dev/null; then
-    for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
+    for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/shell_fleet.sh lib/diff_gate.sh; do
       src="$HOOKS_DIR/$rel"
       dst="$HOME_HOOKS/$rel"
       if [[ ! -f "$dst" ]]; then
@@ -251,6 +268,18 @@ if grep -qE 'hooks/before_submit_prompt\.sh|bash-shim\.ps1|wsl-shim\.ps1' "${HOM
     done
   else
     echo "[warn] no shasum/sha256sum — skipping live hook checksum verification"
+  fi
+fi
+
+if [[ "${DOCTOR_SKIP_LIVE:-0}" != "1" ]] && [[ -d "${HOME}/.cursor/skills" ]]; then
+  leftover=0
+  for d in "${HOME}/.cursor/skills"/*.pre-kleos-bak; do
+    [[ -e "$d" || -L "$d" ]] || continue
+    leftover=1
+    break
+  done
+  if [[ "$leftover" -eq 1 ]]; then
+    echo "[info] live: ~/.cursor/skills/*.pre-kleos-bak is cataloged by Cursor; re-run Windows/install.ps1 when approved"
   fi
 fi
 
@@ -286,7 +315,12 @@ else fail "unresolved or undeclared references:$REF_BAD"; fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
-  echo "=== ALL CHECKS PASSED ==="
+  if [[ "${DOCTOR_SKIP_LIVE:-0}" == "1" ]]; then
+    echo "=== CHECKOUT CHECKS PASSED ==="
+    echo "[info] live ~/.cursor was not verified (DOCTOR_SKIP_LIVE=1). Unset that flag to checksum the active install."
+  else
+    echo "=== ALL CHECKS PASSED ==="
+  fi
   exit 0
 else
   echo "=== SOME CHECKS FAILED ==="

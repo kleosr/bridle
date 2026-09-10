@@ -1,6 +1,7 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib\host.ps1')
+. (Join-Path $PSScriptRoot 'lib\skills.ps1')
 
 $Pack = Split-Path -Parent $PSScriptRoot
 $HomeC = Join-Path $env:USERPROFILE '.cursor'
@@ -56,14 +57,7 @@ Get-Content $skillsTxt | ForEach-Object {
     Copy-Item $from $to -Recurse -Force
   }
 }
-Get-Content (Join-Path $Pack 'shared\config\retired-skills.txt') | ForEach-Object {
-  $line = $_.Trim()
-  if (-not $line -or $line.StartsWith('#')) { return }
-  $orphan = Join-Path $skillsDst $line
-  if (Test-Path $orphan) {
-    if (-not (Test-Path "$orphan.pre-kleos-bak")) { Move-Item $orphan "$orphan.pre-kleos-bak" -Force }
-  }
-}
+Remove-KleosRetiredSkills -Pack $Pack -HomeC $HomeC
 
 New-Item -ItemType Directory -Force (Join-Path $HomeC 'agents') | Out-Null
 foreach ($a in 'hunter', 'cut', 'prove') {

@@ -45,7 +45,7 @@ bash scripts/doctor.sh
 bash tests/run.sh
 ```
 
-Skills: `/ponytail` `/debugging` `/testing` `/complexity` `/writing-pr`. Review: `hunter` `cut` `prove`. Map: `AGENTS.md`. Loads: `docs/token-budget.md`. Docs index: `docs/README.md`.
+Skills: `ponytail` `debugging` `testing` `complexity` `writing-pr` (auto-discovered; manual `/name` supported). Review subagents: `/hunter` `/cut` `/prove`. Map: `AGENTS.md`. Loads: `docs/token-budget.md`. Docs index: `docs/README.md`.
 
 ## Layout
 

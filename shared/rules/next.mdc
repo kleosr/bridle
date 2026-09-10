@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Next.js
 
-Confirm `next` in the owning `package.json` first; globs are candidates, not proof. This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos/nested apps: not the repo root if `next` is nested). Heed deprecations.
+Confirm `next` in the owning `package.json` first; globs are candidates, not proof. If the owning package has no `next`, this file is inert. This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos/nested apps: not the repo root if `next` is nested). Heed deprecations.
 
 If that folder is missing, inspect the installed version + lockfile; missing files do not prove a version. Fallback to version-matched docs for the installed version (Docs MCP / versioned site / project `AGENTS.md` / `.next-docs/`), or ask. Report if unavailable. Do not guess APIs. Do not run a codemod unless the user asked.
 

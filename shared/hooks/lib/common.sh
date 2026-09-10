@@ -27,36 +27,36 @@ emit_allow() {
 }
 
 emit_deny() {
-  local msg="$1" agent="${2:-}"
-  if [[ -n "$agent" ]] && jq -n --arg m "$msg" --arg a "$agent" '{permission:"deny", user_message:$m, agent_message:$a}' 2>/dev/null; then
+  local msg="$1" agent="${2:-}" reason="${3:-deny}"
+  if [[ -n "$agent" ]] && jq -n --arg m "$msg" --arg a "$agent" --arg r "$reason" '{permission:"deny", user_message:$m, agent_message:$a, reason:$r}' 2>/dev/null; then
     return 0
   fi
-  if jq -n --arg m "$msg" '{permission:"deny", user_message:$m}' 2>/dev/null; then
+  if jq -n --arg m "$msg" --arg r "$reason" '{permission:"deny", user_message:$m, reason:$r}' 2>/dev/null; then
     return 0
   fi
-  echo '{"permission":"deny","user_message":"kleosrules: jq is required"}'
+  echo '{"permission":"deny","user_message":"kleosrules: jq is required","reason":"missing-jq"}'
 }
 
 emit_ask() {
-  local msg="$1" agent="${2:-}"
-  if [[ -n "$agent" ]] && jq -n --arg m "$msg" --arg a "$agent" '{permission:"ask", user_message:$m, agent_message:$a}' 2>/dev/null; then
+  local msg="$1" agent="${2:-}" reason="${3:-ask}"
+  if [[ -n "$agent" ]] && jq -n --arg m "$msg" --arg a "$agent" --arg r "$reason" '{permission:"ask", user_message:$m, agent_message:$a, reason:$r}' 2>/dev/null; then
     return 0
   fi
-  if jq -n --arg m "$msg" '{permission:"ask", user_message:$m}' 2>/dev/null; then
+  if jq -n --arg m "$msg" --arg r "$reason" '{permission:"ask", user_message:$m, reason:$r}' 2>/dev/null; then
     return 0
   fi
-  echo '{"permission":"ask","user_message":"kleosrules: jq is required"}'
+  echo '{"permission":"ask","user_message":"kleosrules: jq is required","reason":"missing-jq"}'
 }
 
 emit_quiet() { echo '{}'; }
 
 emit_continue() {
-  local cont="${1:-true}" msg="${2:-}"
+  local cont="${1:-true}" msg="${2:-}" reason="${3:-}"
   if [[ "$cont" == "false" ]]; then
-    if [[ -n "$msg" ]] && jq -n --arg m "$msg" '{continue:false, user_message:$m}' 2>/dev/null; then
+    if [[ -n "$msg" ]] && jq -n --arg m "$msg" --arg r "${reason:-block}" '{continue:false, user_message:$m, reason:$r}' 2>/dev/null; then
       return 0
     fi
-    echo '{"continue":false}'
+    echo '{"continue":false,"reason":"block"}'
     return 0
   fi
   if [[ -n "$msg" ]] && jq -n --arg m "$msg" '{continue:true, user_message:$m}' 2>/dev/null; then

@@ -20,6 +20,13 @@ source "$HOOKS_DIR/lib/fleet_verify.sh"
 
 case "$CMD" in
   install)
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
+      echo "[dry-run] HOME_C=$HOME_C FORCE=$FORCE (no files written)"
+      echo "[dry-run] merge hooks.json; copy four hook scripts + runtime libs + policy"
+      echo "[dry-run] global rules: ${GLOBAL[*]}"
+      echo "[dry-run] skills from shared/config/skills.txt; agents hunter cut prove"
+      exit 0
+    fi
     install_home_hooks
     install_global_rules
     install_skills
@@ -43,6 +50,13 @@ case "$CMD" in
     verify_smoke
     ;;
   all)
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
+      echo "[dry-run] HOME_C=$HOME_C FORCE=$FORCE (no files written)"
+      echo "[dry-run] merge hooks.json; copy four hook scripts + runtime libs + policy"
+      echo "[dry-run] global rules: ${GLOBAL[*]}"
+      echo "[dry-run] skills from shared/config/skills.txt; agents hunter cut prove"
+      exit 0
+    fi
     install_home_hooks
     install_global_rules
     install_skills

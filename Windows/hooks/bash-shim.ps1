@@ -50,7 +50,12 @@ function Invoke-Utf8Process {
   $psi.StandardOutputEncoding = $script:utf8
   $p = New-Object System.Diagnostics.Process
   $p.StartInfo = $psi
-  [void]$p.Start()
+  try {
+    if (-not $p.Start()) { return 1 }
+  } catch {
+    if ($_.Exception.Message) { [Console]::Error.Write([string]$_.Exception.Message) }
+    return 1
+  }
   $bytes = $script:utf8.GetBytes($Stdin)
   $p.StandardInput.BaseStream.Write($bytes, 0, $bytes.Length)
   $p.StandardInput.Close()
@@ -59,20 +64,24 @@ function Invoke-Utf8Process {
   $p.WaitForExit()
   if ($stderr) { [Console]::Error.Write($stderr) }
   if ($stdout) { [Console]::Out.Write($stdout) }
+  return $p.ExitCode
 }
 
 $jqDir = Find-JqDir
 if ($jqDir) { $env:PATH = "$jqDir;$env:PATH" }
 
+function Exit-HookProcess([object]$Code) {
+  if ($null -eq $Code) { exit 1 }
+  exit [int]$Code
+}
+
 $bash = Find-GitBash
 if ($bash) {
   $unix = ConvertTo-GitBashPath $hookPath
-  Invoke-Utf8Process -FileName $bash -Arguments "--noprofile --norc `"$unix`"" -Stdin $inputJson
-  return
+  Exit-HookProcess (Invoke-Utf8Process -FileName $bash -Arguments "--noprofile --norc `"$unix`"" -Stdin $inputJson)
 }
 if (Get-Command wsl.exe -ErrorAction SilentlyContinue) {
   $wslPath = (wsl.exe wslpath -a $hookPath).Trim()
-  Invoke-Utf8Process -FileName 'wsl.exe' -Arguments "bash --noprofile --norc $wslPath" -Stdin $inputJson
-  return
+  Exit-HookProcess (Invoke-Utf8Process -FileName 'wsl.exe' -Arguments "bash --noprofile --norc $wslPath" -Stdin $inputJson)
 }
 throw 'Git Bash not found. Install Git for Windows and jq (winget install jqlang.jq).'
