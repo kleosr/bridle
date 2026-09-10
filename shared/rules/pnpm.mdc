@@ -1,0 +1,15 @@
+---
+description: "pnpm for new JS; respect the repo's existing manager. Never convert without approval."
+alwaysApply: true
+---
+
+# pnpm
+
+For new JS, use **pnpm** for add/update/run/audit. Respect an existing manager; migration needs approval.
+
+- New JS: `pnpm-lock.yaml` only. Existing non-pnpm lockfile: keep it, say so, convert only on explicit request.
+- New packages must lose to stdlib, the framework, and already-installed deps first.
+- Audit with the repo manager (`pnpm audit` on pnpm).
+- Do not run `curl | sh` or an unknown package `postinstall`. Honor `onlyBuiltDependencies` / `strictDepBuilds` when the repo sets them; do not invent a workspace security config for a one-line install.
+- `packageManager`, when you touch it on new JS, names pnpm.
+- Before changing pnpm security keys or adding a JS dependency, read `SECURITY.md`.

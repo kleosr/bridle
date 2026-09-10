@@ -1,0 +1,8 @@
+# Skill folder names that must be absent from the install target. Absence list; keep even when empty.
+memory
+monorepo
+package-scope
+spec-kit
+vernacular
+session-handoff
+now

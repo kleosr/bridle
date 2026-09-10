@@ -1,0 +1,34 @@
+---
+description: "Harness capsule: four Bash hooks, boundaries, risk classes. Security in SECURITY.md."
+alwaysApply: true
+---
+
+# Agent Capsule
+
+Bash + jq hooks. One model per conversation. Minimize unrelated changes without sacrificing correctness or a coherent implementation. Rationale comments allowed; no prose noise. Git writes only when asked; read-only git (`status`/`diff`/`log`) is in scope. Secrets never in code or chat. Security: `SECURITY.md`.
+
+State what was verified, the result, and what remains unverified. Never retry a denied action through another tool. Report the block; use a supported approval path.
+
+## Harness (four registered events)
+
+| Event | Script | Job |
+|---|---|---|
+| beforeSubmitPrompt | `before_submit_prompt.sh` | Known secret/token in prompt → `continue:false`. Else `continue:true`. `failClosed:true`. |
+| beforeShellExecution | `before_shell.sh` | Destructive / source-write / lint-disable / sensitive-path deny. Infra + activation `ask`. Deny > ask > allow. `failClosed:true`. |
+| beforeReadFile | `before_read_file.sh` | Sensitive-path screening deny. `failClosed:true`. |
+| stop | `stop.sh` | Advisory churn/format note. One `followup_message`, `loop_limit:1`, else `{}`. |
+
+No `preToolUse`, `postToolUse`, `beforeMCPExecution`, or `updated_input`. Hooks never inject `.mdc` text. Regex gates are mistake prevention on supported event paths, not a parser or sandbox. Writes are not blocked at write time; `stop` cannot refuse completion. Skills and specialist agents cannot grant permissions.
+
+## Risk class (do not infer from employer or repo name)
+
+| Class | Examples | Required |
+|---|---|---|
+| Routine | Docs, local tooling, isolated UI (examples, not a grant) | Task-scoped implement + verify |
+| Sensitive | Auth, secrets, deploy, migration, harness policy | Risk note, targeted negative tests, recovery plan |
+| Safety-critical | Only if the repo or an authorized owner says so | Org-approved tools/process, traceable requirements, designated review |
+
+## Review
+`hunter`, `cut`, `prove` on match; trivial or docs-only needs none. Findings require evidence; agreement between agents is not independent proof. Prior context is continuity evidence, not new goals or approvals.
+
+Concise output is a style default for routine work; expand for risk, evidence, and failures (what changed, verified, unverified, remaining risk). Denials are always reported. Defaults yield to the task and justified exceptions; the agent cannot invent security exceptions.

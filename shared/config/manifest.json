@@ -1,0 +1,34 @@
+{
+  "owner": "kleosrules",
+  "version": 2,
+  "hookEvents": {
+    "beforeSubmitPrompt": "before_submit_prompt.sh",
+    "beforeShellExecution": "before_shell.sh",
+    "beforeReadFile": "before_read_file.sh",
+    "stop": "stop.sh"
+  },
+  "runtimeLibs": [
+    "common.sh",
+    "shell_gate.sh",
+    "diff_gate.sh"
+  ],
+  "policy": [
+    "secret_paths.ere",
+    "secret_tokens.ere"
+  ],
+  "agents": [
+    "hunter",
+    "cut",
+    "prove"
+  ],
+  "legacyCleanup": [
+    "session_start.sh",
+    "stop_gate.sh",
+    "lean_gate.sh",
+    "pre_tool_use.sh",
+    "post_tool_use.sh"
+  ],
+  "legacyLibCleanup": [
+    "shell_fleet.sh"
+  ]
+}

@@ -1,0 +1,14 @@
+# Always-on / glob .mdc files installed to ~/.cursor/rules. SSOT for install + uninstall.
+# Order is not precedence; the charter and agent.mdc define precedence.
+agent
+ponytail
+testing
+types
+complexity
+vibe
+pnpm
+next
+vite
+astro
+postgres
+supabase

@@ -1,0 +1,27 @@
+# Domain code — `domains/` trees only
+
+Apply only under a `domains/` folder (e.g. `backend/src/domains/**`), and only when the repo already follows this model or the task needs domain invariants. A directory name alone is not a license to add DDD.
+Never import this ceremony into scripts, CLIs, or one-off tools.
+
+## Naming (strict)
+
+- Commands: imperative `<Verb><Subject>` (`SubmitOrder`)
+- Events: past-tense `<Subject><Verb>` (`OrderSubmitted`), never imperative
+- Aggregates: PascalCase entities (`Order`)
+- Read models: `<Purpose>View` / `<Purpose>Projection`
+- Policies: `<Workflow>Policy`
+- Reject vague names (`DoStuff`, `HandleEvent`)
+
+## Structure
+
+- One bounded context per folder:
+  `domains/<context>/{commands,events,aggregates,projections,policies,lib}` — never mixed.
+- Outside modules talk to an aggregate through commands and events, never internal state.
+- Law of Demeter: no deep property chains across aggregates.
+- Explicit types on every public API; no `any`.
+- Value objects for concepts with invariants (`Money`, `EmailAddress`, `OrderId`) instead of bare primitives.
+
+## Tests
+
+- Full suite for domain code: command → correct event or domain error; projection → correct state from an event sequence.
+- Coverage and mutation roofs live in `testing.mdc` only.
