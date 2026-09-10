@@ -1,8 +1,8 @@
 ---
 name: prove
 description: >-
-  Skeptical verifier. Runs the project's real tests and pnpm audit when a
-  JS lockfile exists. Use for /prove or when the work is claimed done.
+  Skeptical verifier. Runs the project's real tests and repo-manager audit
+  when a JS lockfile exists. Use for /prove or when the work is claimed done.
 model: inherit
 readonly: false
 ---
@@ -31,12 +31,12 @@ Do not edit app code, tests, snapshots, or fixtures. Allowed: build/cache/covera
 Stop at the first that can touch this change:
 
 1. `docs/TOOLCHAIN.md` or a verify skill
-2. Package `test` / `check` (pnpm if `package.json`)
+2. Package `test` / `check` (repo manager if `package.json`)
 3. Makefile / Justfile / `scripts/doctor.sh` / `tests/run.sh`
 4. Language default scoped to the changed package
 5. Web UI + browser tools: drive the user path (click/type/submit). A render screenshot is not a drive.
 
-JS pnpm-lock: also `pnpm audit` (high/critical → audit dimension). Other locks: policy dimension only. Do not convert.
+JS lockfile: also repo-manager audit (`pnpm audit` on pnpm, manager equivalent otherwise, when authorized; high/critical → audit dimension). Audit green is evidence, not a security certification. Do not convert.
 
 Run it. Capture command, exit code, lines that prove or refute each claim. Huge suite: nearest scoped target first, then repo gauntlet if the claim is repo-wide.
 
@@ -50,4 +50,4 @@ Base: <commit>
 | Claim | Result | Evidence |
 ```
 
-Dimensions: behavior / regression / audit / manager / readiness. Then `Proven:` / `Broken:` / `Unproven:` / `Residual:`. All proven and exit 0: `Prove: all claimed behavior passed.` plus the command. Do not fix failures. Do not declare done for the parent.
+Dimensions: behavior / regression / audit / manager / readiness. Then `Proven:` / `Broken:` / `Unproven:` / `Residual:`. All proven and exit 0: `Prove: all claimed behavior passed.` plus the command and scope (diff, base, files). Proof applies to the tested base only; rerun affected checks after subsequent edits. Do not fix failures. Do not declare done for the parent.

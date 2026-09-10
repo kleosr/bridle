@@ -6,11 +6,11 @@ alwaysApply: false
 
 # Next.js
 
-Confirm `next` in the owning `package.json` first; globs are candidates, not proof. This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos: not the repo root if `next` is nested). Heed deprecations.
+Confirm `next` in the owning `package.json` first; globs are candidates, not proof. This is not the Next in training. Before Write, Read the matching guide under `node_modules/next/dist/docs/` from **this app's** package (monorepos/nested apps: not the repo root if `next` is nested). Heed deprecations.
 
-If that folder is missing, inspect the installed version + lockfile; missing files do not prove a version. Use project `AGENTS.md` / `.next-docs/`, or ask. Do not guess APIs. Do not run a codemod unless the user asked.
+If that folder is missing, inspect the installed version + lockfile; missing files do not prove a version. Fallback to version-matched docs for the installed version (Docs MCP / versioned site / project `AGENTS.md` / `.next-docs/`), or ask. Report if unavailable. Do not guess APIs. Do not run a codemod unless the user asked.
 
-Route by the file you touch: `app/` files use App Router; `pages/` files use Pages. Hybrids exist during migrations; never mix routers in one file.
+Route by the file you touch: `app/` files use App Router; `pages/` files use Pages. Hybrids exist during migrations; never mix routers in one file. In monorepos with Next + Vite, route per owning package.
 
 ## Hard
 
@@ -20,4 +20,4 @@ Route by the file you touch: `app/` files use App Router; `pages/` files use Pag
 - No Vite `import.meta.env` for Next public env; use `process.env` as this version documents.
 - Knowledge from bundled docs, not from a Next "knowledge skill". Skills like `next-dev-loop` are workflows only.
 
-pnpm for installs. Subagents inherit this.
+Repo manager for installs. Subagents inherit this.

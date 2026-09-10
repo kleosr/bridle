@@ -5,9 +5,9 @@ alwaysApply: true
 
 # Vibe
 
-Prefer retrieval-led reasoning over pre-training. Do not dump framework AGENTS.md.
+Use project/version-matched evidence for version-sensitive decisions. Report missing evidence. Do not dump framework AGENTS.md.
 
-GROUND: no `package.json` → stack pick silent; other rules still apply. Otherwise Read the nearest `package.json`. Pick **one** owning package. Do not mix APIs there.
+GROUND: no `package.json` → stack pick silent; other rules still apply. Otherwise resolve ownership per scope: 1) identify the owning package/workspace for the files you touch, 2) Read its manifest + relevant config, 3) determine framework + package manager from evidence, 4) apply only that guidance, 5) avoid app-specific assumptions in shared packages, 6) report unresolved ambiguity. One owner per scope; multi-package tasks resolve each scope separately. Do not mix APIs within one owner. Reading a companion is explicit, not proof of host glob auto-activation.
 
 | Detect | Then |
 |---|---|
@@ -16,7 +16,7 @@ GROUND: no `package.json` → stack pick silent; other rules still apply. Otherw
 | `"vite"` and no `next` | `vite.mdc`. |
 | none of the above | Neighbors only. No Next/Astro/Vite APIs. |
 
-Then Read **one** skill: ponytail, or `vercel-react-best-practices` `rules/<one>.md` if that skill is installed and the stack is React. If it is missing, stay on ponytail.
+Then Read the matching baseline: ponytail, or `vercel-react-best-practices` `rules/<one>.md` if that skill is installed and the stack is React. If it is missing, stay on ponytail. Load further skills only on task match (e.g. debugging + testing for a bug fix); a tiny edit loads no further skill.
 
 ## Hard (JS/TS)
 

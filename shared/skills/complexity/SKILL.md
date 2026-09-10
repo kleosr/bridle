@@ -2,7 +2,8 @@
 name: complexity
 description: >
   Satisfy cyclomatic lint; never disable. Use when lint is red or the user
-  asks for simpler code.
+  asks for simpler code. Detects the configured cap and reduces complexity
+  without disabling lint.
 ---
 
 # Complexity

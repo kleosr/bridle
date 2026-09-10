@@ -7,7 +7,7 @@ description: >
 
 # Premium UI craft
 
-Law for product UI. User brand and a11y override this profile. Sources when stuck: [SOURCE.md](SOURCE.md).
+Defaults for product UI (refs, not mandates). Priority per `design-stack`: existing system → user needs/a11y → brand → these defaults. Sources when stuck: [SOURCE.md](SOURCE.md).
 
 ## Doctrine
 
@@ -15,11 +15,11 @@ Interaction-dense, visually sparse. One accent for primary/complete, one for dan
 
 ## Palette ban
 
-Default profile avoids Scandinavian, Nordic, Japandi, hygge: no parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige, or serif-on-paper titles. Linear/Stripe/Apple.
+Default profile avoids Scandinavian, Nordic, Japandi, hygge: no parchment, oatmeal, linen, sage-on-cream, pale wood, muted beige, or serif-on-paper titles. Linear/Stripe/Apple-grade is a ref, not a mandate.
 
 Typography is the brand. One UI sans. 4–6 sizes. Tabular nums. No decorative second font unless the user explicitly asks.
 
-Motion: one curve, one duration. `300ms` / `cubic-bezier(0.22, 1, 0.36, 1)`. No bounce, no card lift. `prefers-reduced-motion` zeros duration.
+Motion (default): one curve, one duration. `300ms` / `cubic-bezier(0.22, 1, 0.36, 1)`. No bounce, no card lift. `prefers-reduced-motion` zeros duration (required).
 
 ## Hierarchy
 
@@ -31,7 +31,7 @@ Defaults: desktop left rail ~220px; active = marker + text, not a gray pill. Mob
 
 ## Components
 
-shadcn primitives. Semantic tokens. No raw `bg-blue-500`. Pages are structure (header + list), not stacked generic cards.
+Default: shadcn primitives + semantic tokens. No raw `bg-blue-500`. Pages are structure (header + list), not stacked generic cards. Existing component library wins.
 
 Every control: default, hover, focus ring, active, disabled. Empty/error are designed copy. Keyboard: every action without a pointer. Touch targets ≥44px. Contrast must read as primary.
 

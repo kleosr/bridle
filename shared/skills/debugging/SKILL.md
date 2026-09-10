@@ -2,7 +2,8 @@
 name: debugging
 description: >
   Evidence-first debug for unknown or intermittent bugs. Use when the cause
-  is unknown or the user asks to diagnose.
+  is unknown or the user asks to diagnose. Establishes evidence and distinguishes
+  confirmed causes from hypotheses. Diagnosis alone does not authorize implementation changes.
 ---
 
 # Bug hunt

@@ -54,6 +54,10 @@ echo "=== Runtime grounding probes ==="
 source "$PACK/tests/grounding.sh"
 
 echo ""
+echo "=== Eval corpus (control + prose presence + manual rubric) ==="
+source "$PACK/tests/eval_corpus.sh"
+
+echo ""
 echo "=== Install lifecycle (isolated HOME) ==="
 source "$PACK/tests/install_lifecycle.sh"
 

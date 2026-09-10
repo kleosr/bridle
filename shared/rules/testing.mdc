@@ -1,17 +1,17 @@
 ---
-description: "Testing roofs. This-turn coverage 100% when a job exists. Zero surviving mutants when a mutator exists."
+description: "Testing roofs. Defined-scope coverage 100% when a job exists. Zero meaningful surviving mutants when a mutator exists."
 alwaysApply: true
 ---
 
 # TESTING (THIN)
 
-Cero bloat en tests. Public surface only. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
-Run the verify this change can break. Fail closed on red; report pre-existing/env blockers, do not loop forever. Cite evidence.
+Zero bloat in tests. Prefer observable behavior at stable boundaries; direct tests of critical internal invariants (authorization, parsing, migrations, concurrency, recovery) allowed. Native tools (`Read`/`Grep`/`Write`/`StrReplace`).
+Run the verify this change can break. Fail closed on red; report pre-existing/env blockers, do not loop forever. Cite evidence (command, exit, scope).
 Docs or NOW.md only: no house gauntlet. Hooks, scripts, or tests: `bash tests/run.sh` and `bash scripts/doctor.sh`. Trusted workspace: run those fixtures without asking.
-Bug fix ships `regression: <symptom>`. Flaky = broken.
+Bug fix ships `regression: <symptom>` with observed fail-before/pass-after; the label alone is not proof. Flaky = broken.
 
-Coverage of code you added or changed this turn is **100%** when the repo already has a coverage job — cite that job; risk-based, genuine exclusions ok. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
-Mutation: if the repo already runs a mutator, **0 surviving mutants** on files you touched; documented equivalent/unreachable ok. Do not add Stryker, PIT, or mutmut.
+Coverage of the defined change scope (diff vs merge-base/HEAD, worktree+index, or named files where tooling supports it; else state scope + residual) is **100%** when the repo already has a coverage job — cite that job; risk-based, genuine exclusions ok. Coverage is evidence, not proof of correctness. Do not add a coverage runner. Whole-repo 100% is not a reason to test getters or mock internals.
+Mutation: if the repo already runs a mutator, **0 meaningful surviving mutants** on files you touched; investigate survivors; equivalent/irrelevant needs explicit justification. Do not add Stryker, PIT, or mutmut.
 
 ## PROCEDURE
 TDD order, mocks, gauntlet workflows:

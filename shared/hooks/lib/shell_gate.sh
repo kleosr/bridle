@@ -23,7 +23,7 @@ gate_shell_command() {
   local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
   local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|drop[[:space:]]+(database|table|schema)|truncate[[:space:]]+table|>[[:space:]]*/dev/sd|shred[[:space:]]"
   if echo "$cmd" | grep -qiE "${rm_root}|${force_push}|${wipe}"; then
-    emit_deny "AUTONOMY BLOCK: destructive command denied. CMD: ${cmd:0:120}"
+    emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI."
     return 1
   fi
   local db="(^|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(sudo[[:space:]]+|env[[:space:]]+)?(psql|mysql|mongosh)([[:space:]]|$)"
@@ -35,7 +35,7 @@ gate_shell_command() {
   if gate_shell_source_write "$cmd"; then return 1; fi
   if gate_shell_secrets "$cmd"; then return 1; fi
   if [[ "$infra" -eq 0 ]]; then
-    emit_ask "Command mutates infra/DB. Approve in the Cursor card to proceed. CMD: ${cmd:0:120}"
+    emit_ask "Command mutates infra/DB. Approve the concrete action, target, and scope in the Cursor card. Command not echoed to avoid secret leakage."
     return 1
   fi
   return 0
@@ -45,7 +45,7 @@ gate_complexity_bypass() {
   local cmd="$1"
   shell_is_git_gh "$cmd" && return 1
   if echo "$cmd" | grep -qiE 'eslint-disable[^[:space:]]*[[:space:]]+([^[:space:],]+,)*complexity|complexity[[:space:]]*:[[:space:]]*['\''"]?off|complexity[[:space:]]*:[[:space:]]*0([^0-9]|$)|(--ignore|--extend-ignore)[=[:space:]][^;&]*C901|noqa:[[:space:]]*C901|clippy::(cyclo|cognitive)[[:alnum:]_]*complexity'; then
-    emit_deny "Do not disable cyclomatic lint from the shell. Extract until the project lint is green. CMD: ${cmd:0:120}"
+    emit_deny "Do not disable cyclomatic lint from the shell. Extract until the project lint is green."
     return 0
   fi
   return 1
@@ -110,6 +110,6 @@ gate_shell_source_write() {
   local cmd="$1"
   shell_is_git_gh_body "$cmd" && return 1
   shell_writes_source "$cmd" || return 1
-  emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code. CMD: ${cmd:0:120}"
+  emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code."
   return 0
 }

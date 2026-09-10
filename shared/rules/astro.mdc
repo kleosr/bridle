@@ -11,7 +11,7 @@ Confirm `astro` in the owning `package.json`; globs are candidates. Training is 
 ## Hard
 
 - HTML first. Client JS only with an explicit `client:*` directive. Do not wrap the whole page in React/Vue.
-- Official integrations: prefer `pnpm astro add <name>`; inspect its diff. Hand-edit only when the tool cannot express the config.
+- Official integrations: prefer the repo manager (`pnpm astro add <name>` on pnpm, else the manager equivalent); inspect its diff. Hand-edit only when the tool cannot express the config.
 - Content: use Content Collections if this repo already has `src/content`. Do not invent a parallel glob CMS.
 - Routing and `output` (static vs server) from **this** `astro.config.*`. No `getServerSideProps`. No `app/` directory as Next.
 - Islands: pass only the props the island needs. No fetching in `useEffect` for data the `.astro` frontmatter already has.

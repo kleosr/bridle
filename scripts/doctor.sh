@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Doctor inspects the selected HOME (real ~/.cursor by default, read-only)
+# plus a mktemp fixture install. Tests set HOME to an isolated temp dir
+# and never touch the real installation.
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOOKS_DIR="$PACK/shared/hooks"

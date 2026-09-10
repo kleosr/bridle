@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Postgres
 
-Confirm the Postgres engine (not SQLite/MySQL); Prisma provider must be postgres. Generic PostgreSQL and Prisma/SQL. Supabase RLS and `auth.uid()` live in `supabase.mdc` when those paths match.
+Confirm the Postgres engine (not SQLite/MySQL); Prisma provider must be postgres. Generic PostgreSQL and Prisma/SQL. Composable with `supabase.mdc`: when the repo uses Supabase Postgres, apply both (generic SQL here, RLS/auth/pooler there).
 
 ## Hard (cheap)
 
@@ -15,6 +15,6 @@ Confirm the Postgres engine (not SQLite/MySQL); Prisma provider must be postgres
 - Migrations forward-only, named, in the repo's existing folder. No drive-by schema in app code. Never run prod queries to “verify” without approval.
 - Do not invent RLS or `auth.uid()` unless this repo already uses that model.
 
-Hooks: infra/DB shell is `ask`. Never fight a deny.
+Hooks: infra/DB shell is `ask`. Do not retry a denied action through another tool; report the block.
 
 Subagents inherit this. Do not paste these bullets into Task prompts.

@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Supabase
 
-Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Generic SQL lives in `postgres.mdc`. If the `supabase` or `supabase-postgres-best-practices` skill is installed, Read one matching file; otherwise stay on this roof and project docs.
+Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Composable with `postgres.mdc` (generic SQL there, RLS/auth/pooler here). If the `supabase` or `supabase-postgres-best-practices` skill is installed, Read one matching file; otherwise stay on this roof and project docs.
 
 ## Hard
 
@@ -15,4 +15,4 @@ Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Generic 
 - Service role never in client bundles. User JWT for user data.
 - Pooler-aware connections. No connection-per-request in serverless without the pooler.
 
-Hooks: infra/DB shell is `ask`. Never fight a deny.
+Hooks: infra/DB shell is `ask`. Do not retry a denied action through another tool; report the block.
