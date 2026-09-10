@@ -19,7 +19,7 @@ Caps live in `complexity.mdc`. This skill is detection + reduction only.
 1. Grep `complexity`, `C901`, `mccabe`, `gocyclo`, `cyclo`, `cognitive` in eslint/ruff/clippy/biome/`pyproject.toml`/Makefile/CI.
 2. Existing cap is law.
 3. If missing and eslint, ruff, or biome already runs: add the rule there. Do not add a linter stack.
-4. No linter: write as cap 10. Cite that TOOLCHAIN has no complexity job.
+4. No linter: UNMEASURED. Flat control flow and early returns. Do not invent a numeric cap. Cite that TOOLCHAIN has no complexity job.
 
 TS/JS: repo `complexity` option (legacy or flat). Run **repo** lint on touched files (`pnpm exec eslint path`). Python: ruff `C901`. Go/Rust: gocyclo/clippy only if already in TOOLCHAIN.
 

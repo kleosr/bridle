@@ -16,11 +16,31 @@ for role in boundary contract procedure workaround preference unclear; do
 done
 run_test "ledger declares all six roles (structural presence, not completeness)" "ok" "$LEDGER_ROLES"
 
-LEDGER_HOT="$(cat "$PACK/shared/config/rules.global.txt" "$PACK/shared/config/skills.txt" "$PACK/shared/hooks/hooks.json" "$PACK/shared/config/manifest.json" 2>/dev/null | grep -c 'lifecycle-ledger' | tr -d ' ')"
-run_test "ledger not referenced by hot path (structural presence, not completeness)" "0" "$LEDGER_HOT"
+# grep -c exits 1 on zero matches. An assignment under set -euo pipefail
+# aborts tests/run.sh before [fail] or the Results banner.
+if LEDGER_HOT="$(cat "$PACK/shared/config/rules.global.txt" "$PACK/shared/config/skills.txt" "$PACK/shared/hooks/hooks.json" "$PACK/shared/config/manifest.json" 2>/dev/null | grep -c 'lifecycle-ledger' | tr -d ' ')"; then
+  :
+else
+  _st=$?
+  if [[ "$_st" -eq 1 ]]; then
+    LEDGER_HOT="${LEDGER_HOT:-0}"
+  else
+    LEDGER_HOT="grep-error:$_st"
+  fi
+fi
+run_test "regression: ledger hot-path grep -c zero-match does not abort the runner" "0" "$LEDGER_HOT"
 
-LEDGER_OVER="$(grep -c -e 'semantically complete' -e 'proves model behavior' "$LEDGER" | tr -d ' ')"
-run_test "ledger makes no overclaim wording (structural presence, not completeness)" "0" "$LEDGER_OVER"
+if LEDGER_OVER="$(grep -c -e 'semantically complete' -e 'proves model behavior' "$LEDGER" | tr -d ' ')"; then
+  :
+else
+  _st=$?
+  if [[ "$_st" -eq 1 ]]; then
+    LEDGER_OVER="${LEDGER_OVER:-0}"
+  else
+    LEDGER_OVER="grep-error:$_st"
+  fi
+fi
+run_test "regression: ledger overclaim grep -c zero-match does not abort the runner" "0" "$LEDGER_OVER"
 
 LEDGER_HOOKS=ok
 for s in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh; do

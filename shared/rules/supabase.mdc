@@ -14,5 +14,3 @@ Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Composab
 - Views: `security_invoker = true` on PG15+ when the intended model is invoker rights. Avoid `SECURITY DEFINER` to bypass RLS; allowed only with safe `search_path` + least privilege + review.
 - Service role never in client bundles. User JWT for user data.
 - Pooler-aware connections. No connection-per-request in serverless without the pooler.
-
-Hooks: infra/DB shell is `ask`. Do not retry a denied action through another tool; report the block.

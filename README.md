@@ -7,7 +7,7 @@
 
   <h1>kleosrules</h1>
 
-  <p><strong>Cursor harness pack — User Rules, thin roofs, on-demand skills, four Bash hooks, optional handoff note.</strong></p>
+  <p><strong>Cursor harness pack — User Rules, thin roofs, on-demand skills, four Bash hooks.</strong></p>
 
   <p>
     <img src="https://img.shields.io/badge/v18.0.0-111827?style=flat&logo=github&logoColor=white" alt="version" />
@@ -36,7 +36,7 @@ Paste `shared/rules/USER-RULES.paste.txt` → Cursor Settings → User Rules. Ne
 
 Update: re-run install (merges `hooks.json`; keeps unknown entries). Uninstall: `bash scripts/uninstall.sh` (owned commands and files only). Cloud Lane-A: 3 events (no `stop`).
 
-`HANDOFF.md` is retired (`NOW.md`). Doctor fails if it returns.
+`HANDOFF.md`, `NOW.md`, and the session-handoff skill are retired. Doctor fails if they return.
 
 ## Verify
 
@@ -59,7 +59,7 @@ shared/config/             manifest.json, skills.txt, retired*
 scripts/                   install, uninstall, doctor
 tests/                     run.sh + fixtures
 docs/                      living map; _archive/ = 2026-09 snapshots
-NOW.md  SECURITY.md  AGENTS.md
+SECURITY.md  AGENTS.md
 ```
 
 `FORCE=1 bash scripts/install.sh` after edits. MIT.

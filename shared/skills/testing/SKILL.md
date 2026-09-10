@@ -46,6 +46,6 @@ Pack checkout verify: `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` → expect `CH
 
 - Success: tests `FAIL: 0`. Doctor checkout-only vs live are different banners.
 - Fail: `[fail]` lines — fix or report pre-existing/env blockers; do not loop.
-- Block: policy deny and hook/host crash both stop that tool operation. Report which. Do not retry the blocked action through another tool.
+- Block: policy deny and hook/host crash both stop that tool operation. Report which.
 
 Coverage / mutants: roofs in `testing.mdc`. Do not add coverage or mutator stacks.

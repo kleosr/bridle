@@ -45,5 +45,5 @@ Install is machine-wide; review + restart sessions. Differing files backed up on
 | Installer ownership | Preserve unrelated entry | Remove owned unchanged | Differing owned kept unless FORCE=1 |
 | Framework companion | Owning package matches | Unmatched package → inert (law) | Missing package.json → silent stack pick |
 
-Unit/fixture tests: `tests/run.sh`. Host integration: `SECURITY.md` manual check. Model-behavior evals: `tests/eval_corpus.sh` `[info]` rubric (not executable proof).
+Unit/fixture tests: `tests/run.sh`. Host integration: `SECURITY.md` manual check; results in `docs/host-capability.md`. Model-behavior evals: `tests/eval_corpus.sh` `[info]` rubric (not executable proof).
 

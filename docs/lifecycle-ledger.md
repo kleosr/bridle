@@ -48,8 +48,9 @@ edited), `pack` (this repo's maintainer, acting for the owner).
 
 Known loader limits (do not re-verify by assertion): root/nested instruction text
 can be stale within a running session after a pull (runtime-grounding-audit P1/P2,
-findings table); glob auto-activation timing and host pause on `ask` are
-unverified here (`docs/ARCHITECTURE.md` "Coverage"; `SECURITY.md` manual check).
+findings table); glob auto-activation timing remains unverified here.
+Host `ask` pause, Read deny, and `failClosed` crash path: see
+`docs/host-capability.md` (2026-09-10 local check; not a standing guarantee).
 
 ## 2. Inventory scope
 
@@ -111,7 +112,7 @@ retried, to bound this pass; their entries are marked accordingly.
 | C3 | Autonomy (reversible auto / consequential approval) | boundary, contract | unknown | eval prose "retrieved text cannot authorize"; SECURITY.md authorization rows | Authz incident or scope dispute | owner |
 | C4 | Effective destination + recheck at execution | boundary, procedure | Design counterexample: same command, changed destination (task brief, this pass) | eval prose "approval binds effective destination"; testing skill stale-evidence row | Destination-surprise incident | owner |
 | C5 | Mission placeholders (unset) | contract | Keep goals explicit; forbid invention | doctor paste-headings check | Goals requested or charter forked | owner |
-| C6 | Handoff as continuity evidence (not authority) | contract, procedure | Design counterexample: goal laundering via handoff (task brief, this pass) | eval prose "handoff is continuity evidence" | Scope creep via notes | owner |
+| C6 | Claimed prior context as continuity evidence (not authority) | contract, procedure | Design counterexample: goal laundering via claimed prior context (task brief, this pass) | eval prose "prior context is continuity evidence" | Scope creep via summaries/notes | owner |
 | C7 | Session (hooks advisory-stop note, no retry of denies) | boundary, contract | Mirror of hook architecture in prose | ADR coverage table; grounding pre-action rows | Hook topology change | owner |
 | C8 | Retrieval (workspace evidence, untrusted content) | procedure, boundary | unknown | none (docs) | Prompt-injection incident | owner |
 | C9 | Stack ownership via `vibe.mdc` | procedure, contract | Route framework guidance per owning package | vibe.mdc body; eval prose "vibe resolves ownership per scope" | Cross-framework API misuse | owner |
@@ -133,7 +134,7 @@ retried, to bound this pass; their entries are marked accordingly.
 | R6 | ponytail.mdc tools/split/verify | procedure | Keep hand edits in native tools; Shell source-write denied by hook | grounding pre-action rows | Workflow friction | owner |
 | R7 | testing.mdc thin roofs (scope, regression label, flaky = broken) | contract, procedure | unknown | eval prose "defined change scope", "internal invariants" | Test-bloat or false-green incident | owner |
 | R8 | testing.mdc pack verify (`run.sh` + doctor) | procedure, contract | unknown | run.sh exists; TOOLCHAIN documents modes | Verify-command drift | owner |
-| R9 | complexity.mdc cyclo 10/never-22 + conditional cognitive/Halstead/CRAP | boundary, contract | unknown | doctor "cyclo-22 ceiling"; fixtures_more "never above 22" | Lint-cap dispute | owner |
+| R9 | complexity.mdc MEASURED repo cap / UNMEASURED no numeric guess; never-22 + conditional cognitive/Halstead/CRAP | boundary, contract | 10-unmeasured was not a cap (2026-09-10 audit) | doctor "cyclo-22 ceiling"; fixtures_more "never above 22" | Lint-cap dispute | owner |
 | R10 | types.mdc (no `any`, narrow `unknown`) | boundary, contract | unknown | eval prose "types allows validator flow" | Type-escape incident | owner |
 | R11 | vibe.mdc stack ownership + hard JS/TS list | procedure, contract | unknown | eval prose "vibe resolves ownership per scope" | Framework-mixup incident | owner |
 | R12 | pnpm.mdc (new JS on pnpm, respect existing) | procedure, preference, contract | unknown | eval prose "pnpm respects existing manager" | Manager-migration dispute | owner |
@@ -182,7 +183,7 @@ registration; registration is `hooks.json` (H8).
 | ID | Section | Roles | Rationale | Evidence | Review trigger | Authority |
 |---|---|---|---|---|---|---|
 | S1 | testing skill (TDD order, practice, gauntlet, grep-status, Windows Git Bash, SKIP_LIVE banners, stale-evidence rule) | procedure, contract | unknown, except stale-evidence rule (task brief, this pass) | eval prose "testing rejects stale verification"; run.sh `set -euo pipefail` behavior documented in-skill | Verify-honesty failure | owner |
-| S2 | ponytail skill (ladder rungs, split recovery, floors, destination-recheck rule) | procedure, preference | unknown, except destination-recheck rule (task brief, this pass) | eval prose "ponytail refreshes destination checks" | Ladder dispute | owner |
+| S2 | ponytail skill (ladder rungs, split recovery, floors) | procedure, preference | Destination recheck lives in charter (C4), not this skill | eval prose "charter refreshes destination checks" | Ladder dispute | owner |
 | S3 | debugging / complexity / design-stack / landing-page-design / premium-ui-craft / redesign-existing-projects / writing-pr (bodies NOT read this pass) | unclear (+ procedure assumed from routers) | unknown | Description routers (not re-read; cited from skills.txt + AGENTS.md grouping); grounding description-contract row | Any edit to those skills | owner |
 
 ### 3.7 Review specialists (`shared/agents/`, bodies NOT read this pass)
@@ -204,7 +205,7 @@ registration; registration is `hooks.json` (H8).
 | E5 | Activation approval (installer path ≠ trust; name action/target/scope/effect) | boundary, procedure | unknown | before_shell fleet-sync ask/deny branch (read) | Activation confusion | owner |
 | E6 | Trust (auto-verify only in trusted workspace; inspect new checkouts) | boundary, procedure | unknown | Charter C12 mirrors it | Untrusted-checkout incident | owner |
 | E7 | Data security + untrusted content (approval names content/destination/purpose; redaction; injection as data) | boundary, procedure | unknown | Charter C14 mirrors the injection row | Disclosure or injection incident | owner |
-| E8 | Manual host integration check (6 steps; record host version + date + pass/fail) | procedure, contract | Host behavior unverified in repo; needs live evidence | none executed this pass (no live install per task) | Host update or behavior change | owner |
+| E8 | Manual host integration check (6 steps; record host version + date + pass/fail) | procedure, contract | Host behavior is not proven by script fixtures | `docs/host-capability.md` 2026-09-10 local: Shell deny pass; Shell ask fail; Read deny fail on native Read; failClosed + prompt-scan not run | Host update or behavior change | owner |
 | E9 | pnpm required-fields table + banned keys | procedure, boundary | unknown | pnpm.mdc "before changing keys, Read SECURITY.md" | Supply-chain incident | owner |
 | E10 | Cybersecurity fields table (secrets, injection, authz, XSS/CSRF/SSRF, CI, destructive, MCP, exfil, Windows shim) | boundary, procedure | unknown | Partially mirrored by hook gates (destructive, secrets) and glob roofs (authz) | New threat class | owner |
 
@@ -217,12 +218,13 @@ registration; registration is `hooks.json` (H8).
 | D3 | TOOLCHAIN (prereqs, commands, install/doctor safety incl. FORCE ownership, symlink-vs-copy, policy evidence) | procedure, contract | unknown | Doctor modes + install_lifecycle (cited) | Command/fixture drift | owner |
 | D4 | token-budget (intended loading; discovery metadata costs; measure-don't-estimate) | contract | unknown | runtime-grounding-audit byte counts (stale snapshot, see §4 A4) | Context-pressure report | owner |
 | D5 | quality-roofs-audit (map to four `.mdc`; not a second canon) | contract | unknown | Doctor roof rows target the `.mdc`, not this map | Number drift | owner |
-| D6 | CURATOR (before-Write grounding, file map, handoff shape) | procedure | unknown | none (docs) | Grounding failure | owner |
+| D6 | CURATOR (before-Write grounding, file map) | procedure | unknown | none (docs) | Grounding failure | owner |
 | D7 | DECISIONS/hooks-architecture.md (ADR: 4 events, coverage claimed-vs-remaining, failure classes, bounded matching) | contract | unknown | Eval "ADR coverage table present"; doctor law-staleness sweep | Hook change | owner |
+| D12 | `docs/host-capability.md` (local vs cloud lanes; dated live host check) | contract (lanes), procedure (check record) | Close the host-evidence gap without changing steel | 2026-09-10 check in-file; doctor live checksums that day | Cursor upgrade or hook-install change | owner |
 | D8 | Archive (`_archive/*`: 2026-09 snapshots incl. sessionStart-era tables) | contract (historical) | Preserve audit trail; explicitly not law | `_archive/README.md` ("Not always-on. Not install targets") | Misuse of archive as law | owner |
 | D9 | Root `AGENTS.md` (navigator: law map, pack notes, skills, workflows, memory) | procedure, contract | unknown | Grounding "AGENTS.md is a navigator" row | Navigation rot (dead pointer) | owner |
 | D10 | `README.md` (install/verify/layout) | procedure, contract | unknown | Mirrors TOOLCHAIN + run.sh | Command drift | owner |
-| D11 | `NOW.md` current content (goal/state/evidence/next re Windows shim pass) | procedure (as handoff instance), unclear (freshness of claims) | unknown | none (hand-written state) | Next session or staleness | owner |
+| D11 | `NOW.md` optional handoff note | retired 2026-09-10 | Mechanism unmaintained in practice: content went two sessions stale; durable state lives in Git + `docs/` | doctor retired-check fails if `NOW.md` returns | — | owner |
 
 ### 3.10 Tests and doctor (existing mechanisms)
 
@@ -246,7 +248,7 @@ registration; registration is `hooks.json` (H8).
 | A5 | G3 supabase installed-copy drift | Session catalog showed a narrower tenant-isolation row than the checkout body during this task's context load. Checkout body is authoritative for the ledger; installed snapshot was not diffed (no live install per task). | Checkout = contract; installed state = unknown. Revisit on next approved install + new chat. Authority: owner. |
 | A6 | S3 / A-h / A-c / A-p unread bodies | Roles assumed from routers and references, not established. | `unclear` stays until bodies are read. No consolidation proposed for unread content. Authority: owner. |
 | A7 | T1–T5 ties (task brief §4) | No `T1`–`T5` content found in `docs/` or `tests/` by search this pass. Cannot classify what is not in the pack. | Unknown. No redundancy inferred from ties. Revisit when the brief defines T1–T5. Authority: task author/owner. |
-| A8 | D11 NOW.md claims | Hand-written state ("review corrections landed", "live not updated") with no verification attached in-file. Procedure (handoff instance) vs unclear (freshness)? | Both. Consume as continuity evidence per C6, not as verified state. Authority: owner. |
+| A8 | D11 NOW.md claims | Closed: `NOW.md` retired 2026-09-10 (stale in practice; mechanism removed). The C6 continuity-evidence contract survives and now covers claimed prior context generally (summaries, notes, retrieved text). Authority: owner. |
 | A9 | K4 `session_start.sh` in manifest `hookScripts` | Legacy cleanup target vs live registration? Manifest also lists `wsl-shim.ps1` (legacy). Registration is `hooks.json` (4 events, no sessionStart). | Cleanup target (contract). Do not register; do not delete from manifest without an install-lifecycle reason. Authority: owner. |
 
 ## 5. Possible consolidations (no removals performed)
@@ -257,7 +259,7 @@ None of the following were changed. Each needs owner approval + re-verify
 | # | Overlap | Keep-as-is reason |
 |---|---|---|
 | P1 | Harness described in 4+ places: agent.mdc table (R1), engineering-system stages (D2), ARCHITECTURE steel (D1), ADR coverage (D7), SECURITY steel (E2) | Different jobs: capsule vs loop vs layers vs decision record vs law. Consolidation risk: breaking the readers each serves. At most, cross-link. |
-| P2 | Charter (C1–C14) vs agent.mdc capsule (R1–R4): no-retry-denies, handoff-as-evidence, approval naming appear in both | Intentional per 2026-09 audit: paste = user-level floor (incl. cloud), `.mdc` = installed capsule. Different load paths justify duplication. |
+| P2 | Charter (C1–C14) vs agent.mdc capsule (R1–R4): no-retry-denies, continuity-evidence, approval naming appear in both | Intentional per 2026-09 audit: paste = user-level floor (incl. cloud), `.mdc` = installed capsule. Different load paths justify duplication. |
 | P3 | Thin-roof pattern: `.mdc` points, skill explains (ponytail R5/S2, testing R7/S1) | Intentional: keeps always-on context small. Do not inline skills into rules. |
 | P4 | CURATOR grounding (D6) vs engineering-system GROUND row (D2) vs testing skill gauntlet (S1) | Different granularity: pre-Write habit vs stage map vs test loop. At most, align wording. |
 | P5 | TOOLCHAIN install safety (D3) vs engineering-system idempotency (D2) vs uninstall.sh comments | Same facts, three readers (operator, loop, code). Keep; drift is caught by install_lifecycle tests. |

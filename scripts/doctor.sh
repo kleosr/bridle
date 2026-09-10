@@ -160,14 +160,11 @@ else ok "no repo-level hooks in pack (local global-only mode)"; fi
 if ! grep -RqiE 'CallMcpTool|user-obsidian' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
 else fail "MCP core dependency found in hooks (should be optional, not core)"; fi
 
-if [[ -f "$PACK/NOW.md" ]]; then ok "NOW.md present (optional handoff note)"
-else echo "[info] no NOW.md (optional; only for unfinished multi-session work)"; fi
-
 if [[ -f "$PACK/SECURITY.md" ]] && grep -q 'onlyBuiltDependencies' "$PACK/SECURITY.md"; then ok "SECURITY.md present"
 else fail "SECURITY.md missing or incomplete"; fi
 
-if [[ ! -f "$PACK/HANDOFF.md" && ! -d "$PACK/shared/skills/session-handoff" ]]; then ok "HANDOFF.md and session-handoff retired"
-else fail "HANDOFF.md or skills/session-handoff still on disk (use NOW.md)"; fi
+if [[ ! -f "$PACK/HANDOFF.md" && ! -f "$PACK/NOW.md" && ! -d "$PACK/shared/skills/session-handoff" ]]; then ok "HANDOFF.md, NOW.md, and session-handoff retired"
+else fail "HANDOFF.md / NOW.md / skills/session-handoff still on disk (retired)"; fi
 
 if [[ ! -f "$HOOKS_DIR/stop_gate.sh" && ! -f "$HOOKS_DIR/lean_gate.sh" && ! -f "$HOOKS_DIR/pre_tool_use.sh" ]]; then
   ok "unregistered event scripts removed"

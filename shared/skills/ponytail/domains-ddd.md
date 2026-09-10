@@ -21,7 +21,7 @@ Never import this ceremony into scripts, CLIs, or one-off tools.
 - Explicit types on every public API; no `any`.
 - Value objects for concepts with invariants (`Money`, `EmailAddress`, `OrderId`) instead of bare primitives.
 
-## Tests (overrides core single-check)
+## Tests
 
 - Full suite for domain code: command → correct event or domain error; projection → correct state from an event sequence.
-- >80% coverage on new domain code.
+- Coverage and mutation roofs live in `testing.mdc` only.

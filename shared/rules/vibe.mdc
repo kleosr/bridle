@@ -25,4 +25,4 @@ Then Read the matching baseline: ponytail, or `vercel-react-best-practices` `rul
 - React: derived state, not mirrored `useState` + `useEffect`.
 - Do not invent RSC, `getServerSideProps`, or `client:*` unless this stack has them.
 
-Subagents inherit this. Do not paste into Task prompts. Ladder/cyclo: `ponytail.mdc` / `complexity.mdc`.
+Ladder/cyclo: `ponytail.mdc` / `complexity.mdc`.

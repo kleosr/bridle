@@ -2,7 +2,7 @@
 
 SSOT for this pack and for agents writing JS/TS in your repos. Do not put secret **values** in this file, `NOW.md`, paste, hooks, or chat. Report issues to the owner privately. Do not file a public issue with a PoC, payload, or exploit.
 
-Boundary: four hooks enforce documented restrictions on **supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Supported submit/shell/read scripts emit fail-closed deny/`continue:false` on match, malformed input, missing policy, or missing `jq`. Host `failClosed:true` requests blocking on hook failure, but host timing/pause behavior is unverified in this repo (see manual check below). Other tool channels, allowed-program behavior, and host bypasses are outside that boundary. Regex gates are substring heuristics and mistake prevention, not complete parsing, containment, or a sandbox. Local install does not imply local inference.
+Boundary: four hooks enforce documented restrictions on **supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Supported submit/shell/read scripts emit fail-closed deny/`continue:false` on match, malformed input, missing policy, or missing `jq`. Host `failClosed:true` requests blocking on hook failure. Host honor of `failClosed`, `ask` pause, Read deny, and prompt-scan-before-transmit is recorded in `docs/host-capability.md` (last check 2026-09-10; not a standing guarantee). Other tool channels, allowed-program behavior, and host bypasses are outside that boundary. Regex gates are substring heuristics and mistake prevention, not complete parsing, containment, or a sandbox. Local install does not imply local inference.
 
 Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc` security keys, before adding a dependency, and before a security or `/hunter` pass.
 
@@ -14,7 +14,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Sensitive **paths** on Read | `beforeReadFile` | **yes (scripts)** | `policy/secret_paths.ere` (case-insensitive screening, not full confidentiality). Timeout 10s. Missing policy or non-JSON → deny. Else `{"permission":"allow"}`. `.env.example` is readable. |
 | Sensitive paths / `.env` / `git show` secrets | `beforeShellExecution` | **yes (scripts)** | `git commit` / `gh pr` / `gh issue` skip prose path scan. `$(` / `-F` / `--body-file` on secret names deny. Case-insensitive. Non-JSON or non-string command → deny. Deny/ask messages do not echo the command, to avoid secret leakage. |
 | Destructive git/disk/SQL | `beforeShellExecution` | **yes (scripts)** | deny. Known FP, kept: substring match fires on `drop`/`truncate` text anywhere, e.g. grepping a dump for `drop table`. Rephrase the diagnostic; do not weaken the gate. |
-| Infra/DB mutation | `beforeShellExecution` | **yes (scripts)** | `ask` (timeout/crash still deny in scripts; host pause unverified) |
+| Infra/DB mutation | `beforeShellExecution` | **yes (scripts)** | `ask` (timeout/crash still deny in scripts). Host pause: `docs/host-capability.md` (2026-09-10 local: script ask, no pause) |
 | Cyclomatic lint disable | `beforeShellExecution` | **yes (scripts)** | deny |
 | Shell write of source | `beforeShellExecution` | **yes (scripts)** | deny Shell text rewriting (redirects, `sed -i`, `tee`, etc.). Approved validation/generation (lint `--fix`, format `--write`, typecheck, codegen, dep install via repo manager) remains allowed. |
 | Ponytail diff churn (unrequested rewrite, mass reindent) | `stop` | no | one `followup_message`, `loop_limit: 1`. Cannot block completion. Not a security control. |
@@ -59,7 +59,7 @@ Scripts are unit-tested in `tests/`; the host's handling is not. In a live Curso
 5. Complete a turn with a large rewrite (≥50% churn on a ≥80 LOC file) → expect one advisory `followup_message`, not a refusal; second pass quiet.
 6. Confirm `Write` of a secret path, MCP tools, and Tab are not blocked by hooks (law only).
 
-Record host version + date + pass/fail per step. Do not claim host guarantees without this evidence.
+Record host version + date + pass/fail per step in `docs/host-capability.md` (append a new dated section; do not silently overwrite). Last run: 2026-09-10, Cursor 3.19.19 local. Observed: Shell deny honored; Shell `ask` did not pause; Read deny from the script was not applied to native Read; `failClosed` crash path and prompt-scan-before-transmit not run. Do not claim host guarantees from script fixtures or from a stale check.
 
 ## pnpm — required fields
 
