@@ -6,13 +6,14 @@ Map. Do not paste this file into Task briefs.
 
 | File | Job |
 |------|-----|
-| `ARCHITECTURE.md` | Five layers, steel vs ask |
+| `ARCHITECTURE.md` | Five layers, script vs host, coverage limits |
 | `CURATOR.md` | Handoff + grounding before Write |
-| `TOOLCHAIN.md` | doctor / tests / hook LOC |
-| `token-budget.md` | What loads automatically |
+| `TOOLCHAIN.md` | doctor / tests / policy evidence table |
+| `token-budget.md` | Intended vs measured loading |
 | `quality-roofs-audit.md` | Roof numbers → four `.mdc` files |
 | `engineering-system.md` | GROUND → STOP |
-| `DECISIONS/hooks-architecture.md` | ADR (current) |
+| `DECISIONS/hooks-architecture.md` | ADR + coverage table + failure classes |
+| `lifecycle-ledger.md` | Guidance inventory + roles + maintenance (not law, not injected) |
 
 ## Archive
 

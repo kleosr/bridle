@@ -11,7 +11,7 @@ Code you add/change must pass complexity lint for the touched functions. That is
 - Cognitive complexity: if this repo already measures it (Sonar / sonarjs), that cap or **22**, whichever is tighter. Do not add Sonar to a repo that lacks it.
 - Halstead difficulty: if this repo already measures it, **< 80**. Do not add a Halstead tool.
 - CRAP: if this repo already measures it, **< 25**. Do not add a CRAP reporter.
-- Do not disable cyclomatic lint (`eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, clippy allow).
+- Do not disable cyclomatic lint merely to hide findings (`eslint-disable` complexity, `# noqa: C901`, `--ignore C901`, clippy allow). Legitimate config/rule fixes need a one-line why.
 - Extract. Early return. Flat `if`. No nested pyramids.
 - Nesting >2 (ponytail) is not a substitute for the lint number; nesting compliance does not excuse high cyclo.
 - Done = cited lint green (analyzer + cap + scope) when a job exists; else report unmeasured, never claim green.

@@ -183,3 +183,23 @@ rm -rf "$DOC_ISO"
 DOC_FIX="$(printf '%s' "$DOC_OUT" | grep -c 'fixture install: hooks.json registers beforeSubmitPrompt' || true)"
 run_test "doctor reports fixture install check" "1" "$DOC_FIX"
 run_test "doctor exits 0 with isolated HOME" "0" "$DOC_EC"
+
+DOC_SKIP="$(mktemp -d "${TMPDIR:-/tmp}/kleos-docskip.XXXXXX")"
+if HOME="$DOC_SKIP" DOCTOR_SKIP_LIVE=1 bash "$PACK/scripts/doctor.sh" >"$DOC_SKIP/out.txt" 2>&1; then DOC_SKIP_EC=0; else DOC_SKIP_EC=$?; fi
+DOC_SKIP_OUT="$(cat "$DOC_SKIP/out.txt")"
+rm -rf "$DOC_SKIP"
+if printf '%s' "$DOC_SKIP_OUT" | grep -q 'live ~/.cursor was not verified'; then DOC_SKIP_MSG=yes; else DOC_SKIP_MSG=no; fi
+if printf '%s' "$DOC_SKIP_OUT" | grep -q 'CHECKOUT CHECKS PASSED'; then DOC_SKIP_CO=yes; else DOC_SKIP_CO=no; fi
+if printf '%s' "$DOC_SKIP_OUT" | grep -q 'ALL CHECKS PASSED'; then DOC_SKIP_ALL=yes; else DOC_SKIP_ALL=no; fi
+run_test "DOCTOR_SKIP_LIVE=1 exits 0" "0" "$DOC_SKIP_EC"
+run_test "DOCTOR_SKIP_LIVE=1 states live was not verified" "yes" "$DOC_SKIP_MSG"
+run_test "DOCTOR_SKIP_LIVE=1 uses checkout banner" "yes" "$DOC_SKIP_CO"
+run_test "DOCTOR_SKIP_LIVE=1 does not claim ALL CHECKS PASSED" "no" "$DOC_SKIP_ALL"
+
+DRY_H="$(mktemp -d "${TMPDIR:-/tmp}/kleos-dry.XXXXXX")"
+DRY_EC=0
+HOME="$DRY_H" DRY_RUN=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || DRY_EC=$?
+DRY_HOOKS="$(test -e "$DRY_H/.cursor" && echo yes || echo no)"
+rm -rf "$DRY_H"
+run_test "dry-run install exits 0" "0" "$DRY_EC"
+run_test "dry-run install writes no .cursor" "no" "$DRY_HOOKS"

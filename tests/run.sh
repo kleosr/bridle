@@ -62,6 +62,14 @@ echo "=== Install lifecycle (isolated HOME) ==="
 source "$PACK/tests/install_lifecycle.sh"
 
 echo ""
+echo "=== Windows host (shim + skill catalog) ==="
+source "$PACK/tests/windows_host.sh"
+
+echo ""
+echo "=== Lifecycle ledger (structural presence only) ==="
+source "$PACK/tests/lifecycle_ledger.sh"
+
+echo ""
 echo "=== Results ==="
 echo "PASS: $PASS"
 echo "FAIL: $FAIL"

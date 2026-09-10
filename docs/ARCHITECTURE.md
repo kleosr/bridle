@@ -6,7 +6,7 @@ Five layers. Fix the layer that failed.
 |---|---|---|---|
 | 1 | Prompt | Input | User message |
 | 2 | Context | Window | Project docs, config, Git, tests |
-| 3 | Harness | Pass | Four Bash hooks. Law in `.mdc` / skills |
+| 3 | Harness | Pass | Four Bash hooks on supported events. Law in `.mdc` / skills. Broader security: OS, CI, human auth |
 | 4 | Loop | Run | Agent states the job in chat |
 | 5 | Graph | Job | Handoff note, `SECURITY.md` |
 
@@ -19,12 +19,12 @@ Five layers. Fix the layer that failed.
 ## Injection vs declaration
 
 - Inject: nothing automatic. `beforeSubmitPrompt` → `continue` (secret → false). No `preToolUse`, no `updated_input`.
-- Declare: open the files you will change. Concise output is a style default (1–2 sentences: outcome, files, proof); expand for architecture, risks, or asked analysis.
-- Steel (scripts): supported shell/submit/read scripts emit deny/`continue:false` on match, malformed input, missing policy, or missing `jq`; deny > ask > allow. Deny destructive/source-write/lint-disable/sensitive paths; infra/DB `ask`. Shell screening is substring/regex heuristics, not complete parsing or containment. Host `failClosed:true` requests blocking on hook failure, but host timing/pause behavior is unverified in this repo (see `SECURITY.md` manual check). Other channels and allowed-program behavior are outside the boundary.
+- Declare: open the files you will change. Concise output is a style default (outcome, files, verification); expand for architecture, risks, failures, or asked analysis.
+- Steel (scripts): four hooks enforce documented restrictions on **supported Cursor event paths**. Broader security: repo permissions, sandboxing, CI, human authorization. Scripts emit deny/`continue:false` on match, malformed input, missing policy, or missing `jq`; deny > ask > allow. Shell screening is substring/regex heuristics, not parsing or containment. Source-write deny is a **workflow** restriction (hand-written edits via Write/StrReplace). Host `failClosed:true` requests blocking on hook failure; timing/pause unverified (`SECURITY.md`). Other channels are outside the boundary.
 
 ## Runtime
 
-Event hooks ≤80 LOC in `shared/hooks/`. Policy in `lib/` + `policy/*.ere`. Install: GLOBAL `.mdc` → `~/.cursor/rules`. Platforms: `MacOS/`, `Linux/`, `Windows/` (Git Bash shim; WSL fallback). Registration: `~/.cursor/hooks.json`, commands `./hooks/*.sh`.
+Event hooks ≤80 LOC in `shared/hooks/`. Policy in `lib/` + `policy/*.ere`. Install: GLOBAL `.mdc` → `~/.cursor/rules`. Platforms: `MacOS/`, `Linux/`, `Windows/` (Git Bash shim; WSL fallback). Registration: `~/.cursor/hooks.json`, commands `./hooks/*.sh` (Windows: rewritten to Git Bash shim).
 
 ## Steel vs ask
 

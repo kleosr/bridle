@@ -7,7 +7,7 @@ alwaysApply: true
 
 Use project/version-matched evidence for version-sensitive decisions. Report missing evidence. Do not dump framework AGENTS.md.
 
-GROUND: no `package.json` → stack pick silent; other rules still apply. Otherwise resolve ownership per scope: 1) identify the owning package/workspace for the files you touch, 2) Read its manifest + relevant config, 3) determine framework + package manager from evidence, 4) apply only that guidance, 5) avoid app-specific assumptions in shared packages, 6) report unresolved ambiguity. One owner per scope; multi-package tasks resolve each scope separately. Do not mix APIs within one owner. Reading a companion is explicit, not proof of host glob auto-activation.
+GROUND: no `package.json` → stack pick silent; other rules still apply. Otherwise resolve ownership per scope (touched file/package): 1) identify the owning package/workspace, 2) Read its manifest + relevant config, 3) determine framework + package manager from evidence, 4) apply only that guidance, 5) avoid app-specific assumptions in shared packages, 6) report unresolved ambiguity. Multi-package changes are allowed; do not mix APIs within one owner. Companion `.mdc` files self-check the owning package and are inert if unmatched. Host globs are candidates, not proof of applicability. Framework companions (`next` / `vite` / `astro`) are independent of `postgres.mdc` / `supabase.mdc`. SQL in TS/ORM still follows `postgres.mdc` when you touch SQL; glob miss is not an exemption.
 
 | Detect | Then |
 |---|---|

@@ -10,8 +10,8 @@ Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Composab
 
 ## Hard
 
-- Tenant isolation per the repo's model (often RLS + `auth.uid()`); verify membership/org/service identities. No app-only `WHERE user_id =` without a matching policy.
-- Views: `security_invoker = true` (PG15+). Avoid `SECURITY DEFINER` to bypass RLS; allowed only with safe `search_path` + least privilege + review.
+- Tenant isolation per the repo's model (often RLS + `auth.uid()`); verify with negative tests: unauthenticated, cross-user/tenant read, cross-user/tenant write, privileged backend, views/functions that change privilege. No app-only `WHERE user_id =` without a matching policy.
+- Views: `security_invoker = true` on PG15+ when the intended model is invoker rights. Avoid `SECURITY DEFINER` to bypass RLS; allowed only with safe `search_path` + least privilege + review.
 - Service role never in client bundles. User JWT for user data.
 - Pooler-aware connections. No connection-per-request in serverless without the pooler.
 

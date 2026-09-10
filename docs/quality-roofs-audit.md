@@ -11,7 +11,7 @@ Numbers are SSOT in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`
 | Coverage | **100%** of the defined change scope (diff vs merge-base/HEAD, worktree+index, or named files) when a coverage job exists; risk-based, genuine exclusions ok. Evidence, not proof of correctness. Do not add a runner. |
 | CRAP | **< 25** only if measured. |
 | Mutants | **0** meaningful survivors on files you touched when a mutator exists; equivalent/irrelevant needs explicit justification. Do not add one. |
-| Dead / redundant | Zero. Third copy → extract. `cut` on demand (cohesion, not caller count; never delete solely for a metric). |
+| Dead / redundant | Remove dead code the task introduced/obsoleted. Third occurrence: consider extract when same responsibility. `cut` on demand; never delete solely for a metric. |
 | `any` / `unknown` | No TS `any` (Go differs). `unknown` may flow to a validator/untrusted container; narrow before trusted domain use. `types.mdc` alwaysApply GLOBAL. |
 
 AlwaysApply count is **7** (agent, ponytail, pnpm, complexity, vibe, testing, types). Glob: next, vite, astro, postgres, supabase.

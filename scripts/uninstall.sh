@@ -63,6 +63,7 @@ while IFS= read -r skill; do
     echo "[rm] ~/.cursor/skills/$skill (FORCE=1 directory copy)"
   fi
 done < <(load_lines "$PACK/shared/config/skills.txt")
+prune_skill_catalog_backups "$HOME_C/skills"
 
 for a in hunter cut prove; do
   dst="$HOME_C/agents/${a}.md"

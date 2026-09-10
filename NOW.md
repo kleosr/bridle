@@ -1,7 +1,7 @@
 # NOW.md (optional handoff note)
 
-Goal: Bounded cleanup on `simplify-optional-now-no-budget` — optional NOW, no budget bureaucracy, no sessionStart, no fleet discovery.
+Goal: Close the Windows shim/catalog pack improvement after a focused diff review.
 
-State: All edits applied. Syntax green. Doctor green except 2 expected live-checksum drifts (branch changed before_shell.sh + common.sh; live install untouched). Suite re-run in progress after fixing 3 jq-precedence assertions + 1 Windows ln -s test assumption.
-Evidence: doctor 12s run; suite run 1: 3 fails (jq `has`), all diagnosed, fixes applied.
-Next: Confirm suite run 2 is green; do NOT install to live ~/.cursor without approval.
+State: Review corrections landed (shim Start failure, foreign leftover keep, no bak overwrite, SKIP_LIVE checkout banner, grep status 0/1/error). Live ~/.cursor not updated.
+Evidence: windows_host 14/0; install_lifecycle 51/0 including DOCTOR_SKIP_LIVE banners; `DOCTOR_SKIP_LIVE=1` doctor → CHECKOUT CHECKS PASSED, live not verified.
+Next: Optional approved `Windows/install.ps1` to migrate live `now.pre-kleos-bak` out of the catalog. Do not FORCE-install without asking.

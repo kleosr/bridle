@@ -35,3 +35,29 @@ symlink_force() {
     cp -f "$src" "$dst"
   fi
 }
+
+is_retired_skill_stem() {
+  local stem="$1" n
+  [[ -n "${PACK:-}" && -f "$PACK/shared/config/retired-skills.txt" ]] || return 1
+  while IFS= read -r n; do
+    [[ "$n" == "$stem" ]] && return 0
+  done < <(load_lines "$PACK/shared/config/retired-skills.txt")
+  return 1
+}
+
+# Pack installer used to leave retired skills as ~/.cursor/skills/<name>.pre-kleos-bak.
+# Only those stems (retired-skills.txt) are removed from the catalog tree. Other names stay.
+prune_skill_catalog_backups() {
+  local root="${1:-$HOME_C/skills}" dst base stem
+  for dst in "$root"/*.pre-kleos-bak; do
+    [[ -e "$dst" || -L "$dst" ]] || continue
+    base="$(basename "$dst")"
+    stem="${base%.pre-kleos-bak}"
+    if ! is_retired_skill_stem "$stem"; then
+      echo "[keep] $dst (not a pack retired-skill leftover)"
+      continue
+    fi
+    rm -rf "$dst"
+    echo "[rm] skill catalog leftover $base"
+  done
+}

@@ -85,6 +85,7 @@ install_skills() {
       fi
     fi
   done < <(load_lines "$PACK/shared/config/retired-skills.txt")
+  prune_skill_catalog_backups "$HOME_C/skills"
   return 0
 }
 

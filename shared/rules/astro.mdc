@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Astro
 
-Confirm `astro` in the owning `package.json`; globs are candidates. Training is stale (actions, sessions, content collections). Before Write: version-matched docs for the installed version (Docs MCP if connected, else docs.astro.build); latest may mismatch a pinned project. If neither is available, say so and do not invent APIs. Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
+Confirm `astro` in the owning `package.json`; globs are candidates. If the owning package has no `astro`, this file is inert. Training is stale (actions, sessions, content collections). Before Write: version-matched docs for the installed version (Docs MCP if connected, else docs.astro.build); latest may mismatch a pinned project. If neither is available, say so and do not invent APIs. Do not mix Next App Router or Vite-only SPA patterns into `.astro` pages.
 
 ## Hard
 
