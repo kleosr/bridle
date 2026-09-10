@@ -6,10 +6,10 @@ Four registered events. Law stays in `.mdc`. Fleet does not rewrite other repos'
 
 | Script | Event | Job |
 |--------|-------|-----|
-| `before_submit_prompt.sh` | beforeSubmitPrompt | Secret-prompt block (`continue`; failClosed false) |
-| `before_shell.sh` | beforeShellExecution | Destructive / source-write deny; infra/DB ask |
+| `before_submit_prompt.sh` | beforeSubmitPrompt | Secret-prompt block (`continue`; `failClosed: true`) |
+| `before_shell.sh` | beforeShellExecution | Destructive / source-write deny; infra/DB ask (`failClosed: true`) |
 | `before_read_file.sh` | beforeReadFile | Secret path deny (`failClosed: true`) |
-| `stop.sh` | stop | Rewrite / format_churn followup (`loop_limit: 1`) |
+| `stop.sh` | stop | Rewrite / format_churn followup (`loop_limit: 1`, advisory; `failClosed: false`) |
 
 Cloud: `hooks.cloud.json` = submit / shell / read. No stop.
 

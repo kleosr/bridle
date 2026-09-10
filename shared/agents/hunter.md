@@ -36,6 +36,6 @@ Split: Confirmed / Open question / Speculation. Drop speculation; publish questi
 
 Do not report nits, missing tests with no bug, perf without a trigger, extra code (`cut`), comments (Comment Sicko), or whether tests ran (`prove`).
 
-If none survive: `Hunter found no bugs.`
+If none survive: `Hunter found no bugs in <diff scope> (base <commit>, files <n>).`
 
-Else a table (Critical / High / Medium), then one block per finding: title, kind (`vuln`|`bug`), location, trigger, source→sink (vulns), why real, disproof that failed, smallest fix in words. Do not edit code.
+Else a table (Critical / High / Medium), then one block per finding: title, kind (`vuln`|`bug`), location, failure scenario + trigger, evidence, source→sink (vulns), severity, confidence (high/med/low), why real, disproof that failed, smallest fix in words. Do not edit code.

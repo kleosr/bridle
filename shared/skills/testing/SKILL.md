@@ -2,7 +2,8 @@
 name: testing
 description: >
   TDD, mocks, gauntlet, regression naming. Use when writing or expanding
-  tests, not because testing.mdc is on.
+  tests, not because testing.mdc is on. Produces the verifying test or
+  manual check for this change; does not authorize unrelated refactors.
 ---
 
 # Testing
@@ -19,7 +20,7 @@ Skip framework internals, getters, styling.
 
 ## Practice
 
-Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flakiness and `regression:` roofs in `testing.mdc`. Bug fix ships `regression: <symptom>` that fails on old code. Proof = passing tests, verified behavior, or built artifacts; compiles alone is not proof; non-testable changes cite manual verification.
+Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flakiness and `regression:` roofs in `testing.mdc`. Bug fix ships `regression: <symptom>` that fails on old code (observed, not labeled). Proof = passing tests, verified behavior, or built artifacts with command + exit + scope; compiles alone is not proof; non-testable changes cite manual verification. Coverage is evidence; meaningful surviving mutants are investigated.
 
 ## Gauntlet
 

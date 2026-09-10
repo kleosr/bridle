@@ -19,8 +19,8 @@ Five layers. Fix the layer that failed.
 ## Injection vs declaration
 
 - Inject: nothing automatic. `beforeSubmitPrompt` → `continue` (secret → false). No `preToolUse`, no `updated_input`.
-- Declare: open the files you will change. Default 1–2 sentences: outcome, files, proof; expand for architecture, risks, or asked analysis.
-- Steel: supported shell/submit/read checks fail closed (deny > ask > allow). Deny destructive/source-write/lint-disable/sensitive paths; infra/DB `ask`. Other channels and allowed-program behavior are outside the boundary.
+- Declare: open the files you will change. Concise output is a style default (1–2 sentences: outcome, files, proof); expand for architecture, risks, or asked analysis.
+- Steel (scripts): supported shell/submit/read scripts emit deny/`continue:false` on match, malformed input, missing policy, or missing `jq`; deny > ask > allow. Deny destructive/source-write/lint-disable/sensitive paths; infra/DB `ask`. Shell screening is substring/regex heuristics, not complete parsing or containment. Host `failClosed:true` requests blocking on hook failure, but host timing/pause behavior is unverified in this repo (see `SECURITY.md` manual check). Other channels and allowed-program behavior are outside the boundary.
 
 ## Runtime
 
@@ -32,3 +32,9 @@ Event hooks ≤80 LOC in `shared/hooks/`. Policy in `lib/` + `policy/*.ere`. Ins
 - **ask:** infra/DB mutation; harness activation. Material command changes need renewed approval.
 - **stop:** one advisory followup, `loop_limit: 1`. Cannot refuse completion. Not file size or complexity.
 - **law only:** ungrounded Write, ladder, nesting. Loop: `docs/engineering-system.md`.
+
+## Coverage
+
+- Verified here (unit-tested): script allow/deny/ask/advisory outputs, malformed input, missing policy/`jq`, timeout-shape fallback to deny/`continue:false` in scripts. See `tests/`.
+- Host-assumed, unverified here: rejection before side effects, approval genuinely pausing execution, prompt scan before remote transmission, glob auto-activation timing. See `SECURITY.md` manual integration check.
+- Uncovered: native `Write`/`StrReplace` of secret paths, MCP tools, Tab, alternate execution paths, allowed-program behavior, subagent host bypasses. Law only; do not rely on hooks for these.

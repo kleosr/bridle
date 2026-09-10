@@ -8,14 +8,14 @@ alwaysApply: false
 
 Per owning package: only if its `package.json` has `vite` and not `next`. If both, Next wins for that package. Confirm before applying; globs are candidates. Do not import `next/navigation`, `next/image`, or `getServerSideProps`.
 
-Read `vite.config.*` and neighbors. Entry is `index.html` + `src/main.*` unless this config says otherwise.
+Read `vite.config.*`, `package.json` (type/exports), and neighbors. Entry is `index.html` + `src/main.*` for apps; libraries/custom setups follow this config (lib mode, custom entry). Shared React packages: no app-specific assumptions.
 
 ## Hard
 
 - Env: `import.meta.env` (`VITE_` prefix unless `envPrefix` says otherwise). Do not invent Next `NEXT_PUBLIC_*` here.
-- Client SPA by default. No RSC, no `app/` router conventions, no Server Components.
+- Client SPA by default; library/custom modes per this config. No RSC, no `app/` router conventions, no Server Components.
 - SSR only per **this** config's plugin/docs (e.g. vike); frameworks may wrap Vite with their own conventions. Match them. Do not invent Next `loading.tsx`.
 - Aliases and `base` from this Vite config, not from Next `basePath`.
-- Tests: Vitest if `vitest` is a dependency. pnpm.
+- Tests: Vitest if `vitest` is a dependency. Repo manager.
 
 Subagents inherit this. Do not paste into Task prompts.

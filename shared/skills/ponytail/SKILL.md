@@ -2,7 +2,9 @@
 name: ponytail
 description: >
   Native Lean ladder and split recovery. Use when writing, editing, or
-  splitting any app code.
+  splitting any app code. Selects the lowest sufficient rung and the split
+  plan; not for diagnosis (use debugging) or test design (use testing).
+  Does not authorize unrelated cleanup.
 ---
 
 # Ponytail
@@ -33,4 +35,4 @@ Read → plan → Write new modules → StrReplace original to imports → Grep 
 
 ## Floors
 
-Trust, authz, data-loss, a11y, explicit asks. Cyclo: `complexity.mdc`. Style off only if the user says stop ponytail; safety denials stay.
+Trust, authz, data-loss, a11y, explicit asks. Cyclo: `complexity.mdc`. Style yields to task and explicit user direction; safety denials are not overridable.

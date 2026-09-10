@@ -30,8 +30,8 @@ Pass-through. Shallow module. Temporal split (load/validate/transform/save as fo
 
 ## Do not flag
 
-Trust/authz/data-loss/a11y/explicit asks. Domain-hard complexity. `regression:` tests. Comments (Comment Sicko). Logic bugs/vulns (`hunter` — one line under `Leaked to hunter`).
+Trust/authz/data-loss/a11y/explicit asks. Domain-hard complexity. `regression:` tests. Comments (Comment Sicko). Logic bugs/vulns (`hunter` — one line under `Leaked to hunter`). Never delete solely to satisfy a metric.
 
-If nothing should go: `Cut found nothing to delete.`
+If nothing should go: `Cut found nothing to delete in <diff scope> (base <commit>, files <n>).`
 
-Else a table (delete / inline / shrink / skip-dep / use-pnpm), cheapest first, then one block: why extra, what remains, `Do not` (the rewrite you are not asking for). Prefer delete over move over wrap. Do not edit code.
+Else a table (delete / inline / shrink / skip-dep / use-repo-manager), cheapest first, then one block: concrete simplification, why extra, what remains, why behavior and important invariants are preserved, `Do not` (the rewrite you are not asking for). Prefer delete over move over wrap. Do not edit code.
