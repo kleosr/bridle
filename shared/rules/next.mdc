@@ -20,4 +20,4 @@ Route by the file you touch: `app/` files use App Router; `pages/` files use Pag
 - No Vite `import.meta.env` for Next public env; use `process.env` as this version documents.
 - Knowledge from bundled docs, not from a Next "knowledge skill". Skills like `next-dev-loop` are workflows only.
 
-Repo manager for installs. Subagents inherit this.
+Repo manager for installs.

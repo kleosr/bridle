@@ -8,12 +8,12 @@ Five layers. Fix the layer that failed.
 | 2 | Context | Window | Project docs, config, Git, tests |
 | 3 | Harness | Pass | Four Bash hooks on supported events. Law in `.mdc` / skills. Broader security: OS, CI, human auth |
 | 4 | Loop | Run | Agent states the job in chat |
-| 5 | Graph | Job | Handoff note, `SECURITY.md` |
+| 5 | Graph | Job | Git, `docs/`, `SECURITY.md` |
 
 ## Channels
 
 1. **Law** — paste + `~/.cursor/rules` alwaysApply/glob `.mdc` + skills on demand. `SHARED=()`. Hooks never inject `.mdc`.
-2. **State** — project docs, config, Git, tests. Optional handoff note for unfinished work. Do not invent state.
+2. **State** — project docs, config, Git, tests. Do not invent state.
 3. **Feedback** — tool results. `stop.sh`: one advisory `followup_message` on churn (diff added+deleted ≥50% vs HEAD, file ≥80 LOC) or mass reindent. Baseline is HEAD; attribution uncertain.
 
 ## Injection vs declaration
@@ -36,5 +36,5 @@ Event hooks ≤80 LOC in `shared/hooks/`. Policy in `lib/` + `policy/*.ere`. Ins
 ## Coverage
 
 - Verified here (unit-tested): script allow/deny/ask/advisory outputs, malformed input, missing policy/`jq`, timeout-shape fallback to deny/`continue:false` in scripts. See `tests/`.
-- Host-assumed, unverified here: rejection before side effects, approval genuinely pausing execution, prompt scan before remote transmission, glob auto-activation timing. See `SECURITY.md` manual integration check.
+- Host: `docs/host-capability.md` (lanes + last live check). 2026-09-10 local: Shell deny before side effects observed; `ask` pause not observed; native Read of a `.env` path returned contents despite script deny; prompt-scan-before-transmit and `failClosed` crash path not run. Glob auto-activation timing still unverified.
 - Uncovered: native `Write`/`StrReplace` of secret paths, MCP tools, Tab, alternate execution paths, allowed-program behavior, subagent host bypasses. Law only; do not rely on hooks for these.

@@ -6,8 +6,8 @@ One loop. Snapshot: `docs/_archive/runtime-grounding-audit.md`.
 
 | stage | job | owner | when | failure |
 |---|---|---|---|---|
-| GROUND | smallest repo/task/state | 7 alwaysApply; glob `.mdc`; root AGENTS.md; handoff note on demand | session start / Read | judgment; no auto inject |
-| BOUND | scope + steel | `before_read_file.sh` (sensitive-path screening); `before_shell.sh` (destructive / source-write / lint-disable / sensitive-path deny; infra/DB + activation ask; deny > ask > allow); `SECURITY.md` | every Read / Shell | scripts emit deny/ask JSON; script crash/malformed/missing-dep denies; host `failClosed:true` requests blocking but host pause behavior is unverified here |
+| GROUND | smallest repo/task/state | 7 alwaysApply; glob `.mdc`; root AGENTS.md | session start / Read | judgment; no auto inject |
+| BOUND | scope + steel | `before_read_file.sh` (sensitive-path screening); `before_shell.sh` (destructive / source-write / lint-disable / sensitive-path deny; infra/DB + activation ask; deny > ask > allow); `SECURITY.md` | every Read / Shell | scripts emit deny/ask JSON; script crash/malformed/missing-dep denies; host `failClosed:true` requests blocking; live honor of deny/ask/`failClosed` is `docs/host-capability.md`, not assumed |
 | PLAN | smallest change + proof | paste / `agent.mdc` (open files; outcome, files, proof); `ponytail.mdc`; `complexity.mdc` | before Write | judgment; no `preToolUse` |
 | CHANGE | surgical edits | Write/StrReplace; Shell source-write denied | during turn | `LEAN BYPASS BLOCK` |
 | VERIFY | exact exit codes | `bash tests/run.sh`; `bash scripts/doctor.sh`; `prove` (separate behavior / audit / env / manager verdicts) | before done | `[fail]` / doctor names recovery; classify regression vs pre-existing vs env blocker |
@@ -63,4 +63,4 @@ No `updated_input` (no `preToolUse`). No Rust or pack Python. No MCP core. Event
 
 ## Not in scope
 
-Judgment roofs stay with `cut` and the ponytail skill. `stop` on cloud is unregistered until verified. Two alwaysApply rules do not share a canonical heading.
+Judgment roofs stay with `cut` and the ponytail skill. `stop` on cloud is unregistered until verified (`docs/host-capability.md`). Two alwaysApply rules do not share a canonical heading.

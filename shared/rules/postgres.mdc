@@ -14,7 +14,3 @@ Confirm the Postgres engine (not SQLite/MySQL); Prisma provider must be postgres
 - Perf indexes: representative `EXPLAIN` (plan only) on representative data; add an index only with measured benefit. Constraint-supporting indexes follow integrity requirements, not a perf plan. `EXPLAIN ANALYZE` **executes** the statement — not for prod writes without approval. Indexes cost writes + storage.
 - Migrations forward-only, named, in the repo's existing folder. No drive-by schema in app code. Still need a recovery strategy, lock-impact review, and compatibility plan. Never run prod queries to “verify” without approval.
 - Do not invent RLS or `auth.uid()` unless this repo already uses that model.
-
-Hooks: infra/DB shell is `ask`. Do not retry a denied action through another tool; report the block.
-
-Subagents inherit this. Do not paste these bullets into Task prompts.

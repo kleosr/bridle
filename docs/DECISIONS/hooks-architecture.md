@@ -19,7 +19,7 @@ Four hooks enforce **documented restrictions on supported Cursor event paths**. 
 |---|---|---|---|
 | Read sensitive file | `beforeReadFile` (`file_path` / nested `tool_input`) | Deny | OS permissions / sandbox; Shell `cat` of the same path is a **different** event (`beforeShellExecution`); `Write`/`StrReplace`/MCP/Tab uncovered |
 | Execute destructive command | `beforeShellExecution` string `command` | Deny | Execution permissions; interpreters, repo scripts, package lifecycle, encoded args, non-Shell tools |
-| Change infrastructure | Recognized shell strings (`psql`, `terraform apply`, …) | Ask | Credentials / approval system; host pause unverified here |
+| Change infrastructure | Recognized shell strings (`psql`, `terraform apply`, …) | Ask | Credentials / approval system; host pause not observed 2026-09-10 (`docs/host-capability.md`) |
 | Submit likely secret | `beforeSubmitPrompt` prompt fields | `continue: false` | Org-approved client/logging/telemetry; **hook timing vs remote submit is unverified** — do not claim the secret never left the machine |
 | Edit source | Native Write/StrReplace **allowed**; Shell text-rewrite denied | Workflow restriction | Review / CI; not complete protection against source modification |
 
@@ -31,9 +31,9 @@ Preventive hooks (submit / shell / read): invalid input, missing policy, missing
 
 `stop.sh`: advisory only; cannot prevent completion; malformed/`aborted`/`loop_count>0` → `{}`; its own failure must not loop (`loop_limit: 1`).
 
-`ask` is useful only if the client pauses for authorization — test in a live session; do not assume.
+`ask` is useful only if the client pauses for authorization — test in a live session; do not assume. 2026-09-10 local check: script `ask` for `psql` did not pause (`docs/host-capability.md`).
 
-Cloud: `hooks.cloud.json` = submit / shell / read. No stop.
+Cloud: user `~/.cursor/hooks.json` does **not** load. Cloud sees project `.cursor/hooks.json` only (plus Enterprise team/dashboard hooks). `hooks.cloud.json` is **opt-in** project-hooks (submit / shell / read; no `stop`). This pack has no repo-level hooks. Matrix: `docs/host-capability.md`.
 
 Bans: no `updated_input`; no kleos-gate; no pack Python; event hooks ≤80 LOC.
 

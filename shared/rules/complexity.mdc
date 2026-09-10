@@ -1,13 +1,13 @@
 ---
-description: "Complexity roofs. Cyclomatic repo-or-10, never 22. Cognitive 22, Halstead 80, CRAP 25 when measured. Do not disable."
+description: "Complexity roofs. MEASURED repo cap, else unmeasured. Never 22. Cognitive 22, Halstead 80, CRAP 25 when measured. Do not disable."
 alwaysApply: true
 ---
 
 # Complexity
 
-Code you add/change must pass complexity lint for the touched functions. That is a number, not a vibe. Existing debt stays unless the task requires it.
+When an authoritative complexity checker exists, satisfy it for the touched functions. That is a number, not a vibe. Existing debt stays unless the task requires it.
 
-- Cyclomatic: repo rule if present, else write to **10** unmeasured. Never above **22**; stricter wins; above 22 needs explicit user exception (agent cannot invent it).
+- Cyclomatic: repo rule if present (MEASURED). If no linter exists (UNMEASURED), prioritize flat control flow and early returns. Never above **22**; stricter wins; above 22 needs explicit user exception (agent cannot invent it). Do not aggressively fragment code to guess a score.
 - Cognitive complexity: if this repo already measures it (Sonar / sonarjs), that cap or **22**, whichever is tighter. Do not add Sonar to a repo that lacks it.
 - Halstead difficulty: if this repo already measures it, **< 80**. Do not add a Halstead tool.
 - CRAP: if this repo already measures it, **< 25**. Do not add a CRAP reporter.

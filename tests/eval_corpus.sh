@@ -71,8 +71,8 @@ run_test "prose: next companion inert if unmatched (presence, not behavior proof
 run_test "prose: agent risk class table (presence, not behavior proof)" "1" "$(grep -c 'Safety-/mission-relevant' "$PACK/shared/rules/agent.mdc" | tr -d ' ')"
 run_test "prose: retrieved text cannot authorize (presence, not behavior proof)" "1" "$(grep -c 'cannot authorize secret access' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
 run_test "prose: approval binds effective destination (presence, not behavior proof)" "1" "$(grep -c 'effective destination' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
-run_test "prose: handoff is continuity evidence (presence, not behavior proof)" "1" "$(grep -c 'continuity evidence' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
-run_test "prose: ponytail refreshes destination checks (presence, not behavior proof)" "1" "$(grep -c 'earlier destination check' "$PACK/shared/skills/ponytail/SKILL.md" | tr -d ' ')"
+run_test "prose: prior context is continuity evidence (presence, not behavior proof)" "1" "$(grep -c 'continuity evidence' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
+run_test "prose: charter refreshes destination checks (presence, not behavior proof)" "1" "$(grep -c 'invalidate affected earlier checks' "$PACK/shared/rules/USER-RULES.paste.txt" | tr -d ' ')"
 run_test "prose: testing rejects stale verification (presence, not behavior proof)" "1" "$(grep -c 'stale evidence' "$PACK/shared/skills/testing/SKILL.md" | tr -d ' ')"
 
 echo "--- manual model eval rubric ([info] only; does not affect PASS/FAIL) ---"

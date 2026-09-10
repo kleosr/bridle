@@ -14,7 +14,7 @@ Law lives elsewhere. This file is a map.
 
 ## Pack
 
-- Optional handoff note for unfinished work. Muscle = the four hooks. Local-host install (`FORCE=1 bash scripts/install.sh` → `~/.cursor`); project opt-in. Never Lane-A into this pack.
+- Muscle = the four hooks. Local-host install (`FORCE=1 bash scripts/install.sh` → `~/.cursor`); project opt-in. Never Lane-A into this pack.
 - No Rust kleos-gate. No pack Python. MCP is optional, never core.
 - Output: never `updated_input` (no `preToolUse`). `beforeSubmitPrompt` → `continue`. `stop` → one `followup_message`.
 
@@ -30,8 +30,8 @@ Stored in `shared/skills/` (not `.agents/skills`). Read `SKILL.md` only when the
 
 - **Verify (hooks/scripts/tests/rules):** `chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh` → `bash -n` those scripts → `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` (checkout only) → `bash tests/run.sh`. Windows: Git Bash, not PowerShell `&&`. To verify the active install: `bash scripts/doctor.sh` without `DOCTOR_SKIP_LIVE` (`docs/TOOLCHAIN.md`). Trusted workspace: local fixtures without asking, still subject to authorization and side effects. Docs-only: skip.
 - **Install:** `FORCE=1 bash scripts/install.sh` (global; merges `hooks.json`). `scripts/uninstall.sh` (owned entries only). Platform: `MacOS/`, `Linux/`, `Windows/`.
-- **Docs:** `docs/README.md` (index). Living: ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit, engineering-system, DECISIONS. Snapshots: `docs/_archive/`.
+- **Docs:** `docs/README.md` (index). Living: ARCHITECTURE, CURATOR, TOOLCHAIN, token-budget, quality-roofs-audit, engineering-system, DECISIONS, host-capability. Snapshots: `docs/_archive/`.
 
 ## Memory
 
-Optional handoff note for unfinished work. Versioned specs under `docs/`. No vendor memory.
+Versioned specs under `docs/`. No vendor memory. No session-state file (`NOW.md` retired).

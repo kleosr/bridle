@@ -17,5 +17,3 @@ Read `vite.config.*`, `package.json` (type/exports), and neighbors. Entry is `in
 - SSR only per **this** config's plugin/docs (e.g. vike); frameworks may wrap Vite with their own conventions. Match them. Do not invent Next `loading.tsx`.
 - Aliases and `base` from this Vite config, not from Next `basePath`.
 - Tests: Vitest if `vitest` is a dependency. Repo manager.
-
-Subagents inherit this. Do not paste into Task prompts.

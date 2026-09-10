@@ -4,7 +4,7 @@ Numbers are SSOT in `complexity.mdc`, `ponytail.mdc`, `testing.mdc`, `types.mdc`
 
 | Metric | Law (summary; canonical in the named `.mdc`) |
 |--------|-----|
-| Cyclomatic | Repo lint, else write to **10** unmeasured. Never above **22**; stricter wins. Explicit user exception only. Do not disable; unmeasured is not green. Scope: touched functions, not full repo. |
+| Cyclomatic | Repo lint if present (MEASURED). Else UNMEASURED: flat control flow, early returns; do not guess a score. Never above **22**; stricter wins. Explicit user exception only. Do not disable; unmeasured is not green. Scope: touched functions, not full repo. |
 | Cognitive | **22** only if this repo already measures it. Do not add Sonar. |
 | Halstead | **< 80** only if already measured. Do not add a tool. |
 | File LOC | New code: ponytail hard **300**. Never **500**. Legacy >700: modules ≤300. Generated/vendor/lockfiles/migrations/declarative excluded. Split for cohesion, not count alone. `stop.sh` does not gate size; approved refactors exempt from churn. |
