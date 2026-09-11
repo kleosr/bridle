@@ -60,7 +60,8 @@ mask_git_message() {
   printf '%s' "$1" | sed -E \
     -e 's/(-m|--message|--title|--body|--notes)(=|[[:space:]]+)"[^"]*"/\1 /g' \
     -e "s/(-m|--message|--title|--body|--notes)(=|[[:space:]]+)'[^']*'/\1 /g" \
-    -e 's/(-m|--message|--title|--body|--notes)=[^[:space:]]+/\1 /g'
+    -e 's/(-m|--message|--title|--body|--notes)=[^[:space:]]+/\1 /g' \
+    -e 's/(-m|--message|--title|--body|--notes)[[:space:]]+[^[:space:]]+/\1 /g'
 }
 
 shell_is_fleet_sync() {
@@ -76,7 +77,7 @@ gate_destructive() {
   local wipe_tgt="${Q}?(/(/*|\./*|\.\./*)*|/[^/]+/\.\.(/*|\./*|\.\./*)*|~|\\\$HOME|\\\$\{HOME\}|\.\.?|\*)${Q}?/?${Q}?(\.|\*)?${Q}?"
   local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&]|$)"
   local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
-  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|drop[[:space:]]+(database|table|schema)|truncate[[:space:]]+table|>[[:space:]]*/dev/sd|shred[[:space:]]"
+  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|>[[:space:]]*/dev/sd|shred[[:space:]]"
   echo "$seg" | grep -qiE "${rm_root}|${force_push}|${wipe}"
 }
 
@@ -155,6 +156,10 @@ gate_shell_command() {
       emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
       return 0
     fi
+    if sql_destructive_segment "$scan"; then
+      emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+      return 0
+    fi
     if gate_complexity_bypass "$scan"; then
       emit_deny "Do not disable cyclomatic lint from the shell. Extract until the project lint is green." "" lint-disable
       return 0
@@ -163,7 +168,8 @@ gate_shell_command() {
       emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code." "" source-write
       return 0
     fi
-    gate_secrets "$scan"; rc=$?
+    # Secrets see the raw segment: substitution/file flags must stay visible.
+    gate_secrets "$seg"; rc=$?
     if [[ "$rc" -eq 0 ]]; then
       emit_deny "AUTONOMY BLOCK: shell must not read secret paths." "" secret-path
       return 0
@@ -172,6 +178,11 @@ gate_shell_command() {
     fi
     if gate_infra "$scan"; then ask=1; fi
   done
+  # Backstop: multiline stdin scripts (heredocs) span segments; check once whole.
+  if shell_writes_source "$(mask_git_message "$cmd")"; then
+    emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code." "" source-write
+    return 0
+  fi
   if [[ "$ask" -eq 1 ]]; then
     emit_ask "Command mutates infra/DB. Approve the concrete action, target, and scope in the Cursor card. Command not echoed to avoid secret leakage." "" ask-infra
     return 0

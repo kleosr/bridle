@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Supabase
 
-Apply when this repo uses Supabase (client, CLI, or `supabase/` paths). Composable with `postgres.mdc` (generic SQL there, RLS/auth/pooler here).
+Apply when this repo uses Supabase (client, CLI, or `supabase/` paths); otherwise this file is inert. Composable with `postgres.mdc` (generic SQL there, RLS/auth/pooler here).
 
 ## Hard
 - Tenant isolation follows the repo's model (often RLS + `auth.uid()`). Verify with negative tests: unauthenticated access, cross-user/tenant read, cross-user/tenant write, privileged backend paths, and views/functions that change privilege. No app-only `WHERE user_id =` guard without a matching policy.
