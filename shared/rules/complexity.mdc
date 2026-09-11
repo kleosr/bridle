@@ -7,7 +7,7 @@ alwaysApply: true
 
 When an authoritative complexity checker exists, satisfy it for the touched functions. That is a number, not a vibe. Existing debt stays unless the task requires it.
 
-- Cyclomatic: repo rule when present (MEASURED). When no linter exists (UNMEASURED), prefer flat control flow and early returns; do not guess a score. Never above **22**; a stricter repo cap wins. Above 22 needs an explicit user exception the agent cannot invent.
+- Cyclomatic: repo rule when present (MEASURED). When no linter exists (UNMEASURED), prefer flat control flow and early returns; do not guess a score. Never above **22** (governance ceiling); a stricter repo cap wins. Above 22 needs an explicit user exception the agent cannot invent.
 - Cognitive: only when this repo already measures it (Sonar / sonarjs); use that cap or **22**, whichever is tighter. Do not add Sonar.
 - Halstead difficulty: only when already measured; **< 80**. Do not add a Halstead tool.
 - CRAP: only when already measured; **< 25**. Do not add a CRAP reporter.

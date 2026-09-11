@@ -18,7 +18,7 @@ State what was verified, the result, and what remains unverified. Never retry a 
 | beforeReadFile | `before_read_file.sh` | Sensitive-path screening deny. `failClosed:true`. |
 | stop | `stop.sh` | Advisory churn/format note. One `followup_message`, `loop_limit:1`, else `{}`. |
 
-No `preToolUse`, `postToolUse`, `beforeMCPExecution`, or `updated_input`. Hooks never inject `.mdc` text. Regex gates are mistake prevention on supported event paths, not a parser or sandbox. Writes are not blocked at write time; `stop` cannot refuse completion. Skills and specialist agents cannot grant permissions.
+No `preToolUse`, `postToolUse`, `beforeMCPExecution`, or `updated_input`. Hooks never inject `.mdc` text. Hooks execute; skills persuade. Regex gates are mistake prevention on supported event paths, not a parser or sandbox. Writes are not blocked at write time; `stop` cannot refuse completion. Skills and specialist agents cannot grant permissions.
 
 ## Risk class (do not infer from employer or repo name)
 
