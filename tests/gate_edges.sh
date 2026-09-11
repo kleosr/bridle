@@ -57,6 +57,10 @@ for c in \
 done
 
 run_test "regression: gate denies python stdin heredoc writing .py" "deny" "$(gate_verdict $'python3 - <<EOF\nopen("a.py","w").write("x")\nEOF')"
+run_test "regression: gate denies psql heredoc DROP TABLE" "deny" "$(gate_verdict $'psql <<EOF\nDROP TABLE t\nEOF')"
+run_test "regression: gate denies piped DROP TABLE to sqlite3" "deny" "$(gate_verdict "echo 'DROP TABLE t' | sqlite3 db")"
+run_test "regression: gate denies piped DROP TABLE to psql" "deny" "$(gate_verdict "echo 'DROP TABLE t' | psql")"
+run_test "regression: gate allows grep drop table dump" "allow" "$(gate_verdict "grep 'drop table' dump.sql")"
 run_test "regression: gate asks env-prefixed psql" "ask" "$(gate_verdict 'PGPASSWORD=x psql -h db -c "select 1"')"
 
 run_test "regression: read allows .env.example" "allow" "$(read_verdict /repo/.env.example)"
