@@ -34,7 +34,8 @@ else echo "[warn] shellcheck not found (optional, recommended for CI)"; fi
 for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/scripts/*.sh; do
   [[ -f "$f" ]] || continue
   if [[ -x "$f" ]]; then ok "executable: ${f#$PACK/}"
-  else fail "not executable: ${f#$PACK/}"; fi
+  elif git -C "$PACK" ls-files -s -- "${f#$PACK/}" 2>/dev/null | grep -q '^100755'; then ok "executable bit in git index: ${f#$PACK/} (working tree cannot represent it on this mount)"
+  else fail "not executable: ${f#$PACK/} (set +x; on noacl Windows use: git update-index --chmod=+x <file>)"; fi
 done
 
 for j in "$HOOKS_DIR/hooks.json" "$HOOKS_DIR/hooks.cloud.json" "$PACK/shared/config/manifest.json" "$PACK/package.json"; do
@@ -86,7 +87,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else

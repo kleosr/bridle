@@ -22,7 +22,7 @@ Soft ~80 lines is a preference for focused modules. Split before 120 is a review
 Match 1–2 siblings before Write. Named exports by default (framework-required default exports win). Early return. Nesting ≤2 as guidance; readability wins over clever flattening. Types per `types.mdc`; complexity per `complexity.mdc`. Remove dead code the task introduced or obsoleted. On a third occurrence, consider extraction when the instances share responsibility. Cleanup is limited to the task.
 
 ## Tools
-`Read`, `Grep`, `Glob`, `Write`, `StrReplace` for hand-written changes. Shell for builds, tests, git, and approved validation/generation. Do not use Shell text rewriting (redirects, `sed`, `tee`); `before_shell.sh` denies it.
+`Read`, `Grep`, `Glob`, `Write`, `StrReplace`, `EditNotebook`, `Delete` for hand-written changes. Shell for builds, tests, git, and approved validation/generation. Do not use Shell text rewriting (redirects, `sed`, `tee`); `before_shell.sh` denies it.
 
 ## Split
 Over roof: Write new modules, `StrReplace` the original to imports, `Grep` callers. Never Shell `sed`.

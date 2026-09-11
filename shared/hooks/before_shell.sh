@@ -5,6 +5,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 source "$HERE/lib/shell_gate.sh"
+source "$HERE/lib/sql_scope.sh"
 INPUT="$(cat)"
 if ! TYPE="$(printf '%s' "$INPUT" | jq -r '(.command // .tool_input.command // .tool_input.cmd // null) | type' 2>/dev/null)"; then
   emit_deny "kleosrules: beforeShellExecution payload is not JSON; command denied (failClosed). Run bash scripts/doctor.sh." "" malformed

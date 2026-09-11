@@ -9,7 +9,7 @@ LC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-lc.XXXXXX")"
 HOOKS_DIR="$PACK/shared/hooks"
 # shellcheck source=shared/hooks/lib/fleet_install.sh
 source "$HOOKS_DIR/lib/fleet_install.sh"
-EXPECTED_HOOK_SH=$((4 + 3))
+EXPECTED_HOOK_SH=$((4 + 4))
 
 INSTALL1_EC=0
 HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
@@ -33,7 +33,7 @@ SHELL_FLEET="$(test -e "$LC_HOME/.cursor/hooks/lib/shell_fleet.sh" && echo yes |
 run_test "install does not ship v1 shell_fleet.sh" "no" "$SHELL_FLEET"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
-run_test "double install hook script count matches (4 scripts + 3 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+run_test "double install hook script count matches (4 scripts + 4 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
 
 DUP_BASENAMES="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' -exec basename {} \; 2>/dev/null | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "double install has no duplicate hook script basenames" "0" "$DUP_BASENAMES"
@@ -100,7 +100,7 @@ MIX_KEEP="$(jq -r '.hooks.beforeSubmitPrompt[0].command' "$MIX_HOME/.cursor/hook
 MIX_EXTRA="$(jq -r '.extra' "$MIX_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 MIX_STOP="$(jq -r '.hooks|has("stop")' "$MIX_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 MIX_USER="$(test -f "$MIX_HOME/.cursor/hooks/user_audit.sh" && echo yes || echo no)"
-MIX_PACK="$(test -f "$MIX_HOME/.cursor/hooks/before_submit_prompt.sh" && echo no || echo yes)"
+MIX_PACK="$(test -f "$MIX_HOME/.cursor/hooks/before_submit_prompt.sh" && echo yes || echo no)"
 rm -rf "$MIX_HOME"
 run_test "uninstall with mixed hooks.json exits 0" "0" "$MIX_EC"
 run_test "uninstall preserves unrelated hook command" "./hooks/user_audit.sh" "$MIX_KEEP"
