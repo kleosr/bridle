@@ -13,6 +13,9 @@ def owned:
   ((.command // "") | type) == "string"
   and ((hook_basename | IN(owned_names[])) or shim_owned);
 
+def event_has_shim($entries):
+  ($entries // []) | any(shim_owned);
+
 def strip_hooks:
   .hooks |= (
     ((. // {})
@@ -37,7 +40,11 @@ else
       | ($incoming.hooks // {}) as $add
       | reduce ($add | keys[]) as $k (
           $keep;
-          .[$k] = (($keep[$k] // []) + $add[$k])
+          if event_has_shim($keep[$k]) then
+            .
+          else
+            .[$k] = (($keep[$k] // []) + $add[$k])
+          end
         )
     )
 end
