@@ -30,7 +30,7 @@ Skip framework internals, getters, styling.
 
 ## Practice
 
-Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flakiness and `regression:` roofs in `testing.mdc`. Bug fix ships `regression: <symptom>` that fails on old code (observed, not labeled). Proof = passing tests, verified behavior, or built artifacts with command + exit + scope; compiles alone is not proof; non-testable changes cite manual verification. Coverage is evidence; meaningful surviving mutants are investigated.
+Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Do not Shell-hack fixtures when a gate denies. Mock true externals only. Flakiness and `regression:` roofs in `testing.mdc`. Bug fix ships `regression: <symptom>` that fails on old code (observed, not labeled). Proof = passing tests, verified behavior, or built artifacts with command + exit + scope; compiles alone is not proof; a chat claim that tests passed is not proof; non-testable changes cite manual verification. Coverage is evidence; meaningful surviving mutants are investigated.
 
 Before a final verification claim: identify the evidence relied on; if code or inputs changed since that pass, refresh only the affected checks. An earlier pass does not cover a later diff. Report remaining uncertainty; do not claim completion on stale evidence.
 

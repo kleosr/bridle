@@ -7,7 +7,7 @@ alwaysApply: true
 
 Zero bloat. Test observable behavior at the narrowest stable boundary. Use coverage to find untested changes, not as a substitute for test quality. Direct tests of critical internal invariants (authorization, parsing, migrations, concurrency, recovery) are allowed.
 
-Run the verify this change can break. Fail closed on red; report pre-existing or environment blockers, do not loop forever. Cite evidence (command, exit, scope). Docs-only changes need no house gauntlet.
+Run the verify this change can break. Fail closed on red; report pre-existing or environment blockers, do not loop forever. Cite evidence (command, exit, scope). The agent’s claim that tests passed is not evidence. A missing or nonzero observation is not success. Do not treat a green proxy as the goal when acceptance is a different command or UI path. Docs-only changes need no house gauntlet.
 
 - In this pack, changes to hooks/scripts/tests → `bash tests/run.sh` and `bash scripts/doctor.sh`. Elsewhere run the repo's verify (TOOLCHAIN / package scripts).
 - Trusted workspace: run those checks without asking while they stay in approved scope. Network, credential, destructive, or external effects still need authorization.

@@ -29,7 +29,7 @@ Run from Git Bash on Windows. `CLOUD=1 TARGET_REPO=<other-repo> bash shared/hook
 `shared/hooks/hooks.json` (four events). Scripts: `before_submit_prompt.sh`, `before_shell.sh`, `before_read_file.sh`, `stop.sh`. Libs: `common.sh`, `shell_gate.sh`, `diff_gate.sh`. Policy: `policy/*.ere`. Merge/strip helpers: `lib/hooks_json.jq`, `lib/hooks_json.sh`. Event scripts stay ≤80 LOC.
 
 ## Docs
-`docs/ARCHITECTURE.md` (shape), `docs/TOOLCHAIN.md` (commands), `docs/DECISIONS/hooks.md` (why four), `docs/host-capability.md` (live evidence, not law). `legacy/` is the v18 tree: reference only, never an install target, never law.
+`docs/ARCHITECTURE.md` (shape), `docs/TOOLCHAIN.md` (commands), `docs/DECISIONS/hooks.md` (why four), `docs/DECISIONS/ai-engineering.md` (curriculum ingest, not law), `docs/host-capability.md` (live evidence, not law). `legacy/` is the v18 tree: reference only, never an install target, never law.
 
 ## Skills
 - `ponytail` — lean ladder + split recovery (code turns).
