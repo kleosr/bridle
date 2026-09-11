@@ -10,7 +10,8 @@
   "runtimeLibs": [
     "common.sh",
     "shell_gate.sh",
-    "diff_gate.sh"
+    "diff_gate.sh",
+    "sql_scope.sh"
   ],
   "policy": [
     "secret_paths.ere",
