@@ -141,7 +141,7 @@ gate_infra() {
 }
 
 gate_shell_command() {
-  local cmd="$1" rest seg scan ask=0 rc
+  local cmd="$1" rest seg scan ask=0 rc whole
   [[ -z "$cmd" ]] && return 1
   rest="$(split_segments "$cmd")${SEG_SEP}"
   while [[ -n "$rest" ]]; do
@@ -178,8 +178,13 @@ gate_shell_command() {
     fi
     if gate_infra "$scan"; then ask=1; fi
   done
-  # Backstop: multiline stdin scripts (heredocs) span segments; check once whole.
-  if shell_writes_source "$(mask_git_message "$cmd")"; then
+  # Backstop: heredocs/pipes span segments; check once whole.
+  whole="$(mask_git_message "$cmd")"
+  if sql_destructive_segment "$whole"; then
+    emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+    return 0
+  fi
+  if shell_writes_source "$whole"; then
     emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code." "" source-write
     return 0
   fi
