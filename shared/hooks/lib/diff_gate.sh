@@ -2,7 +2,7 @@
 # Stop-time churn advisory: unrequested rewrites and mass reindents.
 # Advisory only. Baseline is HEAD and may include pre-existing changes.
 
-DIFF_SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs)'
+DIFF_SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs|sql|vue|svelte|astro|cs|tf|mdc|ere)'
 DIFF_REWRITE_MIN=80
 DIFF_REWRITE_RATIO=50
 DIFF_FORMAT_MIN=20

@@ -1,6 +1,9 @@
 # Local runtime state (never committed)
 state/
 .cursor/
+temp_auto_push.bat
 # Editor / OS noise
 .DS_Store
 Thumbs.db
+.gitignore
+branch_structure.json

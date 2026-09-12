@@ -5,6 +5,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
+source "$HERE/lib/host.sh"
 INPUT="$(cat)"
 POL="$HERE/policy/secret_paths.ere"
 if ! FILE_PATH="$(printf '%s' "$INPUT" | jq -r '.file_path // .tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"; then

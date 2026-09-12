@@ -18,7 +18,7 @@ Smoke: `echo '{"prompt":"test code"}' | bash shared/hooks/before_submit_prompt.s
 
 Expect: `continue` (submit), `permission` (shell/read), `{}` or `followup_message` (stop; advisory). Submit, shell, and read are `failClosed:true`. `stop.loop_limit` is 1.
 
-Event hooks ≤80 LOC (readability). Policy: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`. LOC 300 is `ponytail.mdc`, not a hook. Boundary SSOT: `SECURITY.md`.
+Event hooks ≤80 LOC (readability). Policy: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/host.sh`. LOC 300 is `core.mdc`, not a hook. Boundary SSOT: `SECURITY.md`.
 
 ## Install / doctor safety
 

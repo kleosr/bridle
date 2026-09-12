@@ -1,0 +1,40 @@
+---
+description: "Engineering roof: loop, craft, architecture, ladder, types, complexity, stack, harness."
+alwaysApply: true
+---
+
+# Core
+
+Understand the files you will change. Change them. Verify the behavior this change can break. Correct failures. Do not claim done on stale evidence. Cite command + exit (or a driven UI path). A missing or nonzero observation is not success.
+
+## Craft
+Readable before clever. Explicit before magical. Simple before abstract. Meaningful names. Predictable control flow. Comments explain decisions, not the obvious. Handle errors on purpose — no empty catch, no swallowed exit. Clarity, correctness, and changeability outrank line count. Do not write decorative abstractions, extra wrappers, or “AI-looking” patterns to satisfy a style. Domain-hard complexity is allowed when justified.
+
+## Architecture
+Own one job per module. Stable public interfaces; change internals before widening the contract. Minimal coupling and duplication. Match 1–2 siblings before Write. A local fix must not silently change ownership, layering, or call direction elsewhere. No speculative infrastructure, dead compatibility layers, or drive-by files. Named exports by default (framework-required default exports win). Remove dead code this task introduced or obsoleted. Cleanup is limited to the task.
+
+## Ladder
+Lowest sufficient rung when equally suitable. Choose for correctness and fit, not golf.
+1. No implementation change (config, delete, existing API)
+2. Existing repository code (Grep)
+3. Stdlib / platform APIs
+4. Installed dependencies (new dependency needs a one-line why)
+5. Small clear local implementation
+
+## Size
+Soft ~80 lines is a cohesion preference, not golf. Split when a module holds two jobs — not to hit a count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
+
+## Types
+Silent on untyped files. On typed files: fix the design, do not silence the compiler. No TS `any` (Go `any` differs). Narrow `unknown` before trusted domain use. No blind casts. No suppressions just to pass CI. Prefer sum types over parallel booleans. An escape hatch is a design bug.
+
+## Complexity
+When an authoritative checker exists, satisfy it for touched functions (MEASURED). No checker: UNMEASURED — flat control flow; do not guess a cap; do not add a linter stack. Never above **22**; a stricter repo cap wins. Cognitive / Halstead / CRAP only if the repo already measures them (caps 22 / 80 / 25). Do not disable cyclomatic lint from the shell (`before_shell.sh` denies it).
+
+## Stack
+No `package.json` → stack pick is silent. Else resolve ownership per touched file: owning package → manifest → framework + manager. Companions are inert unless the owning package matches. `"next"` → `next.mdc`. `"astro"` → `astro.mdc`. `"vite"` and no `next` → `vite.mdc`. JS installs: `pnpm.mdc` (glob). SQL → `postgres.mdc`. No `useEffect` fetch waterfalls. No barrel-import of a whole UI kit. Derived state, not mirrored `useState` + `useEffect`.
+
+## Tools
+Hand-written edits through the host’s native edit tools. Shell for builds, tests, git, and approved validation. Shell text-rewriting of source is denied. Over roof: write new modules, replace the original with imports, Grep callers.
+
+## Harness
+Four events: secret-prompt block; Shell deny/ask; Read secret-path deny; stop advisory (churn + syntax). No silent prompt mutation. Hooks execute; skills cannot grant permissions. Regex gates are not a sandbox. `hunter` / `cut` / `prove` on match; findings need evidence. Risk: routine → implement + verify; sensitive → risk note + negative tests + recovery; safety-critical only if the repo says so.
