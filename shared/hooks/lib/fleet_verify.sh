@@ -40,17 +40,17 @@ verify_smoke() {
   if [[ -f "$HOME_C/hooks/lib/shell_fleet.sh" ]]; then
     echo "[fail] v1 lib shell_fleet.sh still installed (must be pruned on upgrade)"; bad=1
   fi
-  if [[ ! -f "$HOME_C/rules/agent.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/agent.mdc missing after install"; bad=1
+  if [[ ! -f "$HOME_C/rules/core.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/core.mdc missing after install"; bad=1
   fi
-  if [[ ! -f "$HOME_C/rules/types.mdc" ]]; then
-    echo "[fail] ~/.cursor/rules/types.mdc missing after install"; bad=1
+  if [[ ! -f "$HOME_C/rules/testing.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/testing.mdc missing after install"; bad=1
   fi
-  if [[ -e "$PACK/.cursor/rules/agent.mdc" || -L "$PACK/.cursor/rules/agent.mdc" ]]; then
-    echo "[fail] pack .cursor/rules/agent.mdc duplicates user alwaysApply"; bad=1
+  if [[ -e "$PACK/.cursor/rules/core.mdc" || -L "$PACK/.cursor/rules/core.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/core.mdc duplicates user alwaysApply"; bad=1
   fi
-  if [[ -e "$PACK/.cursor/rules/types.mdc" || -L "$PACK/.cursor/rules/types.mdc" ]]; then
-    echo "[fail] pack .cursor/rules/types.mdc duplicates user alwaysApply"; bad=1
+  if [[ -e "$PACK/.cursor/rules/testing.mdc" || -L "$PACK/.cursor/rules/testing.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/testing.mdc duplicates user alwaysApply"; bad=1
   fi
   if ! grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json" 2>/dev/null; then
     echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1

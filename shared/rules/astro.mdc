@@ -1,6 +1,6 @@
 ---
 description: "Astro roof. HTML first, islands explicit, version-matched docs."
-globs: astro.config.*, **/*.astro, **/src/content.config.*, **/src/content/**
+globs: **/astro.config.*, **/*.astro, **/src/content.config.*, **/src/content/**
 alwaysApply: false
 ---
 

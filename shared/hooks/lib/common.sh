@@ -16,6 +16,7 @@ posix_slashes() {
 canon_secret_path() {
   local p n
   p="$(posix_slashes "$1")"
+  p="$(printf '%s' "$p" | tr -d "'\"")"
   p="$(printf '%s' "$p" | tr -s '/')"
   p="${p//\/.\//\/}"
   n=0
@@ -37,6 +38,11 @@ emit_allow() {
 
 emit_deny() {
   local msg="$1" agent="${2:-}" reason="${3:-deny}"
+  if type detect_host >/dev/null 2>&1 && [[ "$(detect_host)" == "claude" ]]; then
+    jq -n --arg m "$msg" --arg r "$reason" \
+      '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$m},reason:$r}'
+    return 0
+  fi
   if [[ -n "$agent" ]] && jq -n --arg m "$msg" --arg a "$agent" --arg r "$reason" '{permission:"deny", user_message:$m, agent_message:$a, reason:$r}' 2>/dev/null; then
     return 0
   fi
@@ -48,6 +54,11 @@ emit_deny() {
 
 emit_ask() {
   local msg="$1" agent="${2:-}" reason="${3:-ask}"
+  if type detect_host >/dev/null 2>&1 && [[ "$(detect_host)" == "claude" ]]; then
+    jq -n --arg m "$msg" --arg r "$reason" \
+      '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$m},reason:$r}'
+    return 0
+  fi
   if [[ -n "$agent" ]] && jq -n --arg m "$msg" --arg a "$agent" --arg r "$reason" '{permission:"ask", user_message:$m, agent_message:$a, reason:$r}' 2>/dev/null; then
     return 0
   fi

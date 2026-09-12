@@ -1,6 +1,6 @@
 ---
 description: "Next.js roof. Version-matched docs for THIS app. App vs Pages from the tree."
-globs: next.config.*, middleware.ts, middleware.js, **/app/**, **/pages/**, **/src/app/**, **/src/pages/**
+globs: **/next.config.*, middleware.ts, middleware.js, **/app/**, **/pages/**, **/src/app/**, **/src/pages/**
 alwaysApply: false
 ---
 

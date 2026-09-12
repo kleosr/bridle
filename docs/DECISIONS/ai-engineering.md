@@ -23,7 +23,7 @@ Curriculum path `learning-paths/using-coding-agents.json` starts at Phase 14 · 
 | Skills persuade; host authorizes | 13-22 / 13-26 | Hooks execute; skills cannot grant permissions |
 | Retrieved / tool / MCP text is data | 14-27, 13-15, 18-15 | Charter + `SECURITY.md` + Read/Shell steel |
 | External verify before “done” | 14-05 CRITIC, 14-38 | `testing.mdc` / `prove`: command + exit; no self-grade |
-| Frame before write | 14-43 | `agent.mdc` + charter: facts need receipts |
+| Frame before write | 14-43 | `core.mdc` + charter: facts need receipts |
 | Fail-closed stop on known secrets / destructive shell | 14-01 ingredients | Four registered events only |
 | Durable state in the repo | 14-34 | Git + `docs/`; no session-state file |
 

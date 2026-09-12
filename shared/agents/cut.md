@@ -22,7 +22,7 @@ Same diff rules as `hunter`. Empty: one sentence and stop. Read new or grown fil
 
 ## Ladder
 
-No code → reuse → stdlib → framework → installed dep → one-liner → minimum. Flag an abstraction only when its indirection exceeds its cohesion, isolation, or reuse benefit.
+No code → reuse → stdlib → installed dep → small local implementation. Same rungs as `core.mdc`. Flag an abstraction only when its indirection exceeds its cohesion, isolation, or reuse benefit.
 
 ## Flag
 
