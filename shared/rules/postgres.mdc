@@ -1,6 +1,6 @@
 ---
 description: "Postgres roof: parameterized SQL, forward-only migrations, measured indexes. Index only."
-globs: migrations/**, **/*.sql, **/prisma/**, **/*.prisma
+globs: **/migrations/**, **/*.sql, **/prisma/**, **/*.prisma
 alwaysApply: false
 ---
 

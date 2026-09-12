@@ -1,6 +1,6 @@
-# kleosrules v2
+# kleosrules
 
-Cursor harness pack: User Rules, companion `.mdc` rules, skills, and four Bash hooks (local install only). `legacy/` is the v18 tree — reference only, never an install target.
+Agent engineering pack: charter, `core.mdc` + `testing.mdc`, glob companions, skills, and four Bash hooks (local install). Design UI skills live in `optional/design/` and are not installed.
 
 ## Install
 
@@ -34,13 +34,14 @@ Run from Git Bash on Windows.
 |---|---|
 | `shared/rules/` | Charter paste + always-on / glob `.mdc` |
 | `shared/skills/` | On-demand skill bodies |
+| `shared/hosts/` | Portable `CLAUDE.md` |
+| `optional/design/` | UI skills, not installed |
 | `shared/agents/` | `hunter` / `cut` / `prove` specialists |
 | `shared/hooks/` | Four event scripts + `lib/` + `policy/` |
 | `shared/config/` | `rules.global.txt`, `skills.txt`, absence lists, `manifest.json` |
 | `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh` |
 | `tests/` | Fixture + edge + lifecycle suites |
 | `docs/` | Architecture, toolchain, decisions, host evidence |
-| `legacy/` | v18 reference. Not law, not installed. |
 
 ## Docs
 
@@ -48,4 +49,5 @@ Run from Git Bash on Windows.
 - `docs/ARCHITECTURE.md` — layers and channels.
 - `docs/TOOLCHAIN.md` — commands and install safety.
 - `docs/DECISIONS/hooks.md` — why four hooks.
+- `docs/DECISIONS/engineering-os.md` — layer map and verify sensor.
 - `docs/host-capability.md` — live host evidence (not law).

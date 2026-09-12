@@ -12,7 +12,7 @@ SEG='[^;&|]*'
 Q='["'\'']'
 TERM="(['\"]|[[:space:];|&)]|$)"
 WORD='(^|[[:space:];|&])'
-SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs)'
+SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs|sql|vue|svelte|astro|cs|tf|mdc|ere)'
 SRC_PATH="(['\"][^'\"]*\\.${SRC_EXT}['\"]|(\\\\ |[^|&;[:space:]'\"])+\\.${SRC_EXT}${TERM})"
 
 split_segments() {
@@ -64,6 +64,25 @@ mask_git_message() {
     -e 's/(-m|--message|--title|--body|--notes)[[:space:]]+[^[:space:]]+/\1 /g'
 }
 
+# Path matching must not depend on whether the agent quoted the path.
+shell_strip_quotes() {
+  printf '%s' "$1" | tr -d "'\""
+}
+
+# git -C DIR / --git-dir / --work-tree / -c key=val sit between `git` and the
+# subcommand; strip them so force-push and reset --hard still match.
+normalize_git_globals() {
+  local s="$1" prev n=0
+  s="$(printf '%s' "$s" | tr -d '\n')"
+  while [[ "$n" -lt 8 ]]; do
+    prev="$s"
+    s="$(printf '%s' "$s" | sed -E 's/(^|[[:space:];|&])git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+|--git-dir=[^[:space:]]+[[:space:]]+|--work-tree=[^[:space:]]+[[:space:]]+|-c[[:space:]]+[^[:space:]]+[[:space:]]+)/\1git /g' | tr -d '\n')"
+    [[ "$s" == "$prev" ]] && break
+    n=$((n + 1))
+  done
+  printf '%s' "$s"
+}
+
 shell_is_fleet_sync() {
   case "$1" in
     *$'\n'*|*$'\r'*|*';'*|*'|'*|*'&'*|*'$'*|*'`'*|*'#'*|*'('*|*')'*) return 1 ;;
@@ -73,12 +92,26 @@ shell_is_fleet_sync() {
 }
 
 gate_destructive() {
-  local seg="$1"
+  local seg
+  seg="$(normalize_git_globals "$1")"
   local wipe_tgt="${Q}?(/(/*|\./*|\.\./*)*|/[^/]+/\.\.(/*|\./*|\.\./*)*|~|\\\$HOME|\\\$\{HOME\}|\.\.?|\*)${Q}?/?${Q}?(\.|\*)?${Q}?"
   local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&]|$)"
   local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
   local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|>[[:space:]]*/dev/sd|shred[[:space:]]"
-  echo "$seg" | grep -qiE "${rm_root}|${force_push}|${wipe}"
+  local pipe_sh="(curl|wget)[[:space:]].*\|[[:space:]]*(sudo[[:space:]]+)?(ba)?sh([[:space:];|&]|$)"
+  echo "$seg" | grep -qiE "${rm_root}|${force_push}|${wipe}|${pipe_sh}"
+}
+
+# Writes to the installed harness (hooks.json, ~/.cursor/hooks, ~/.cursor/rules).
+# Installer path is asked earlier in before_shell.sh and never reaches here.
+gate_harness() {
+  local seg
+  seg="$(shell_strip_quotes "$1")"
+  local tgt='(\$HOME|\$\{HOME\}|~|[^[:space:]]*)/\.cursor/(hooks\.json|hooks(/|$)|rules/)'
+  echo "$seg" | grep -qiE "(>>|>)[[:space:]]*${tgt}" && return 0
+  echo "$seg" | grep -qiE "${WORD}(rm|cp|mv|install|tee|touch|dd)[[:space:]]+.*\\.cursor/(hooks\\.json|hooks/|rules/)" && return 0
+  echo "$seg" | grep -qiE "${WORD}(sed|perl)[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*\\.cursor/(hooks|rules)" && return 0
+  return 1
 }
 
 gate_complexity_bypass() {
@@ -110,13 +143,13 @@ gate_secrets() {
   local secret_name='(\.env|id_rsa|id_ed25519|id_ecdsa|\.pem|\.key|credentials\.json)'
   if shell_is_git_gh_body "$seg"; then
     if echo "$seg" | grep -qE '\$\(|`'; then
-      if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$seg" | grep -qiE -f "$pol"; }; then
+      if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$(shell_strip_quotes "$seg")" | grep -qiE -f "$pol"; }; then
         return 0
       fi
       return 2
     fi
     if echo "$seg" | grep -qiE '(^|[[:space:]])(-F|--file|--body-file|--notes-file)[[:space:]=]'; then
-      if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$seg" | grep -qiE -f "$pol"; }; then
+      if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$(shell_strip_quotes "$seg")" | grep -qiE -f "$pol"; }; then
         return 0
       fi
     fi
@@ -127,22 +160,28 @@ gate_secrets() {
   local readers='(cat|head|tail|less|more|bat|source|\.|grep|rg|awk|sed|cut|xxd|od|base64|openssl|strings|scp|cp)'
   local key_mat="${WORD}${readers}[[:space:]]+${SEG}([^[:space:]\"']+\.(pem|key|p12|pfx)|[^[:space:]\"']*id_(rsa|ed25519|ecdsa))(${Q}|[[:space:];|&]|$)"
   local git_leak="${WORD}git[[:space:]]+(show|cat-file|checkout|restore|archive)[[:space:]]${SEG}(\.env|\.pem|\.key|id_rsa|id_ed25519|credentials)"
-  if [[ -f "$pol" ]] && printf '%s' "$seg" | grep -qiE -f "$pol"; then return 0; fi
-  if echo "$seg" | grep -qiE "$env_tok" && ! echo "$seg" | grep -qE "$env_seed"; then return 0; fi
-  if echo "$seg" | grep -qiE "$key_mat"; then return 0; fi
-  if echo "$seg" | grep -qiE "$git_leak"; then return 0; fi
+  local scan
+  scan="$(shell_strip_quotes "$seg")"
+  if [[ -f "$pol" ]] && printf '%s' "$scan" | grep -qiE -f "$pol"; then return 0; fi
+  if echo "$scan" | grep -qiE "$env_tok" && ! echo "$seg" | grep -qE "$env_seed"; then return 0; fi
+  if echo "$scan" | grep -qiE "$key_mat"; then return 0; fi
+  if echo "$scan" | grep -qiE "$git_leak"; then return 0; fi
   return 1
 }
 
 gate_infra() {
   local seg="$1"
   local db="(^|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(sudo[[:space:]]+|env[[:space:]]+)?(psql|mysql|mongosh)([[:space:]]|$)"
-  echo "$seg" | grep -qiE "${db}|supabase[[:space:]]+db|terraform[[:space:]]+apply|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)"
+  echo "$seg" | grep -qiE "${db}|supabase[[:space:]]+db|terraform[[:space:]]+(apply|destroy)|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)|aws[[:space:]]+s3[[:space:]]+rm[[:space:]].*--recursive|prisma[[:space:]]+migrate[[:space:]]+reset"
 }
 
 gate_shell_command() {
   local cmd="$1" rest seg scan ask=0 rc whole
   [[ -z "$cmd" ]] && return 1
+  if echo "$cmd" | grep -qiE '(curl|wget)[[:space:]].*\|[[:space:]]*(sudo[[:space:]]+)?(ba)?sh([[:space:];|&]|$)'; then
+    emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+    return 0
+  fi
   rest="$(split_segments "$cmd")${SEG_SEP}"
   while [[ -n "$rest" ]]; do
     seg="${rest%%"$SEG_SEP"*}"
@@ -154,6 +193,10 @@ gate_shell_command() {
     if shell_is_git_gh_body "$seg"; then scan="$(mask_git_message "$seg")"; fi
     if gate_destructive "$scan"; then
       emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+      return 0
+    fi
+    if gate_harness "$seg"; then
+      emit_deny "AUTONOMY BLOCK: modifying the installed harness requires activation. Use FORCE=1 bash scripts/install.sh from the pack root." "" harness
       return 0
     fi
     if sql_destructive_segment "$scan"; then

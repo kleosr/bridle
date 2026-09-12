@@ -1,4 +1,0 @@
-*.sh text eol=lf
-*.ere text eol=lf
-*.jq text eol=lf
-shared/config/*.txt text eol=lf

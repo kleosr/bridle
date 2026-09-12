@@ -83,4 +83,20 @@ run_test "stop: failure names the gate and the recovery action" "true" "$RESULT"
 RESULT="$(gr_stop "$GR_TMP/rewrite" | jq -r 'has("followup_message") and (has("permission")|not) and (has("continue")|not)')"
 run_test "stop: churn warning is advisory followup, not refusal" "true" "$RESULT"
 
+gr_repo "$GR_TMP/badshell"
+printf 'echo ok\n' > "$GR_TMP/badshell/ok.sh"
+git -C "$GR_TMP/badshell" add ok.sh
+git -C "$GR_TMP/badshell" -c user.email=t@t -c user.name=t commit -q -m base
+printf 'echo ok\nif then\n' > "$GR_TMP/badshell/ok.sh"
+RESULT="$(gr_stop "$GR_TMP/badshell" | jq -r '.followup_message // "" | test("VERIFY")')"
+run_test "stop: bash -n failure on changed .sh is advisory VERIFY" "true" "$RESULT"
+
+gr_repo "$GR_TMP/okshell"
+printf 'echo ok\n' > "$GR_TMP/okshell/ok.sh"
+git -C "$GR_TMP/okshell" add ok.sh
+git -C "$GR_TMP/okshell" -c user.email=t@t -c user.name=t commit -q -m base
+printf 'echo still-ok\n' > "$GR_TMP/okshell/ok.sh"
+RESULT="$(gr_stop "$GR_TMP/okshell" | jq -c .)"
+run_test "stop: valid .sh edit without churn is quiet (hook does not run tests)" "{}" "$RESULT"
+
 rm -rf "$GR_TMP"

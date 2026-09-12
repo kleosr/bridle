@@ -1,4 +1,9 @@
 # .mdc names that must be absent from every install target. Absence list; keep even when empty.
+agent
+ponytail
+types
+complexity
+vibe
 debugging
 native-lean-autoload
 now

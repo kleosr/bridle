@@ -87,7 +87,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -95,10 +95,10 @@ if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
     fi
   done
 fi
-if [[ -f "$DOCTOR_FIXTURE/.cursor/rules/types.mdc" ]]; then
-  ok "fixture install: types.mdc in user rules"
+if [[ -f "$DOCTOR_FIXTURE/.cursor/rules/core.mdc" ]]; then
+  ok "fixture install: core.mdc in user rules"
 else
-  fail "fixture install: types.mdc missing from user rules"
+  fail "fixture install: core.mdc missing from user rules"
 fi
 rm -rf "$DOCTOR_FIXTURE"
 fi
@@ -137,13 +137,12 @@ if [[ -f "$PACK/SECURITY.md" ]]; then ok "SECURITY.md present"
 else fail "SECURITY.md missing"; fi
 
 LAW_STALE=""
-for f in "$PACK/shared/rules/agent.mdc" "$PACK/shared/rules/ponytail.mdc" \
-  "$PACK/shared/rules/vibe.mdc" "$PACK/shared/rules/postgres.mdc" \
+for f in "$PACK/shared/rules/core.mdc" \
+  "$PACK/shared/rules/postgres.mdc" \
   "$PACK/shared/rules/supabase.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
-  "$PACK/shared/rules/astro.mdc" "$PACK/shared/rules/complexity.mdc" \
+  "$PACK/shared/rules/astro.mdc" \
   "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/testing.mdc" \
-  "$PACK/shared/rules/types.mdc" \
   "$PACK/shared/rules/USER-RULES.paste.txt"; do
   [[ -f "$f" ]] || { LAW_STALE="$LAW_STALE missing:${f#$PACK/}"; continue; }
   if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
@@ -153,15 +152,15 @@ done
 if [[ -z "$LAW_STALE" ]]; then ok "law matches four-hook harness (no stale gate names)"
 else fail "stale deleted-hook names in$LAW_STALE"; fi
 
-if grep -q 'hard 300' "$PACK/shared/rules/ponytail.mdc" && grep -q 'never 500' "$PACK/shared/rules/ponytail.mdc"; then ok "ponytail.mdc has hard 300 roof and never-500 ceiling"
-else fail "ponytail.mdc missing hard 300 roof or never-500 ceiling"; fi
+if grep -q 'hard 300' "$PACK/shared/rules/core.mdc" && grep -q 'never 500' "$PACK/shared/rules/core.mdc"; then ok "core.mdc has hard 300 roof and never-500 ceiling"
+else fail "core.mdc missing hard 300 roof or never-500 ceiling"; fi
 
-if grep -q '^alwaysApply: true' "$PACK/shared/rules/types.mdc" \
-  && grep -q '^alwaysApply: true' "$PACK/shared/rules/testing.mdc"; then ok "types.mdc and testing.mdc are alwaysApply"
-else fail "types.mdc or testing.mdc is not alwaysApply"; fi
+if grep -q '^alwaysApply: true' "$PACK/shared/rules/core.mdc" \
+  && grep -q '^alwaysApply: true' "$PACK/shared/rules/testing.mdc"; then ok "core.mdc and testing.mdc are alwaysApply"
+else fail "core.mdc or testing.mdc is not alwaysApply"; fi
 
-if grep -q 'Never above \*\*22\*\*' "$PACK/shared/rules/complexity.mdc"; then ok "complexity.mdc has the cyclo-22 ceiling"
-else fail "complexity.mdc missing cyclo-22 ceiling"; fi
+if grep -q 'Never above \*\*22\*\*' "$PACK/shared/rules/core.mdc"; then ok "core.mdc has the cyclo-22 ceiling"
+else fail "core.mdc missing cyclo-22 ceiling"; fi
 
 PASTE="$PACK/shared/rules/USER-RULES.paste.txt"
 PASTE_HEADS=ok

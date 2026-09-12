@@ -9,7 +9,7 @@ LC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-lc.XXXXXX")"
 HOOKS_DIR="$PACK/shared/hooks"
 # shellcheck source=shared/hooks/lib/fleet_install.sh
 source "$HOOKS_DIR/lib/fleet_install.sh"
-EXPECTED_HOOK_SH=$((4 + 4))
+EXPECTED_HOOK_SH=$((4 + 6))
 
 INSTALL1_EC=0
 HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
@@ -21,8 +21,8 @@ run_test "double install second pass exits 0" "0" "$INSTALL2_EC"
 EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile"),has("stop")] | map(select(.)) | length' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 run_test "double install registers the 4 required events" "4" "$EVT"
 
-TYPES_HOME="$(test -f "$LC_HOME/.cursor/rules/types.mdc" && echo yes || echo no)"
-run_test "install copies types.mdc into isolated HOME rules" "yes" "$TYPES_HOME"
+CORE_HOME="$(test -f "$LC_HOME/.cursor/rules/core.mdc" && echo yes || echo no)"
+run_test "install copies core.mdc into isolated HOME rules" "yes" "$CORE_HOME"
 HUNTER_HOME="$(test -f "$LC_HOME/.cursor/agents/hunter.md" && echo yes || echo no)"
 CUT_HOME="$(test -f "$LC_HOME/.cursor/agents/cut.md" && echo yes || echo no)"
 PROVE_HOME="$(test -f "$LC_HOME/.cursor/agents/prove.md" && echo yes || echo no)"
@@ -33,7 +33,7 @@ SHELL_FLEET="$(test -e "$LC_HOME/.cursor/hooks/lib/shell_fleet.sh" && echo yes |
 run_test "install does not ship v1 shell_fleet.sh" "no" "$SHELL_FLEET"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
-run_test "double install hook script count matches (4 scripts + 4 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+run_test "double install hook script count matches (4 scripts + 6 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
 
 DUP_BASENAMES="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' -exec basename {} \; 2>/dev/null | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "double install has no duplicate hook script basenames" "0" "$DUP_BASENAMES"
@@ -46,11 +46,11 @@ CUSTOM_OK="$(test -f "$LC_HOME/.cursor/rules/my-custom.mdc" && echo yes || echo 
 HOOKS_GONE="$(test -f "$LC_HOME/.cursor/hooks.json" && echo no || echo yes)"
 AGENT_GONE="$(test -f "$LC_HOME/.cursor/agents/hunter.md" && echo no || echo yes)"
 PONY_GONE="$(test -f "$LC_HOME/.cursor/rules/ponytail.mdc" && echo no || echo yes)"
-TYPES_GONE="$(test -f "$LC_HOME/.cursor/rules/types.mdc" && echo no || echo yes)"
+CORE_GONE="$(test -f "$LC_HOME/.cursor/rules/core.mdc" && echo no || echo yes)"
 run_test "uninstall with FORCE unset exits 0" "0" "$UNINSTALL_EC"
 run_test "uninstall removes hooks.json when only pack events remain" "yes" "$HOOKS_GONE"
-run_test "uninstall removes kleosrules agent.mdc rules" "yes" "$PONY_GONE"
-run_test "uninstall removes types.mdc" "yes" "$TYPES_GONE"
+run_test "uninstall removes kleosrules ponytail.mdc rules" "yes" "$PONY_GONE"
+run_test "uninstall removes core.mdc" "yes" "$CORE_GONE"
 run_test "uninstall removes hunter agent" "yes" "$AGENT_GONE"
 run_test "uninstall preserves unrelated my-custom.mdc" "yes" "$CUSTOM_OK"
 
@@ -123,13 +123,13 @@ run_test "install merge registers all 4 required events" "4" "$MERGE_EVT"
 
 OWN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-own.XXXXXX")"
 mkdir -p "$OWN_HOME/.cursor/rules"
-printf '%s\n' '# user agent' > "$OWN_HOME/.cursor/rules/agent.mdc"
+printf '%s\n' '# user core' > "$OWN_HOME/.cursor/rules/core.mdc"
 HOME="$OWN_HOME" FORCE=0 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || true
-OWN_SKIP="$(grep -q 'user agent' "$OWN_HOME/.cursor/rules/agent.mdc" 2>/dev/null && echo kept || echo replaced)"
+OWN_SKIP="$(grep -q 'user core' "$OWN_HOME/.cursor/rules/core.mdc" 2>/dev/null && echo kept || echo replaced)"
 HOME="$OWN_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || true
-OWN_BAK="$(test -f "$OWN_HOME/.cursor/rules/agent.mdc.pre-kleos-bak" && echo yes || echo no)"
+OWN_BAK="$(test -f "$OWN_HOME/.cursor/rules/core.mdc.pre-kleos-bak" && echo yes || echo no)"
 HOME="$OWN_HOME" bash "$PACK/scripts/uninstall.sh" >/dev/null 2>&1 || true
-OWN_RESTORE="$(grep -q 'user agent' "$OWN_HOME/.cursor/rules/agent.mdc" 2>/dev/null && echo yes || echo no)"
+OWN_RESTORE="$(grep -q 'user core' "$OWN_HOME/.cursor/rules/core.mdc" 2>/dev/null && echo yes || echo no)"
 rm -rf "$OWN_HOME"
 run_test "install without FORCE keeps differing user rule" "kept" "$OWN_SKIP"
 run_test "install with FORCE backs up differing user rule" "yes" "$OWN_BAK"

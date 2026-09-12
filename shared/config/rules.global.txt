@@ -1,11 +1,7 @@
-# Always-on / glob .mdc files installed to ~/.cursor/rules. SSOT for install + uninstall.
-# Order is not precedence; the charter and agent.mdc define precedence.
-agent
-ponytail
+# Always-on / glob .mdc files installed to ~/.cursor/rules.
+# Always-on: core, testing. Companions: glob-triggered (inert unmatched).
+core
 testing
-types
-complexity
-vibe
 pnpm
 next
 vite
