@@ -11,7 +11,9 @@
     "common.sh",
     "shell_gate.sh",
     "diff_gate.sh",
-    "sql_scope.sh"
+    "sql_scope.sh",
+    "host.sh",
+    "verify_gate.sh"
   ],
   "policy": [
     "secret_paths.ere",

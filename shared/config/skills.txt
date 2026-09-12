@@ -2,9 +2,3 @@
 ponytail
 testing
 debugging
-complexity
-design-stack
-premium-ui-craft
-landing-page-design
-redesign-existing-projects
-writing-pr

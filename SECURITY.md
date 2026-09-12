@@ -11,14 +11,15 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Control | Event | Fail closed | Notes |
 |---|---|---|---|
 | Secret tokens in the user prompt | `beforeSubmitPrompt` | **yes (scripts)** | `policy/secret_tokens.ere` (known prefixes only; no-match ≠ no-secret). Missing policy, parser fail, or hook crash → `continue:false`. Whether the scan runs before remote transmission is host-determined and unverified here. Deny messages do not echo the prompt. |
-| Sensitive **paths** on Read | `beforeReadFile` | **yes (scripts)** | `policy/secret_paths.ere` (case-insensitive screening, not confidentiality). Timeout 10s. Missing policy or non-JSON → deny. `.env.example` and `.env.dist` stay readable. |
-| Sensitive paths / `.env*` / `git show` secrets | `beforeShellExecution` | **yes (scripts)** | Evaluated per command **segment**; a `git commit`/`gh pr` message suppresses matches inside its own message argument only — never the rest of the command. Command substitution / `-F` / `--body-file` on secret names deny. Non-JSON or non-string command → deny. Deny/ask messages never echo the command. |
-| Destructive git/disk/SQL | `beforeShellExecution` | **yes (scripts)** | deny, per segment. Git/disk patterns match on program token + flags, unchanged. SQL patterns are program-scoped via `lib/sql_scope.sh`: evaluated only when the segment invokes a SQL client, so `grep drop dump.sql` no longer matches. Covered by `tests/sql_scope_test.sh`. |
-| Infra/DB mutation | `beforeShellExecution` | **yes (scripts)** | `ask` (timeout/crash still deny in scripts). Host pause unverified (`docs/host-capability.md`). |
+| Sensitive **paths** on Read | `beforeReadFile` | **yes (scripts)** | `policy/secret_paths.ere`. Quotes stripped before match. Token-end anchors (not `$` only). Timeout 10s. `.env.example` and `.env.dist` stay readable. |
+| Sensitive paths / `.env*` / `git show` secrets | `beforeShellExecution` | **yes (scripts)** | Quotes stripped before path match. Per-segment; git/gh message masking unchanged. `scp` of secret names denies. |
+| Destructive git/disk/SQL | `beforeShellExecution` | **yes (scripts)** | deny, per segment. Git global flags (`-C`, `--git-dir`, `--work-tree`, `-c`) stripped before match. `curl`/`wget` piped to `sh`/`bash` denied. SQL remains program-scoped. |
+| Shell write of source | `beforeShellExecution` | **yes (scripts)** | Includes `sql vue svelte astro cs tf mdc ere` plus the original language list. |
+| Infra/DB mutation | `beforeShellExecution` | **yes (scripts)** | `ask` (timeout/crash still deny in scripts). Includes `terraform destroy`, `aws s3 rm --recursive`, `prisma migrate reset`. |
+| Harness self-protection | `beforeShellExecution` | **yes (scripts)** | deny writes/`rm`/`cp`/`mv` against `~/.cursor/hooks.json`, `~/.cursor/hooks/`, `~/.cursor/rules/`. Installer path still `ask` via pack markers. Reason `harness`. |
 | Cyclomatic lint disable | `beforeShellExecution` | **yes (scripts)** | deny, per segment. |
-| Shell write of source | `beforeShellExecution` | **yes (scripts)** | deny Shell text rewriting (redirects, `sed -i`, `tee`, `cp`/`mv` of source, interpreter writes). Approved validation/generation (lint `--fix`, format, typecheck, codegen, dep install via the repo manager) remains allowed. |
-| Harness activation | `beforeShellExecution` | **yes (scripts)** | Installer path is checked against the **payload cwd**, never the hook process cwd. Pack markers → `ask`; otherwise deny. A relative path is not proof of trust. |
-| Ponytail diff churn | `stop` | no | One `followup_message`, `loop_limit:1`. Cannot block completion. Not a security control. |
+| Harness activation | `beforeShellExecution` | **yes (scripts)** | Installer path is checked against the **payload cwd**, never the hook process cwd. Pack markers → `ask`; otherwise deny. |
+| Ponytail diff + syntax | `stop` | no | Churn/format advisory. `verify_gate.sh` runs `bash -n` / `jq empty` on changed shell/JSON only — **does not execute repo test suites**. Cannot block completion. |
 
 **Not gated (law only):** `Write` / `StrReplace` of secret paths, MCP tools, Tab, `preToolUse`. Do not write `.env`, keys, or `credentials.json`. A denied Read may still be reachable via an allowed program; verdicts combine as deny > ask > allow.
 
@@ -32,7 +33,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Timeout / crash | — | host-defined; requested fail-closed on preventive events |
 | `stop` malformed / aborted / loop>0 | `{}` | cannot loop (`loop_limit:1`); cannot refuse completion |
 
-stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-jq`, `secret-token`, `ask-infra`, `activation`.
+stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-jq`, `secret-token`, `ask-infra`, `activation`, `harness`.
 
 Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval.
 
