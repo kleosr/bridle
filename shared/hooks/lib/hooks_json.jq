@@ -7,7 +7,7 @@ def owned_names:
 
 def shim_owned:
   (.command // "")
-  | test("bash-shim\\.ps1[[:space:]]+[^[:space:]]*(before_submit_prompt|before_shell|before_read_file|stop)\\.sh([[:space:]]|$)");
+  | test("bash-shim\\.ps1[\"']?[[:space:]]+[^[:space:]]*(session_start|before_submit_prompt|before_shell|before_read_file|stop)\\.sh([[:space:]]|$)");
 
 def owned:
   ((.command // "") | type) == "string"
@@ -15,6 +15,9 @@ def owned:
 
 def event_has_shim($entries):
   ($entries // []) | any(shim_owned);
+
+def first_shim_command($entries):
+  ($entries // []) | map(select(shim_owned)) | .[0].command // empty;
 
 def strip_hooks:
   .hooks |= (
@@ -40,8 +43,11 @@ else
       | ($incoming.hooks // {}) as $add
       | reduce ($add | keys[]) as $k (
           $keep;
-          if event_has_shim($keep[$k]) then
-            .
+          if event_has_shim($raw.hooks[$k]) then
+            .[$k] = (
+              [($raw.hooks[$k] // [])[] | select(owned | not)]
+              + [($add[$k] // [])[] | .command = first_shim_command($raw.hooks[$k])]
+            )
           else
             .[$k] = (($keep[$k] // []) + $add[$k])
           end

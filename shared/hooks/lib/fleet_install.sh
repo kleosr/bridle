@@ -10,6 +10,24 @@ CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
 
 manifest_list() { jq -r "$1" "$(manifest_json)" 2>/dev/null; }
 
+retired_mdc() {
+  local n="${1%.mdc}"
+  n="${n%.MDC}"
+  printf '%s.mdc' "$n"
+}
+
+prune_retired_rules() {
+  local root="$1" label="$2" orphan rel
+  while IFS= read -r orphan; do
+    [[ -z "$orphan" ]] && continue
+    rel="$(retired_mdc "$orphan")"
+    if [[ -e "$root/$rel" || -L "$root/$rel" ]]; then
+      rm -f "$root/$rel"
+      echo "[rm] $label/$rel"
+    fi
+  done < <(load_lines "$PACK/shared/config/retired.txt")
+}
+
 copy_runtime_libs() {
   local dest="$1" s b keep k libs
   libs="$(manifest_list '.runtimeLibs[]')"
@@ -38,6 +56,9 @@ copy_hook_scripts() {
     cp -f "$HOOKS_DIR/$s" "$dest/$s"
     chmod +x "$dest/$s"
   done
+  if [[ -f "$HOOKS_DIR/git-bash-shim.ps1" ]]; then
+    cp -f "$HOOKS_DIR/git-bash-shim.ps1" "$dest/git-bash-shim.ps1"
+  fi
   while IFS= read -r legacy; do
     [[ -z "$legacy" ]] && continue
     rm -f "$dest/$legacy"
@@ -51,6 +72,7 @@ copy_hook_scripts() {
 
 write_home_hooks_json() {
   merge_hooks_json "$HOME_C/hooks.json" "$HOOKS_DIR/hooks.json"
+  apply_pwsh_shim_hooks "$HOME_C/hooks.json"
 }
 
 heal_orphan_project_hooks() {
@@ -79,7 +101,7 @@ install_home_hooks() {
 }
 
 install_global_rules() {
-  local name orphan src dst h
+  local name src dst h
   mkdir -p "$HOME_C/rules"
   : >"$HOME_C/kleosrules-owned.txt"
   for name in "${GLOBAL[@]}"; do
@@ -101,13 +123,7 @@ install_global_rules() {
     h="$(owned_hash "$dst")"
     [[ -n "$h" ]] && printf 'rules/%s.mdc %s\n' "$name" "$h" >>"$HOME_C/kleosrules-owned.txt"
   done
-  while IFS= read -r orphan; do
-    [[ -z "$orphan" ]] && continue
-    if [[ -e "$HOME_C/rules/$orphan" || -L "$HOME_C/rules/$orphan" ]]; then
-      rm -f "$HOME_C/rules/$orphan"
-      echo "[rm] ~/.cursor/rules/$orphan"
-    fi
-  done < <(load_lines "$PACK/shared/config/retired.txt")
+  prune_retired_rules "$HOME_C/rules" "~/.cursor/rules"
 }
 
 install_skills() {
@@ -194,12 +210,6 @@ install_project_hooks() {
     [[ -f "$PACK/shared/rules/${s}.mdc" ]] || continue
     cp -f "$PACK/shared/rules/${s}.mdc" "$rules_dest/${s}.mdc"
   done
-  while IFS= read -r orphan; do
-    [[ -z "$orphan" ]] && continue
-    if [[ -e "$rules_dest/$orphan" || -L "$rules_dest/$orphan" ]]; then
-      rm -f "$rules_dest/$orphan"
-      echo "[rm] $label/.cursor/rules/$orphan"
-    fi
-  done < <(load_lines "$PACK/shared/config/retired.txt")
+  prune_retired_rules "$rules_dest" "$label/.cursor/rules"
   echo "[ok] project hooks + .mdc → $label (cloud-safe)"
 }
