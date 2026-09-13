@@ -71,3 +71,7 @@ run_test "pre-action gate: shell redirect into .ts denied before write" "deny" "
 
 RESULT="$(echo '{"command":"bash tests/run.sh && bash scripts/doctor.sh","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "pre-action gate: repo proof command allowed" "allow" "$RESULT"
+
+CHARTER="$PACK/shared/rules/USER-RULES.paste.txt"
+if grep -qE 'Never above|useEffect|failClosed|globs:' "$CHARTER"; then CHARTER_DUP=fail; else CHARTER_DUP=ok; fi
+run_test "regression: charter does not restate core.mdc or hook internals" "ok" "$CHARTER_DUP"

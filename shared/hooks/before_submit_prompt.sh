@@ -4,7 +4,7 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
-INPUT="$(cat)"
+INPUT="$(hook_stdin)"
 POL="$HERE/policy/secret_tokens.ere"
 if [[ -z "$INPUT" ]] || ! printf '%s' "$INPUT" | jq empty >/dev/null 2>&1; then
   emit_continue false "Blocked: prompt JSON could not be parsed. Remove credentials and resubmit." malformed

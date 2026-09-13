@@ -1,14 +1,21 @@
-# Restore Windows hooks.json to bash-shim-only (removes duplicate ./hooks/ entries
-# that fleet_sync merge adds and breaks failClosed on Windows).
+# Restore Windows hooks.json to shim-only (removes duplicate ./hooks/ entries
+# that fleet_sync merge used to add). Prefers git-bash-shim.ps1, then bash-shim.ps1.
 $ErrorActionPreference = 'Stop'
 $hooksDir = Join-Path $env:USERPROFILE '.cursor\hooks'
 $hooksJson = Join-Path $env:USERPROFILE '.cursor\hooks.json'
 $backup = "$hooksJson.pre-sync-bak"
-$shim = Join-Path $hooksDir 'bash-shim.ps1'
-if (-not (Test-Path -LiteralPath $shim)) {
-  Write-Error "Missing $shim - install hooks scripts first."
+$shim = $null
+foreach ($name in @('git-bash-shim.ps1', 'bash-shim.ps1')) {
+  $candidate = Join-Path $hooksDir $name
+  if (Test-Path -LiteralPath $candidate) {
+    $shim = $candidate
+    break
+  }
 }
-$cmd = "powershell -NoProfile -ExecutionPolicy Bypass -File `"$shim`""
+if (-not $shim) {
+  Write-Error "Missing git-bash-shim.ps1 or bash-shim.ps1 under $hooksDir - install hooks scripts first."
+}
+$cmd = "pwsh -NoProfile -ExecutionPolicy Bypass -File `"$shim`""
 if (Test-Path -LiteralPath $backup) {
   Copy-Item -LiteralPath $backup -Destination $hooksJson -Force
   Write-Host "[ok] restored from $backup"

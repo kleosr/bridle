@@ -8,7 +8,7 @@ The pack is an engineering operating system for autonomous coding agents: a smal
 
 | Layer | Job | Loaded |
 |---|---|---|
-| Charter | Identity, approval, evidence | User Rules paste, every host |
+| Charter | Identity, authorization, evidence, host/OS; not craft/verify/stack | User Rules paste, every host |
 | Core | Craft, ladder, types, complexity, stack, harness | `core.mdc` + `testing.mdc` always-on |
 | Companion | Stack facts | glob `.mdc` |
 | Skill | Procedures | `ponytail`, `debugging`, `testing` on match |

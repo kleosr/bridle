@@ -2,8 +2,11 @@
 # hooks.json merge/strip. Merge preserves unknown keys and foreign entries;
 # only exact pack-owned basenames (or the shim form) are ever removed.
 
+# shellcheck source=shared/hooks/lib/hooks_shim.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hooks_shim.sh"
+
 hooks_json_jq() {
-  printf '%s\n' "${HOOKS_JSON_JQ:-$HOOKS_DIR/lib/hooks_json.jq}"
+  printf '%s\n' "${HOOKS_JSON_JQ:-${HOOKS_DIR:-$PACK/shared/hooks}/lib/hooks_json.jq}"
 }
 
 manifest_json() {
@@ -83,5 +86,6 @@ remove_owned_hook_files() {
     [[ -z "$s" ]] && continue
     rm -f "$dest/$s"
   done < <(jq -r '.legacyCleanup[]' "$man" 2>/dev/null)
+  rm -f "$dest/git-bash-shim.ps1"
   rmdir "$dest/lib" "$dest/policy" "$dest" 2>/dev/null || true
 }

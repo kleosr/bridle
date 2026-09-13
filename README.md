@@ -37,7 +37,7 @@ Run from Git Bash on Windows.
 | `shared/hosts/` | Portable `CLAUDE.md` |
 | `optional/design/` | UI skills, not installed |
 | `shared/agents/` | `hunter` / `cut` / `prove` specialists |
-| `shared/hooks/` | Four event scripts + `lib/` + `policy/` |
+| `shared/hooks/` | Four event scripts + `git-bash-shim.ps1` + `lib/` + `policy/` |
 | `shared/config/` | `rules.global.txt`, `skills.txt`, absence lists, `manifest.json` |
 | `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh` |
 | `tests/` | Fixture + edge + lifecycle suites |
@@ -50,4 +50,5 @@ Run from Git Bash on Windows.
 - `docs/TOOLCHAIN.md` — commands and install safety.
 - `docs/DECISIONS/hooks.md` — why four hooks.
 - `docs/DECISIONS/engineering-os.md` — layer map and verify sensor.
+- `docs/DECISIONS/ai-engineering.md` — ingest: adopt / adapt / reject.
 - `docs/host-capability.md` — live host evidence (not law).
