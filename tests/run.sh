@@ -48,6 +48,10 @@ echo "=== Gate edges (false positives / bypasses) ==="
 source "$PACK/tests/gate_edges.sh"
 
 echo ""
+echo "=== Overlay edges (BOM stdin, retired mdc, shim merge) ==="
+source "$PACK/tests/overlay_edges.sh"
+
+echo ""
 echo "=== SQL scope (program-scoped destructive SQL) ==="
 if bash "$PACK/tests/sql_scope_test.sh"; then
   run_test "sql_scope: all program-scope checks pass" "pass" "pass"

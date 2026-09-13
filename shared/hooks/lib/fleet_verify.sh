@@ -52,7 +52,7 @@ verify_smoke() {
   if [[ -e "$PACK/.cursor/rules/testing.mdc" || -L "$PACK/.cursor/rules/testing.mdc" ]]; then
     echo "[fail] pack .cursor/rules/testing.mdc duplicates user alwaysApply"; bad=1
   fi
-  if ! grep -q 'hooks/before_submit_prompt.sh' "$HOME_C/hooks.json" 2>/dev/null; then
+  if ! jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh")' "$HOME_C/hooks.json" >/dev/null 2>&1; then
     echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1
   fi
   if grep -q 'kleos-gate' "$HOME_C/hooks.json" 2>/dev/null; then

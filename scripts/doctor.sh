@@ -81,13 +81,13 @@ else fail ".gitignore missing state/ or .cursor/ coverage"; fi
 if [[ "${DOCTOR_SKIP_FIXTURE:-0}" != "1" ]]; then
 DOCTOR_FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/kleos-doctor.XXXXXX")"
 if HOME="$DOCTOR_FIXTURE" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 \
-  && grep -q 'hooks/before_submit_prompt.sh' "$DOCTOR_FIXTURE/.cursor/hooks.json" 2>/dev/null; then
+  && jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh")' "$DOCTOR_FIXTURE/.cursor/hooks.json" >/dev/null 2>&1; then
   ok "fixture install: hooks.json registers beforeSubmitPrompt (isolated HOME)"
 else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -104,7 +104,7 @@ rm -rf "$DOCTOR_FIXTURE"
 fi
 
 if [[ "${DOCTOR_SKIP_LIVE:-0}" != "1" ]]; then
-if grep -qE 'hooks/before_submit_prompt\.sh' "${HOME}/.cursor/hooks.json" 2>/dev/null; then
+if jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh")' "${HOME}/.cursor/hooks.json" >/dev/null 2>&1; then
   ok "live: ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
 else
   echo "[info] live: ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh)"

@@ -4,10 +4,18 @@
 
 # Portability: some Windows jq builds emit CRLF. Hook logic compares jq
 # scalars and uses them as paths, so normalize once here. JSON string values
-# produced by these scripts never legitimately contain CR.
+# produced by these scripts never legitimately contain CR. Windows hook stdin
+# may also carry a UTF-8 BOM from the PowerShell pipe.
 if ! declare -F jq >/dev/null 2>&1; then
   jq() { command jq "$@" | tr -d '\r'; }
 fi
+
+hook_stdin() {
+  local s
+  s="$(cat)"
+  s="${s#$'\xEF\xBB\xBF'}"
+  printf '%s' "$s" | tr -d '\r'
+}
 
 posix_slashes() {
   printf '%s' "${1//\\//}"
