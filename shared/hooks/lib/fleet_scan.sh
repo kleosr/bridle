@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 # Fleet helpers: config-list parsing, path canon, ownership hashing, symlinks.
 
-# Portability: some Windows jq builds emit CRLF. Installer logic compares jq
-# scalars and uses them as paths, so normalize once here.
-if ! declare -F jq >/dev/null 2>&1; then
-  jq() { command jq "$@" | tr -d '\r'; }
-fi
+KLEOS_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=shared/hooks/lib/common.sh
+source "$KLEOS_LIB_DIR/common.sh"
 
 load_lines() {
   local f="$1" line

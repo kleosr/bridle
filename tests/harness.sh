@@ -25,12 +25,11 @@ run_test "feature.sh check passes on pack features.json" "ok" "$RESULT"
 RESULT="$(jq -e '.version == 1 and (.features | length) >= 1' "$PACK/shared/config/features.json" >/dev/null && echo ok || echo fail)"
 run_test "features.json has version 1 and a features array" "ok" "$RESULT"
 
-RESULT="$(jq -e '.hierarchy and .subsystems and .lifecycle and .graph and .stopping and .evals and .invariants and .articleNine and .requiredEvalDimensions and .layers and .qualityLoop and .extend' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
-run_test "harness.json exposes hierarchy, subsystems, lifecycle, graph, stopping, evals, invariants, articleNine, qualityLoop" "ok" "$RESULT"
+RESULT="$(jq -e '.runtime and .commands and .verification and .invariants and .requiredEvalDimensions and .layers and .extend' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
+run_test "harness.json exposes only the operational contract" "ok" "$RESULT"
 
-JSON_SKILLS="$(jq -r '.plugins.skills[]' "$PACK/shared/config/harness.json" | sort | tr -d '\r')"
-TXT_SKILLS="$(load_lines "$PACK/shared/config/skills.txt" | sort)"
-run_test "harness.json plugins.skills matches skills.txt" "$TXT_SKILLS" "$JSON_SKILLS"
+RESULT="$(jq -e 'has("subsystems") or has("articleNine") or has("graph") or has("plugins") or has("failures") or has("reasons") or has("stopping")' "$PACK/shared/config/harness.json" >/dev/null && echo duplicated || echo clean)"
+run_test "harness.json excludes descriptive indexes duplicated by docs" "clean" "$RESULT"
 
 EVAL_OK=ok
 while IFS= read -r proves; do
@@ -47,6 +46,11 @@ BAD="$HARNESS_TMP/features-bad.json"
 jq -n '{version:1,features:[{id:"T01",priority:1,area:"x",title:"t",behavior:"b",verification:"true",status:"passing"}]}' > "$BAD"
 RESULT="$(FEATURE_FILE="$BAD" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "regression: feature.sh check fails when passing has no evidence" "fail" "$RESULT"
+
+BAD_STATUS="$HARNESS_TMP/features-status.json"
+jq -n '{version:1,features:[{id:"T00",priority:1,area:"x",title:"t",behavior:"b",verification:"true",status:"done"}]}' > "$BAD_STATUS"
+RESULT="$(FEATURE_FILE="$BAD_STATUS" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "regression: feature.sh check rejects an unknown status" "fail" "$RESULT"
 
 TWO="$HARNESS_TMP/features-two.json"
 jq -n '{version:1,features:[
@@ -85,6 +89,11 @@ printf '%s\n' '{"version":1,"task":"t"}' | HANDOFF_FILE="$HARNESS_TMP/bad-handof
   && RESULT=ok || RESULT=fail
 run_test "handoff.sh write rejects a snapshot missing verified/remaining/nextAction" "fail" "$RESULT"
 
+printf '%s\n' '{"version":1,"task":"t","verified":{"command":"true","exit":0},"remaining":[1],"nextAction":"continue"}' \
+  | HANDOFF_FILE="$HARNESS_TMP/bad-handoff-array.json" bash "$HAND" write >/dev/null 2>&1 \
+  && RESULT=ok || RESULT=fail
+run_test "handoff.sh write rejects non-string arrays" "fail" "$RESULT"
+
 hf_repo "$HARNESS_TMP/falsewin"
 printf 'echo ok\n' > "$HARNESS_TMP/falsewin/ok.sh"
 git -C "$HARNESS_TMP/falsewin" add ok.sh
@@ -109,8 +118,8 @@ run_test "stop remains advisory (loop_limit 1; no new hook events)" "1" "$RESULT
 RESULT="$(jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.json" >/dev/null && echo yes || echo no)"
 run_test "hooks.json still omits sessionStart" "yes" "$RESULT"
 
-RESULT="$(jq -e '.invariants.hookEventCount==4 and .invariants.preToolUse==false and .invariants.sessionStart==false and .invariants.nowMd==false and .invariants.packOwnedLoop==false' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
-run_test "harness.json invariants freeze four hooks, no preToolUse, no NOW.md, no pack loop" "ok" "$RESULT"
+RESULT="$(jq -e '.invariants.hookEventCount==4 and .invariants.hooksFrozen==true and .invariants.noSessionStart==true and .invariants.noPreToolUse==true and .invariants.noPackLoop==true' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
+run_test "harness.json invariants freeze the small runtime" "ok" "$RESULT"
 
 HOOK_KEYS="$(jq -r '.hooks | keys | sort | join(",")' "$PACK/shared/hooks/hooks.json")"
 run_test "hooks.json registers exactly the four Cursor events" "beforeReadFile,beforeShellExecution,beforeSubmitPrompt,stop" "$HOOK_KEYS"
@@ -129,6 +138,13 @@ run_test "pack does not ship a second ReAct loop script" "absent" "$LOOPF"
 
 RESULT="$(bash "$PACK/scripts/ready.sh" >/dev/null && echo ok || echo fail)"
 run_test "scripts/ready.sh reports L06 bootstrap contract" "ok" "$RESULT"
+
+READY_NO_JQ="$(KLEOS_JQ_BIN=/nonexistent bash "$PACK/scripts/ready.sh" 2>/dev/null || true)"
+run_test "ready without jq reports canStart=false" "false" "$(printf '%s' "$READY_NO_JQ" | jq -r '.canStart')"
+run_test "ready without jq reports canTest=false" "false" "$(printf '%s' "$READY_NO_JQ" | jq -r '.canTest')"
+
+HOOK_NO_JQ="$(printf '%s' '{"prompt":"hello"}' | KLEOS_JQ_BIN=/nonexistent bash "$PACK/shared/hooks/before_submit_prompt.sh")"
+run_test "submit hook without jq fails closed with missing-jq" "missing-jq" "$(printf '%s' "$HOOK_NO_JQ" | jq -r '.reason')"
 
 RESULT="$(bash "$PACK/scripts/eval.sh" check >/dev/null && echo ok || echo fail)"
 run_test "scripts/eval.sh check covers required eval dimensions" "ok" "$RESULT"
@@ -155,9 +171,9 @@ ON_CAP="$(jq -r '.invariants.alwaysOnMaxLines' "$PACK/shared/config/harness.json
 if [[ "$((CORE_N + TEST_N))" -le "$ON_CAP" ]]; then ON_OK=ok; else ON_OK="lines:$((CORE_N + TEST_N))>$ON_CAP"; fi
 run_test "always-on core.mdc+testing.mdc stay under alwaysOnMaxLines" "ok" "$ON_OK"
 
-RESULT="$(jq -r '.verify.default' "$PACK/shared/config/harness.json")"
+RESULT="$(jq -r '.verification.default' "$PACK/shared/config/harness.json")"
 run_test "verify default is scoped, not whole-suite" "scoped" "$RESULT"
-RESULT="$(jq -r '.extend.hooksFrozen' "$PACK/shared/config/harness.json")"
-run_test "extend.hooksFrozen keeps the four-event freeze" "true" "$RESULT"
+RESULT="$(jq -r '.invariants.hooksFrozen' "$PACK/shared/config/harness.json")"
+run_test "hooksFrozen keeps the four-event freeze" "true" "$RESULT"
 
 rm -rf "$HARNESS_TMP"

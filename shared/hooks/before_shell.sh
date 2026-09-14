@@ -8,6 +8,10 @@ source "$HERE/lib/host.sh"
 source "$HERE/lib/shell_gate.sh"
 source "$HERE/lib/sql_scope.sh"
 INPUT="$(hook_stdin)"
+if ! jq_available; then
+  emit_deny "kleosrules: jq is unavailable; command denied (failClosed). Install jq or set KLEOS_JQ_BIN." "" missing-jq
+  exit 0
+fi
 if ! TYPE="$(printf '%s' "$INPUT" | jq -r '(.command // .tool_input.command // .tool_input.cmd // null) | type' 2>/dev/null)"; then
   emit_deny "kleosrules: beforeShellExecution payload is not JSON; command denied (failClosed). Run bash scripts/doctor.sh." "" malformed
   exit 0

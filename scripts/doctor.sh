@@ -25,8 +25,16 @@ fi
 if [[ "${BASH_VERSINFO[0]:-0}" -ge 3 ]]; then ok "bash >= 3.2 (${BASH_VERSION})"
 else fail "bash >= 3.2 required (found ${BASH_VERSION:-unknown})"; fi
 
-if command -v jq >/dev/null 2>&1; then ok "jq $(jq --version 2>/dev/null || echo 'present')"
-else fail "jq not found — required for JSON parsing in hooks"; fi
+if jq_available; then ok "jq $(jq --version 2>/dev/null || echo 'present')"
+else
+  fail "jq executable not found — required for JSON parsing"
+  echo "fix: install jq or set KLEOS_JQ_BIN, then rerun doctor"
+  echo ""
+  echo "=== SOME CHECKS FAILED ==="
+  exit 1
+fi
+
+HOOK_CAP="$(jq -r '.invariants.eventHookMaxLines // 80' "$PACK/shared/config/harness.json" 2>/dev/null || echo 80)"
 
 if command -v shellcheck >/dev/null 2>&1; then ok "shellcheck available"
 else echo "[warn] shellcheck not found (optional, recommended for CI)"; fi
@@ -62,8 +70,8 @@ else fail "GNU-only util found in hooks: $GNU_HITS"; fi
 
 for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh "$HOOKS_DIR"/stop.sh; do
   n="$(wc -l < "$f")"
-  if [[ "$n" -le 80 ]]; then ok "LOC ≤ 80: ${f#$PACK/} ($n)"
-  else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
+  if [[ "$n" -le "$HOOK_CAP" ]]; then ok "LOC ≤ $HOOK_CAP: ${f#$PACK/} ($n)"
+  else fail "LOC > $HOOK_CAP: ${f#$PACK/} ($n)"; fi
 done
 
 for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config shared/schema docs scripts tests evals; do

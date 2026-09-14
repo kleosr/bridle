@@ -6,6 +6,10 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 INPUT="$(hook_stdin)"
 POL="$HERE/policy/secret_tokens.ere"
+if ! jq_available; then
+  emit_continue false "kleosrules: jq is unavailable; prompt blocked (failClosed). Install jq or set KLEOS_JQ_BIN." missing-jq
+  exit 0
+fi
 if [[ -z "$INPUT" ]] || ! printf '%s' "$INPUT" | jq empty >/dev/null 2>&1; then
   emit_continue false "Blocked: prompt JSON could not be parsed. Remove credentials and resubmit." malformed
   exit 0

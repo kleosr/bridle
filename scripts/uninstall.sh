@@ -6,6 +6,7 @@ PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOOKS_DIR="$PACK/shared/hooks"
 HOME_C="${HOME}/.cursor"
 source "$HOOKS_DIR/lib/fleet_scan.sh"
+require_jq
 source "$HOOKS_DIR/lib/hooks_json.sh"
 GLOBAL=()
 while IFS= read -r _g; do
@@ -63,7 +64,7 @@ while IFS= read -r skill; do
     rm -rf "$dst"
     echo "[rm] ~/.cursor/skills/$skill (FORCE=1 directory copy)"
   fi
-done < <(load_lines "$PACK/shared/config/skills.txt")
+done < <({ load_lines "$PACK/shared/config/skills.txt"; load_lines "$PACK/shared/config/retired-skills.txt"; } | sort -u)
 prune_skill_catalog_backups "$HOME_C/skills"
 
 for a in hunter cut prove; do

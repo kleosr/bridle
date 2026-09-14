@@ -1,124 +1,38 @@
 {
   "owner": "kleosrules",
-  "version": 5,
-  "role": "user-harness",
-  "formula": "agent = model + host-runtime + this-pack",
-  "hostOwns": [
-    "loop",
-    "compaction",
-    "sandbox",
-    "native-tools",
-    "conversation"
-  ],
-  "hierarchy": [
-    "host-system",
-    "USER-RULES.paste.txt",
-    "SECURITY.md",
-    "core.mdc+testing.mdc",
-    "glob-companions",
-    "repo-AGENTS.md",
-    "skills-on-match",
-    "specialists-invoke-only"
-  ],
-  "disclosure": {
-    "start": ["AGENTS.md", "shared/config/harness.json"],
-    "state": ["shared/config/features.json", "state/handoff.json"],
-    "verify": ["docs/TOOLCHAIN.md", "shared/rules/testing.mdc"],
-    "security": ["SECURITY.md"]
-  },
-  "subsystems": {
-    "instructions": {
-      "ssot": "AGENTS.md",
-      "law": [
-        "shared/rules/USER-RULES.paste.txt",
-        "shared/rules/core.mdc",
-        "shared/rules/testing.mdc"
-      ]
-    },
-    "tools": {
-      "host": "Cursor native tools",
-      "steel": "four hooks",
-      "contracts": "shared/schema/hook-io.schema.json"
-    },
-    "environment": {
-      "sandbox": "host",
-      "init": "bash scripts/ready.sh",
-      "inventory": "DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh",
-      "windows": "Git Bash"
-    },
-    "state": {
-      "features": "shared/config/features.json",
-      "handoff": "state/handoff.json",
-      "durable": "git+docs",
-      "authority": false
-    },
-    "feedback": {
-      "hooks": "reason codes",
-      "stop": "advisory churn/syntax/feature",
-      "prove": "independent",
-      "lastFailure": "features[].lastFailure"
-    }
-  },
-  "articleNine": {
-    "tools": "host native + hook-io.schema.json",
+  "version": 6,
+  "runtime": {
     "loop": "host",
-    "memory": "git+docs+features+handoff",
-    "context": "AGENTS.md then targeted retrieval",
-    "environment": "host sandbox + ready.sh + doctor",
-    "goalVerify": "features.json triple + feature.sh pass",
-    "permissions": "four hooks + SECURITY.md",
-    "observability": "reason codes + command+exit (no OTel)",
-    "evals": "evals/tasks.json + scripts/eval.sh check"
+    "shell": "bash",
+    "json": "jq"
+  },
+  "commands": {
+    "init": "bash scripts/ready.sh",
+    "inventory": "DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh",
+    "verify": "bash tests/run.sh",
+    "install": "FORCE=1 bash scripts/install.sh"
+  },
+  "verification": {
+    "default": "scoped"
   },
   "invariants": {
     "hookEventCount": 4,
-    "sessionStart": false,
-    "preToolUse": false,
-    "postToolUse": false,
-    "updated_input": false,
-    "nowMd": false,
-    "progressMd": false,
-    "learningMd": false,
-    "packOwnedLoop": false,
-    "alwaysOnMaxLines": 80
+    "eventHookMaxLines": 80,
+    "alwaysOnMaxLines": 80,
+    "hooksFrozen": true,
+    "noSessionStart": true,
+    "noPreToolUse": true,
+    "noPackLoop": true
   },
-  "qualityLoop": ["understand", "change", "verify", "correct"],
-  "verify": {
-    "default": "scoped",
-    "packGauntlet": "bash tests/run.sh",
-    "init": "bash scripts/ready.sh"
-  },
-  "extend": {
-    "skills": "shared/config/skills.txt",
-    "glob": "shared/rules",
-    "hooksFrozen": true
-  },
-  "reasons": [
-    "destructive",
-    "secret-path",
-    "source-write",
-    "lint-disable",
-    "malformed",
-    "missing-policy",
-    "missing-jq",
-    "secret-token",
-    "ask-infra",
-    "activation",
-    "harness"
-  ],
   "layers": [
     "instructions",
-    "tools",
-    "environment",
-    "state",
-    "feedback",
-    "verification",
+    "context",
     "permissions",
+    "state",
+    "verification",
     "scope",
     "lifecycle",
-    "context",
-    "handoff",
-    "steel"
+    "continuity"
   ],
   "requiredEvalDimensions": [
     "completion",
@@ -129,52 +43,11 @@
     "recovery",
     "false_completion",
     "instruction_conflict",
-    "execution_reliability"
+    "execution_reliability",
+    "continuity"
   ],
-  "lifecycle": [
-    "map",
-    "init",
-    "select-one-feature",
-    "implement",
-    "verify",
-    "record",
-    "handoff"
-  ],
-  "graph": {
-    "nodes": ["retrieve", "implement", "verify", "prove", "hunter", "cut", "handoff"],
-    "edges": [
-      { "from": "retrieve", "to": "implement" },
-      { "from": "implement", "to": "verify" },
-      { "from": "verify", "to": "implement", "when": "verify-failed" },
-      { "from": "verify", "to": "prove", "when": "claimed-done" },
-      { "from": "prove", "to": "hunter", "when": "auth-money-shell-deps" },
-      { "from": "prove", "to": "cut", "when": "size-or-deps" },
-      { "from": "verify", "to": "handoff" }
-    ]
-  },
-  "stopping": {
-    "sameCommandFailsTwice": "change-approach",
-    "hookDeny": "stop-that-path",
-    "featurePassing": "scripts/feature.sh pass",
-    "selfGrade": "forbidden"
-  },
-  "failures": {
-    "secret-token": "permissions",
-    "destructive": "permissions",
-    "syntax-red": "verification",
-    "churn": "scope",
-    "false-completion": "verification",
-    "stall": "context",
-    "lost-continuity": "state",
-    "instruction-conflict": "instructions",
-    "verify-failed": "feedback"
-  },
-  "plugins": {
-    "alwaysOn": ["core", "testing"],
-    "glob": ["pnpm", "next", "vite", "astro", "postgres", "supabase"],
-    "skills": ["ponytail", "testing", "debugging", "handoff"],
-    "agents": ["hunter", "cut", "prove"],
-    "optional": ["optional/design"]
-  },
-  "evals": "evals/tasks.json"
+  "extend": {
+    "rules": "shared/config/rules.global.txt",
+    "skills": "shared/config/skills.txt"
+  }
 }
