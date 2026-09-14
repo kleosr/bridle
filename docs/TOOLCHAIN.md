@@ -15,8 +15,11 @@ bash scripts/ready.sh
 bash scripts/eval.sh check
 bash scripts/doctor.sh
 bash tests/run.sh
+TESTS=harness bash tests/run.sh      # scoped: static_checks + named fixtures only
 FORCE=1 bash scripts/install.sh
 ```
+
+Fixture names for `TESTS=`: `fixtures`, `gate_edges`, `overlay_edges`, `sql_scope`, `stop_edges`, `install_lifecycle`, `grounding`, `harness`. Each feature's `verification` in `features.json` names the fixture holding its assertions. Failed `feature.sh pass` records `lastFailure`; `bash scripts/feature.sh note <id> <hypothesis>` replaces the mechanical `re-run:` hint with your diagnosis.
 
 Smoke: `echo '{"prompt":"test code"}' | bash shared/hooks/before_submit_prompt.sh`
 

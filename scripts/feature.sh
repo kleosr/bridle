@@ -11,7 +11,8 @@ ROOT="${FEATURE_ROOT:-$PACK}"
 CMD="${1:-}"
 
 usage() {
-  echo "usage: bash scripts/feature.sh {list|next|check|start <id>|pass <id>|block <id> <reason>}" >&2
+  echo "usage: bash scripts/feature.sh {list|next|check|start <id>|pass <id>|note <id> <hypothesis>|block <id> <reason>}" >&2
+  echo "note: replaces lastFailure.nextExperiment with the agent's diagnosis. Requires a recorded failure." >&2
   exit 2
 }
 
@@ -141,6 +142,23 @@ cmd_pass() {
   echo "passed $id"
 }
 
+# Reflexion as data: the failure signal is machine-written by `pass`; the
+# reflection on it is agent-written here. Read on the next attempt, not graded.
+cmd_note() {
+  local id="$1"
+  shift || true
+  local text="$*"
+  [[ -n "$id" && -n "$text" ]] || usage
+  need_file
+  has_id "$id" || { echo "unknown feature: $id" >&2; exit 1; }
+  jq -e --arg id "$id" '.features | any(.id == $id and .lastFailure != null)' "$FILE" >/dev/null \
+    || { echo "$id has no lastFailure; run pass first, note the failure it records" >&2; exit 1; }
+  jq --arg id "$id" --arg t "$text" '
+    .features |= map(if .id == $id then .lastFailure.nextExperiment = $t else . end)
+  ' "$FILE" | write_json
+  echo "noted $id"
+}
+
 cmd_block() {
   local id="$1"
   shift || true
@@ -160,6 +178,12 @@ case "$CMD" in
   check) cmd_check ;;
   start) cmd_start "${2:-}" ;;
   pass) cmd_pass "${2:-}" ;;
+  note)
+    [[ -n "${2:-}" ]] || usage
+    id="$2"
+    shift 2
+    cmd_note "$id" "$@"
+    ;;
   block)
     [[ -n "${2:-}" ]] || usage
     id="$2"

@@ -37,43 +37,67 @@ run_test() {
 
 rm -rf "$PACK/state" "$PACK/.cursor/hooks.json" "$PACK/.cursor/hooks"
 
+# TESTS=fixtures,harness runs only those fixtures (scoped evidence for one
+# feature). Unset runs the whole gauntlet. static_checks always runs: syntax
+# is layer 1 and every fixture depends on it.
+selected() {
+  [[ -z "${TESTS:-}" ]] && return 0
+  case ",${TESTS}," in *",$1,"*) return 0 ;; *) return 1 ;; esac
+}
+
 source "$PACK/tests/static_checks.sh"
 
-echo ""
-echo "=== Hook fixtures ==="
-source "$PACK/tests/fixtures.sh"
-
-echo ""
-echo "=== Gate edges (false positives / bypasses) ==="
-source "$PACK/tests/gate_edges.sh"
-
-echo ""
-echo "=== Overlay edges (BOM stdin, retired mdc, shim merge) ==="
-source "$PACK/tests/overlay_edges.sh"
-
-echo ""
-echo "=== SQL scope (program-scoped destructive SQL) ==="
-if bash "$PACK/tests/sql_scope_test.sh"; then
-  run_test "sql_scope: all program-scope checks pass" "pass" "pass"
-else
-  run_test "sql_scope: all program-scope checks pass" "pass" "fail"
+if selected fixtures; then
+  echo ""
+  echo "=== Hook fixtures ==="
+  source "$PACK/tests/fixtures.sh"
 fi
 
-echo ""
-echo "=== Stop gate ==="
-source "$PACK/tests/stop_edges.sh"
+if selected gate_edges; then
+  echo ""
+  echo "=== Gate edges (false positives / bypasses) ==="
+  source "$PACK/tests/gate_edges.sh"
+fi
 
-echo ""
-echo "=== Install lifecycle (isolated HOME) ==="
-source "$PACK/tests/install_lifecycle.sh"
+if selected overlay_edges; then
+  echo ""
+  echo "=== Overlay edges (BOM stdin, retired mdc, shim merge) ==="
+  source "$PACK/tests/overlay_edges.sh"
+fi
 
-echo ""
-echo "=== Grounding (shapes, not prose) ==="
-source "$PACK/tests/grounding.sh"
+if selected sql_scope; then
+  echo ""
+  echo "=== SQL scope (program-scoped destructive SQL) ==="
+  if bash "$PACK/tests/sql_scope_test.sh"; then
+    run_test "sql_scope: all program-scope checks pass" "pass" "pass"
+  else
+    run_test "sql_scope: all program-scope checks pass" "pass" "fail"
+  fi
+fi
 
-echo ""
-echo "=== Harness contracts (features, handoff, evals) ==="
-source "$PACK/tests/harness.sh"
+if selected stop_edges; then
+  echo ""
+  echo "=== Stop gate ==="
+  source "$PACK/tests/stop_edges.sh"
+fi
+
+if selected install_lifecycle; then
+  echo ""
+  echo "=== Install lifecycle (isolated HOME) ==="
+  source "$PACK/tests/install_lifecycle.sh"
+fi
+
+if selected grounding; then
+  echo ""
+  echo "=== Grounding (shapes, not prose) ==="
+  source "$PACK/tests/grounding.sh"
+fi
+
+if selected harness; then
+  echo ""
+  echo "=== Harness contracts (features, handoff, evals) ==="
+  source "$PACK/tests/harness.sh"
+fi
 
 echo ""
 echo "=== Results ==="
