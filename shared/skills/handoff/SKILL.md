@@ -8,7 +8,7 @@ description: >
 
 # Handoff
 
-Thin roof: `shared/schema/handoff.schema.json`. Continuity is Git + `docs/` + this file. Chat history is not the system of record.
+Thin roof: `bash scripts/handoff.sh check` (the validator). Continuity is Git + `docs/` + this file. Chat history is not the system of record.
 
 ## When
 

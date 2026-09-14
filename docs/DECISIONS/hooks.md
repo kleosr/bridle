@@ -35,6 +35,6 @@ Cloud: user `~/.cursor/hooks.json` does **not** load. Cloud sees project `.curso
 
 Bans: no `updated_input`; no kleos-gate; no pack Python *app*; event hooks ≤80 LOC. Hook JSON uses CPython or Node stdlib.
 
-Policy SSOT: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/feature_gate.sh`. Hook I/O: `shared/schema/hook-io.schema.json`. Roofs: `core.mdc`. Host I/O: `lib/host.sh`.
+Policy SSOT: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/feature_gate.sh`. Hook I/O: documented in `SECURITY.md` and `docs/host-capability.md`. Roofs: `core.mdc`. Host I/O: `lib/host.sh`.
 
 Canonical config: `shared/hooks/hooks.json`. Ownership: `lib/hooks_json.jq` (exact basename).
