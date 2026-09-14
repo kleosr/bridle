@@ -7,6 +7,7 @@ source "$HERE/lib/diff_gate.sh"
 source "$HERE/lib/verify_gate.sh"
 source "$HERE/lib/feature_gate.sh"
 INPUT="$(hook_stdin)"
+jq_available || { emit_quiet; exit 0; }
 STATUS="$(printf '%s' "$INPUT" | jq -r '.status // empty' 2>/dev/null || true)"
 LOOP="$(printf '%s' "$INPUT" | jq -r '.loop_count // 0' 2>/dev/null || echo 0)"
 WR="$(posix_slashes "$(printf '%s' "$INPUT" | jq -r '.workspace_roots[0] // .cwd // empty' 2>/dev/null || true)")"
