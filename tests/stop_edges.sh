@@ -99,4 +99,14 @@ printf 'echo still-ok\n' > "$GR_TMP/okshell/ok.sh"
 RESULT="$(gr_stop "$GR_TMP/okshell" | jq -c .)"
 run_test "stop: valid .sh edit without churn is quiet (hook does not run tests)" "{}" "$RESULT"
 
+gr_repo "$GR_TMP/fatnew"
+gr_lines 301 > "$GR_TMP/fatnew/fat.ts"
+RESULT="$(gr_stop "$GR_TMP/fatnew" | jq -r '.followup_message // "" | test("size: fat.ts")')"
+run_test "stop: new untracked file over 300 lines is advisory size" "true" "$RESULT"
+
+gr_repo "$GR_TMP/thinnew"
+gr_lines 50 > "$GR_TMP/thinnew/thin.ts"
+RESULT="$(gr_stop "$GR_TMP/thinnew" | jq -c .)"
+run_test "stop: new untracked file at 50 lines is quiet" "{}" "$RESULT"
+
 rm -rf "$GR_TMP"

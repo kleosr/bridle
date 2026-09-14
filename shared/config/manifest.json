@@ -1,6 +1,6 @@
 {
   "owner": "kleosrules",
-  "version": 2,
+  "version": 4,
   "hookEvents": {
     "beforeSubmitPrompt": "before_submit_prompt.sh",
     "beforeShellExecution": "before_shell.sh",
@@ -13,7 +13,8 @@
     "diff_gate.sh",
     "sql_scope.sh",
     "host.sh",
-    "verify_gate.sh"
+    "verify_gate.sh",
+    "feature_gate.sh"
   ],
   "policy": [
     "secret_paths.ere",

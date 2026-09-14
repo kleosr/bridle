@@ -5,6 +5,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
 source "$HERE/lib/diff_gate.sh"
 source "$HERE/lib/verify_gate.sh"
+source "$HERE/lib/feature_gate.sh"
 INPUT="$(hook_stdin)"
 STATUS="$(printf '%s' "$INPUT" | jq -r '.status // empty' 2>/dev/null || true)"
 LOOP="$(printf '%s' "$INPUT" | jq -r '.loop_count // 0' 2>/dev/null || echo 0)"
@@ -15,6 +16,7 @@ fi
 git -C "$WR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { emit_quiet; exit 0; }
 MSG="$(gate_diff "$WR" || true)"
 VER="$(gate_verify "$WR" || true)"
-MSG="${MSG}${VER}"
+FEAT="$(gate_features "$WR" || true)"
+MSG="${MSG}${VER}${FEAT}"
 [[ -n "$MSG" ]] || { emit_quiet; exit 0; }
 jq -n --arg m "$MSG" '{followup_message:$m}'

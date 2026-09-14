@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "note": "Deterministic harness evals. Live agent-on-task scoring is out of band.",
+  "dimensions": [
+    "completion",
+    "verification",
+    "false_completion",
+    "instruction_conflict",
+    "unnecessary_edits",
+    "recovery",
+    "continuity",
+    "execution_reliability",
+    "context_efficiency",
+    "regression"
+  ],
+  "tasks": [
+    {
+      "id": "false-completion-syntax",
+      "dimension": "false_completion",
+      "layer": "verification",
+      "proves": "tests/stop_edges.sh"
+    },
+    {
+      "id": "false-completion-feature",
+      "dimension": "false_completion",
+      "layer": "state",
+      "proves": "tests/harness.sh"
+    },
+    {
+      "id": "instruction-conflict-charter",
+      "dimension": "instruction_conflict",
+      "layer": "instructions",
+      "proves": "tests/grounding.sh"
+    },
+    {
+      "id": "scope-churn",
+      "dimension": "unnecessary_edits",
+      "layer": "scope",
+      "proves": "tests/stop_edges.sh"
+    },
+    {
+      "id": "execution-steel",
+      "dimension": "execution_reliability",
+      "layer": "permissions",
+      "proves": "tests/gate_edges.sh"
+    },
+    {
+      "id": "lifecycle-install",
+      "dimension": "recovery",
+      "layer": "lifecycle",
+      "proves": "tests/install_lifecycle.sh"
+    },
+    {
+      "id": "continuity-handoff",
+      "dimension": "continuity",
+      "layer": "handoff",
+      "proves": "tests/harness.sh"
+    },
+    {
+      "id": "context-map-size",
+      "dimension": "context_efficiency",
+      "layer": "context",
+      "proves": "tests/harness.sh"
+    },
+    {
+      "id": "verification-citation",
+      "dimension": "verification",
+      "layer": "verification",
+      "proves": "tests/grounding.sh"
+    },
+    {
+      "id": "completion-feature-check",
+      "dimension": "completion",
+      "layer": "state",
+      "proves": "tests/harness.sh"
+    },
+    {
+      "id": "regression-false-win",
+      "dimension": "regression",
+      "layer": "verification",
+      "proves": "tests/harness.sh"
+    }
+  ]
+}

@@ -19,7 +19,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Harness self-protection | `beforeShellExecution` | **yes (scripts)** | deny writes/`rm`/`cp`/`mv` against `~/.cursor/hooks.json`, `~/.cursor/hooks/`, `~/.cursor/rules/`. Installer path still `ask` via pack markers. Reason `harness`. |
 | Cyclomatic lint disable | `beforeShellExecution` | **yes (scripts)** | deny, per segment. |
 | Harness activation | `beforeShellExecution` | **yes (scripts)** | Installer path is checked against the **payload cwd**, never the hook process cwd. Pack markers → `ask`; otherwise deny. |
-| Ponytail diff + syntax | `stop` | no | Churn/format advisory. `verify_gate.sh` runs `bash -n` / `jq empty` on changed shell/JSON only — **does not execute repo test suites**. Cannot block completion. |
+| Ponytail diff + syntax + false passing | `stop` | no | Churn/format advisory. `verify_gate.sh` runs `bash -n` / `jq empty` on changed shell/JSON only. `feature_gate.sh` flags `passing` without evidence. **Does not execute repo test suites**. Cannot block completion. |
 
 **Not gated (law only):** `Write` / `StrReplace` of secret paths, MCP tools, Tab, `preToolUse`. Do not write `.env`, keys, or `credentials.json`. A denied Read may still be reachable via an allowed program; verdicts combine as deny > ask > allow.
 

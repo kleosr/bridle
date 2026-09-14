@@ -38,7 +38,12 @@ for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/scripts/*.sh; do
   else fail "not executable: ${f#$PACK/} (set +x; on noacl Windows use: git update-index --chmod=+x <file>)"; fi
 done
 
-for j in "$HOOKS_DIR/hooks.json" "$HOOKS_DIR/hooks.cloud.json" "$PACK/shared/config/manifest.json" "$PACK/package.json"; do
+for j in "$HOOKS_DIR/hooks.json" "$HOOKS_DIR/hooks.cloud.json" \
+  "$PACK/shared/config/manifest.json" "$PACK/shared/config/harness.json" \
+  "$PACK/shared/config/features.json" "$PACK/package.json" \
+  "$PACK/shared/schema/feature.schema.json" "$PACK/shared/schema/handoff.schema.json" \
+  "$PACK/shared/schema/eval.schema.json" "$PACK/shared/schema/hook-io.schema.json" \
+  "$PACK/evals/tasks.json"; do
   if jq empty "$j" 2>/dev/null; then ok "valid JSON: ${j#$PACK/}"
   else fail "invalid JSON: ${j#$PACK/}"; fi
 done
@@ -61,7 +66,7 @@ for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOO
   else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
 done
 
-for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config docs scripts tests; do
+for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config shared/schema docs scripts tests evals; do
   if [[ -d "$PACK/$d" ]]; then ok "dir exists: $d/"
   else fail "missing dir: $d/"; fi
 done
@@ -87,7 +92,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh lib/feature_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -115,11 +120,12 @@ if jq -e '.hooks.beforeSubmitPrompt[0].command == "./hooks/before_submit_prompt.
   && jq -e '.hooks.beforeShellExecution[0].command == "./hooks/before_shell.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeReadFile[0].command == "./hooks/before_read_file.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.stop[0].command == "./hooks/stop.sh" and .hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks|has("sessionStart")|not' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks | (has("sessionStart") | not) and (has("preToolUse") | not) and (has("postToolUse") | not)' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks | keys | length == 4' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true and .hooks.beforeReadFile[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.cloud.json" >/dev/null 2>&1; then
-  ok "hooks.json registers submit+shell+read+stop (no sessionStart; security failClosed)"
-else fail "hooks.json must register submit+shell+read+stop with ./hooks/ commands, stop.loop_limit 1, no sessionStart, and security failClosed"; fi
+  ok "hooks.json registers submit+shell+read+stop (no sessionStart/preToolUse; security failClosed)"
+else fail "hooks.json must register submit+shell+read+stop with ./hooks/ commands, stop.loop_limit 1, no sessionStart/preToolUse, and security failClosed"; fi
 
 if jq empty "$PACK/shared/config/manifest.json" >/dev/null 2>&1 \
   && [[ -f "$HOOKS_DIR/lib/hooks_json.jq" && -f "$HOOKS_DIR/lib/hooks_json.sh" ]]; then
@@ -191,6 +197,29 @@ while IFS= read -r skill; do
 done < <(load_lines "$PACK/shared/config/retired-skills.txt")
 if [[ -z "$REF_BAD" ]]; then ok "rule/skill references resolve"
 else fail "unresolved references:$REF_BAD"; fi
+
+if bash "$PACK/scripts/feature.sh" check >/dev/null; then ok "features.json pass-state (scripts/feature.sh check)"
+else fail "features.json failed scripts/feature.sh check"; fi
+
+if bash "$PACK/scripts/handoff.sh" check >/dev/null; then ok "handoff absent or schema-valid"
+else fail "state/handoff.json failed scripts/handoff.sh check"; fi
+
+if bash "$PACK/scripts/eval.sh" check >/dev/null; then ok "eval coverage (scripts/eval.sh check)"
+else fail "evals/tasks.json failed scripts/eval.sh check"; fi
+
+if bash "$PACK/scripts/ready.sh" >/dev/null; then ok "L06 bootstrap contract (scripts/ready.sh)"
+else fail "scripts/ready.sh failed"; fi
+
+ANTI_OK=ok
+for f in NOW.md PROGRESS.md LEARNING.md claude-progress.md; do
+  [[ -e "$PACK/$f" ]] && ANTI_OK="present:$f"
+done
+if [[ "$ANTI_OK" == ok ]]; then ok "no NOW.md/PROGRESS.md/LEARNING.md/claude-progress.md at pack root"
+else fail "banned session SoR file at pack root ($ANTI_OK)"; fi
+
+if jq -e '.runtimeLibs | index("feature_gate.sh")' "$PACK/shared/config/manifest.json" >/dev/null; then
+  ok "manifest runtimeLibs includes feature_gate.sh"
+else fail "manifest.json missing feature_gate.sh in runtimeLibs"; fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then

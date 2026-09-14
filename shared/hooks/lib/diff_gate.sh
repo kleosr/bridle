@@ -7,6 +7,7 @@ DIFF_REWRITE_MIN=80
 DIFF_REWRITE_RATIO=50
 DIFF_FORMAT_MIN=20
 DIFF_FORMAT_RATIO=33
+DIFF_NEW_MAX=300
 
 diff_has_head() { git -C "$1" rev-parse --verify -q HEAD >/dev/null 2>&1; }
 
@@ -59,9 +60,30 @@ gate_format_churn() {
   printf '%s' "$out"
 }
 
+# New hand-written files only. Tracked legacy over the roof is not this sensor.
+gate_new_file_roof() {
+  local root="$1" f n out=""
+  diff_has_head "$root" || return 0
+  while IFS= read -r f; do
+    [[ -n "$f" ]] || continue
+    [[ -f "$root/$f" ]] || continue
+    printf '%s' "$f" | grep -qE '(^|/)(node_modules|dist|vendor|coverage)/' && continue
+    printf '%s' "$f" | grep -qE "\.${DIFF_SRC_EXT}$" || continue
+    n="$(wc -l < "$root/$f" | tr -d ' ')"
+    [[ "$n" =~ ^[0-9]+$ ]] || continue
+    [[ "$n" -gt "$DIFF_NEW_MAX" ]] || continue
+    out="${out}size: $f is $n lines (new hand-written roof is ${DIFF_NEW_MAX}). Split by job, not to hit a count.
+"
+  done < <({
+    git -C "$root" ls-files -o --exclude-standard 2>/dev/null
+    git -C "$root" diff --name-only --diff-filter=A HEAD -- 2>/dev/null
+  } | sort -u)
+  printf '%s' "$out"
+}
+
 gate_diff() {
   local root="$1" out
-  out="$(gate_rewrite "$root")$(gate_format_churn "$root")"
+  out="$(gate_rewrite "$root")$(gate_format_churn "$root")$(gate_new_file_roof "$root")"
   [[ -n "$out" ]] || return 0
   printf 'PONYTAIL STOP (advisory, once per turn). Fix your hunks, then run the repo proof.\n%s' "$out"
 }

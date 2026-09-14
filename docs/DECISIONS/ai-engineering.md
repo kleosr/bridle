@@ -25,7 +25,7 @@ Curriculum path `learning-paths/using-coding-agents.json` starts at Phase 14 · 
 | External verify before “done” | 14-05 CRITIC, 14-38 | `testing.mdc` / `prove`: command + exit; no self-grade |
 | Frame before write | 14-43 | `core.mdc` + charter: facts need receipts |
 | Fail-closed stop on known secrets / destructive shell | 14-01 ingredients | Four registered events only |
-| Durable state in the repo | 14-34 | Git + `docs/`; no session-state file |
+| Durable state in the repo | 14-34 | Git + `docs/` + schema-validated `features.json` / `state/handoff.json` (continuity, not authority) |
 
 ## Adapt (thin, no new runtime)
 
@@ -33,7 +33,7 @@ Curriculum path `learning-paths/using-coding-agents.json` starts at Phase 14 · 
 |---|---|---|
 | Five constraint categories (Forbidden / Done / Uncertainty / Approval) | Encode in paste + `.mdc` + hooks | `rule_checker.py` / `rule_report.json` |
 | Scope as negative space | Ponytail + stop churn advisory | Mandatory `scope_contract.json` |
-| Handoff | PR / commit / docs `next_action` | `handoff.json` / `LEARNING.md` as SoR |
+| Handoff | PR / commit / docs + `scripts/handoff.sh` | unvalidated `LEARNING.md` / `NOW.md` as SoR |
 | Builder ≠ reviewer | `hunter` / `cut` / `prove` invoke-only | Multi-agent debate pools |
 | Pack tests as eval outer loop | `tests/run.sh` + `doctor.sh` | Langfuse / RAGAS / SWE-bench in-pack |
 | Stall under context pressure | Law: same command fails twice → change approach | Host-side transcript half-life (Cursor owns the loop) |
@@ -42,7 +42,7 @@ Curriculum path `learning-paths/using-coding-agents.json` starts at Phase 14 · 
 
 ## Reject
 
-Course content (Phases 0–12, vision/speech/RL/from-scratch LLMs). Framework tours (LangGraph, CrewAI, Mastra). Memory stacks (Mem0, MemGPT, vector paging). Observability platforms (OTel GenAI, Phoenix). Multi-agent debate / SRE swarms. Computer-use / voice. Session SoR files (`agent_state.json`, `task_board.json`, `LEARNING.md` as harness). Extra hook events, `updated_input`, injected `.mdc`. Second-model PVE. Capability minting from an extra LLM call. Growing always-on prefixes (measured cost without resolve).
+Course content (Phases 0–12, vision/speech/RL/from-scratch LLMs). Framework tours (LangGraph, CrewAI, Mastra). Memory stacks (Mem0, MemGPT, vector paging). Observability platforms (OTel GenAI, Phoenix). Multi-agent debate / SRE swarms. Computer-use / voice. Unvalidated session SoR (`NOW.md`, `LEARNING.md`, `agent_state.json`). Extra hook events, `updated_input`, injected `.mdc`. Second-model PVE. Capability minting from an extra LLM call. Growing always-on prefixes (measured cost without resolve).
 
 ## Remaining gap (honest)
 
