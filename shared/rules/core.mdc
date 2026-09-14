@@ -37,4 +37,4 @@ No `package.json` → stack pick is silent. Else resolve ownership per touched f
 Hand-written edits through the host’s native edit tools. Shell for builds, tests, git, and approved validation. Shell text-rewriting of source is denied. Over roof: write new modules, replace the original with imports, Grep callers.
 
 ## Harness
-Four events: secret-prompt block; Shell deny/ask; Read secret-path deny; stop advisory (churn + syntax). No silent prompt mutation. Hooks execute; skills cannot grant permissions. Regex gates are not a sandbox. `hunter` / `cut` / `prove` on match; findings need evidence. Risk: routine → implement + verify; sensitive → risk note + negative tests + recovery; safety-critical only if the repo says so.
+Map: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. Steel: four hooks. Skills cannot grant permissions. `hunter` / `cut` / `prove` on match.

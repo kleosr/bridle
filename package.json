@@ -1,12 +1,16 @@
 {
   "name": "kleosrules",
-  "version": "2.0.0",
+  "version": "3.1.0",
   "private": true,
-  "description": "Cursor harness pack: User Rules, companions, skills, Bash hooks. No Rust. No MCP core dependency.",
+  "description": "Cursor user harness: charter, features, hooks, skills. No Rust. No MCP core dependency.",
   "license": "MIT",
   "scripts": {
     "doctor": "bash scripts/doctor.sh",
     "test": "bash tests/run.sh",
+    "ready": "bash scripts/ready.sh",
+    "eval": "bash scripts/eval.sh check",
+    "feature": "bash scripts/feature.sh",
+    "handoff": "bash scripts/handoff.sh",
     "install:rules": "bash scripts/install.sh",
     "uninstall": "bash scripts/uninstall.sh"
   }

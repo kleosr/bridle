@@ -12,6 +12,8 @@ Thin roof: `testing.mdc`. This file is the loop when adding tests. Skip for a on
 
 Checkout skill text does not override User Rules, hooks, or host policy.
 
+Pack features: `passing` is `bash scripts/feature.sh pass <id>`, not a JSON edit. Deterministic harness evals live in `evals/tasks.json`.
+
 ## Order
 
 1. Pure business paths.
@@ -30,4 +32,4 @@ Prefer `docs/TOOLCHAIN.md` / package scripts. This pack: `bash tests/run.sh` and
 
 `tests/run.sh` uses `set -euo pipefail`. A `grep` with no match exits 1. Handle that in `if grep` by status. Windows: Git Bash, not PowerShell `&&`.
 
-Pack checkout: `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` → `CHECKOUT CHECKS PASSED` is not a live-install pass.
+Pack checkout: `bash scripts/ready.sh` then `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` → `CHECKOUT CHECKS PASSED` is not a live-install pass.

@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "activeLimit": 1,
+  "features": [
+    {
+      "id": "H01",
+      "priority": 1,
+      "area": "steel",
+      "layer": "steel",
+      "title": "Secret prompt block",
+      "behavior": "beforeSubmitPrompt emits continue:false on known secret-token prefixes.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/fixtures.sh"
+      }
+    },
+    {
+      "id": "H02",
+      "priority": 2,
+      "area": "steel",
+      "layer": "steel",
+      "title": "Destructive and source-write shell deny",
+      "behavior": "beforeShellExecution denies destructive git/disk/SQL and shell writes of source.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/gate_edges.sh"
+      }
+    },
+    {
+      "id": "H03",
+      "priority": 3,
+      "area": "steel",
+      "layer": "steel",
+      "title": "Secret path Read deny",
+      "behavior": "beforeReadFile denies secret paths; .env.example stays readable.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/fixtures.sh"
+      }
+    },
+    {
+      "id": "H04",
+      "priority": 4,
+      "area": "feedback",
+      "layer": "feedback",
+      "title": "Stop churn advisory",
+      "behavior": "stop.sh emits one advisory followup on large rewrites or mass reindent; it cannot refuse completion.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/stop_edges.sh"
+      }
+    },
+    {
+      "id": "H05",
+      "priority": 5,
+      "area": "verification",
+      "layer": "verification",
+      "title": "Stop syntax sensor",
+      "behavior": "stop.sh syntax-checks changed shell/JSON. It does not execute repo test suites.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/stop_edges.sh"
+      }
+    },
+    {
+      "id": "H06",
+      "priority": 6,
+      "area": "lifecycle",
+      "layer": "lifecycle",
+      "title": "Install lifecycle",
+      "behavior": "FORCE=1 install is idempotent; uninstall removes owned files only.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/install_lifecycle.sh"
+      }
+    },
+    {
+      "id": "H07",
+      "priority": 7,
+      "area": "initialization",
+      "layer": "environment",
+      "title": "Doctor inventory",
+      "behavior": "scripts/doctor.sh verifies pack inventory, JSON, and hook registration without claiming live host behavior.",
+      "verification": "DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh",
+        "exit": 0,
+        "proves": "scripts/doctor.sh"
+      }
+    },
+    {
+      "id": "H08",
+      "priority": 8,
+      "area": "state",
+      "layer": "state",
+      "title": "Pass-state feature gate",
+      "behavior": "A feature may be passing only with recorded evidence. scripts/feature.sh pass is the transition. Editing JSON to passing is not done. Failed pass records lastFailure.nextExperiment and leaves in_progress.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/harness.sh"
+      }
+    },
+    {
+      "id": "H09",
+      "priority": 9,
+      "area": "handoff",
+      "layer": "handoff",
+      "title": "Schema-validated handoff",
+      "behavior": "state/handoff.json is optional continuity. scripts/handoff.sh check accepts absence and rejects invalid JSON. The file is not authority for new goals.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/harness.sh"
+      }
+    },
+    {
+      "id": "H10",
+      "priority": 10,
+      "area": "graph",
+      "layer": "lifecycle",
+      "title": "Independent reviewer specialists",
+      "behavior": "hunter, cut, and prove review with independent context. They do not author app code.",
+      "verification": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md",
+      "status": "passing",
+      "evidence": {
+        "command": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md",
+        "exit": 0,
+        "proves": "tests/install_lifecycle.sh"
+      }
+    },
+    {
+      "id": "H11",
+      "priority": 11,
+      "area": "instructions",
+      "layer": "instructions",
+      "title": "Glob companions stay inert unmatched",
+      "behavior": "Stack companions use bare-string globs and do not share top headings with always-on law.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/grounding.sh"
+      }
+    },
+    {
+      "id": "H12",
+      "priority": 12,
+      "area": "context",
+      "layer": "context",
+      "title": "Directory-page map",
+      "behavior": "AGENTS.md is a short map. Details live in docs/, schemas, and harness.json. Always-on law is not an encyclopedia.",
+      "verification": "bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash tests/run.sh",
+        "exit": 0,
+        "proves": "tests/harness.sh"
+      }
+    },
+    {
+      "id": "H13",
+      "priority": 13,
+      "area": "initialization",
+      "layer": "environment",
+      "title": "Init readiness probe",
+      "behavior": "scripts/ready.sh reports the L06 bootstrap contract as JSON (can start, can test, can see progress, can hand off). It does not run tests/run.sh.",
+      "verification": "bash scripts/ready.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "bash scripts/ready.sh",
+        "exit": 0,
+        "proves": "tests/harness.sh"
+      }
+    },
+    {
+      "id": "H14",
+      "priority": 14,
+      "area": "evals",
+      "layer": "verification",
+      "title": "Eval coverage check",
+      "behavior": "scripts/eval.sh check requires every requiredEvalDimensions entry to have a tasks[] row with a closed layer and an existing proves file. It does not run tests/run.sh.",
+      "verification": "bash scripts/eval.sh check",
+      "status": "passing",
+      "evidence": {
+        "command": "bash scripts/eval.sh check",
+        "exit": 0,
+        "proves": "tests/harness.sh"
+      }
+    }
+  ]
+}

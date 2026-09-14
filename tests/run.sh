@@ -72,6 +72,10 @@ echo "=== Grounding (shapes, not prose) ==="
 source "$PACK/tests/grounding.sh"
 
 echo ""
+echo "=== Harness contracts (features, handoff, evals) ==="
+source "$PACK/tests/harness.sh"
+
+echo ""
 echo "=== Results ==="
 echo "PASS: $PASS"
 echo "FAIL: $FAIL"

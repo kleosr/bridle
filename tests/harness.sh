@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# Sourced by run.sh. Feature pass-state, handoff schema, eval index, map size.
+
+# shellcheck source=shared/hooks/lib/fleet_scan.sh
+source "$PACK/shared/hooks/lib/fleet_scan.sh"
+
+HARNESS_TMP="$(mktemp -d "${TMPDIR:-/tmp}/kleos-harness.XXXXXX")"
+STOP="$PACK/shared/hooks/stop.sh"
+FEAT="$PACK/scripts/feature.sh"
+HAND="$PACK/scripts/handoff.sh"
+
+hf_repo() {
+  mkdir -p "$1"
+  git -C "$1" init -q
+  git -C "$1" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+}
+
+hf_stop() {
+  jq -n --arg w "$1" '{status:"completed",loop_count:0,workspace_roots:[$w]}' | bash "$STOP"
+}
+
+RESULT="$(bash "$FEAT" check >/dev/null && echo ok || echo fail)"
+run_test "feature.sh check passes on pack features.json" "ok" "$RESULT"
+
+RESULT="$(jq -e '.version == 1 and (.features | length) >= 1' "$PACK/shared/config/features.json" >/dev/null && echo ok || echo fail)"
+run_test "features.json has version 1 and a features array" "ok" "$RESULT"
+
+RESULT="$(jq -e '.hierarchy and .subsystems and .lifecycle and .graph and .stopping and .evals and .invariants and .articleNine and .requiredEvalDimensions and .layers and .qualityLoop and .extend' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
+run_test "harness.json exposes hierarchy, subsystems, lifecycle, graph, stopping, evals, invariants, articleNine, qualityLoop" "ok" "$RESULT"
+
+JSON_SKILLS="$(jq -r '.plugins.skills[]' "$PACK/shared/config/harness.json" | sort | tr -d '\r')"
+TXT_SKILLS="$(load_lines "$PACK/shared/config/skills.txt" | sort)"
+run_test "harness.json plugins.skills matches skills.txt" "$TXT_SKILLS" "$JSON_SKILLS"
+
+EVAL_OK=ok
+while IFS= read -r proves; do
+  [[ -z "$proves" ]] && continue
+  [[ -f "$PACK/$proves" ]] || EVAL_OK="missing:$proves"
+done < <(jq -r '.tasks[] | .proves' "$PACK/evals/tasks.json")
+run_test "every evals/tasks.json proves path exists" "ok" "$EVAL_OK"
+
+AGENTS_N="$(wc -l < "$PACK/AGENTS.md" | tr -d ' ')"
+if [[ "$AGENTS_N" -le 120 ]]; then AGENTS_CAP=ok; else AGENTS_CAP="lines:$AGENTS_N"; fi
+run_test "AGENTS.md is a directory page (≤120 lines)" "ok" "$AGENTS_CAP"
+
+BAD="$HARNESS_TMP/features-bad.json"
+jq -n '{version:1,features:[{id:"T01",priority:1,area:"x",title:"t",behavior:"b",verification:"true",status:"passing"}]}' > "$BAD"
+RESULT="$(FEATURE_FILE="$BAD" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "regression: feature.sh check fails when passing has no evidence" "fail" "$RESULT"
+
+TWO="$HARNESS_TMP/features-two.json"
+jq -n '{version:1,features:[
+  {id:"A",priority:1,area:"x",title:"a",behavior:"b",verification:"true",status:"in_progress"},
+  {id:"B",priority:2,area:"x",title:"b",behavior:"b",verification:"true",status:"in_progress"}
+]}' > "$TWO"
+RESULT="$(FEATURE_FILE="$TWO" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "feature.sh check fails when two features are in_progress" "fail" "$RESULT"
+
+OKF="$HARNESS_TMP/features-ok.json"
+jq -n '{version:1,features:[{id:"T02",priority:1,area:"x",title:"t",behavior:"b",verification:"true",status:"not_started"}]}' > "$OKF"
+RESULT="$(FEATURE_FILE="$OKF" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" pass T02 >/dev/null && echo ok || echo fail)"
+run_test "feature.sh pass records evidence after verification exit 0" "ok" "$RESULT"
+RESULT="$(jq -r '.features[0].status' "$OKF")"
+run_test "feature.sh pass sets status passing" "passing" "$RESULT"
+RESULT="$(jq -r '.features[0].evidence.exit' "$OKF")"
+run_test "feature.sh pass records evidence.exit 0" "0" "$RESULT"
+
+FAILF="$HARNESS_TMP/features-fail.json"
+jq -n '{version:1,features:[{id:"T03",priority:1,area:"x",title:"t",behavior:"b",verification:"exit 1",status:"in_progress"}]}' > "$FAILF"
+RESULT="$(FEATURE_FILE="$FAILF" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" pass T03 >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "feature.sh pass does not mark passing when verification fails" "fail" "$RESULT"
+RESULT="$(jq -r '.features[0].status' "$FAILF")"
+run_test "failed pass leaves status in_progress" "in_progress" "$RESULT"
+
+HO="$HARNESS_TMP/handoff.json"
+RESULT="$(HANDOFF_FILE="$HO" bash "$HAND" check >/dev/null && echo ok || echo fail)"
+run_test "handoff.sh check treats absence as ok" "ok" "$RESULT"
+
+printf '%s\n' '{"version":1,"task":"t","verified":{"command":"true","exit":0},"remaining":["x"],"nextAction":"continue"}' \
+  | HANDOFF_FILE="$HO" bash "$HAND" write >/dev/null
+RESULT="$(HANDOFF_FILE="$HO" bash "$HAND" check >/dev/null && echo ok || echo fail)"
+run_test "handoff.sh write+check accepts a schema-valid snapshot" "ok" "$RESULT"
+
+printf '%s\n' '{"version":1,"task":"t"}' | HANDOFF_FILE="$HARNESS_TMP/bad-handoff.json" bash "$HAND" write >/dev/null 2>&1 \
+  && RESULT=ok || RESULT=fail
+run_test "handoff.sh write rejects a snapshot missing verified/remaining/nextAction" "fail" "$RESULT"
+
+hf_repo "$HARNESS_TMP/falsewin"
+printf 'echo ok\n' > "$HARNESS_TMP/falsewin/ok.sh"
+git -C "$HARNESS_TMP/falsewin" add ok.sh
+git -C "$HARNESS_TMP/falsewin" -c user.email=t@t -c user.name=t commit -q -m base
+printf '%s\n' '{"version":1,"features":[{"id":"F01","priority":1,"area":"x","title":"t","behavior":"b","verification":"true","status":"passing"}]}' \
+  > "$HARNESS_TMP/falsewin/feature_list.json"
+RESULT="$(hf_stop "$HARNESS_TMP/falsewin" | jq -r '.followup_message // "" | test("FEATURE")')"
+run_test "regression: stop advisory when feature_list.json is passing without evidence" "true" "$RESULT"
+
+hf_repo "$HARNESS_TMP/truewin"
+printf 'echo ok\n' > "$HARNESS_TMP/truewin/ok.sh"
+git -C "$HARNESS_TMP/truewin" add ok.sh
+git -C "$HARNESS_TMP/truewin" -c user.email=t@t -c user.name=t commit -q -m base
+printf '%s\n' '{"version":1,"features":[{"id":"F01","priority":1,"area":"x","title":"t","behavior":"b","verification":"true","status":"passing","evidence":{"command":"true","exit":0}}]}' \
+  > "$HARNESS_TMP/truewin/feature_list.json"
+RESULT="$(hf_stop "$HARNESS_TMP/truewin" | jq -c .)"
+run_test "stop is quiet when feature_list.json passing has evidence and no other sensor hits" "{}" "$RESULT"
+
+RESULT="$(jq -r '.hooks.stop[0].loop_limit' "$PACK/shared/hooks/hooks.json")"
+run_test "stop remains advisory (loop_limit 1; no new hook events)" "1" "$RESULT"
+
+RESULT="$(jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.json" >/dev/null && echo yes || echo no)"
+run_test "hooks.json still omits sessionStart" "yes" "$RESULT"
+
+RESULT="$(jq -e '.invariants.hookEventCount==4 and .invariants.preToolUse==false and .invariants.sessionStart==false and .invariants.nowMd==false and .invariants.packOwnedLoop==false' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
+run_test "harness.json invariants freeze four hooks, no preToolUse, no NOW.md, no pack loop" "ok" "$RESULT"
+
+HOOK_KEYS="$(jq -r '.hooks | keys | sort | join(",")' "$PACK/shared/hooks/hooks.json")"
+run_test "hooks.json registers exactly the four Cursor events" "beforeReadFile,beforeShellExecution,beforeSubmitPrompt,stop" "$HOOK_KEYS"
+
+RESULT="$(jq -e '.hooks | (has("preToolUse") | not) and (has("postToolUse") | not)' "$PACK/shared/hooks/hooks.json" >/dev/null && echo yes || echo no)"
+run_test "hooks.json omits preToolUse and postToolUse" "yes" "$RESULT"
+
+ANTI=ok
+for f in NOW.md PROGRESS.md LEARNING.md claude-progress.md; do
+  [[ -e "$PACK/$f" ]] && ANTI="present:$f"
+done
+run_test "pack root has no NOW.md/PROGRESS.md/LEARNING.md/claude-progress.md" "ok" "$ANTI"
+
+[[ -e "$PACK/scripts/loop.sh" ]] && LOOPF=present || LOOPF=absent
+run_test "pack does not ship a second ReAct loop script" "absent" "$LOOPF"
+
+RESULT="$(bash "$PACK/scripts/ready.sh" >/dev/null && echo ok || echo fail)"
+run_test "scripts/ready.sh reports L06 bootstrap contract" "ok" "$RESULT"
+
+RESULT="$(bash "$PACK/scripts/eval.sh" check >/dev/null && echo ok || echo fail)"
+run_test "scripts/eval.sh check covers required eval dimensions" "ok" "$RESULT"
+
+if grep -Eq '(^|[[:space:]])bash[[:space:]]+tests/run\.sh' "$PACK/scripts/eval.sh"; then EVAL_REC=recurse; else EVAL_REC=ok; fi
+run_test "eval.sh does not invoke tests/run.sh" "ok" "$EVAL_REC"
+
+BAD_EVAL="$HARNESS_TMP/tasks-bad.json"
+jq '{version:.version,note:.note,dimensions:.dimensions,tasks:[.tasks[] | select(.dimension != "regression")]}' \
+  "$PACK/evals/tasks.json" > "$BAD_EVAL"
+RESULT="$(EVAL_FILE="$BAD_EVAL" bash "$PACK/scripts/eval.sh" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "regression: eval.sh check fails when a required dimension is missing" "fail" "$RESULT"
+
+RESULT="$(jq -r '.features[0].lastFailure.exit' "$FAILF")"
+run_test "failed feature.sh pass records lastFailure.exit" "1" "$RESULT"
+RESULT="$(jq -r '.features[0].lastFailure.nextExperiment' "$FAILF")"
+run_test "failed feature.sh pass records lastFailure.nextExperiment" "re-run: exit 1" "$RESULT"
+RESULT="$(jq -r '.features[0].lastFailure // "none"' "$OKF")"
+run_test "successful feature.sh pass clears lastFailure" "none" "$RESULT"
+
+CORE_N="$(wc -l < "$PACK/shared/rules/core.mdc" | tr -d ' ')"
+TEST_N="$(wc -l < "$PACK/shared/rules/testing.mdc" | tr -d ' ')"
+ON_CAP="$(jq -r '.invariants.alwaysOnMaxLines' "$PACK/shared/config/harness.json")"
+if [[ "$((CORE_N + TEST_N))" -le "$ON_CAP" ]]; then ON_OK=ok; else ON_OK="lines:$((CORE_N + TEST_N))>$ON_CAP"; fi
+run_test "always-on core.mdc+testing.mdc stay under alwaysOnMaxLines" "ok" "$ON_OK"
+
+RESULT="$(jq -r '.verify.default' "$PACK/shared/config/harness.json")"
+run_test "verify default is scoped, not whole-suite" "scoped" "$RESULT"
+RESULT="$(jq -r '.extend.hooksFrozen' "$PACK/shared/config/harness.json")"
+run_test "extend.hooksFrozen keeps the four-event freeze" "true" "$RESULT"
+
+rm -rf "$HARNESS_TMP"
