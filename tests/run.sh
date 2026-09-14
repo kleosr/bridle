@@ -11,10 +11,9 @@ cp -a "$REAL_PACK/." "$PACK/"
 FAIL=0
 PASS=0
 
-# Portability: some Windows jq builds emit CRLF; tests compare jq scalars.
-if ! declare -F jq >/dev/null 2>&1; then
-  jq() { command jq "$@" | tr -d '\r'; }
-fi
+# Portability: this also fails before the copied pack's first assertion.
+source "$REAL_PACK/shared/hooks/lib/common.sh"
+require_jq
 
 cleanup_pack() {
   cd "${TMPDIR:-/tmp}" 2>/dev/null || true

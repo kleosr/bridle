@@ -7,6 +7,9 @@ alwaysApply: true
 
 Understand the files you will change. Change them. Verify the behavior this change can break. Correct failures. Do not claim done on stale evidence. Cite command + exit (or a driven UI path). A missing or nonzero observation is not success.
 
+## Change
+State the intended behavior and non-goals when the task leaves them open. Trace callers and contracts before changing a boundary. Preserve unrelated work. If the same check fails twice, stop repeating it: record the evidence, change the hypothesis, or name the missing input. Remove temporary instrumentation when the investigation ends.
+
 ## Craft
 Readable before clever. Explicit before magical. Simple before abstract. Meaningful names. Predictable control flow. Comments explain decisions, not the obvious. Handle errors on purpose — no empty catch, no swallowed exit. Clarity, correctness, and changeability outrank line count. Do not write decorative abstractions, extra wrappers, or “AI-looking” patterns to satisfy a style. Domain-hard complexity is allowed when justified.
 

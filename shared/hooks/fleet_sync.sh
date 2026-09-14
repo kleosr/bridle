@@ -11,6 +11,7 @@ PROJECT_HOOKS="${PROJECT_HOOKS:-$CLOUD}"
 TARGET_REPO="${TARGET_REPO:-}"
 CMD="${1:-all}"
 source "$HOOKS_DIR/lib/fleet_scan.sh"
+require_jq
 GLOBAL=()
 while IFS= read -r _g; do
   GLOBAL+=("$_g")
