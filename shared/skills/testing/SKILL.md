@@ -28,7 +28,7 @@ Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Mock true externals only
 
 ## Gauntlet
 
-Prefer `docs/TOOLCHAIN.md` / package scripts. This pack: `bash tests/run.sh` and doctor (below). Docs-only: skip. Fail closed. `stop.sh` syntax-checks changed shell/JSON; it does not run the suite.
+Prefer `docs/TOOLCHAIN.md` / package scripts. This pack: `TESTS=<fixture> bash tests/run.sh` for the fixture this change touches; `bash tests/run.sh` for repo-wide claims; doctor (below). Docs-only: skip. Fail closed. `stop.sh` syntax-checks changed shell/JSON; it does not run the suite.
 
 `tests/run.sh` uses `set -euo pipefail`. A `grep` with no match exits 1. Handle that in `if grep` by status. Windows: Git Bash, not PowerShell `&&`.
 

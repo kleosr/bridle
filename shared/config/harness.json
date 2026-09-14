@@ -1,6 +1,6 @@
 {
   "owner": "kleosrules",
-  "version": 5,
+  "version": 6,
   "role": "user-harness",
   "formula": "agent = model + host-runtime + this-pack",
   "hostOwns": [
@@ -56,7 +56,8 @@
       "hooks": "reason codes",
       "stop": "advisory churn/syntax/feature",
       "prove": "independent",
-      "lastFailure": "features[].lastFailure"
+      "lastFailure": "features[].lastFailure",
+      "reflection": "scripts/feature.sh note <id> <hypothesis>"
     }
   },
   "articleNine": {
@@ -85,6 +86,7 @@
   "qualityLoop": ["understand", "change", "verify", "correct"],
   "verify": {
     "default": "scoped",
+    "packScoped": "TESTS=<fixture>[,<fixture>] bash tests/run.sh",
     "packGauntlet": "bash tests/run.sh",
     "init": "bash scripts/ready.sh"
   },

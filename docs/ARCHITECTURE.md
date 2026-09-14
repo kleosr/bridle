@@ -41,6 +41,6 @@ Host adapter: `lib/host.sh` + `KLEOS_HOST=claude` maps deny/ask onto Claude Code
 
 ## Coverage
 
-- Verified here (unit-tested): script allow/deny/ask/advisory outputs, malformed input, missing policy/`jq`, per-segment git/gh gating, exact-basename ownership, timeout-shape fallback to deny/`continue:false` in scripts, feature pass-state, lastFailure.nextExperiment, handoff schema, ready/eval probes, scoped verify default, new-file size roof, invariants (no `preToolUse` / `NOW.md` / pack loop). See `tests/`.
+- Verified here (unit-tested): script allow/deny/ask/advisory outputs, malformed input, missing policy/`jq`, per-segment git/gh gating, exact-basename ownership, timeout-shape fallback to deny/`continue:false` in scripts, feature pass-state, lastFailure.nextExperiment, `feature.sh note` reflection, scoped feature evidence (no feature cites the bare gauntlet), handoff schema, ready/eval probes, scoped verify default, new-file size roof, invariants (no `preToolUse` / `NOW.md` / pack loop). See `tests/`.
 - Host: `docs/host-capability.md` (lanes + last live check). Glob auto-activation timing still unverified.
 - Uncovered: native `Write`/`StrReplace` of secret paths, MCP tools, Tab, alternate execution paths, allowed-program behavior, subagent host bypasses. Law only; do not rely on hooks for these.

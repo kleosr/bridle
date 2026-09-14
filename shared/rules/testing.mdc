@@ -7,7 +7,7 @@ alwaysApply: true
 
 Test observable behavior at the narrowest stable boundary. Loop: understand → change → verify → correct. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence.
 
-- This pack: `bash tests/run.sh` and `bash scripts/doctor.sh`. Init: `bash scripts/ready.sh` (does not run the suite). Else the repo's TOOLCHAIN / package scripts.
+- This pack: `TESTS=<fixture> bash tests/run.sh` (scoped), `bash tests/run.sh` (gauntlet), `bash scripts/doctor.sh`. Init: `bash scripts/ready.sh` (does not run the suite). Else the repo's TOOLCHAIN / package scripts.
 - Docs-only: no house gauntlet. Trusted workspace: run in-scope checks; network, credentials, and destructive effects still need authorization.
 - Bug fix: `regression: <symptom>` with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
 - Coverage / mutation only if the repo already has those jobs. Do not add a runner. Do not expose privates to hit coverage.
