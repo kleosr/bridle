@@ -8,6 +8,10 @@ source "$HERE/lib/common.sh"
 source "$HERE/lib/host.sh"
 INPUT="$(hook_stdin)"
 POL="$HERE/policy/secret_paths.ere"
+if ! jq_available; then
+  emit_deny "kleosrules: jq is unavailable; read denied (failClosed). Install jq or set KLEOS_JQ_BIN." "" missing-jq
+  exit 0
+fi
 if ! FILE_PATH="$(printf '%s' "$INPUT" | jq -r '.file_path // .tool_input.file_path // .tool_input.path // empty' 2>/dev/null)"; then
   emit_deny "kleosrules: beforeReadFile payload is not JSON; read denied (failClosed). Run bash scripts/doctor.sh." "" malformed
   exit 0

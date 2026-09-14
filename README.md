@@ -36,7 +36,7 @@ Run from Git Bash on Windows.
 | Path | Job |
 |---|---|
 | `AGENTS.md` | Directory page (not an encyclopedia) |
-| `shared/config/harness.json` | Machine-readable OS map |
+| `shared/config/harness.json` | Machine-readable runtime contract |
 | `shared/config/features.json` | Capability state (pass via `scripts/feature.sh`) |
 | `shared/schema/` | Feature, handoff, eval, and hook I/O contracts |
 | `state/handoff.json` | Optional session snapshot (gitignored) |
@@ -58,7 +58,5 @@ Run from Git Bash on Windows.
 - `docs/ARCHITECTURE.md` — layers and channels.
 - `docs/TOOLCHAIN.md` — commands and install safety.
 - `docs/DECISIONS/hooks.md` — why four hooks.
-- `docs/DECISIONS/engineering-os.md` — pointer to `harness.json` / `ARCHITECTURE.md`.
-- `docs/DECISIONS/ai-engineering.md` — ingest: adopt / adapt / reject.
-- `docs/DECISIONS/harness-engineering.md` — complete-course ingest vs this pack.
+- `docs/DECISIONS/engineering-os.md` — principles, source boundary, and runtime contract.
 - `docs/host-capability.md` — live host evidence (not law).

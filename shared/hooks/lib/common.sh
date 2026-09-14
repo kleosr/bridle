@@ -1,13 +1,36 @@
 #!/usr/bin/env bash
-# Shared hook helpers: path canonicalization and JSON verdict emitters.
+# Shared hook helpers: jq resolution, path canonicalization, JSON verdict emitters.
 # stdout is JSON only. Deny/ask messages never echo the command or secrets.
+
+# Resolve jq before defining the wrapper. Otherwise `command -v jq` sees the
+# wrapper itself when the executable is absent and reports a false positive.
+jq_executable() {
+  if [[ -n "${KLEOS_JQ_BIN:-}" ]]; then
+    [[ -x "$KLEOS_JQ_BIN" ]] && printf '%s\n' "$KLEOS_JQ_BIN"
+    return 0
+  fi
+  type -P jq 2>/dev/null || true
+}
+
+jq_available() { [[ -n "$(jq_executable)" ]]; }
+
+require_jq() {
+  if ! jq_available; then
+    echo "jq is required but was not found on PATH" >&2
+    echo "fix: install jq (or set KLEOS_JQ_BIN), then run bash scripts/doctor.sh" >&2
+    exit 1
+  fi
+}
 
 # Portability: some Windows jq builds emit CRLF. Hook logic compares jq
 # scalars and uses them as paths, so normalize once here. JSON string values
 # produced by these scripts never legitimately contain CR. Windows hook stdin
 # may also carry a UTF-8 BOM from the PowerShell pipe.
 if ! declare -F jq >/dev/null 2>&1; then
-  jq() { command jq "$@" | tr -d '\r'; }
+  KLEOS_JQ_EXEC="$(jq_executable)"
+  if [[ -n "$KLEOS_JQ_EXEC" ]]; then
+    jq() { "$KLEOS_JQ_EXEC" "$@" | tr -d '\r'; }
+  fi
 fi
 
 hook_stdin() {

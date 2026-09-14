@@ -1,4 +1,5 @@
 # Skill folder names that must be absent from the install target. Absence list; keep even when empty.
+ponytail
 memory
 monorepo
 package-scope

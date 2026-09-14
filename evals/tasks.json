@@ -53,7 +53,7 @@
     {
       "id": "continuity-handoff",
       "dimension": "continuity",
-      "layer": "handoff",
+      "layer": "continuity",
       "proves": "tests/harness.sh"
     },
     {

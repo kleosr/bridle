@@ -6,6 +6,7 @@ set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=shared/hooks/lib/common.sh
 source "$PACK/shared/hooks/lib/common.sh"
+require_jq
 FILE="${FEATURE_FILE:-$PACK/shared/config/features.json}"
 ROOT="${FEATURE_ROOT:-$PACK}"
 CMD="${1:-}"
@@ -35,6 +36,10 @@ active_count() {
   jq '[.features[]? | select(.status == "in_progress")] | length' "$FILE"
 }
 
+active_limit() {
+  jq -r '.activeLimit // 1' "$FILE"
+}
+
 has_id() {
   jq -e --arg id "$1" '.features | any(.id == $id)' "$FILE" >/dev/null
 }
@@ -50,55 +55,69 @@ cmd_next() {
 }
 
 cmd_check() {
-  local dup n_active missing root_ok
+  local dup n_active limit invalid
   need_file
   dup="$(jq -r '.features | group_by(.id) | map(select(length > 1)[0].id) | .[]?' "$FILE")"
   [[ -z "$dup" ]] || { echo "duplicate feature id: $dup" >&2; exit 1; }
-  jq -e '.version == 1 and (.features | type == "array")' "$FILE" >/dev/null \
-    || { echo "features.json must have version 1 and a features array" >&2; exit 1; }
-  missing="$(jq -r '.features[] | select((.id // "") == "" or (.behavior // "") == "" or (.verification // "") == "" or (.status // "") == "") | .id // "unknown"' "$FILE")"
-  [[ -z "$missing" ]] || { echo "feature missing required fields: $missing" >&2; exit 1; }
+  jq -e '
+    .version == 1
+    and (.features | type == "array")
+    and ((.activeLimit // 1) | type == "number" and floor == . and . >= 1)
+    and ([.features[] | (
+      (.id | type == "string" and length > 0)
+      and (.priority | type == "number" and floor == . and . >= 1)
+      and (.area | type == "string" and length > 0)
+      and (.title | type == "string" and length > 0)
+      and (.behavior | type == "string" and length > 0)
+      and (.verification | type == "string" and length > 0)
+      and (.status == "not_started" or .status == "in_progress" or .status == "blocked" or .status == "passing")
+      and ((has("evidence") | not) or (.evidence | type == "object"))
+      and ((has("lastFailure") | not) or (
+        .lastFailure | type == "object"
+        and (.command | type == "string" and length > 0)
+        and (.exit | type == "number" and floor == .)
+        and (.recordedAt | type == "string" and length > 0)
+        and (.nextExperiment | type == "string" and length > 0)
+      ))
+    )] | all)
+  ' "$FILE" >/dev/null || { echo "features.json failed schema" >&2; exit 1; }
   n_active="$(active_count)"
-  if [[ "$n_active" -gt 1 ]]; then
-    echo "too many in_progress features: $n_active (limit 1)" >&2
+  limit="$(active_limit)"
+  if [[ "$n_active" -gt "$limit" ]]; then
+    echo "too many in_progress features: $n_active (limit $limit)" >&2
     exit 1
   fi
-  while IFS= read -r id; do
-    [[ -z "$id" ]] && continue
-    echo "passing without evidence: $id" >&2
-    root_ok=1
-  done < <(jq -r '
+  invalid="$(jq -r '
     .features[] |
     select(.status == "passing") |
     select(
-      .evidence == null
+      .evidence.exit != 0
       or (
         ((.evidence.proves // "") == "")
         and ((.evidence.command // "") == "")
       )
     ) | .id
-  ' "$FILE")
-  [[ -z "${root_ok:-}" ]] || exit 1
+  ' "$FILE")"
+  [[ -z "$invalid" ]] || { echo "passing feature lacks valid evidence: $invalid" >&2; exit 1; }
   while IFS= read -r proves; do
     [[ -z "$proves" ]] && continue
     [[ -e "$ROOT/$proves" ]] || { echo "evidence.proves missing: $proves" >&2; exit 1; }
   done < <(jq -r '.features[] | select(.status == "passing") | .evidence.proves // empty' "$FILE")
-  missing="$(jq -r '.features[] | select(.lastFailure != null) | select((.lastFailure.command // "") == "" or ((.lastFailure.exit | type) != "number") or ((.lastFailure.recordedAt // "") == "") or ((.lastFailure.nextExperiment // "") == "")) | .id // "unknown"' "$FILE")"
-  [[ -z "$missing" ]] || { echo "feature lastFailure missing command/exit/recordedAt/nextExperiment: $missing" >&2; exit 1; }
   echo "features ok"
 }
 
 cmd_start() {
-  local id="$1"
+  local id="$1" limit
   [[ -n "$id" ]] || usage
   need_file
   has_id "$id" || { echo "unknown feature: $id" >&2; exit 1; }
-  if [[ "$(active_count)" -ge 1 ]]; then
+  limit="$(active_limit)"
+  if [[ "$(active_count)" -ge "$limit" ]]; then
     if jq -e --arg id "$id" '.features | any(.id == $id and .status == "in_progress")' "$FILE" >/dev/null; then
       echo "$id already in_progress"
       return 0
     fi
-    echo "another feature is in_progress (limit 1)" >&2
+    echo "active feature limit reached ($limit)" >&2
     exit 1
   fi
   jq --arg id "$id" '.features |= map(if .id == $id then .status = "in_progress" else . end)' "$FILE" | write_json
