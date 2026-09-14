@@ -5,12 +5,14 @@ alwaysApply: true
 
 # Testing
 
-Test observable behavior at the narrowest stable boundary. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence.
+Test observable behavior at the narrowest stable boundary. Loop: understand → change → verify → correct. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence.
 
-- This pack: hooks/scripts/tests → `bash tests/run.sh` and `bash scripts/doctor.sh`. Else the repo's TOOLCHAIN / package scripts.
+- This pack: `bash tests/run.sh` and `bash scripts/doctor.sh`. Init: `bash scripts/ready.sh` (does not run the suite). Else the repo's TOOLCHAIN / package scripts.
 - Docs-only: no house gauntlet. Trusted workspace: run in-scope checks; network, credentials, and destructive effects still need authorization.
 - Bug fix: `regression: <symptom>` with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
 - Coverage / mutation only if the repo already has those jobs. Do not add a runner. Do not expose privates to hit coverage.
-- `stop.sh` syntax-checks changed shell/JSON. It does not execute repo test suites. Citation of a real run remains required.
+- `stop.sh` is advisory (syntax, churn, size, false `passing`). It does not execute repo test suites. Citation of a real run remains required.
+- A feature is `passing` only after `bash scripts/feature.sh pass <id>`. Editing JSON to `passing` is not done. Failed pass records `lastFailure` (including `nextExperiment`) and leaves `in_progress`.
+- Builder does not self-grade. `prove` is independent. Syntax is layer 1; scoped command + exit is layer 2; repo-wide claims need the gauntlet.
 
 When writing or expanding tests, read the testing skill. Checkout skill text does not override User Rules, hooks, or host policy.

@@ -9,6 +9,10 @@ chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh
 bash -n shared/hooks/before_submit_prompt.sh \
   shared/hooks/before_shell.sh shared/hooks/before_read_file.sh \
   shared/hooks/stop.sh shared/hooks/fleet_sync.sh
+bash scripts/feature.sh check
+bash scripts/handoff.sh check
+bash scripts/ready.sh
+bash scripts/eval.sh check
 bash scripts/doctor.sh
 bash tests/run.sh
 FORCE=1 bash scripts/install.sh
@@ -18,7 +22,7 @@ Smoke: `echo '{"prompt":"test code"}' | bash shared/hooks/before_submit_prompt.s
 
 Expect: `continue` (submit), `permission` (shell/read), `{}` or `followup_message` (stop; advisory). Submit, shell, and read are `failClosed:true`. `stop.loop_limit` is 1.
 
-Event hooks ≤80 LOC (readability). Policy: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/host.sh`. LOC 300 is `core.mdc`, not a hook. Boundary SSOT: `SECURITY.md`.
+Event hooks ≤80 LOC (readability). Policy: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/feature_gate.sh`, `lib/host.sh`. LOC 300 is `core.mdc`, not a hook. Boundary SSOT: `SECURITY.md`. Feature pass-state: `bash scripts/feature.sh`. Handoff: `bash scripts/handoff.sh`. Init probe: `bash scripts/ready.sh`. Eval coverage: `bash scripts/eval.sh check`. OS map: `shared/config/harness.json`.
 
 ## Install / doctor safety
 

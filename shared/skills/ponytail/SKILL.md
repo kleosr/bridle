@@ -8,7 +8,7 @@ description: >
 
 # Ponytail
 
-Thin roof: `core.mdc` (ladder, size, craft). `stop.sh` checks churn, mass reindent, and shell/JSON syntax (advisory).
+Thin roof: `core.mdc` (ladder, size, craft). `stop.sh` checks churn, mass reindent, shell/JSON syntax, and false feature `passing` (advisory).
 
 ## Split
 

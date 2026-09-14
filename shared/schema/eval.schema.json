@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kleosrules.local/schema/eval.schema.json",
+  "title": "kleosrules harness eval index",
+  "type": "object",
+  "required": ["version", "dimensions", "tasks"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "note": { "type": "string" },
+    "dimensions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "dimension", "layer", "proves"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "dimension": { "type": "string" },
+          "layer": { "type": "string" },
+          "proves": { "type": "string" }
+        }
+      }
+    }
+  }
+}
