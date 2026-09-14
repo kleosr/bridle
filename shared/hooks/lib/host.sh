@@ -13,22 +13,3 @@ detect_host() {
   fi
   printf '%s' "cursor"
 }
-
-# Permission verdict. Cursor: {permission}. Claude Code PreToolUse:
-# hookSpecificOutput.permissionDecision. Unknown hosts get the Cursor shape.
-emit_host_permission() {
-  local perm="$1" msg="${2:-}" reason="${3:-}" host
-  host="$(detect_host)"
-  case "$host" in
-    claude)
-      json_emit claude "$msg" "$reason" "" "" "$perm"
-      ;;
-    *)
-      case "$perm" in
-        deny) emit_deny "$msg" "" "$reason" ;;
-        ask) emit_ask "$msg" "" "$reason" ;;
-        *) emit_allow "$msg" ;;
-      esac
-      ;;
-  esac
-}

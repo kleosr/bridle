@@ -49,8 +49,6 @@ done
 for j in "$HOOKS_DIR/hooks.json" "$HOOKS_DIR/hooks.cloud.json" \
   "$PACK/shared/config/manifest.json" "$PACK/shared/config/harness.json" \
   "$PACK/shared/config/features.json" "$PACK/package.json" \
-  "$PACK/shared/schema/feature.schema.json" "$PACK/shared/schema/handoff.schema.json" \
-  "$PACK/shared/schema/eval.schema.json" "$PACK/shared/schema/hook-io.schema.json" \
   "$PACK/evals/tasks.json"; do
   if jq empty "$j" 2>/dev/null; then ok "valid JSON: ${j#$PACK/}"
   else fail "invalid JSON: ${j#$PACK/}"; fi
@@ -74,7 +72,7 @@ for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOO
   else fail "LOC > $HOOK_CAP: ${f#$PACK/} ($n)"; fi
 done
 
-for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config shared/schema docs scripts tests evals; do
+for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config docs scripts tests evals; do
   if [[ -d "$PACK/$d" ]]; then ok "dir exists: $d/"
   else fail "missing dir: $d/"; fi
 done

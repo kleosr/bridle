@@ -2,7 +2,7 @@ def hook_basename:
   (.command // "" | split("/") | last | split("\\") | last);
 
 def owned_names:
-  ["session_start.sh", "before_submit_prompt.sh", "before_shell.sh",
+  ["before_submit_prompt.sh", "before_shell.sh",
    "before_read_file.sh", "stop.sh"];
 
 def shim_owned:

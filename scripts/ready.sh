@@ -35,10 +35,6 @@ if ! bash "$PACK/scripts/handoff.sh" check >/dev/null 2>&1; then
   can_hand=false
   fixes="${fixes}bash scripts/handoff.sh check; "
 fi
-if [[ ! -f "$PACK/shared/schema/handoff.schema.json" ]]; then
-  can_hand=false
-  fixes="${fixes}restore shared/schema/handoff.schema.json; "
-fi
 
 jq -n \
   --argjson canStart "$can_start" \

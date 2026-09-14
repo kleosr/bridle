@@ -1,6 +1,6 @@
 # kleosrules
 
-Agent engineering pack: charter, `core.mdc` + `testing.mdc`, glob companions, skills, four Bash hooks, and machine-readable feature/handoff contracts. Design UI skills live in `optional/design/` and are not installed.
+Agent engineering pack: charter, `core.mdc` + `testing.mdc`, glob companions, skills, four Bash hooks, and machine-readable feature/handoff contracts.
 
 ## Install
 
@@ -38,13 +38,11 @@ Run from Git Bash on Windows.
 | `AGENTS.md` | Directory page (not an encyclopedia) |
 | `shared/config/harness.json` | Machine-readable runtime contract |
 | `shared/config/features.json` | Capability state (pass via `scripts/feature.sh`) |
-| `shared/schema/` | Feature, handoff, eval, and hook I/O contracts |
 | `state/handoff.json` | Optional session snapshot (gitignored) |
 | `evals/tasks.json` | Deterministic harness eval index |
 | `shared/rules/` | Charter paste + always-on / glob `.mdc` |
 | `shared/skills/` | On-demand skill bodies |
 | `shared/hosts/` | Portable `CLAUDE.md` |
-| `optional/design/` | UI skills, not installed |
 | `shared/agents/` | `hunter` / `cut` / `prove` specialists |
 | `shared/hooks/` | Four event scripts + `git-bash-shim.ps1` + `lib/` + `policy/` |
 | `shared/config/` | Installed names, absence lists, `manifest.json` |
