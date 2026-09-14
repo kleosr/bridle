@@ -6,6 +6,7 @@ set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=shared/hooks/lib/common.sh
 source "$PACK/shared/hooks/lib/common.sh"
+require_jq
 FILE="${HANDOFF_FILE:-$PACK/state/handoff.json}"
 CMD="${1:-}"
 
@@ -20,11 +21,16 @@ valid_shape() {
   jq empty "$f" >/dev/null 2>&1 || return 1
   jq -e '.version == 1
     and (.task | type == "string" and length > 0)
+    and ((.investigated // []) | type == "array" and all(.[]; type == "string"))
+    and ((.changed // []) | type == "array" and all(.[]; type == "string"))
+    and ((.failed // []) | type == "array" and all(.[]; type == "string"))
     and (.nextAction | type == "string" and length > 0)
-    and (.remaining | type == "array")
+    and (.remaining | type == "array" and all(.[]; type == "string"))
+    and ((.decisions // []) | type == "array" and all(.[]; type == "string"))
     and (.verified | type == "object")
-    and (.verified.command | type == "string")
-    and (.verified.exit | type == "number")' "$f" >/dev/null
+    and (.verified.command | type == "string" and length > 0)
+    and (.verified.exit | type == "number" and floor == .)
+    and ((.activeFeature | type == "string") or .activeFeature == null)' "$f" >/dev/null
 }
 
 cmd_check() {

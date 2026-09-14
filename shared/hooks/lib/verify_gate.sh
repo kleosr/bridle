@@ -7,7 +7,7 @@ verify_changed_files() {
   git -C "$root" diff --name-only HEAD -- 2>/dev/null
 }
 
-# Syntax only: bash -n on changed *.sh; jq empty on changed *.json.
+# Syntax only: bash -n on changed *.sh; JSON parse on changed *.json.
 gate_verify_syntax() {
   local root="$1" f out=""
   while IFS= read -r f; do
@@ -19,7 +19,7 @@ gate_verify_syntax() {
 "
         ;;
       *.json)
-        jq empty "$root/$f" >/dev/null 2>&1 || out="${out}syntax: $f (jq empty failed)
+        json_run file-valid "$root/$f" >/dev/null 2>&1 || out="${out}syntax: $f (JSON parse failed)
 "
         ;;
     esac
@@ -33,7 +33,7 @@ resolve_verify_hint() {
     printf '%s' "bash tests/run.sh"
     return 0
   fi
-  if [[ -f "$root/package.json" ]] && jq -e '.scripts.test' "$root/package.json" >/dev/null 2>&1; then
+  if [[ -f "$root/package.json" ]] && json_run has-scripts-test "$root/package.json" >/dev/null 2>&1; then
     printf '%s' "package.json scripts.test (cite a real run; hook does not execute it)"
     return 0
   fi

@@ -1,8 +1,8 @@
 # Toolchain
 
-Bash + jq. No Rust. No pack Python.
+Bash + CPython or Node for hook JSON. `jq` remains for install/scripts (`feature.sh`, `hooks.json` merge, doctor). No Rust. No pack Python app.
 
-Need `bash` 3.2+ (no `flock`, `mapfile`, `realpath`, `stat -c`) and `jq`. Windows: Git for Windows + `jq`; run everything from Git Bash.
+Need `bash` 3.2+ (no `flock`, `mapfile`, `realpath`, `stat -c`), plus `python3` or `node` on the hook path. Windows: Git for Windows; run pack scripts from Git Bash.
 
 ```bash
 chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh
