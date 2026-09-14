@@ -149,6 +149,18 @@ run_test "failed feature.sh pass records lastFailure.nextExperiment" "re-run: ex
 RESULT="$(jq -r '.features[0].lastFailure // "none"' "$OKF")"
 run_test "successful feature.sh pass clears lastFailure" "none" "$RESULT"
 
+RESULT="$(FEATURE_FILE="$FAILF" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" note T03 "hypothesis: exit 1 is the stub" >/dev/null && echo ok || echo fail)"
+run_test "feature.sh note records an agent-written reflection on a recorded failure" "ok" "$RESULT"
+RESULT="$(jq -r '.features[0].lastFailure.nextExperiment' "$FAILF")"
+run_test "feature.sh note replaces nextExperiment with the hypothesis" "hypothesis: exit 1 is the stub" "$RESULT"
+RESULT="$(jq -r '.features[0].status' "$FAILF")"
+run_test "feature.sh note does not change status" "in_progress" "$RESULT"
+RESULT="$(FEATURE_FILE="$OKF" FEATURE_ROOT="$HARNESS_TMP" bash "$FEAT" note T02 "no failure here" >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "regression: feature.sh note refuses when there is no lastFailure to reflect on" "fail" "$RESULT"
+
+RESULT="$(jq -r '[.features[] | select(.verification == "bash tests/run.sh")] | length' "$PACK/shared/config/features.json")"
+run_test "no pack feature cites the whole gauntlet as its verification (scoped evidence)" "0" "$RESULT"
+
 CORE_N="$(wc -l < "$PACK/shared/rules/core.mdc" | tr -d ' ')"
 TEST_N="$(wc -l < "$PACK/shared/rules/testing.mdc" | tr -d ' ')"
 ON_CAP="$(jq -r '.invariants.alwaysOnMaxLines' "$PACK/shared/config/harness.json")"

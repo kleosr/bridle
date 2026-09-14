@@ -9,12 +9,13 @@
       "layer": "steel",
       "title": "Secret prompt block",
       "behavior": "beforeSubmitPrompt emits continue:false on known secret-token prefixes.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=fixtures bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=fixtures bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/fixtures.sh"
+        "proves": "tests/fixtures.sh",
+        "recordedAt": "2026-09-14T16:28:05Z"
       }
     },
     {
@@ -24,12 +25,13 @@
       "layer": "steel",
       "title": "Destructive and source-write shell deny",
       "behavior": "beforeShellExecution denies destructive git/disk/SQL and shell writes of source.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=gate_edges,sql_scope bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=gate_edges,sql_scope bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/gate_edges.sh"
+        "proves": "tests/gate_edges.sh",
+        "recordedAt": "2026-09-14T16:30:47Z"
       }
     },
     {
@@ -39,12 +41,13 @@
       "layer": "steel",
       "title": "Secret path Read deny",
       "behavior": "beforeReadFile denies secret paths; .env.example stays readable.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=fixtures bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=fixtures bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/fixtures.sh"
+        "proves": "tests/fixtures.sh",
+        "recordedAt": "2026-09-14T16:31:40Z"
       }
     },
     {
@@ -54,12 +57,13 @@
       "layer": "feedback",
       "title": "Stop churn advisory",
       "behavior": "stop.sh emits one advisory followup on large rewrites or mass reindent; it cannot refuse completion.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=stop_edges bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=stop_edges bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/stop_edges.sh"
+        "proves": "tests/stop_edges.sh",
+        "recordedAt": "2026-09-14T16:32:06Z"
       }
     },
     {
@@ -69,12 +73,13 @@
       "layer": "verification",
       "title": "Stop syntax sensor",
       "behavior": "stop.sh syntax-checks changed shell/JSON. It does not execute repo test suites.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=stop_edges bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=stop_edges bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/stop_edges.sh"
+        "proves": "tests/stop_edges.sh",
+        "recordedAt": "2026-09-14T16:32:31Z"
       }
     },
     {
@@ -84,12 +89,13 @@
       "layer": "lifecycle",
       "title": "Install lifecycle",
       "behavior": "FORCE=1 install is idempotent; uninstall removes owned files only.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=install_lifecycle,overlay_edges bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=install_lifecycle,overlay_edges bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/install_lifecycle.sh"
+        "proves": "tests/install_lifecycle.sh",
+        "recordedAt": "2026-09-14T16:33:47Z"
       }
     },
     {
@@ -114,12 +120,13 @@
       "layer": "state",
       "title": "Pass-state feature gate",
       "behavior": "A feature may be passing only with recorded evidence. scripts/feature.sh pass is the transition. Editing JSON to passing is not done. Failed pass records lastFailure.nextExperiment and leaves in_progress.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=harness bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=harness bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/harness.sh"
+        "proves": "tests/harness.sh",
+        "recordedAt": "2026-09-14T16:34:03Z"
       }
     },
     {
@@ -129,12 +136,13 @@
       "layer": "handoff",
       "title": "Schema-validated handoff",
       "behavior": "state/handoff.json is optional continuity. scripts/handoff.sh check accepts absence and rejects invalid JSON. The file is not authority for new goals.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=harness bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=harness bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/harness.sh"
+        "proves": "tests/harness.sh",
+        "recordedAt": "2026-09-14T16:34:19Z"
       }
     },
     {
@@ -142,8 +150,8 @@
       "priority": 10,
       "area": "graph",
       "layer": "lifecycle",
-      "title": "Independent reviewer specialists",
-      "behavior": "hunter, cut, and prove review with independent context. They do not author app code.",
+      "title": "Specialist files present and wired",
+      "behavior": "hunter, cut, and prove prompt files exist and are installed by fleet_install.sh. This proves presence and install-wiring only; it does not measure that a review ran, was independent, or caught anything.",
       "verification": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md",
       "status": "passing",
       "evidence": {
@@ -159,12 +167,13 @@
       "layer": "instructions",
       "title": "Glob companions stay inert unmatched",
       "behavior": "Stack companions use bare-string globs and do not share top headings with always-on law.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=grounding bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=grounding bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/grounding.sh"
+        "proves": "tests/grounding.sh",
+        "recordedAt": "2026-09-14T16:34:28Z"
       }
     },
     {
@@ -174,12 +183,13 @@
       "layer": "context",
       "title": "Directory-page map",
       "behavior": "AGENTS.md is a short map. Details live in docs/, schemas, and harness.json. Always-on law is not an encyclopedia.",
-      "verification": "bash tests/run.sh",
+      "verification": "TESTS=harness bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "bash tests/run.sh",
+        "command": "TESTS=harness bash tests/run.sh",
         "exit": 0,
-        "proves": "tests/harness.sh"
+        "proves": "tests/harness.sh",
+        "recordedAt": "2026-09-14T16:34:46Z"
       }
     },
     {
@@ -210,6 +220,22 @@
         "command": "bash scripts/eval.sh check",
         "exit": 0,
         "proves": "tests/harness.sh"
+      }
+    },
+    {
+      "id": "H15",
+      "priority": 15,
+      "area": "feedback",
+      "layer": "feedback",
+      "title": "Agent-written reflection on a recorded failure",
+      "behavior": "scripts/feature.sh note <id> <hypothesis> replaces lastFailure.nextExperiment with the agent's diagnosis so the next attempt starts from a reflection, not a raw exit code. It refuses when no failure is recorded and never changes status.",
+      "verification": "TESTS=harness bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "proves": "tests/harness.sh",
+        "command": "TESTS=harness bash tests/run.sh",
+        "exit": 0,
+        "recordedAt": "2026-09-14T16:35:02Z"
       }
     }
   ]
