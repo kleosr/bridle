@@ -7,10 +7,13 @@ source "$HERE/lib/diff_gate.sh"
 source "$HERE/lib/verify_gate.sh"
 source "$HERE/lib/feature_gate.sh"
 INPUT="$(hook_stdin)"
-STATUS="$(printf '%s' "$INPUT" | jq -r '.status // empty' 2>/dev/null || true)"
-LOOP="$(printf '%s' "$INPUT" | jq -r '.loop_count // 0' 2>/dev/null || echo 0)"
-WR="$(posix_slashes "$(printf '%s' "$INPUT" | jq -r '.workspace_roots[0] // .cwd // empty' 2>/dev/null || true)")"
-if [[ "$STATUS" != "completed" || "$LOOP" != "0" || -z "$WR" || ! -d "$WR" ]]; then
+json_available || { emit_quiet; exit 0; }
+if ! DECODE="$(printf '%s' "$INPUT" | json_run decode-stop)"; then
+  emit_quiet; exit 0
+fi
+eval "$DECODE"
+WR="$(posix_slashes "${WR:-}")"
+if [[ "${STATUS:-}" != "completed" || "${LOOP:-0}" != "0" || -z "$WR" || ! -d "$WR" ]]; then
   emit_quiet; exit 0
 fi
 git -C "$WR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { emit_quiet; exit 0; }
@@ -19,4 +22,4 @@ VER="$(gate_verify "$WR" || true)"
 FEAT="$(gate_features "$WR" || true)"
 MSG="${MSG}${VER}${FEAT}"
 [[ -n "$MSG" ]] || { emit_quiet; exit 0; }
-jq -n --arg m "$MSG" '{followup_message:$m}'
+emit_followup "$MSG"

@@ -6,6 +6,7 @@ set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=shared/hooks/lib/common.sh
 source "$PACK/shared/hooks/lib/common.sh"
+require_jq
 FILE="${EVAL_FILE:-$PACK/evals/tasks.json}"
 HARNESS="${HARNESS_FILE:-$PACK/shared/config/harness.json}"
 
@@ -20,12 +21,25 @@ usage() {
 [[ -f "$FILE" ]] || { echo "missing $FILE" >&2; echo "fix: restore evals/tasks.json" >&2; exit 1; }
 [[ -f "$HARNESS" ]] || { echo "missing $HARNESS" >&2; echo "fix: restore shared/config/harness.json" >&2; exit 1; }
 jq empty "$FILE" >/dev/null 2>&1 || { echo "evals/tasks.json is not JSON" >&2; exit 1; }
-jq -e '.version == 1 and (.dimensions | type == "array") and (.tasks | type == "array")' "$FILE" >/dev/null \
-  || { echo "evals/tasks.json must have version, dimensions, tasks" >&2; exit 1; }
+jq -e '
+  .version == 1
+  and (.dimensions | type == "array" and all(.[]; type == "string" and length > 0))
+  and (.tasks | type == "array" and all(.[];
+    (.id | type == "string" and length > 0)
+    and (.dimension | type == "string" and length > 0)
+    and (.layer | type == "string" and length > 0)
+    and (.proves | type == "string" and length > 0)))
+' "$FILE" >/dev/null || { echo "evals/tasks.json failed schema" >&2; exit 1; }
 jq -e '.requiredEvalDimensions | type == "array" and length > 0' "$HARNESS" >/dev/null \
   || { echo "harness.json missing requiredEvalDimensions" >&2; exit 1; }
 jq -e '.layers | type == "array" and length > 0' "$HARNESS" >/dev/null \
   || { echo "harness.json missing layers" >&2; exit 1; }
+
+dup="$(jq -r '.tasks | group_by(.id) | map(select(length > 1)[0].id) | .[]?' "$FILE")"
+[[ -z "$dup" ]] || { echo "eval duplicate task id: $dup" >&2; exit 1; }
+
+unknown_dimension="$(jq -r --slurpfile e "$FILE" '[.tasks[]?.dimension | select(. as $d | $e[0].dimensions | index($d) | not)] | .[]?' "$HARNESS")"
+[[ -z "$unknown_dimension" ]] || { echo "eval unknown dimension: $unknown_dimension" >&2; exit 1; }
 
 missing=""
 while IFS= read -r d; do

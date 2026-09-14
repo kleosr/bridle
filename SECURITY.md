@@ -29,11 +29,11 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 |---|---|---|
 | Malformed JSON / non-string command | deny / `continue:false`, `reason=malformed` | `failClosed:true` requests block (unverified) |
 | Missing policy file | deny / `continue:false`, `reason=missing-policy` | same |
-| Missing working `jq` | deny JSON `reason=missing-jq` (fallback echo) | same |
+| Missing Python/Node JSON codec | deny JSON `reason=missing-json` (fallback echo) | same |
 | Timeout / crash | — | host-defined; requested fail-closed on preventive events |
 | `stop` malformed / aborted / loop>0 | `{}` | cannot loop (`loop_limit:1`); cannot refuse completion |
 
-stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-jq`, `secret-token`, `ask-infra`, `activation`, `harness`.
+stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `secret-token`, `ask-infra`, `activation`, `harness`.
 
 Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval.
 

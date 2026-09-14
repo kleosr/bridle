@@ -7,16 +7,18 @@ PACK="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=shared/hooks/lib/common.sh
 source "$PACK/shared/hooks/lib/common.sh"
 
+if ! jq_available; then
+  printf '%s\n' '{"canStart":false,"canTest":true,"canSeeProgress":false,"canHandoff":false,"init":"bash scripts/ready.sh","inventory":"DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh","verify":"bash tests/run.sh","fixes":"install jq or set KLEOS_JQ_BIN; "}'
+  echo "ready: jq executable not found; set KLEOS_JQ_BIN or install jq." >&2
+  exit 1
+fi
+
 can_start=true
 can_test=true
 can_see=true
 can_hand=true
 fixes=""
 
-if ! command -v jq >/dev/null 2>&1; then
-  can_start=false
-  fixes="${fixes}install jq; "
-fi
 if [[ ! -f "$PACK/AGENTS.md" || ! -f "$PACK/shared/config/harness.json" ]]; then
   can_start=false
   fixes="${fixes}restore AGENTS.md and shared/config/harness.json; "

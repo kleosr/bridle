@@ -21,8 +21,7 @@ emit_host_permission() {
   host="$(detect_host)"
   case "$host" in
     claude)
-      jq -n --arg d "$perm" --arg r "$msg" --arg why "$reason" \
-        '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:$d,permissionDecisionReason:$r},reason:$why}'
+      json_emit claude "$msg" "$reason" "" "" "$perm"
       ;;
     *)
       case "$perm" in

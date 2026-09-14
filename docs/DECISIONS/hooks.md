@@ -27,13 +27,13 @@ Four hooks enforce **documented restrictions on supported Cursor event paths**. 
 
 ## Failure classes (scripts)
 
-Preventive hooks (submit / shell / read): invalid input, missing policy, missing working `jq`, or non-string command → deny / `continue:false` (not silent allow). Diagnostics in `user_message` must not echo secrets or the raw command. stdout is JSON only. Stable `reason` codes: `deny`, `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-jq`, `ask-infra`, `activation`, `harness`. Timeout/crash: host `failClosed:true` **requests** deny; host interpretation is unverified.
+Preventive hooks (submit / shell / read): invalid input, missing policy, missing Python/Node JSON codec, or non-string command → deny / `continue:false` (not silent allow). Diagnostics in `user_message` must not echo secrets or the raw command. stdout is JSON only. Stable `reason` codes: `deny`, `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `ask-infra`, `activation`, `harness`. Timeout/crash: host `failClosed:true` **requests** deny; host interpretation is unverified.
 
 `stop.sh`: advisory only; cannot prevent completion; malformed/`aborted`/`loop_count>0` → `{}`; its own failure must not loop (`loop_limit:1`).
 
 Cloud: user `~/.cursor/hooks.json` does **not** load. Cloud sees project `.cursor/hooks.json` only (plus Enterprise team/dashboard hooks). `hooks.cloud.json` is **opt-in** project-hooks (submit / shell / read; no `stop`). This pack has no repo-level hooks. Matrix: `docs/host-capability.md`.
 
-Bans: no `updated_input`; no kleos-gate; no pack Python; event hooks ≤80 LOC.
+Bans: no `updated_input`; no kleos-gate; no pack Python *app*; event hooks ≤80 LOC. Hook JSON uses CPython or Node stdlib.
 
 Policy SSOT: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/feature_gate.sh`. Hook I/O: `shared/schema/hook-io.schema.json`. Roofs: `core.mdc`. Host I/O: `lib/host.sh`.
 

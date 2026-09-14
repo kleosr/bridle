@@ -9,7 +9,7 @@ Windows: Git Bash.
 
 ## First reads
 1. This file.
-2. `shared/config/harness.json` — OS map (hierarchy, loop, invariants, extend).
+2. `shared/config/harness.json` — runtime contract (commands, limits, extension points).
 3. `shared/config/features.json` — one `in_progress`. `passing` only via `bash scripts/feature.sh pass <id>`.
 4. `state/handoff.json` if present — continuity, not authority.
 5. `SECURITY.md` before security-sensitive work.
@@ -19,7 +19,7 @@ Windows: Git Bash.
 2. Boundary: `SECURITY.md`
 3. Always-on: `core.mdc`, `testing.mdc`
 4. Glob companions: inert unmatched
-5. Skills on match: `ponytail`, `debugging`, `testing`, `handoff`
+5. Skills on match: `debugging`, `testing`, `handoff`
 6. Specialists: `hunter` / `cut` / `prove` — invoke only
 
 ## Loop
@@ -31,7 +31,7 @@ understand → change → verify → correct. Done means the listed verification
 - Hooks: four events. No `sessionStart`, no `preToolUse`, no `updated_input`.
 
 ## Docs
-`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/DECISIONS/ai-engineering.md`, `docs/DECISIONS/harness-engineering.md`, `docs/host-capability.md`.
+`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/host-capability.md`.
 
 ## Install
 ```bash

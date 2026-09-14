@@ -9,12 +9,15 @@
   },
   "runtimeLibs": [
     "common.sh",
+    "json.sh",
     "shell_gate.sh",
     "diff_gate.sh",
     "sql_scope.sh",
     "host.sh",
     "verify_gate.sh",
-    "feature_gate.sh"
+    "feature_gate.sh",
+    "json_tool.py",
+    "json_tool.js"
   ],
   "policy": [
     "secret_paths.ere",

@@ -25,8 +25,16 @@ fi
 if [[ "${BASH_VERSINFO[0]:-0}" -ge 3 ]]; then ok "bash >= 3.2 (${BASH_VERSION})"
 else fail "bash >= 3.2 required (found ${BASH_VERSION:-unknown})"; fi
 
-if command -v jq >/dev/null 2>&1; then ok "jq $(jq --version 2>/dev/null || echo 'present')"
-else fail "jq not found — required for JSON parsing in hooks"; fi
+if jq_available; then ok "jq $(jq --version 2>/dev/null || echo 'present')"
+else
+  fail "jq executable not found — required for JSON parsing"
+  echo "fix: install jq or set KLEOS_JQ_BIN, then rerun doctor"
+  echo ""
+  echo "=== SOME CHECKS FAILED ==="
+  exit 1
+fi
+
+HOOK_CAP="$(jq -r '.invariants.eventHookMaxLines // 80' "$PACK/shared/config/harness.json" 2>/dev/null || echo 80)"
 
 if command -v shellcheck >/dev/null 2>&1; then ok "shellcheck available"
 else echo "[warn] shellcheck not found (optional, recommended for CI)"; fi
@@ -62,8 +70,8 @@ else fail "GNU-only util found in hooks: $GNU_HITS"; fi
 
 for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh "$HOOKS_DIR"/stop.sh; do
   n="$(wc -l < "$f")"
-  if [[ "$n" -le 80 ]]; then ok "LOC ≤ 80: ${f#$PACK/} ($n)"
-  else fail "LOC > 80: ${f#$PACK/} ($n)"; fi
+  if [[ "$n" -le "$HOOK_CAP" ]]; then ok "LOC ≤ $HOOK_CAP: ${f#$PACK/} ($n)"
+  else fail "LOC > $HOOK_CAP: ${f#$PACK/} ($n)"; fi
 done
 
 for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config shared/schema docs scripts tests evals; do
@@ -92,7 +100,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh lib/feature_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh lib/feature_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -220,6 +228,11 @@ else fail "banned session SoR file at pack root ($ANTI_OK)"; fi
 if jq -e '.runtimeLibs | index("feature_gate.sh")' "$PACK/shared/config/manifest.json" >/dev/null; then
   ok "manifest runtimeLibs includes feature_gate.sh"
 else fail "manifest.json missing feature_gate.sh in runtimeLibs"; fi
+if jq -e '.runtimeLibs | index("json.sh") and index("json_tool.py") and index("json_tool.js")' "$PACK/shared/config/manifest.json" >/dev/null; then
+  ok "manifest runtimeLibs includes hook JSON codec"
+else fail "manifest.json missing json.sh/json_tool.py/json_tool.js in runtimeLibs"; fi
+if json_available; then ok "hook JSON codec (python3 or node)"
+else fail "hook JSON codec missing — install python3 or node (or set KLEOS_JSON_BIN)"; fi
 
 echo ""
 if [[ "$FAIL" -eq 0 ]]; then
