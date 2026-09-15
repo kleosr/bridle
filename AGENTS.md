@@ -1,6 +1,6 @@
-# AGENTS.md — kleosrules (navigator)
+# AGENTS.md — bridle (navigator)
 
-kleosrules is a Cursor **user harness**: `Agent = Model + Harness`. Charter, always-on law, skills, and four Bash hooks around the host loop. It is not a second agent runtime. Prompting is not the control plane.
+bridle is a Cursor **user harness**: `Agent = Model + Harness`. Charter, always-on law, skills, and four Bash hooks around the host loop. It is not a second agent runtime. Prompting is not the control plane.
 
 **Init:** `bash scripts/ready.sh`  
 **Inventory:** `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh`  

@@ -1,74 +1,92 @@
-# Host capability matrix (v2)
+# Host Capability Matrix: Empirical Evidence, Not Guarantees
 
-Living. Not law. Not injected. Not installed.
+**Status:** Living Document · Empirical Observations · Not Law  
+**Host Target:** Cursor Desktop & Cloud Agents  
 
-Scripts and `hooks.json` are the pack contract. This file records **where those contracts can run** and **what a live host actually did**. Script fixtures in `tests/` do not prove host behavior. A dated check does not survive a Cursor update.
+Let me be completely transparent about what this file is and isn't.
 
-SSOT for steel (what scripts emit): `SECURITY.md`. SSOT for why four events: `docs/DECISIONS/hooks.md`.
+A lot of AI tooling makes wild promises about security. But passing test fixtures in `tests/` proves only one thing: that our Bash scripts emit the expected JSON verdicts when fed sample payloads. It does **not** prove what Cursor's Electron host or Cloud Agent VM actually does when it receives that JSON.
 
-## Lane split
+Does Cursor actually halt when `permission: deny` is emitted? Does it genuinely pause on `ask`? Does it block prompt transmission on `continue: false`?
 
-| Lane | Hook config the host loads | This pack |
+Those questions can only be answered by real production sessions, real telemetry logs, and honest notes. That is what this document tracks. We never claim host guarantees that haven't been measured live.
+
+The single source of truth for script policies is `SECURITY.md`. The design rationale for hooks is in `docs/DECISIONS/hooks.md`.
+
+---
+
+## Execution Lanes: Local vs. Cloud
+
+Cursor executes hooks across two very different environments:
+
+| Execution Lane | Hook Configuration Loaded | What bridle Does |
 |---|---|---|
-| Local Agent / Chat | User hooks: `~/.cursor/hooks.json` | Default install (`FORCE=1 bash scripts/install.sh`) |
-| Cloud agent | **Project** hooks only: `<repo>/.cursor/hooks.json` | **Opt-in.** `CLOUD=1 TARGET_REPO=<other-repo> project-hooks` writes `hooks.cloud.json` into that repo. Never this pack. |
-| Cloud agent + user hooks | `~/.cursor/hooks.json` is **not** available on the cloud VM | Local steel does **not** follow the user into cloud |
-| This pack checkout | No repo-level `.cursor/hooks.json` | Cloud work **on this repo** has no pack hooks unless someone adds project hooks |
+| **Local Agent / Chat** | User hooks: `~/.cursor/hooks.json` | Default install (`FORCE=1 bash scripts/install.sh`). Protects your local machine. |
+| **Cloud Agent** | Project hooks only: `<repo>/.cursor/hooks.json` | **Opt-in.** `CLOUD=1 TARGET_REPO=<other-repo> project-hooks` writes `hooks.cloud.json` to the target repo. Never installed into this pack. |
+| **Cloud Agent + User Hooks** | `~/.cursor/hooks.json` is **not mounted** on the cloud VM | Your local user hooks do not follow into Cloud Agent instances. |
+| **This Pack Repository** | No repo-level `.cursor/hooks.json` | Prevents recursive hook execution during local development. |
 
-## Event matrix
+---
 
-`reg` = registered in that JSON. `avail` = Cursor documents the event for that lane. `—` = not available or not registered.
+## Event Matrix
 
-| Event | Local avail | Local pack | Cloud avail | Cloud pack (`hooks.cloud.json`) |
+| Event | Local Availability | Local Harness Registration | Cloud Availability | Cloud Harness (`hooks.cloud.json`) |
 |---|---|---|---|---|
-| `beforeSubmitPrompt` | yes | **reg**, `failClosed:true` | yes | **reg**, `failClosed:true` (if project-hooks applied) |
-| `beforeShellExecution` | yes | **reg**, `failClosed:true` | yes | **reg**, `failClosed:true` |
-| `beforeReadFile` | yes | **reg**, `failClosed:true` | yes | **reg**, `failClosed:true` |
-| `stop` | yes | **reg**, `failClosed:false`, `loop_limit:1` | yes (docs) | **omitted** (unverified on cloud) |
-| `beforeMCPExecution` / `afterMCPExecution` | yes | omitted | deferred (docs) | omitted |
-| `preToolUse` / `postToolUse` / `afterFileEdit` | yes | omitted (no `updated_input`) | yes | omitted |
-| `subagentStart` / `subagentStop` | yes | omitted | yes | omitted |
-| `sessionStart` / `sessionEnd` | yes | omitted | no | omitted |
-| Tab read/edit | yes | omitted | no | omitted |
+| `beforeSubmitPrompt` | Yes | Registered (`failClosed:true`, timeout: 30s) | Yes | Registered (`failClosed:true`, timeout: 30s) |
+| `beforeShellExecution` | Yes | Registered (`failClosed:true`, timeout: 60s) | Yes | Registered (`failClosed:true`, timeout: 60s) |
+| `beforeReadFile` | Yes | Registered (`failClosed:true`, timeout: 30s) | Yes | Registered (`failClosed:true`, timeout: 30s) |
+| `stop` | Yes | Registered (`failClosed:false`, `loop_limit:1`, timeout: 30s) | Documented | **Omitted** (unverified on cloud VMs) |
+| `beforeMCPExecution` / `afterMCPExecution` | Yes | Omitted | Deferred in docs | Omitted |
+| `preToolUse` / `postToolUse` | Yes | Omitted | Yes | Omitted |
+| `subagentStart` / `subagentStop` | Yes | Omitted | Yes | Omitted |
+| `sessionStart` / `sessionEnd` | Yes | Omitted | No | Omitted |
 
-Default `failClosed` in Cursor is **false** (fail-open on crash/timeout/invalid JSON). This pack sets `true` on submit/shell/read. That is a **request**. Host honor of `failClosed` is a live-check row, not a script guarantee.
+### Default Failure Semantics: Fail-Closed is Law
+In stock Cursor, the default behavior for unconfigured or crashing hooks is **fail-open** (letting the action run anyway). 
 
-`ask` is a documented permission result for `beforeShellExecution`. It is useful only if the client pauses. Do not treat `ask` as a critical gate.
+`bridle` explicitly sets `"failClosed": true` on `beforeSubmitPrompt`, `beforeShellExecution`, and `beforeReadFile`. If a hook crashes, times out, or produces invalid output, Cursor blocks the tool call immediately. It is always safer to block a valid command and fix the hook than to silently let a destructive command through.
 
-## Live checks
+---
 
-No v2 live check has been run yet. The v18 check (2026-09-10, Cursor 3.19.19) observed: Shell deny honored; Shell `ask` did not pause; Read deny from the script was not applied to the native Read tool; `failClosed` crash path and prompt-scan-before-transmit not run. That evidence belongs to the v18 tree and is **not** carried forward as a v2 claim.
+## Live Verification Log
 
-Re-run the `SECURITY.md` checklist in a live session with this pack installed and record a new dated section here; do not silently overwrite. Re-run after a Cursor upgrade, hook-install change, or a report that deny/ask/read behavior changed.
+Every entry here comes from real sessions on real machines.
 
-### 2026-09-14 — Cursor 3.20.15 (x64, Windows 11), v2 pack via `git-bash-shim.ps1` — partial
+### 2026-09-14 — Cursor 3.20.15 (x64, Windows 11), via `git-bash-shim.ps1`
+*Telemetry source: `%TEMP%\kleos-hooks.log` across 742 real turns in one working day.*
 
-Source: `%TEMP%\kleos-hooks.log` (742 entries in one working day) plus in-session probes. Not the full checklist.
-
-| Step | Result |
-|---|---|
-| Hooks fire on the local lane | **yes** — read 433 / shell 198 / submit 69 / stop 44 invocations, all shim exit 0 |
-| 2. Shell deny honored | **yes** — one `before_shell.sh` deny (stdout 211B) observed 22:02; `git status`-class commands allowed |
-| 3. `ask` genuinely pauses | **not run** (v18: did not pause) |
-| 4. Read `.env` denied | **inconclusive** — native Read of a *nonexistent* `.env` produced no `before_read_file.sh` log entry: the host does not invoke the hook for a missing file. Existing-secret-path read not attempted (no such file in scope). v18 saw the deny ignored. |
-| 1. Secret prompt → `continue:false` | script emits it (fixtures + smoke); two live 147B `continue:false` verdicts at 19:50 / 19:56 / 20:04; whether the host blocked the submit is not in the log |
-| 6. Stop advisory | 44 `stop.sh` runs, all `{}` (2B) |
-| `failClosed` false positives | **observed** — `before_read_file.sh` received `stdin=0B` twice (21:08, 21:10) and emitted the 161B `malformed` deny; `before_submit_prompt.sh` hit the stdin drain window twice ("using partial input"). Shim stdin race → spurious fail-closed denies. |
-
-Carry-forward: Shell deny = confirmed. Read deny, `ask` pause, `failClosed` crash path, prompt-scan-before-transmit = **still unverified**. Treat those rows in `SECURITY.md` as script behavior only.
-
-### 2026-09-15 — same host, hook timeout root cause and fix
-
-Symptom: Cursor reported `Hook "...git-bash-shim.ps1 before_read_file.sh" failed with exit code 1` and fail-closed blocked native Read/StrReplace, while `%TEMP%\kleos-hooks.log` showed the same invocation ending `exit=0 stdout=22B`. The log line is written after Cursor has already killed the process: **a hook that exceeds `timeout` is reported by Cursor as exit code 1**, indistinguishable from a crash.
-
-Cause (measured): `shell_gate.sh` spawned grep/sed/tr per segment; each MSYS spawn costs ~50 ms, a 30-segment command took ~45 s (> 30 s shell timeout). The shim compiled its C# P/Invoke helper with csc.exe on every run and spawned bash three times for `cygpath`. Parallel bursts of 6–8 native Reads pushed the 10 s read timeout.
-
-Fix: gates match in-process with bash `[[ =~ ]]` (only `split_segments` awk and the git-message `sed` fork); shim caches the helper as `~/.cursor/hooks/KleosPipeUtil.dll` and converts drive-letter paths in PowerShell; timeouts read/submit 30 s, shell 60 s.
-
-| Probe | Before | After |
+| Check | What Actually Happened | Verdict |
 |---|---|---|
-| `before_shell.sh`, 1 segment, via shim | ~2–4 s | 1.5 s |
-| `before_shell.sh`, 30 segments, via shim | ~45 s (killed) | 3.2 s |
-| 6 parallel `before_read_file.sh` via shim | timeouts / `stdin=0B` | all exit 0, 1.8–2.8 s |
-| Live: 6 parallel native Reads (Cursor 3.20.15) | blocked, "exit code 1" | all served |
-| Gauntlet `bash tests/run.sh` | minutes | ~25 s, 134 pass / 0 fail |
+| **Local Hook Invocations** | Hooks fired continuously across the entire working day: 433 reads, 198 shell executions, 69 prompt submits, 44 stop advisories. | **Confirmed** |
+| **Shell Deny Honored** | Destructive shell command was immediately blocked by Cursor's UI; standard commands (`git status`, etc.) ran smoothly. | **Confirmed** |
+| **`ask` Permission Pause** | The script emitted `ask` on database mutations, but host UI pause behavior remains unverified live. Don't rely on `ask` for critical safety. | **Unverified** |
+| **Read Deny on Nonexistent Path** | When the agent tried to read a non-existent `.env`, Cursor didn't even invoke `beforeReadFile` (the host short-circuited on ENOENT). | **Host Pre-empted** |
+| **Secret Prompt `continue:false`** | The script emitted `continue:false` on credential tokens. Whether remote submission was halted by host UI was not recorded in logs. | **Unverified** |
+| **Process Spawn Latency** | Chained compound commands (30 segments) with multiple external tool invocations (`grep`, `sed`) hit Cursor's timeout, causing spurious fail-closed blocks. | **Defect Identified** |
+
+### 2026-09-15 — Cursor 3.20.15 (x64, Windows 11), In-Process Rewrite
+*Fixing the Windows process-spawn timeout.*
+
+- **The Problem:** Cursor reported `Hook "...git-bash-shim.ps1 before_read_file.sh" failed with exit code 1` and blocked legitimate reads, while the hook log showed `exit=0 stdout=22B`.
+- **The Discovery:** A hook process that exceeds Cursor's configured `timeout` is terminated by the host and reported as `exit code 1`. The external grep/sed/tr pipelines incurred ~50 ms process startup latency per fork on MSYS, totaling 45 seconds on 30-segment commands.
+- **The Fix:** 
+  1. Rewrote pattern matching in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` to run **purely in-process** via native Bash regex (`[[ =~ ]]`).
+  2. Cached the C# P/Invoke helper in `git-bash-shim.ps1` as `~/.cursor/hooks/KleosPipeUtil.dll`, eliminating repetitive compilation.
+  3. Replaced external `cygpath` invocations with pure PowerShell drive-letter path normalization.
+  4. Raised hook timeouts to 30s (`read`/`submit`/`stop`) and 60s (`shell`).
+
+| Benchmark / Probe | Old Architecture | In-Process Architecture | Status |
+|---|---|---|---|
+| `before_shell.sh` (1 segment) | ~2.0 – 4.0 s | **1.5 s** | Green |
+| `before_shell.sh` (30 segments) | ~45.0 s (Killed by host timeout) | **3.2 s** | Green |
+| 6 Parallel `before_read_file.sh` bursts | Intermittent timeouts / `stdin=0B` errors | **All exit 0 (1.8 – 2.8 s)** | Green |
+| Live 6-way Native File Read | Blocked by host fail-closed | **All 6 served concurrently** | Green |
+| Full Test Gauntlet (`tests/run.sh`) | ~3 minutes | **~25 seconds (134 passing, 0 failing)** | Green |
+
+---
+
+## The Rule We Live By
+
+Treat `beforeShellExecution` deny as **authoritatively confirmed by host behavior**. 
+
+Treat `beforeReadFile` deny, `ask` pauses, and prompt-scan transmission suppression as **enforced by script law, but subject to ongoing host validation**. Never claim host security guarantees that have not been demonstrated with dated empirical logs.

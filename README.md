@@ -1,151 +1,241 @@
-# kleosrules
+<h1 align="center">bridle</h1>
 
-A user-level harness for Cursor. It wraps the agent loop Cursor already runs with a charter, a small set of always-on rules, on-demand skills, three review specialists, and four deterministic hooks, so that the model working in your editor behaves like an engineer with a boundary instead of a very fast intern with root.
+<p align="center">
+  <em>Prompting is not a boundary. The bridle is.</em>
+</p>
 
-This is my life's work. I have been building, breaking, and rebuilding it for as long as I have been using agents to write code, and every line in it exists because something went wrong without it. Treat it with that weight.
+<p align="center">
+  <img src="https://img.shields.io/badge/host-Cursor%20only-000000?style=flat-square" alt="Host: Cursor Only">
+  <img src="https://img.shields.io/badge/hooks-4%20fail--closed-111111?style=flat-square" alt="Hooks: 4 fail-closed">
+  <img src="https://img.shields.io/badge/tests-134%20passing-111111?style=flat-square" alt="Tests: 134 passing">
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows%20(Git%20Bash)-111111?style=flat-square" alt="Platforms">
+  <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="License: MIT">
+</p>
 
-## Read this before anything else
+<p align="center">
+  <strong>A deterministic engineering harness for Cursor. Built from hundreds of hours of research, papers, failure, and hardening.</strong>
+</p>
 
-**This harness is built for Cursor and only for Cursor.**
+---
 
-The rules assume Cursor's instruction hierarchy. The hooks assume Cursor's four hook events, its JSON payloads, its `failClosed` semantics, and the way it spawns a hook process on Windows. The installer writes into `~/.cursor`. The tests and the live evidence in `docs/host-capability.md` were all gathered against Cursor.
+Hey everyone,
 
-If you port this to Claude Code, Codex, Windsurf, Aider, a custom agent loop, or anything else: you are on your own. I will not help, I will not answer issues about it, I will not review pull requests for it, and I will not maintain any adapter for it. There is a `shared/hosts/` folder and a `KLEOS_HOST` switch in the code from an earlier experiment; they are unsupported and may be removed at any time. Do not build on them.
+This repository is my life's work.
 
-Anything that is not Cursor is out of scope. This is not a negotiating position.
+It represents hundreds of hours of researching, reading papers, dissecting agent failure modes, experimenting late into the night, breaking things in real repositories, and rebuilding from the ground up. Every line of hook code, every complexity ceiling in `core.mdc`, every regex anchor in `SECURITY.md`, and every invariant in `shared/config/harness.json` was paid for in real sessions where an unconstrained model read secrets into prompt context, hallucinated test results, or mangled git history.
 
-## What it is, in one breath
+I built this because I got tired of watching agents ship clean diffs for the wrong problem. The code looked fine. The model politely told me *"All tests pass!"* when nothing had actually run. It leaked `.env` keys into model context. It reached for 400 lines of decorative boilerplate when a single native line would do.
 
-Agent = Model + Harness. Cursor owns the model and the loop. This pack is the harness: it decides what the model reads first, what it must never do regardless of how it is asked, how it proves it is done, and how the next session picks up without the transcript. Prompting is one tool inside that harness, not the control plane. Nothing here starts a second agent runtime.
+So I stopped trying to fix the model with more prompts. Prompt therapy does not work. 
+
+**Agent = Model + Harness.** 
+
+A model can read a diff, spot a bug, write code, and explain why. That's model intelligence. What it will **never** reliably do on its own: remember your governing rules after 40 tool turns, track its own blast radius in working memory, refuse to touch files before it actually understands what you asked for, or stop itself from reading your `.env` and running `curl | sh` while you're not looking.
+
+The model provides raw intelligence. Cursor owns the loop. `bridle` is the physical steel cage around that loop.
+
+I built this so I could finally let go—knowing the boundary holds, the proof is real, and the system stands entirely on its own.
+
+*My harness and most of my hours are now focused and put on Grok bot.*
+
+---
+
+## Cursor and only Cursor
+
+**This harness is engineered specifically and exclusively for Cursor.**
+
+The rules rely on Cursor's native instruction hierarchy and rule attachments. The hooks bind to Cursor's four lifecycle events, its JSON IPC schema, its `failClosed` contract, and its process runner. The installer configures `~/.cursor`. Every single test, benchmark, and live probe in `docs/host-capability.md` was executed against Cursor.
+
+If you attempt to port this to Claude Code, Codex, Windsurf, Aider, or a custom LLM runner:
+
+- **I will not help you.**
+- **I will not answer issues, discussions, or forum posts about it.**
+- **I will not review or merge pull requests for other hosts.**
+- **I will not maintain or support external adapters.**
+
+There are leftover experimental files in `shared/hosts/` and a `KLEOS_HOST` toggle in the codebase from an earlier exploration. They are completely unsupported, unmaintained, and will likely be deleted. 
+
+If you use another tool, you are completely on your own. This is not a negotiation.
+
+---
+
+## What changes
+
+<table>
+<tr>
+<th width="50%">Raw Cursor Agent</th>
+<th width="50%">Governed with bridle</th>
+</tr>
+<tr>
+<td valign="top">
+
+- **Leans into secrets:** Reads `.env`, `.pem`, `id_rsa`, and credentials directly into model context.
+- **Destructive execution:** Runs `rm -rf /`, `git push --force`, or destructive SQL without friction.
+- **Hallucinates success:** Claims *"All tests pass and the code is clean!"* without running a single validator.
+- **Over-engineers:** Writes 350-line wrappers, decorative abstractions, and speculative architecture.
+- **Silences linters:** Disables cyclomatic complexity (`eslint-disable complexity`, `--ignore=C901`) when stuck.
+- **Loops on failure:** Repeats the same failing hypothesis five times while burning token context.
+
+</td>
+<td valign="top">
+
+- **Fail-closed secret gates:** `before_read_file.sh` blocks sensitive paths in-process before bytes reach context.
+- **Deterministic shell gate:** `before_shell.sh` splits operators and denies destructive actions, secret reads, and source-code overwrites.
+- **Proof is command + exit:** "Done" is rejected unless the verifying test ran and exited `0`. Builder never self-grades (`prove`).
+- **Hard craft ceilings:** Soft 80 LOC preference, hard 300 LOC limit. Stdlib and platform rungs before new dependencies (`core.mdc`).
+- **Linter tampering blocked:** Shell-level disabling of complexity or quality checks is denied in-process.
+- **Two-strike ratchet:** Fail twice on the same check? Halt, change hypothesis, or ask. No blind repetition.
+
+</td>
+</tr>
+</table>
+
+---
 
 ## How the harness works
 
-There are seven layers. They load in this order and each one is smaller than the last.
+The whole system in one line: **the model is the auditor, Cursor carries context, and the harness gates the blast radius.**
 
-### 1. The charter
+It operates in seven deterministic layers, loaded in strict priority order where each layer is smaller and more focused than the one before it:
 
-`shared/rules/USER-RULES.paste.txt`, installed as `~/.cursor/rules/kleosr.mdc` with `alwaysApply`. Identity, authorization, and evidence. It says who the agent is working for, what it may do without asking (reversible, task-scoped work), what it must ask about first (deploys, destructive data, external effects, access changes), and what counts as proof (a command and its exit code, or a driven UI path, never a claim). It deliberately does not restate craft rules or deny lists; those live in the layers below so the charter stays short and stable.
+```
+┌────────────────────────────────────────────────────────┐
+│  1. The Charter (~/.cursor/rules/kleosr.mdc)           │  Identity, authorization, proof standards
+├────────────────────────────────────────────────────────┤
+│  2. Always-On Law (core.mdc, testing.mdc)             │  Craft, dependency ladder, size, loop discipline
+├────────────────────────────────────────────────────────┤
+│  3. Glob Companions (next, vite, astro, postgres...)   │  Framework guidance; inert unless package matches
+├────────────────────────────────────────────────────────┤
+│  4. Skills (shared/skills/ on match)                  │  Procedures on demand; cannot grant permissions
+├────────────────────────────────────────────────────────┤
+│  5. Review Specialists (hunter, cut, prove)           │  Isolated review contexts; builder never self-grades
+├────────────────────────────────────────────────────────┤
+│  6. Deterministic Hooks (shared/hooks/)               │  The steel door: 4 fail-closed bash scripts
+├────────────────────────────────────────────────────────┤
+│  7. State & Contracts (features.json, handoff.json)    │  Machine-readable pass state & session continuity
+└────────────────────────────────────────────────────────┘
+  * SECURITY.md sits outside: read on-demand; outranks all rules on boundary questions.
+```
 
-Do not also paste it into Cursor Settings → User Rules. Two copies double the always-on context and drift apart. If you have an old paste in there, remove it.
+### 1. The Charter (`kleosr.mdc`)
+Installed as `~/.cursor/rules/kleosr.mdc` with `alwaysApply`. Defines identity, autonomy boundaries, and evidence requirements. It establishes what the agent may do without asking (reversible, task-scoped edits and checks) and what requires explicit user approval (destructive data, deploys, access changes). It mandates that claims of completion without a real command and exit code are invalid.
 
-### 2. Always-on rules
+*Do not paste this into Cursor Settings → User Rules. The installer places it in `~/.cursor/rules/kleosr.mdc` as an always-on rule. Pasting it into settings causes rule duplication and drift.*
 
-`core.mdc` and `testing.mdc`, installed to `~/.cursor/rules/`. Core covers craft, architecture, the dependency ladder, file size, types, complexity caps, stack routing, and which tools may touch source. Testing covers the loop (understand → change → verify → correct), scoped verification by default, regression naming, and the rule that "done" means the validator actually ran. Both stay under 80 lines on purpose. They are a map, not an encyclopedia.
+### 2. Always-On Rules (`core.mdc`, `testing.mdc`)
+Installed to `~/.cursor/rules/`. Under 80 lines each:
+- **`core.mdc`**: Craft, architecture, file size ceilings (soft 80 LOC preference, hard 300 LOC max), cyclomatic complexity ceiling (max 22), the dependency ladder (stdlib before packages before custom code), and tool boundaries (shell must not write source code).
+- **`testing.mdc`**: The engineering loop (`understand -> change -> verify -> correct`). Scoped verification by default. Regressions must be named. A feature is only `passing` when `scripts/feature.sh pass <id>` executes and records evidence.
 
-### 3. Glob companions
-
-`next.mdc`, `vite.mdc`, `astro.mdc`, `pnpm.mdc`, `postgres.mdc`, `supabase.mdc`. Cursor attaches these when a file path matches. Attachment is a candidate, not proof: each companion tells the model to treat itself as inert unless the owning `package.json` actually uses that framework. That is how a `.tsx` file in a Vite project does not get Next.js advice.
+### 3. Glob Companions
+Framework-specific companions (`next.mdc`, `vite.mdc`, `astro.mdc`, `pnpm.mdc`, `postgres.mdc`, `supabase.mdc`) attached by Cursor on file match. Each companion explicitly directs the model to treat its guidance as inert unless the owning `package.json` actually includes that dependency.
 
 ### 4. Skills
+On-demand procedures catalogued in `shared/config/skills.txt` and installed to `~/.cursor/skills/`. Includes structured workflows for debugging, testing, handoffs, and premium UI craft. Skills guide execution; **skills can never grant permissions or bypass hooks.**
 
-`shared/skills/`, catalogued in `shared/config/skills.txt`, installed to `~/.cursor/skills/`. Procedures the model loads only when the task matches: `debugging`, `testing`, `handoff`, and a set of UI, motion, and design skills. A skill can shape how work is done. It cannot grant permissions.
+### 5. Review Specialists
+`hunter`, `cut`, and `prove` in `shared/agents/`. Dedicated subagents designed for isolated secondary review. `prove` verifies claims independently so the implementing model never grades its own work.
 
-### 5. Specialists
+### 6. Deterministic Hooks
+Four Bash scripts registered in `~/.cursor/hooks.json`. This is the physical boundary the model cannot prompt past:
 
-`hunter`, `cut`, and `prove` in `shared/agents/`, installed to `~/.cursor/agents/`. Invoke-only subagents that review in a separate context. They do not author, and `prove` in particular exists so the builder never grades its own work. Same host, same hooks, not an independent authority.
-
-### 6. Hooks
-
-Four Bash scripts in `shared/hooks/`, registered in `~/.cursor/hooks.json`. These are the only part of the pack the model cannot talk its way past.
-
-| Event | Script | What it does |
+| Event | Script | Responsibility |
 |---|---|---|
-| `beforeSubmitPrompt` | `before_submit_prompt.sh` | Blocks prompts that contain known secret or token shapes (`ghp_`, `sk-`, `AKIA`, private key headers, and so on). Fail closed. |
-| `beforeShellExecution` | `before_shell.sh` | Splits the command into segments on `;`, `|`, `&&`, `||` outside quotes and gates every segment. Denies destructive commands (`rm -rf /`, force-push, `reset --hard`, `curl | sh`), secret-path reads, lint-disable tricks, shell writes to source files, and writes to the installed harness. Asks before recognised infra and DB mutations. Fail closed. |
-| `beforeReadFile` | `before_read_file.sh` | Denies reads of sensitive paths after canonicalising the path (backslashes, `..`, quotes, case). Fail closed. |
-| `stop` | `stop.sh` | One non-blocking advisory per turn: churn, syntax errors, oversized files, or a feature marked `passing` without evidence. Never blocks. |
+| `beforeSubmitPrompt` | `before_submit_prompt.sh` | Scans prompts for secrets, API tokens (`ghp_`, `sk-`, `AKIA`, private keys), and blocks transmission. Fail closed (`continue:false`). |
+| `beforeShellExecution` | `before_shell.sh` | Splits commands on shell operators (`;`, `\|`, `&&`, `\|\|`) outside quotes. Denies destructive calls (`rm -rf /`, force push, `reset --hard`, `curl \| sh`), secret-path reads, lint suppressions, and shell source rewrites. Asks on infra/DB changes. Fail closed (`permission:deny`). |
+| `beforeReadFile` | `before_read_file.sh` | Canonicalizes paths (normalizing slashes, `..`, quotes, casing) and denies reads of sensitive files (`.env`, private keys, certificates). Fail closed. |
+| `stop` | `stop.sh` | Emits a single non-blocking advisory per turn if churn, syntax errors, file size violations, or false `passing` states are detected. Never blocks. |
 
-Every hook reads JSON on stdin and writes a JSON verdict on stdout. Deny beats ask beats allow. Missing input, malformed JSON, or a missing policy file is an environment failure, not a policy decision; the charter tells the model to run `scripts/doctor.sh` and retry once instead of trying another route.
+#### In-Process Matching & Windows Performance
+Every gate in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` matches purely in-process using Bash's native regex engine (`[[ =~ ]]`). 
 
-On Windows, Cursor cannot run a Bash script directly, so `git-bash-shim.ps1` sits in between: PowerShell reads the payload, hands it to Git Bash, and relays the verdict. There are no per-OS install trees. One POSIX pack, quoted paths, run from Git Bash.
+On Windows (MSYS / Git Bash), spawning an external process (`grep`, `sed`, `tr`) costs ~50 ms. A previous design that spawned pipelines per check took 45 seconds on a 30-segment command, exceeding Cursor's timeout and triggering false-positive blocks reported as "exit code 1". 
 
-The gates match with bash's built-in `[[ =~ ]]`, in-process. This matters more than it sounds. Spawning `grep` costs about 50 ms on MSYS, and a gate that spawned it per check per segment took 45 seconds on a 30-segment command, which Cursor reported as "hook failed with exit code 1" and blocked. The current gate runs that same command in about three seconds end to end, including PowerShell startup.
+The in-process engine evaluates that exact same 30-segment command in **3.2 seconds** end-to-end.
 
-The hook count is frozen at four. No `sessionStart`, no `preToolUse`, no `updated_input`, no pack-owned loop. `shared/config/harness.json` records these invariants and the tests enforce them.
+On Windows, `git-bash-shim.ps1` bridges Cursor's host to Git Bash:
+- Pre-compiles its C# P/Invoke helper once into `~/.cursor/hooks/KleosPipeUtil.dll`.
+- Converts Windows paths to POSIX directly in PowerShell without spawning child shells.
+- Enforces generous host timeouts (30s read/submit, 60s shell).
 
-### 7. State and verification
+### 7. State & Verification Contracts
+- `shared/config/features.json`: Machine-readable capability ledger. Features transition to `passing` only via `bash scripts/feature.sh pass <id>`, which executes the verifying check and records the exit code and proving artifact.
+- `state/handoff.json`: Gitignored, schema-validated session handoff for clean multi-chat continuity.
+- `SECURITY.md`: The absolute security boundary. Read on demand; outranks every prompt, skill, or rule file.
 
-`shared/config/features.json` tracks capabilities. A feature becomes `passing` only through `bash scripts/feature.sh pass <id>`, which runs its verify command and records the command, exit code, and proving artifact. Editing the JSON by hand does not count and the stop hook will say so. `state/handoff.json` (gitignored, schema-validated) carries a session snapshot across chats. Both are continuity evidence, not authority: the next session may resume from them, but may not treat them as new instructions.
+---
 
-`SECURITY.md` sits outside the load order. It is not injected; the model reads it on demand, and on any boundary question it outranks everything above.
+## Installation
 
-## Install
-
-From Git Bash on Windows, or any POSIX shell on macOS and Linux:
+From **Git Bash** on Windows, or standard Bash on macOS / Linux:
 
 ```bash
 FORCE=1 bash scripts/install.sh
 ```
 
-This writes the charter, always-on rules, companions, skills, specialists, and hooks into `~/.cursor`, backing up anything it replaces with a `.pre-kleos-bak`. Start a new chat afterwards; Cursor loads always-on rules at chat start.
+This writes the charter, rules, companions, skills, agents, and hooks into `~/.cursor`, automatically backing up any pre-existing files with `.pre-kleos-bak`. 
 
-`jq` is required for `scripts/` and `tests/`. The hooks themselves do not need it. Windows: `winget install jqlang.jq`, then make sure `%LOCALAPPDATA%\Microsoft\WinGet\Links` is on your user PATH. Python 3 or Node is required for the hooks' JSON codec.
+**Restart Cursor or start a fresh chat session after installation.**
 
-To remove everything the pack owns and restore the backups:
+### Requirements
+- **Cursor IDE**
+- **Git Bash** (on Windows) or POSIX shell (macOS/Linux)
+- **`jq`**: Required for harness tooling and test runners.
+  - Windows: `winget install jqlang.jq` (ensure `%LOCALAPPDATA%\Microsoft\WinGet\Links` is on your `PATH`).
+  - macOS: `brew install jq`
+  - Linux: `apt install jq` / `pacman -S jq`
+- **Python 3** or **Node.js**: Required by the hooks as the JSON codec.
+
+### Uninstallation
+
+To cleanly remove everything owned by `bridle` and restore your backups:
 
 ```bash
 bash scripts/uninstall.sh
 ```
 
-Cloud agents can receive the project-level hooks (no `stop`, cloud lane unverified):
+---
+
+## Verification & Testing
+
+Verify the harness anytime using the isolated gauntlet:
 
 ```bash
-CLOUD=1 TARGET_REPO=<other-repo> bash shared/hooks/fleet_sync.sh project-hooks
+bash tests/run.sh                          # Full gauntlet (134 tests: fixtures, gate edges, lifecycle)
+TESTS=gate_edges bash tests/run.sh         # Run a scoped test suite
+bash scripts/ready.sh                      # Verify bootstrap contract
+DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh  # Check repository integrity
+bash scripts/doctor.sh                     # Check integrity + live ~/.cursor installation
+bash scripts/eval.sh check                 # Verify eval dimension coverage
+bash scripts/feature.sh check              # Verify feature ledger invariants
 ```
 
-Never install project hooks into this pack itself.
+The test gauntlet executes inside sandboxed fixtures and never mutates your live installation. 
 
-## Verify
+---
 
-```bash
-bash tests/run.sh                          # the gauntlet: fixtures, gate edges, lifecycle, invariants
-TESTS=gate_edges bash tests/run.sh         # one suite
-bash scripts/ready.sh                      # bootstrap probe; does not run the suite
-DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh  # pack inventory without touching ~/.cursor
-bash scripts/doctor.sh                     # inventory plus live checksums of the installed copy
-bash scripts/eval.sh check                 # eval dimension coverage
-bash scripts/feature.sh check              # pass-state invariants
-```
+## Repository Layout
 
-The gauntlet runs in isolated fixtures and never reads your live install. What it proves is script behaviour: this input produces this verdict. What the host does with that verdict is a separate question, answered only by live sessions, and recorded with dates in `docs/host-capability.md`.
-
-## What changed recently
-
-The last two passes were a full audit and a performance fix.
-
-The audit extracted every absolute instruction across the charter, rules, companions, and docs, and checked each one against what Cursor actually enforces. Nineteen contradictions came out of it. They are gone: duplicated instructions were collapsed to a single owner, React data-flow advice moved out of `core.mdc` into the framework companions where it belongs, the charter stopped restating hook internals, the "inert companion" rule now describes what the host really does (attach on path match) rather than what we wished it did, and `SECURITY.md` now says plainly which rows are enforced by scripts and which rows are law the model is expected to follow because the host does not gate them. The charter is also installed as a rule file now rather than pasted into Settings, which ends the drift between two copies.
-
-The performance fix is described above under Hooks. If you were seeing `Hook ... failed with exit code 1` and fail-closed blocks on ordinary reads, that was the timeout, and it is fixed. Timeouts were also raised (read and submit 30 s, shell 60 s) so a slow machine has headroom, and the PowerShell shim now caches its compiled helper as `~/.cursor/hooks/KleosPipeUtil.dll` instead of invoking the C# compiler on every hook.
-
-## Layout
-
-| Path | Job |
+| Directory / File | Role |
 |---|---|
-| `AGENTS.md` | The repo map the agent reads first |
-| `SECURITY.md` | The boundary; outranks every rule on boundary questions |
-| `shared/rules/` | Charter source (`USER-RULES.paste.txt` → `kleosr.mdc`), always-on and glob `.mdc` |
-| `shared/skills/` | Skill bodies, loaded on match |
-| `shared/agents/` | `hunter`, `cut`, `prove` |
-| `shared/hooks/` | Four event scripts, `git-bash-shim.ps1`, `lib/`, `policy/` |
-| `shared/config/` | `harness.json` (runtime contract), `features.json`, `skills.txt`, `rules.global.txt`, `manifest.json` |
-| `shared/hosts/` | Unsupported. See the notice at the top. |
-| `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh`, `ready.sh`, `eval.sh`, `feature.sh`, `handoff.sh` |
-| `tests/` | Fixture, edge, lifecycle, harness, and grounding suites |
-| `evals/tasks.json` | Structural eval coverage |
-| `state/handoff.json` | Optional session snapshot (gitignored) |
-| `docs/` | Architecture, toolchain, decisions, dated host evidence |
+| `AGENTS.md` | The repository entry point the agent reads first |
+| `SECURITY.md` | Single source of truth for the security boundary |
+| `shared/rules/` | Charter source (`USER-RULES.paste.txt` → `kleosr.mdc`), always-on and glob rules |
+| `shared/skills/` | Task-specific skill bodies (testing, debugging, handoff, UI craft) |
+| `shared/agents/` | Specialist definitions (`hunter`, `cut`, `prove`) |
+| `shared/hooks/` | Event scripts, `git-bash-shim.ps1`, `lib/`, and `policy/` |
+| `shared/config/` | `harness.json` (runtime contract), `features.json`, `skills.txt`, `rules.global.txt` |
+| `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh`, `ready.sh`, `eval.sh`, `feature.sh` |
+| `tests/` | Fixtures, edge tests, overlay tests, grounding, and harness gauntlet |
+| `evals/` | Structural eval tasks and coverage tracking |
+| `docs/` | Architecture, toolchain, decision records, and live host capability evidence |
 
-## Docs
+---
 
-- `SECURITY.md` — what is gated, what is law only, and the live checklist.
-- `docs/ARCHITECTURE.md` — layers, owners, and what the tests do and do not cover.
-- `docs/TOOLCHAIN.md` — commands and install safety.
-- `docs/DECISIONS/hooks.md` — why exactly four hooks.
-- `docs/DECISIONS/engineering-os.md` — principles and the runtime contract.
-- `docs/host-capability.md` — what Cursor actually did in live sessions, by date. Evidence, not law.
+Best regards,  
+— **kleosr** (Mario Pulice)
 
-## A last word
+<br>
 
-Everything here is opinionated because it has to be. An agent with no boundary will eventually read your `.env`, force-push over a colleague, or announce a green build it never ran, and it will do it politely. The harness exists so that the cost of those mistakes lands on a hook or a test instead of on you. If a check is wrong, fix the check and add a pin so that class of mistake is expensive next time. That ratchet is the whole method.
-
-Cursor only. No exceptions.
+> *"To will to be that self which one truly is, is indeed the opposite of despair; and in that slight, quiet light, to be simply oneself is the true meaning of joy."*  
+> — **Søren Kierkegaard**, *The Sickness Unto Death*
