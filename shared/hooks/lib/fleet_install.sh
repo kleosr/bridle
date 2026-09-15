@@ -100,6 +100,37 @@ install_home_hooks() {
   echo "[ok] ~/.cursor/hooks.json + hooks scripts (global single layer)"
 }
 
+write_charter_mdc() {
+  local dest="$1" src="$PACK/shared/rules/USER-RULES.paste.txt"
+  [[ -f "$src" ]] || { echo "[fail] missing $src"; return 1; }
+  mkdir -p "$dest"
+  {
+    printf '%s\n' '---' 'description: "kleosr charter: identity, authorization, evidence."' 'alwaysApply: true' '---' ''
+    cat "$src"
+    printf '\n'
+  } >"$dest/kleosr.mdc"
+}
+
+install_charter_rule() {
+  local dst="$HOME_C/rules/kleosr.mdc" tmp h
+  tmp="$(mktemp -d "${TMPDIR:-/tmp}/kleos-charter.XXXXXX")"
+  write_charter_mdc "$tmp" || { rm -rf "$tmp"; return 1; }
+  if [[ -f "$dst" ]] && ! cmp -s "$tmp/kleosr.mdc" "$dst" 2>/dev/null; then
+    if [[ "$FORCE" != "1" ]]; then
+      echo "[warn] skip differing $dst (FORCE=1)"
+      rm -rf "$tmp"
+      return 0
+    fi
+    [[ -f "$dst.pre-kleos-bak" ]] || cp -f "$dst" "$dst.pre-kleos-bak"
+  fi
+  mkdir -p "$HOME_C/rules"
+  mv -f "$tmp/kleosr.mdc" "$dst"
+  rm -rf "$tmp"
+  echo "[ok] ~/.cursor/rules/kleosr.mdc (charter, alwaysApply)"
+  h="$(owned_hash "$dst")"
+  [[ -n "$h" ]] && printf 'rules/kleosr.mdc %s\n' "$h" >>"$HOME_C/kleosrules-owned.txt"
+}
+
 install_global_rules() {
   local name src dst h
   mkdir -p "$HOME_C/rules"
@@ -210,6 +241,7 @@ install_project_hooks() {
     [[ -f "$PACK/shared/rules/${s}.mdc" ]] || continue
     cp -f "$PACK/shared/rules/${s}.mdc" "$rules_dest/${s}.mdc"
   done
+  write_charter_mdc "$rules_dest"
   prune_retired_rules "$rules_dest" "$label/.cursor/rules"
   echo "[ok] project hooks + .mdc → $label (cloud-safe)"
 }

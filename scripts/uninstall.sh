@@ -51,6 +51,17 @@ for name in "${GLOBAL[@]}"; do
   fi
 done
 
+dst="$HOME_C/rules/kleosr.mdc"
+if [[ -f "$dst" ]]; then
+  if owned_ok "rules/kleosr.mdc" "$dst"; then
+    rm -f "$dst"
+    echo "[rm] ~/.cursor/rules/kleosr.mdc"
+    restore_bak "$dst"
+  else
+    echo "[keep] differing ~/.cursor/rules/kleosr.mdc (not owned)"
+  fi
+fi
+
 while IFS= read -r skill; do
   [[ -z "$skill" ]] && continue
   dst="$HOME_C/skills/$skill"

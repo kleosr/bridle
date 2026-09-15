@@ -23,6 +23,7 @@ dry_run() {
   echo "[dry-run] HOME_C=$HOME_C FORCE=$FORCE (no files written)"
   echo "[dry-run] merge hooks.json; copy four hook scripts + runtime libs + policy"
   echo "[dry-run] global rules: ${GLOBAL[*]}"
+  echo "[dry-run] charter → ~/.cursor/rules/kleosr.mdc alwaysApply"
   echo "[dry-run] skills from shared/config/skills.txt; agents hunter cut prove"
 }
 
@@ -31,6 +32,7 @@ case "$CMD" in
     if [[ "${DRY_RUN:-0}" == "1" ]]; then dry_run; exit 0; fi
     install_home_hooks
     install_global_rules
+    install_charter_rule
     install_skills
     install_agents
     ;;
@@ -54,11 +56,12 @@ case "$CMD" in
     if [[ "${DRY_RUN:-0}" == "1" ]]; then dry_run; exit 0; fi
     install_home_hooks
     install_global_rules
+    install_charter_rule
     install_skills
     install_agents
     verify_smoke
     echo "[done] fleet_sync all FORCE=$FORCE (local ~/.cursor only)"
-    echo "Manual: paste $PACK/shared/rules/USER-RULES.paste.txt → Cursor Settings → User Rules"
+    echo "Manual: Cursor Settings → User Rules can stay in sync with $PACK/shared/rules/USER-RULES.paste.txt (also installed as ~/.cursor/rules/kleosr.mdc)"
     ;;
   *)
     echo "usage: FORCE=1 $0 {install|project-hooks|verify|all}" >&2
