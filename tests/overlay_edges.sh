@@ -66,13 +66,33 @@ jq -n --arg r "$PS51 before_read_file.sh" --arg s "$PS51 before_shell.sh" --arg 
 merge_hooks_json "$UNBLOCK_HOME/.cursor/hooks.json" "$PACK/shared/hooks/hooks.json"
 apply_pwsh_shim_hooks "$UNBLOCK_HOME/.cursor/hooks.json"
 UB_HAS="$(jq -r '.hooks | has("beforeSubmitPrompt")' "$UNBLOCK_HOME/.cursor/hooks.json")"
-UB_PWSH="$(jq -r '.hooks.beforeSubmitPrompt[0].command' "$UNBLOCK_HOME/.cursor/hooks.json" | grep -c 'pwsh' || true)"
+UB_LAUNCH="$(jq -r '.hooks.beforeSubmitPrompt[0].command' "$UNBLOCK_HOME/.cursor/hooks.json")"
+UB_SHIM="$(printf '%s' "$UB_LAUNCH" | grep -c 'git-bash-shim' || true)"
+UB_LAUNCHER=0
+printf '%s' "$UB_LAUNCH" | grep -q 'pwsh' && UB_LAUNCHER=1
+printf '%s' "$UB_LAUNCH" | grep -qi 'powershell.exe' && UB_LAUNCHER=1
 UB_PS51="$(jq -r '[.hooks[][]?.command] | map(select(test("(^|[[:space:]])powershell[[:space:]]"))) | length' "$UNBLOCK_HOME/.cursor/hooks.json")"
 UB_FC="$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$UNBLOCK_HOME/.cursor/hooks.json")"
 UB_SS="$(jq -r '.hooks | has("sessionStart")' "$UNBLOCK_HOME/.cursor/hooks.json")"
 rm -rf "$UNBLOCK_HOME"
 run_test "regression: submit missing after unblock is restored via pwsh shim" "true" "$UB_HAS"
-run_test "regression: restored submit launcher is pwsh not powershell 5.1" "1" "$UB_PWSH"
+run_test "regression: restored submit launcher uses git-bash-shim" "1" "$UB_SHIM"
+run_test "regression: restored submit launcher is pwsh or powershell.exe" "1" "$UB_LAUNCHER"
 run_test "regression: apply rewrites leftover powershell 5.1 launchers" "0" "$UB_PS51"
 run_test "regression: restored submit stays failClosed true" "true" "$UB_FC"
 run_test "regression: apply does not reactivate sessionStart" "false" "$UB_SS"
+
+# Live Windows: powershell.exe -File must exit 0 on an allow (failClosed crash was exit 1).
+PS_BIN=""
+if command -v powershell.exe >/dev/null 2>&1; then
+  PS_BIN="$(command -v powershell.exe)"
+elif [[ -f /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ]]; then
+  PS_BIN="/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+fi
+if [[ -n "$PS_BIN" && -f "$PACK/shared/hooks/git-bash-shim.ps1" ]]; then
+  SHIM_EC=0
+  SHIM_OUT="$(printf '%s' '{"file_path":"/repo/README.md"}' | "$PS_BIN" -NoProfile -ExecutionPolicy Bypass -File "$PACK/shared/hooks/git-bash-shim.ps1" before_read_file.sh)" || SHIM_EC=$?
+  SHIM_PERM="$(printf '%s' "$SHIM_OUT" | jq -r '.permission // "none"')"
+  run_test "regression: git-bash-shim allow exits 0 (not failClosed crash)" "0" "$SHIM_EC"
+  run_test "regression: git-bash-shim allow emits permission allow" "allow" "$SHIM_PERM"
+fi

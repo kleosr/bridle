@@ -185,7 +185,7 @@ function main(argv) {
   }
   if (cmd === "decode-read") {
     const data = loadStdin();
-    const p = first(data, ["file_path", "tool_input.file_path", "tool_input.path"]);
+    const p = first(data, ["file_path", "path", "tool_input.file_path", "tool_input.path"]);
     process.stdout.write("FILE_PATH=" + posixSq(typeof p === "string" ? p : asText(p)) + "\n");
     return 0;
   }
