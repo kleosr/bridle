@@ -10,7 +10,8 @@ run_test "hooks.json stop failClosed is false" "false" "$(jq -r '.hooks.stop[0].
 run_test "beforeSubmitPrompt failClosed is true" "true" "$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeShellExecution failClosed is true" "true" "$(jq -r '.hooks.beforeShellExecution[0].failClosed' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeReadFile failClosed is true" "true" "$(jq -r '.hooks.beforeReadFile[0].failClosed' "$PACK/shared/hooks/hooks.json")"
-run_test "beforeReadFile timeout is 10" "10" "$(jq -r '.hooks.beforeReadFile[0].timeout' "$PACK/shared/hooks/hooks.json")"
+run_test "beforeReadFile timeout is 30 (regression: 10s timed out under MSYS spawn latency)" "30" "$(jq -r '.hooks.beforeReadFile[0].timeout' "$PACK/shared/hooks/hooks.json")"
+run_test "beforeShellExecution timeout is 60" "60" "$(jq -r '.hooks.beforeShellExecution[0].timeout' "$PACK/shared/hooks/hooks.json")"
 
 RESULT="$(jq -e '.hooks|has("stop")|not' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null && echo yes || echo no)"
 run_test "hooks.cloud.json does not register stop (unverified on cloud)" "yes" "$RESULT"

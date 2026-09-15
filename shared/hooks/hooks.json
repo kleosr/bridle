@@ -4,21 +4,21 @@
     "beforeSubmitPrompt": [
       {
         "command": "./hooks/before_submit_prompt.sh",
-        "timeout": 10,
+        "timeout": 30,
         "failClosed": true
       }
     ],
     "beforeShellExecution": [
       {
         "command": "./hooks/before_shell.sh",
-        "timeout": 30,
+        "timeout": 60,
         "failClosed": true
       }
     ],
     "beforeReadFile": [
       {
         "command": "./hooks/before_read_file.sh",
-        "timeout": 10,
+        "timeout": 30,
         "failClosed": true
       }
     ],

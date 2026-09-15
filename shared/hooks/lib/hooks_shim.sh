@@ -56,11 +56,11 @@ apply_pwsh_shim_hooks() {
     def keep: map(select(pack_cmd | not));
     del(.hooks.sessionStart)
     | .hooks.beforeSubmitPrompt = ((.hooks.beforeSubmitPrompt // []) | keep)
-        + [{command: ($p + " before_submit_prompt.sh"), timeout: 10, failClosed: true}]
+        + [{command: ($p + " before_submit_prompt.sh"), timeout: 30, failClosed: true}]
     | .hooks.beforeShellExecution = ((.hooks.beforeShellExecution // []) | keep)
-        + [{command: ($p + " before_shell.sh"), timeout: 30, failClosed: true}]
+        + [{command: ($p + " before_shell.sh"), timeout: 60, failClosed: true}]
     | .hooks.beforeReadFile = ((.hooks.beforeReadFile // []) | keep)
-        + [{command: ($p + " before_read_file.sh"), timeout: 10, failClosed: true}]
+        + [{command: ($p + " before_read_file.sh"), timeout: 30, failClosed: true}]
     | .hooks.stop = ((.hooks.stop // []) | keep)
         + [{command: ($p + " stop.sh"), timeout: 30, failClosed: false, loop_limit: 1}]
   ' "$dest" >"$tmp"; then
