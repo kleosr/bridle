@@ -1,8 +1,8 @@
 # Security
 
-Single source of truth for this pack's boundary. Do not put secret **values** in this file, hooks, policy, chat, or the User Rules paste. Report issues to the owner privately; never file a public issue with a PoC, payload, or exploit.
+Single source of truth for this pack's boundary. Do not put secret **values** in this file, hooks, policy, chat, or the charter. Report issues to the owner privately; never file a public issue with a PoC, payload, or exploit.
 
-Boundary: four hooks enforce documented restrictions on **supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Supported submit/shell/read scripts emit fail-closed deny/`continue:false` on match, malformed input, missing policy, or missing working `jq`. Host `failClosed:true` requests blocking on hook failure. Host honor of `failClosed`, `ask` pause, and Read deny is recorded in `docs/host-capability.md` — not guaranteed here. Other tool channels, allowed-program behavior, and host bypasses are outside the boundary. Regex gates are substring heuristics and mistake prevention, not complete parsing, containment, or a sandbox.
+Boundary: four hooks enforce documented restrictions on **supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Supported submit/shell/read scripts emit fail-closed deny/`continue:false` on match, malformed input, missing policy, or a missing Python/Node JSON codec (hooks never call `jq`; `jq` is for install/scripts only). Host `failClosed:true` requests blocking on hook failure. Host honor of `failClosed`, `ask` pause, and Read deny is recorded in `docs/host-capability.md` — not guaranteed here. Last observed (Cursor 3.20.15, 2026-09-14): Shell deny honored; `ask` pause and native-Read deny **not confirmed**; the Read hook is not invoked at all for a nonexistent path. Treat the Read row and every `ask` row below as script behavior, not host guarantees. Other tool channels, allowed-program behavior, and host bypasses are outside the boundary. Regex gates are substring heuristics and mistake prevention, not complete parsing, containment, or a sandbox.
 
 Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc` security keys, before adding a dependency, and before a security or `/hunter` pass.
 
@@ -11,17 +11,17 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Control | Event | Fail closed | Notes |
 |---|---|---|---|
 | Secret tokens in the user prompt | `beforeSubmitPrompt` | **yes (scripts)** | `policy/secret_tokens.ere` (known prefixes only; no-match ≠ no-secret). Missing policy, parser fail, or hook crash → `continue:false`. Whether the scan runs before remote transmission is host-determined and unverified here. Deny messages do not echo the prompt. |
-| Sensitive **paths** on Read | `beforeReadFile` | **yes (scripts)** | `policy/secret_paths.ere`. Quotes stripped before match. Token-end anchors (not `$` only). Timeout 10s. `.env.example` and `.env.dist` stay readable. |
+| Sensitive **paths** on Read | `beforeReadFile` | **yes (scripts)**; host honor **unverified** | `policy/secret_paths.ere`. Quotes stripped before match. Token-end anchors (not `$` only). Timeout 10s. `.env.example` and `.env.dist` stay readable. v18 live check saw the native Read tool ignore the deny; no v2 pass yet. Law (`Do not read secret paths`) is the working control. |
 | Sensitive paths / `.env*` / `git show` secrets | `beforeShellExecution` | **yes (scripts)** | Quotes stripped before path match. Per-segment; git/gh message masking unchanged. `scp` of secret names denies. |
 | Destructive git/disk/SQL | `beforeShellExecution` | **yes (scripts)** | deny, per segment. Git global flags (`-C`, `--git-dir`, `--work-tree`, `-c`) stripped before match. `curl`/`wget` piped to `sh`/`bash` denied. SQL remains program-scoped. |
 | Shell write of source | `beforeShellExecution` | **yes (scripts)** | Includes `sql vue svelte astro cs tf mdc ere` plus the original language list. |
-| Infra/DB mutation | `beforeShellExecution` | **yes (scripts)** | `ask` (timeout/crash still deny in scripts). Includes `terraform destroy`, `aws s3 rm --recursive`, `prisma migrate reset`. |
-| Harness self-protection | `beforeShellExecution` | **yes (scripts)** | deny writes/`rm`/`cp`/`mv` against `~/.cursor/hooks.json`, `~/.cursor/hooks/`, `~/.cursor/rules/`. Installer path still `ask` via pack markers. Reason `harness`. |
+| Infra/DB mutation | `beforeShellExecution` | scripts emit `ask`; host pause **unverified** | Includes `terraform destroy`, `aws s3 rm --recursive`, `prisma migrate reset`. Destructive SQL is a hard deny (`sql_scope.sh`); the rest is `ask`, which v18 saw **not** pause. Charter approval-first is the working control. |
+| Harness self-protection | `beforeShellExecution` | **yes (scripts)**, Shell only | deny writes/`rm`/`cp`/`mv` against `~/.cursor/hooks.json`, `~/.cursor/hooks/`, `~/.cursor/rules/`. Native `Write`/`StrReplace` to those paths is **not gated** (law only). Installer path still `ask` via pack markers. Reason `harness`. |
 | Cyclomatic lint disable | `beforeShellExecution` | **yes (scripts)** | deny, per segment. |
-| Harness activation | `beforeShellExecution` | **yes (scripts)** | Installer path is checked against the **payload cwd**, never the hook process cwd. Pack markers → `ask`; otherwise deny. |
-| Ponytail diff + syntax + false passing | `stop` | no | Churn/format advisory. `verify_gate.sh` runs `bash -n` / `jq empty` on changed shell/JSON only. `feature_gate.sh` flags `passing` without evidence. **Does not execute repo test suites**. Cannot block completion. |
+| Harness activation | `beforeShellExecution` | scripts: deny without markers, `ask` with; host pause **unverified** | Installer path is checked against the **payload cwd**, never the hook process cwd. Only the two exact installer command shapes are recognized; editing `shared/hooks/*.sh` in a checkout is ungated. |
+| Ponytail diff + syntax + false passing | `stop` | no | Churn/format advisory. `verify_gate.sh` runs `bash -n` / JSON-parse (Python/Node codec) on changed shell/JSON only. `feature_gate.sh` flags `passing` without evidence. **Does not execute repo test suites**. Cannot block completion. |
 
-**Not gated (law only):** `Write` / `StrReplace` of secret paths, MCP tools, Tab, `preToolUse`. Do not write `.env`, keys, or `credentials.json`. A denied Read may still be reachable via an allowed program; verdicts combine as deny > ask > allow.
+**Not gated (law only):** `Write` / `StrReplace` of secret paths and of `~/.cursor/*`, MCP tools, Tab, `preToolUse`, network egress, production deploys, external email, payments, and edits to this pack's hook sources in a checkout. Do not write `.env`, keys, or `credentials.json`. A denied Read may still be reachable via an allowed program; verdicts combine as deny > ask > allow.
 
 ## Script failure classes
 
@@ -35,7 +35,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 
 stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `secret-token`, `ask-infra`, `activation`, `harness`.
 
-Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval.
+Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval. Enforcement is partial: the shell gate recognizes only `FORCE=1 bash scripts/install.sh` and `bash shared/hooks/fleet_sync.sh …` (→ `ask`, host pause unverified) and denies shell writes into `~/.cursor/`. Everything else on this line is law.
 
 Trust: routine auto-verify only in a trusted workspace. For a new or untrusted checkout, inspect execution entry points first or run restricted; "test" is not a privilege word.
 
@@ -64,7 +64,7 @@ Record host version + date + pass/fail per step in `docs/host-capability.md` (ap
 
 ## pnpm — required fields
 
-When this repo (or a target app) has JavaScript, set or keep these for pnpm repos. On a non-pnpm repo, keep its manager and apply the equivalent rows with that manager; do not invent a second package manager.
+When this repo (or a target app) has JavaScript, set or keep these for pnpm repos. On a non-pnpm repo, keep its manager and apply the equivalent rows with that manager; do not invent a second package manager. `.npmrc` is a secret path (Read and Shell `cat` denied): inspect its effective values with `pnpm config get <key>` / `npm config get <key>`, never by opening the file.
 
 | Field / file | Required | Value / rule |
 |---|---|---|
@@ -78,7 +78,7 @@ When this repo (or a target app) has JavaScript, set or keep these for pnpm repo
 | blanket `ignore-scripts=false` / `dangerouslyAllowAllBuilds` | **banned** | Never. |
 | `shamefully-hoist` / `hoist=true` | no | Breaks isolation; hides missing deps. |
 | `public-hoist-pattern` | default only | Do not widen to `*` to silence peer errors. |
-| `.npmrc` `audit=false` | **banned** | |
+| `.npmrc` `audit=false` | **banned** | Check via `pnpm config get audit`; the file itself is Read-denied. |
 | CI install | yes | `pnpm install --frozen-lockfile` on pnpm (or the frozen equivalent). Never carry two lockfiles. |
 
 Lifecycle: do not run `curl | sh`, `wget | sh`, or a package `postinstall` from a package not on `onlyBuiltDependencies`. `/prove` and `cut` own lockfile drift and wrong-manager-on-new-JS.
@@ -88,7 +88,7 @@ Lifecycle: do not run `curl | sh`, `wget | sh`, or a package `postinstall` from 
 | Field | Rule |
 |---|---|
 | Secrets in git | Never. Rotate if they landed. Name the **file** in chat, never the value. |
-| `.env`, `.pem`, `.key`, `id_rsa`, `credentials.json`, `.npmrc` with tokens | Read/Shell denied by steel. Do not Write them. |
+| `.env`, `.pem`, `.key`, `id_rsa`, `credentials.json`, `.npmrc` with tokens | Shell `cat`/`cp`/`git show` denied by steel. Native Read: script denies, host honor unverified — do not read them. Do not Write them. |
 | Prompt | No live keys, JWTs, `-----BEGIN PRIVATE KEY-----`. |
 | Supply chain | pnpm table above. `hunter` flags new install scripts. |
 | Injection | SQL parameterized; no `eval`, no `innerHTML` with untrusted input, no Shell interpolation of untrusted strings. |

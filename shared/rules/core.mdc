@@ -34,11 +34,11 @@ Silent on untyped files. On typed files: fix the design, do not silence the comp
 When an authoritative checker exists, satisfy it for touched functions (MEASURED). No checker: UNMEASURED — flat control flow; do not guess a cap; do not add a linter stack. Never above **22**; a stricter repo cap wins. Cognitive / Halstead / CRAP only if the repo already measures them (caps 22 / 80 / 25). Do not disable cyclomatic lint from the shell (`before_shell.sh` denies it).
 
 ## Stack
-No `package.json` → stack pick is silent. Else resolve ownership per touched file: owning package → manifest → framework + manager. Companions are inert unless the owning package matches. `"next"` → `next.mdc`. `"astro"` → `astro.mdc`. `"vite"` and no `next` → `vite.mdc`. JS installs: `pnpm.mdc` (glob). SQL → `postgres.mdc`. No `useEffect` fetch waterfalls. No barrel-import of a whole UI kit. Derived state, not mirrored `useState` + `useEffect`.
+No `package.json` → stack pick is silent. Else resolve ownership per touched file: owning package → manifest → framework + manager. The host attaches companions on path match; treat one as inert unless the owning package matches. `"next"` → `next.mdc`. `"astro"` → `astro.mdc`. `"vite"` and no `next` → `vite.mdc`. JS installs: `pnpm.mdc` (glob). SQL → `postgres.mdc`. React data-flow rules live in `next.mdc` / `vite.mdc`.
 
 ## Tools
 Hand-written edits through the host’s native edit tools. Shell for builds, tests, git, and approved validation. Shell text-rewriting of source is denied. Over roof: write new modules, replace the original with imports, Grep callers.
 
 ## Harness
 Agent = Model + Harness. Prompting is not the control plane. Guides: charter, this file, `testing.mdc`, skills, `AGENTS.md`. Sensors: four hooks + the verify this change can break. Do not add hook events.
-Map: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. Skills cannot grant permissions. `hunter` / `cut` / `prove` on match.
+Map: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. `hunter` / `cut` / `prove` on match.
