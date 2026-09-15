@@ -104,3 +104,22 @@ run_test "submit secret has reason=secret-token" "secret-token" "$RESULT"
 
 RESULT="$(echo '{"file_path":"/tmp/x.pem"}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.reason // "none"')"
 run_test "read deny has reason=secret-path" "secret-path" "$RESULT"
+
+# H16: the read hook lifts file_path in bash; the codec is a fallback, not a gate.
+read_v() { printf '%s' "$1" | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '[.permission, (.reason // "-")] | join(" ")'; }
+run_test "regression: read fast path allows clean payload without any JSON codec" "allow -" \
+  "$(printf '%s' '{"file_path":"/repo/src/app.ts","content":"x"}' | KLEOS_JSON_BIN=/nonexistent bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '[.permission, (.reason // "-")] | join(" ")')"
+run_test "regression: read without codec fails closed when a candidate matches policy" "deny missing-json" \
+  "$(printf '%s' '{"file_path":"/repo/.env"}' | KLEOS_JSON_BIN=/nonexistent bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '[.permission, (.reason // "-")] | join(" ")')"
+run_test "regression: read denies JSON-escaped Windows path to .env" "deny secret-path" "$(read_v '{"file_path":"C:\\Users\\u\\.env","content":"x"}')"
+run_test "regression: read allows JSON-escaped Windows path to source" "allow -" "$(read_v '{"file_path":"C:\\Users\\u\\src\\app.ts","content":"x"}')"
+run_test "regression: read denies escaped-slash path to .env" "deny secret-path" "$(read_v '{"file_path":"\/repo\/.env"}')"
+run_test "regression: read ignores file_path text inside content" "allow -" "$(read_v '{"file_path":"/repo/a.json","content":"{\"file_path\":\"/x/.env\"}"}')"
+run_test "regression: read still denies when content mentions a clean path" "deny secret-path" "$(read_v '{"file_path":"/repo/.env","content":"{\"file_path\":\"/x/ok.ts\"}"}')"
+run_test "regression: read allows when attachments carry a secret path but the read target is clean" "allow -" \
+  "$(read_v '{"file_path":"/repo/ok.ts","content":"x","attachments":[{"type":"rule","file_path":"/repo/.env"}]}')"
+run_test "regression: read denies secret target even with clean attachments" "deny secret-path" \
+  "$(read_v '{"file_path":"/repo/.env","content":"x","attachments":[{"type":"file","file_path":"/repo/ok.ts"}]}')"
+run_test "regression: read denies secret path field beside clean attachment file_path" "deny secret-path" \
+  "$(read_v '{"path":"/repo/.env","attachments":[{"file_path":"/repo/ok.ts"}]}')"
+run_test "regression: read decodes \\u escapes through the codec" "deny secret-path" "$(read_v '{"file_path":"/repo/caf\u00e9/.env"}')"

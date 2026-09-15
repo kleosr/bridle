@@ -119,8 +119,14 @@ emit_perm() {
   echo "{\"permission\":\"$kind\",\"user_message\":\"kleosrules: JSON tool required\",\"reason\":\"missing-json\"}"
 }
 
+# A bare allow is a constant; spawning the codec to print it cost one
+# interpreter start per allowed Read/Shell on the native hot path.
 emit_allow() {
-  json_emit allow "${1:-}" && return 0
+  if [[ -z "${1:-}" ]]; then
+    echo '{"permission":"allow"}'
+    return 0
+  fi
+  json_emit allow "$1" && return 0
   echo '{"permission":"allow"}'
 }
 

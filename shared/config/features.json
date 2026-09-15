@@ -240,6 +240,21 @@
         "exit": 0,
         "recordedAt": "2026-09-15T04:19:16Z"
       }
+    },
+    {
+      "id": "H16",
+      "priority": 16,
+      "area": "steel",
+      "layer": "permissions",
+      "title": "Read hook stays off the native retrieval hot path",
+      "behavior": "beforeReadFile lifts every file_path/path value in bash; when none matches secret_paths.ere the read is allowed with no interpreter spawn. The JSON codec runs only when a candidate matches (to pick the top-level key), when no key is found, or on escapes outside \\\\ and \\/. Codec resolution is cached per process; emit_allow without a message is static. Deny set unchanged; missing-json applies whenever the codec is actually needed.",
+      "verification": "TESTS=fixtures,gate_edges,harness bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "TESTS=fixtures,gate_edges,harness bash tests/run.sh",
+        "exit": 0,
+        "recordedAt": "2026-09-15T18:42:56Z"
+      }
     }
   ]
 }
