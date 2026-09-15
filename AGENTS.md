@@ -1,6 +1,6 @@
 # AGENTS.md — kleosrules (navigator)
 
-kleosrules is a Cursor **user harness**: charter, always-on law, skills, and four Bash hooks around the host loop. It is not a second agent runtime.
+kleosrules is a Cursor **user harness**: `Agent = Model + Harness`. Charter, always-on law, skills, and four Bash hooks around the host loop. It is not a second agent runtime. Prompting is not the control plane.
 
 **Init:** `bash scripts/ready.sh`  
 **Inventory:** `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh`  
@@ -19,7 +19,7 @@ Windows: Git Bash.
 2. Boundary: `SECURITY.md`
 3. Always-on: `core.mdc`, `testing.mdc`
 4. Glob companions: inert unmatched
-5. Skills on match: `debugging`, `testing`, `handoff`
+5. Skills on match: catalog `shared/config/skills.txt` (pack: `debugging`, `testing`, `handoff`; vendor UI/motion on match)
 6. Specialists: `hunter` / `cut` / `prove` — invoke only
 
 ## Loop

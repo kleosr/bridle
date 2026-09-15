@@ -17,6 +17,16 @@ json_pick() {
     printf '%s\n' "$KLEOS_JSON_RESOLVED"
     return 0
   fi
+  # Node first: ~3x faster startup than CPython and prints nothing to stderr.
+  # On Windows, `python3` on PATH is often the Microsoft Store stub (a fake that
+  # exits non-zero), so probing it costs a failed process run before we land on
+  # a real interpreter. Node sidesteps both. Falls through to CPython if absent.
+  if bin="$(type -P node 2>/dev/null)" && "$bin" "$dir/json_tool.js" ping >/dev/null 2>&1; then
+    KLEOS_JSON_RESOLVED="$bin"
+    KLEOS_JSON_KIND=node
+    printf '%s\n' "$bin"
+    return 0
+  fi
   if bin="$(type -P python3 2>/dev/null)" && "$bin" "$dir/json_tool.py" ping >/dev/null 2>&1; then
     KLEOS_JSON_RESOLVED="$bin"
     printf '%s\n' "$bin"
@@ -30,12 +40,6 @@ json_pick() {
   if bin="$(type -P py 2>/dev/null)" && "$bin" -3 "$dir/json_tool.py" ping >/dev/null 2>&1; then
     KLEOS_JSON_RESOLVED="$bin"
     KLEOS_JSON_KIND=py
-    printf '%s\n' "$bin"
-    return 0
-  fi
-  if bin="$(type -P node 2>/dev/null)" && "$bin" "$dir/json_tool.js" ping >/dev/null 2>&1; then
-    KLEOS_JSON_RESOLVED="$bin"
-    KLEOS_JSON_KIND=node
     printf '%s\n' "$bin"
     return 0
   fi

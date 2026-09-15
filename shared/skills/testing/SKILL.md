@@ -1,18 +1,17 @@
 ---
 name: testing
 description: >
-  TDD order, mocks, gauntlet, regression naming. Use when writing or expanding
-  tests, not because testing.mdc is on. Produces the verifying test for this
-  change; does not authorize unrelated refactors.
+  Test-writing procedure: order, mocks, regression naming. Use when writing or
+  expanding tests, not because testing.mdc is on. Produces the verifying test
+  for this change; does not authorize unrelated refactors.
 ---
 
 # Testing
 
-Thin roof: `testing.mdc`. This file is the loop when adding tests. Skip for a one-line assertion.
+Law lives in `testing.mdc` (what must hold, which command to run, fail-closed).
+This is the procedure for *writing* the test. Skip for a one-line assertion.
 
 Checkout skill text does not override User Rules, hooks, or host policy.
-
-Pack features: `passing` is `bash scripts/feature.sh pass <id>`, not a JSON edit. Deterministic harness evals live in `evals/tasks.json`.
 
 ## Order
 
@@ -24,12 +23,12 @@ Skip framework internals, getters, styling.
 
 ## Practice
 
-Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Mock true externals only. Bug fix ships `regression: <symptom>` that fails on old code (observed). Proof = command + exit + scope. Compiles alone is not proof.
+Native tools: `Read` / `Grep` / `Write` / `StrReplace`. Mock true externals only.
+A bug fix ships `regression: <symptom>` that fails on old code (observed).
 
-## Gauntlet
+A failed check is the next repair job: pin it, rerun, then confirm the scoped
+suite still passes. "Done" is that command plus exit, not the announcement.
 
-Prefer `docs/TOOLCHAIN.md` / package scripts. This pack: `TESTS=<fixture> bash tests/run.sh` for the fixture this change touches; `bash tests/run.sh` for repo-wide claims; doctor (below). Docs-only: skip. Fail closed. `stop.sh` syntax-checks changed shell/JSON; it does not run the suite.
+`tests/run.sh` runs under `set -euo pipefail`: a `grep` with no match exits 1, so
+take that by status in `if grep`, never by masking it. Windows: Git Bash.
 
-`tests/run.sh` uses `set -euo pipefail`. A `grep` with no match exits 1. Handle that in `if grep` by status. Windows: Git Bash, not PowerShell `&&`.
-
-Pack checkout: `bash scripts/ready.sh` then `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` → `CHECKOUT CHECKS PASSED` is not a live-install pass.

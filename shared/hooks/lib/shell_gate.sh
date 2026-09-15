@@ -98,8 +98,9 @@ gate_destructive() {
   local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&]|$)"
   local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
   local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|>[[:space:]]*/dev/sd|shred[[:space:]]"
-  local pipe_sh="(curl|wget)[[:space:]].*\|[[:space:]]*(sudo[[:space:]]+)?(ba)?sh([[:space:];|&]|$)"
-  echo "$seg" | grep -qiE "${rm_root}|${force_push}|${wipe}|${pipe_sh}"
+  # curl|sh is checked whole-command in gate_shell_command: split_segments
+  # breaks the pipe, so it can never match inside a single segment.
+  echo "$seg" | grep -qiE "${rm_root}|${force_push}|${wipe}"
 }
 
 # Writes to the installed harness (hooks.json, ~/.cursor/hooks, ~/.cursor/rules).
@@ -142,16 +143,11 @@ gate_secrets() {
   local seg="$1" pol="${HERE}/policy/secret_paths.ere"
   local secret_name='(\.env|id_rsa|id_ed25519|id_ecdsa|\.pem|\.key|credentials\.json)'
   if shell_is_git_gh_body "$seg"; then
-    if echo "$seg" | grep -qE '\$\(|`'; then
-      if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$(shell_strip_quotes "$seg")" | grep -qiE -f "$pol"; }; then
-        return 0
-      fi
-      return 2
-    fi
-    if echo "$seg" | grep -qiE '(^|[[:space:]])(-F|--file|--body-file|--notes-file)[[:space:]=]'; then
-      if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$(shell_strip_quotes "$seg")" | grep -qiE -f "$pol"; }; then
-        return 0
-      fi
+    # A commit/PR message is prose: a literal secret reference denies; prose
+    # that merely mentions deny-list words does not. A value produced by
+    # command substitution is not visible to any regex and is law-only.
+    if echo "$seg" | grep -qiE "$secret_name" || { [[ -f "$pol" ]] && printf '%s' "$(shell_strip_quotes "$seg")" | grep -qiE -f "$pol"; }; then
+      return 0
     fi
     return 1
   fi
@@ -176,7 +172,7 @@ gate_infra() {
 }
 
 gate_shell_command() {
-  local cmd="$1" rest seg scan ask=0 rc whole
+  local cmd="$1" rest seg scan ask=0 whole
   [[ -z "$cmd" ]] && return 1
   if echo "$cmd" | grep -qiE '(curl|wget)[[:space:]].*\|[[:space:]]*(sudo[[:space:]]+)?(ba)?sh([[:space:];|&]|$)'; then
     emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
@@ -212,12 +208,9 @@ gate_shell_command() {
       return 0
     fi
     # Secrets see the raw segment: substitution/file flags must stay visible.
-    gate_secrets "$seg"; rc=$?
-    if [[ "$rc" -eq 0 ]]; then
+    if gate_secrets "$seg"; then
       emit_deny "AUTONOMY BLOCK: shell must not read secret paths." "" secret-path
       return 0
-    elif [[ "$rc" -eq 2 ]]; then
-      ask=1
     fi
     if gate_infra "$scan"; then ask=1; fi
   done
