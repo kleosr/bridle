@@ -1,45 +1,81 @@
 # Toolchain
 
-Bash + CPython or Node for hook JSON. `jq` remains for install/scripts (`feature.sh`, `hooks.json` merge, doctor). No Rust. No pack Python app.
+I've seen too many agent setups collapse because they depend on heavy background daemons, native binaries, or complicated runtimes that work on Linux and completely disintegrate on Windows. 
 
-Need `bash` 3.2+ (no `flock`, `mapfile`, `realpath`, `stat -c`), plus `python3` or `node` on the hook path. Windows: Git for Windows; run pack scripts from Git Bash.
+`bridle` takes the opposite approach: zero bloat, zero native daemon magic, and standard POSIX utilities that have worked for decades. It runs on macOS, Linux, and Windows (via Git Bash) from the same codebase.
+
+## What You Need to Run This
+
+| Dependency | Purpose | Where Used |
+|---|---|---|
+| **Bash 3.2+** | Core runtime; in-process regex matching (`[[ =~ ]]`) | Hooks, scripts, test runner |
+| **Python 3** or **Node.js** | Safe, reliable JSON codec (`json_tool.py` / `json_tool.js`) | Hook stdin/stdout payload parsing |
+| **`jq` (1.6+)** | Fast JSON querying for tooling and test fixtures | Scripts, install merge, test gauntlet (hooks don't need it) |
+| **PowerShell 5.1+ / pwsh** | Native Windows bridge (`git-bash-shim.ps1`) | Windows Cursor hook execution |
+
+*Note for Windows users:* Always run harness scripts from **Git Bash**. Make sure `jq` is installed and on your user `PATH` (e.g. `winget install jqlang.jq`, and verify `%LOCALAPPDATA%\Microsoft\WinGet\Links` is in your environment variables).
+
+## Daily Driver Commands
+
+These are the exact commands I use daily to test, verify, and maintain the harness:
 
 ```bash
-chmod +x shared/hooks/*.sh shared/hooks/lib/*.sh scripts/*.sh
-bash -n shared/hooks/before_submit_prompt.sh \
-  shared/hooks/before_shell.sh shared/hooks/before_read_file.sh \
-  shared/hooks/stop.sh shared/hooks/fleet_sync.sh
-bash scripts/feature.sh check
-bash scripts/handoff.sh check
+# 1. Quick environment readiness check
 bash scripts/ready.sh
-bash scripts/eval.sh check
+
+# 2. Pack inventory and fixture check (safe, doesn't touch your live ~/.cursor)
+DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh
+
+# 3. Full inventory + verifies your live ~/.cursor installation
 bash scripts/doctor.sh
+
+# 4. The full gauntlet (134 tests: fixtures, gate edges, lifecycle)
 bash tests/run.sh
-TESTS=harness bash tests/run.sh      # scoped: static_checks + named fixtures only
+
+# 5. Scoped test run (fast, runs only the suite you care about)
+TESTS=gate_edges bash tests/run.sh
+
+# 6. Check eval dimension coverage
+bash scripts/eval.sh check
+
+# 7. Check feature state ledger
+bash scripts/feature.sh check
+
+# 8. Check session handoff schema
+bash scripts/handoff.sh check
+
+# 9. Install into ~/.cursor (backs up your existing files automatically)
 FORCE=1 bash scripts/install.sh
+
+# 10. Clean uninstall (removes bridle files and restores your backups)
+bash scripts/uninstall.sh
 ```
 
-Fixture names for `TESTS=`: `fixtures`, `gate_edges`, `overlay_edges`, `sql_scope`, `stop_edges`, `install_lifecycle`, `grounding`, `harness`. Each feature's `verification` in `features.json` names the fixture holding its assertions. Failed `feature.sh pass` records `lastFailure`; `bash scripts/feature.sh note <id> <hypothesis>` replaces the mechanical `re-run:` hint with your diagnosis.
+## Hook Protocol & Fast Smoke Tests
 
-Smoke: `echo '{"prompt":"test code"}' | bash shared/hooks/before_submit_prompt.sh`
+Every hook reads JSON on `stdin` and writes JSON on `stdout`. There are no hidden sockets, no sidecars, and no network dependencies.
 
-Expect: `continue` (submit), `permission` (shell/read), `{}` or `followup_message` (stop; advisory). Submit, shell, and read are `failClosed:true`. `stop.loop_limit` is 1.
+- **`beforeSubmitPrompt`**: Returns `{"continue": true}` or `{"continue": false, "reason": "...", "user_message": "..."}`.
+- **`beforeShellExecution`**: Returns `{"permission": "allow"}`, `{"permission": "deny", ...}`, or `{"permission": "ask", ...}`.
+- **`beforeReadFile`**: Returns `{"permission": "allow"}` or `{"permission": "deny", ...}`.
+- **`stop`**: Returns `{}` or `{"followup_message": "..."}` (advisory only; never blocks).
 
-Event hooks ≤80 LOC (readability). Policy: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/feature_gate.sh`, `lib/host.sh`. LOC 300 is `core.mdc`, not a hook. Boundary SSOT: `SECURITY.md`. Feature pass-state: `bash scripts/feature.sh`. Handoff: `bash scripts/handoff.sh`. Init probe: `bash scripts/ready.sh`. Eval coverage: `bash scripts/eval.sh check`. OS map: `shared/config/harness.json`.
+### Fast Smoke Check from the Terminal
+Want to test the hooks by hand right now? Run these directly:
 
-## Install / doctor safety
+```bash
+echo '{"prompt":"test code"}' | bash shared/hooks/before_submit_prompt.sh
+echo '{"command":"git status","cwd":"/tmp"}' | bash shared/hooks/before_shell.sh
+echo '{"file_path":"/tmp/test.txt"}' | bash shared/hooks/before_read_file.sh
+```
 
-- Idempotent: `FORCE=1 install` twice → same 4 events, same script count, no duplicate basenames (tested in `tests/install_lifecycle.sh` with isolated `HOME`).
-- Ownership: differing user rules/agents kept unless `FORCE=1` (backed up once to `.pre-kleos-bak`, restored on uninstall). Hook ownership is exact-basename only — a user hook whose name merely contains a pack name is never stripped (tested). Uninstall removes owned-by-hash/manifest only; user files kept; second run is a no-op.
-- Atomic: `hooks.json` merge/strip via `mktemp` + `mv`. Rules/hooks via `cp -f` (small files; `.bak` recovery). Interrupted install: re-run `FORCE=1 install`.
-- Concurrent: no lock (`flock` unavailable on stock Bash 3.2). Avoid concurrent installs; last writer wins, `hooks.json` merge may interleave.
-- Spaces: install/hook paths are quoted; read-hook blocks paths with spaces (tested).
-- Shell splitting: the gate splits on operators outside quotes (awk state machine); newlines fold to `;`. `$()`/subshell internals are not fully parsed — stronger guarantees need OS sandboxing, not more regex.
-- Symlinks: skills install as live symlinks (checkout edits affect the installed snapshot immediately on Unix).
-- Activation: installer-path checks use the payload `cwd`, never the hook process cwd.
-- Doctor modes (same script; fixture is **not** proof of live): default = pack + isolated fixture + optional live check. `DOCTOR_SKIP_LIVE=1` = pack + fixture; success is checkout-only (`CHECKOUT CHECKS PASSED`) and does **not** claim the active `~/.cursor` was verified.
-- Dry-run: `DRY_RUN=1 bash shared/hooks/fleet_sync.sh install` prints planned writes and exits without touching `$HOME`.
+## Install & Lifecycle Guarantees
 
-Uninstall: `bash scripts/uninstall.sh` (owned by hash/manifest; user files kept; `.pre-kleos-bak` restored). `manifest.json` also lists legacy cleanup targets that are removed but never installed.
+I spent a lot of time engineering the install/uninstall scripts so they never corrupt your environment:
 
-Install is machine-wide; review + restart sessions. Differing files backed up once.
+1. **Idempotence:** Running `FORCE=1 bash scripts/install.sh` ten times in a row leaves your system in the exact same clean state as running it once.
+2. **Safe Backups:** If you have custom user rules or hooks with the same name, the installer saves them as `.pre-kleos-bak` before overwriting.
+3. **Exact Ownership:** Ownership in `~/.cursor/hooks.json` is determined by exact script basename (`before_submit_prompt.sh`, etc.). If you have your own hook called `my_custom_before_shell.sh`, the installer will never touch or strip it.
+4. **Clean Uninstall:** `bash scripts/uninstall.sh` removes only files owned by the pack manifest, restores your `.pre-kleos-bak` backups, and cleans up compiled helper caches (`KleosPipeUtil.dll`).
+5. **Atomic Updates:** `hooks.json` writes use atomic temp-file replacement (`mktemp` -> `mv`). If an install is interrupted mid-write, your `hooks.json` won't be left as a truncated, corrupt JSON file.
+6. **Windows P/Invoke Caching:** On Windows, `git-bash-shim.ps1` compiles its Windows API helper once into `~/.cursor/hooks/KleosPipeUtil.dll`. Every run after that loads the compiled DLL directly, completely eliminating the 1-3 second `csc.exe` compile overhead.

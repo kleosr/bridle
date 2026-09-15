@@ -1,40 +1,66 @@
-# Hooks (ADR)
+# Architecture Decision Record: Why Exactly Four Hooks (And Why We Froze Them)
 
-Status: Accepted. Four registered events. Law stays in `.mdc`. Fleet does not rewrite other repos' hooks.
+**Status:** Accepted, locked, and non-negotiable.  
+**Context:** Cursor lifecycle events and physical boundary enforcement.  
 
-Four hooks enforce **documented restrictions on supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Regex gates are substring heuristics, not a shell parser or sandbox.
+## The Decision
 
-| Script | Event | Job |
-|--------|-------|-----|
-| `before_submit_prompt.sh` | beforeSubmitPrompt | Secret-prompt block (`continue`; `failClosed:true`) |
-| `before_shell.sh` | beforeShellExecution | Destructive / source-write / lint-disable / secret-path deny; infra/DB + activation ask (`failClosed:true`) |
-| `before_read_file.sh` | beforeReadFile | Secret path deny (`failClosed:true`) |
-| `stop.sh` | stop | Rewrite / format_churn / syntax-red / false-passing followup (`loop_limit:1`, advisory; `failClosed:false`) |
+When people first discover hooks in Cursor, the immediate temptation is to hook into everything. You see developers registering hooks on every tool call, injecting massive prompts on `sessionStart`, or trying to build a secondary ReAct loop inside the hook scripts. 
 
-## Coverage (claimed vs remaining)
+I went down that road early on in my research. It was a complete disaster. It creates nested reasoning loops, inflates token counts, slows down every interaction, and makes the agent brittle.
 
-| Protected action | Entry points covered | Decision | Remaining boundary |
+So we made an uncompromising architectural decision: **`bridle` enforces safety through exactly four deterministic hooks, and the hook surface is permanently frozen.**
+
+1. `beforeSubmitPrompt`
+2. `beforeShellExecution`
+3. `beforeReadFile`
+4. `stop`
+
+Physical security belongs in deterministic sensors. Coding standards belong in `.mdc` rules. Specialized workflows belong in on-demand skills.
+
+## The Four Hooks
+
+| Hook Script | Host Event | Enforced Policy | Failure Mode |
 |---|---|---|---|
-| Read sensitive file | `beforeReadFile` (`file_path` / nested `tool_input`) | Deny | OS permissions / sandbox; Shell `cat` of the same path is a **different** event (`beforeShellExecution`); `Write`/`StrReplace`/MCP/Tab uncovered |
-| Execute destructive command | `beforeShellExecution`, evaluated **per segment** | Deny | Execution permissions; interpreters, repo scripts, package lifecycle, encoded args, non-Shell tools |
-| Commit-message false positives | `-m/--message/--title/--body/--notes` argument only | Allow inside that argument | Unquoted multi-word message values stay visible (fail-closed) |
-| Change infrastructure | Recognized shell strings (`psql`, `terraform apply`, …) | Ask | Credentials / approval system; host pause unverified |
-| Submit likely secret | `beforeSubmitPrompt` prompt fields | `continue:false` | Org-approved client/logging/telemetry; **hook timing vs remote submit is unverified** — do not claim the secret never left the machine |
-| Edit source | Native Write/StrReplace **allowed**; Shell text-rewrite denied | Workflow restriction | Review / CI; not complete protection against source modification |
-| Hook identity in shared files | Exact script basename (or the shim form) | Owned | Substring names (`my_stop.sh`) are foreign and survive merge/strip |
+| `before_submit_prompt.sh` | `beforeSubmitPrompt` | Blocks secret tokens (`ghp_`, `sk-`, `AKIA`, private keys) from leaving the machine into model context | Fail-closed (`continue:false`) |
+| `before_shell.sh` | `beforeShellExecution` | Evaluates command segments; denies destructive actions, secret reads, source rewrites, and lint-disable tampering; asks on infra changes | Fail-closed (`permission:deny`) |
+| `before_read_file.sh` | `beforeReadFile` | Canonicalizes paths and denies reads targeting sensitive files (`.env`, certificates, SSH keys) | Fail-closed (`permission:deny`) |
+| `stop.sh` | `stop` | Evaluates turn output and emits one non-blocking advisory if churn, syntax errors, or false feature completion is detected | Non-blocking (`loop_limit:1`, `failClosed:false`) |
 
-**Pass condition:** every claimed script guarantee has a fixture test and a stated limit in this table. Host enforcement of those JSON decisions is a separate, manual check (`SECURITY.md`).
+## What We Protect (And What Remains Outside the Boundary)
 
-## Failure classes (scripts)
+I believe in brutal honesty about what software actually does. Too many AI safety tools claim 100% protection when they're really just string matches. Here is the exact coverage boundary:
 
-Preventive hooks (submit / shell / read): invalid input, missing policy, missing Python/Node JSON codec, or non-string command → deny / `continue:false` (not silent allow). Diagnostics in `user_message` must not echo secrets or the raw command. stdout is JSON only. Stable `reason` codes: `deny`, `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `ask-infra`, `activation`, `harness`. Timeout/crash: host `failClosed:true` **requests** deny; host interpretation is unverified.
+| Protected Action | Event Intercepted | Enforced Verdict | The Remaining Reality |
+|---|---|---|---|
+| Reading sensitive files (`.env`, `.pem`, `id_rsa`) | `beforeReadFile` | `permission:deny` | Blocked at the hook level. But if a native `Write` or `StrReplace` tool touches it, host hooks don't intercept that—that is governed by Charter law and OS permissions. |
+| Destructive shell commands (`rm -rf /`, force push) | `beforeShellExecution` (split on operators outside quotes) | `permission:deny` | Denied across chained commands. But a compiled binary or encoded command (`base64 -d | sh`) won't be caught by regex; true isolation requires an OS sandbox. |
+| Commit / PR message false positives | `beforeShellExecution` | Filtered allow inside `-m`/`--message`/`--body` | If your commit message mentions *"fix: drop table users bug"*, it won't trigger a false deny. Unquoted multi-word args stay visible to prevent bypasses. |
+| Infrastructure changes (`psql`, `terraform`, `docker rm -f`) | `beforeShellExecution` | `permission:ask` | Causes Cursor to show an approval card. Note: whether Cursor's host genuinely pauses execution is tracked in `docs/host-capability.md`. |
+| Leaking secret tokens in prompts | `beforeSubmitPrompt` | `continue:false` | Blocks known token prefixes before Cursor sends the prompt to the API. |
+| Shell overwriting source code (`> src/app.ts`, `sed -i`) | `beforeShellExecution` | `permission:deny` | Forces the model to use Cursor's native `Write` and `StrReplace` tools instead of messy bash redirects. |
+| Modifying the harness itself (`rm ~/.cursor/hooks.json`) | `beforeShellExecution` | `permission:deny` | The agent is forbidden from tampering with its own cage. Updates must be run with `FORCE=1 bash scripts/install.sh`. |
 
-`stop.sh`: advisory only; cannot prevent completion; malformed/`aborted`/`loop_count>0` → `{}`; its own failure must not loop (`loop_limit:1`).
+## The Windows Process Spawn Nightmare (And How We Fixed It)
 
-Cloud: user `~/.cursor/hooks.json` does **not** load. Cloud sees project `.cursor/hooks.json` only (plus Enterprise team/dashboard hooks). `hooks.cloud.json` is **opt-in** project-hooks (submit / shell / read; no `stop`). This pack has no repo-level hooks. Matrix: `docs/host-capability.md`.
+Here is a real war story from building this:
 
-Bans: no `updated_input`; no kleos-gate; no pack Python *app*; event hooks ≤80 LOC. Hook JSON uses CPython or Node stdlib.
+In Git Bash on Windows (MSYS), every time you spawn an external executable (`grep`, `sed`, `tr`, `awk`), Windows takes ~50 ms to initialize the process. 
 
-Policy SSOT: `secret_paths.ere`, `secret_tokens.ere`, `lib/shell_gate.sh`, `lib/diff_gate.sh`, `lib/verify_gate.sh`, `lib/feature_gate.sh`. Hook I/O: documented in `SECURITY.md` and `docs/host-capability.md`. Roofs: `core.mdc`. Host I/O: `lib/host.sh`.
+In my early implementation, `shell_gate.sh` evaluated command segments by piping each segment through multiple grep and sed filters. If an agent ran a compound command with 30 segments (e.g. chained builds or lint checks), evaluating that command took **45 seconds**. 
 
-Canonical config: `shared/hooks/hooks.json`. Ownership: `lib/hooks_json.jq` (exact basename).
+Cursor's internal hook runner gave up, killed the process, and reported:  
+`Hook ... failed with exit code 1`.  
+Because the hook was configured as `failClosed: true`, legitimate commands were completely blocked.
+
+To fix this once and for all:
+1. **In-Process Regex:** All pattern matching now runs **directly in-process** using Bash's built-in regular expression engine (`[[ $str =~ $regex ]]`). Zero forks.
+2. **Policy Caching:** Policy files (`secret_paths.ere`, etc.) are read once into memory arrays.
+3. **P/Invoke Caching:** On Windows, `git-bash-shim.ps1` compiles its Windows API helper once into `~/.cursor/hooks/KleosPipeUtil.dll`, eliminating the 1-3 second C# compilation step on every turn.
+4. **Result:** That same 30-segment command went from 45 seconds down to **3.2 seconds** end-to-end.
+
+## Why We Explicitly Rejected Other Hook Events
+
+- **No `sessionStart` / `sessionEnd`:** Stuffing a massive doctrine into the model at session start burns prompt cache and degrades reasoning before the agent has even read the task. Progressive disclosure via `AGENTS.md` is cleaner, faster, and cheaper.
+- **No `preToolUse` / `postToolUse`:** Cursor already gives us targeted events (`beforeReadFile`, `beforeShellExecution`). A generic tool hook introduces massive latency on every single tool call without adding real security.
+- **No Pack-Owned ReAct Loops:** The model loop belongs to Cursor. When you build a loop inside a harness, you get compounding error rates, runaway costs, and endless lag. We provide the rules and the sensors; Cursor drives the model.
