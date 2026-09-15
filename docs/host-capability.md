@@ -56,3 +56,19 @@ Source: `%TEMP%\kleos-hooks.log` (742 entries in one working day) plus in-sessio
 | `failClosed` false positives | **observed** — `before_read_file.sh` received `stdin=0B` twice (21:08, 21:10) and emitted the 161B `malformed` deny; `before_submit_prompt.sh` hit the stdin drain window twice ("using partial input"). Shim stdin race → spurious fail-closed denies. |
 
 Carry-forward: Shell deny = confirmed. Read deny, `ask` pause, `failClosed` crash path, prompt-scan-before-transmit = **still unverified**. Treat those rows in `SECURITY.md` as script behavior only.
+
+### 2026-09-15 — same host, hook timeout root cause and fix
+
+Symptom: Cursor reported `Hook "...git-bash-shim.ps1 before_read_file.sh" failed with exit code 1` and fail-closed blocked native Read/StrReplace, while `%TEMP%\kleos-hooks.log` showed the same invocation ending `exit=0 stdout=22B`. The log line is written after Cursor has already killed the process: **a hook that exceeds `timeout` is reported by Cursor as exit code 1**, indistinguishable from a crash.
+
+Cause (measured): `shell_gate.sh` spawned grep/sed/tr per segment; each MSYS spawn costs ~50 ms, a 30-segment command took ~45 s (> 30 s shell timeout). The shim compiled its C# P/Invoke helper with csc.exe on every run and spawned bash three times for `cygpath`. Parallel bursts of 6–8 native Reads pushed the 10 s read timeout.
+
+Fix: gates match in-process with bash `[[ =~ ]]` (only `split_segments` awk and the git-message `sed` fork); shim caches the helper as `~/.cursor/hooks/KleosPipeUtil.dll` and converts drive-letter paths in PowerShell; timeouts read/submit 30 s, shell 60 s.
+
+| Probe | Before | After |
+|---|---|---|
+| `before_shell.sh`, 1 segment, via shim | ~2–4 s | 1.5 s |
+| `before_shell.sh`, 30 segments, via shim | ~45 s (killed) | 3.2 s |
+| 6 parallel `before_read_file.sh` via shim | timeouts / `stdin=0B` | all exit 0, 1.8–2.8 s |
+| Live: 6 parallel native Reads (Cursor 3.20.15) | blocked, "exit code 1" | all served |
+| Gauntlet `bash tests/run.sh` | minutes | ~25 s, 134 pass / 0 fail |

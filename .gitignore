@@ -1,6 +1,8 @@
 # Local runtime state (never committed)
 state/
 .cursor/
+# git-bash-shim.ps1 compiles its P/Invoke helper here on first run
+shared/hooks/KleosPipeUtil.dll
 # Editor / OS noise
 .DS_Store
 Thumbs.db

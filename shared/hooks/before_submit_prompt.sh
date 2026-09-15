@@ -19,7 +19,7 @@ if [[ ! -f "$POL" ]]; then
   emit_continue false "kleosrules: policy/secret_tokens.ere is missing; prompt blocked (failClosed). Run FORCE=1 bash scripts/install.sh." missing-policy
   exit 0
 fi
-if [[ -n "${PROMPT:-}" ]] && printf '%s' "$PROMPT" | grep -qE -f "$POL"; then
+if [[ -n "${PROMPT:-}" ]] && policy_match "$PROMPT" "$POL"; then
   emit_continue false "Blocked: prompt looks like it contains a secret/token. Remove credentials and resubmit." secret-token
   exit 0
 fi
