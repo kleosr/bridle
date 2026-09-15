@@ -34,7 +34,7 @@ Vulns: name source and sink or it is not a vuln. Injection, XSS/HTML sinks, auth
 
 Split: Confirmed / Open question / Speculation. Drop speculation; publish questions. Drop if no trigger; existing controls already block it; style/docs; a senior would not block the PR. No Low. Vulns need source, sink, failed control. Logic bugs need trigger and wrong result.
 
-Do not report nits, missing tests with no bug, perf without a trigger, extra code (`cut`), comments (Comment Sicko), or whether tests ran (`prove`).
+Do not report nits, missing tests with no bug, perf without a trigger, extra code and comments (`cut`), or whether tests ran (`prove`).
 
 If none survive: `Hunter found no bugs in <diff scope> (base <commit>, files <n>).`
 
