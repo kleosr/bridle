@@ -83,6 +83,21 @@ Every entry here comes from real sessions on real machines.
 | Live 6-way Native File Read | Blocked by host fail-closed | **All 6 served concurrently** | Green |
 | Full Test Gauntlet (`tests/run.sh`) | ~3 minutes | **~25 seconds (134 passing, 0 failing)** | Green |
 
+### 2026-09-15 (later) — Cursor 3.20.15 (x64, Windows 11), Read hook off the retrieval hot path (H16)
+*Telemetry source: `%TEMP%\kleos-hooks.log`, 1,383 `before_read_file.sh` invocations; payload `stdin` median ≈2 KB, p90 ≈13 KB, max 160 KB.*
+
+- **The Problem:** the host sends the whole file `content` on every native Read and the hook spent one interpreter spawn resolving the JSON codec (`node … ping`), one decoding, and one emitting `allow` — about 550–650 ms of pure overhead per Read in Git Bash, before the PowerShell shim. Retrieval-heavy turns (6–10 Reads) paid seconds for a verdict that is almost always `allow`.
+- **The Fix:** codec resolution cached in-process (`lib/json.sh`); `emit_allow` prints static JSON when it has no message; `before_read_file.sh` lifts every `file_path`/`path` value with a bash regex and allows when none matches policy. The codec still decides every deny and every ambiguous payload, so the deny set and the fail-closed classes are unchanged. Cursor's documented payload is `{file_path, content, attachments:[{type, file_path}]}`; attachments are why "all candidates clean" rather than "exactly one key" is the rule.
+
+| Benchmark (bash, best of 5, no shim) | Before | After |
+|---|---|---|
+| `before_read_file.sh` allow | 541 ms | **186 ms** |
+| `before_read_file.sh` deny (`.env`) | 557 ms | 435 ms |
+| `before_shell.sh` allow (`git status`) | 595 ms | 399 ms |
+| `before_submit_prompt.sh` clean prompt | 527 ms | 383 ms |
+
+Verified: `TESTS=fixtures,gate_edges,harness,overlay_edges bash tests/run.sh` → 248 pass, 0 fail (this entry's regression cases are in `tests/fixtures.sh` under the H16 comment). The shim's own PowerShell startup is unchanged and still dominates the wall clock the host sees.
+
 ---
 
 ## The Rule We Live By

@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 # Resolve CPython or Node for hook JSON. jq is not on the hook path.
 
+# Resolution is cached in the calling shell (KLEOS_JSON_RESOLVED / _KIND /
+# _DIR). Every hook used to re-probe on each json_run inside a $(...) subshell,
+# which threw the cache away and cost 2-3 extra interpreter spawns per event
+# (~100 ms each on MSYS) on the native Read/Shell hot path.
+KLEOS_JSON_DIR="${KLEOS_JSON_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+
 json_lib_dir() {
-  cd "$(dirname "${BASH_SOURCE[0]}")" && pwd
+  printf '%s\n' "$KLEOS_JSON_DIR"
 }
 
 json_pick() {
-  local dir bin
-  dir="$(json_lib_dir)"
+  local dir="$KLEOS_JSON_DIR" bin
   if [[ -n "${KLEOS_JSON_BIN:-}" ]]; then
     [[ -x "$KLEOS_JSON_BIN" ]] || return 1
+    KLEOS_JSON_RESOLVED="$KLEOS_JSON_BIN"
+    KLEOS_JSON_KIND="${KLEOS_JSON_KIND:-$(json_kind_of "$KLEOS_JSON_BIN")}"
     printf '%s\n' "$KLEOS_JSON_BIN"
     return 0
   fi
-  if [[ -n "${KLEOS_JSON_RESOLVED:-}" ]]; then
+  if [[ -n "${KLEOS_JSON_RESOLVED:-}" && -n "${KLEOS_JSON_KIND:-}" ]]; then
     printf '%s\n' "$KLEOS_JSON_RESOLVED"
     return 0
   fi
@@ -29,11 +36,13 @@ json_pick() {
   fi
   if bin="$(type -P python3 2>/dev/null)" && "$bin" "$dir/json_tool.py" ping >/dev/null 2>&1; then
     KLEOS_JSON_RESOLVED="$bin"
+    KLEOS_JSON_KIND=python
     printf '%s\n' "$bin"
     return 0
   fi
   if bin="$(type -P python 2>/dev/null)" && "$bin" "$dir/json_tool.py" ping >/dev/null 2>&1; then
     KLEOS_JSON_RESOLVED="$bin"
+    KLEOS_JSON_KIND=python
     printf '%s\n' "$bin"
     return 0
   fi
@@ -46,20 +55,27 @@ json_pick() {
   return 1
 }
 
+# Interpreter family from the binary name, used when KLEOS_JSON_BIN is forced.
+json_kind_of() {
+  local base="${1##*/}"
+  case "$base" in
+    node|node.exe|nodejs) printf 'node' ;;
+    py|py.exe) printf 'py' ;;
+    *) printf 'python' ;;
+  esac
+}
+
+# json_pick is cheap once resolved (no spawn), so both entry points call it
+# unconditionally; a forced KLEOS_JSON_BIN always wins over a cached pick.
 json_run() {
-  local dir bin base
-  dir="$(json_lib_dir)"
-  bin="$(json_pick)" || return 1
-  [[ -n "$bin" ]] || return 1
-  if [[ "${KLEOS_JSON_KIND:-}" == "node" ]] || [[ "$(basename "$bin")" == node || "$(basename "$bin")" == node.exe || "$(basename "$bin")" == nodejs ]]; then
-    "$bin" "$dir/json_tool.js" "$@"
-    return $?
-  fi
-  if [[ "${KLEOS_JSON_KIND:-}" == "py" ]] || [[ "$(basename "$bin")" == py || "$(basename "$bin")" == py.exe ]]; then
-    "$bin" -3 "$dir/json_tool.py" "$@"
-    return $?
-  fi
-  "$bin" "$dir/json_tool.py" "$@"
+  local dir="$KLEOS_JSON_DIR" bin
+  json_pick >/dev/null || return 1
+  bin="$KLEOS_JSON_RESOLVED"
+  case "${KLEOS_JSON_KIND:-$(json_kind_of "$bin")}" in
+    node) "$bin" "$dir/json_tool.js" "$@" ;;
+    py) "$bin" -3 "$dir/json_tool.py" "$@" ;;
+    *) "$bin" "$dir/json_tool.py" "$@" ;;
+  esac
 }
 
 json_available() {
