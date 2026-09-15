@@ -111,6 +111,12 @@ if [[ -f "$DOCTOR_FIXTURE/.cursor/rules/core.mdc" ]]; then
 else
   fail "fixture install: core.mdc missing from user rules"
 fi
+if grep -q 'Agent = Model + Harness' "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc" 2>/dev/null \
+  && grep -q '^alwaysApply: true' "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc"; then
+  ok "fixture install: kleosr.mdc charter alwaysApply"
+else
+  fail "fixture install: kleosr.mdc missing or not the charter"
+fi
 rm -rf "$DOCTOR_FIXTURE"
 fi
 
