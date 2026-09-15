@@ -182,7 +182,7 @@ else fail "core.mdc missing cyclo-22 ceiling"; fi
 
 PASTE="$PACK/shared/rules/USER-RULES.paste.txt"
 PASTE_HEADS=ok
-for h in Identity Stance Autonomy Mission Session Retrieval Host; do
+for h in Identity Stance Autonomy Session Retrieval Host; do
   grep -q "## $h" "$PASTE" || PASTE_HEADS="missing:$h"
 done
 if [[ "$PASTE_HEADS" == ok ]]; then ok "USER-RULES.paste.txt keeps charter headings"

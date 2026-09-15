@@ -61,7 +61,7 @@ case "$CMD" in
     install_agents
     verify_smoke
     echo "[done] fleet_sync all FORCE=$FORCE (local ~/.cursor only)"
-    echo "Manual: Cursor Settings → User Rules can stay in sync with $PACK/shared/rules/USER-RULES.paste.txt (also installed as ~/.cursor/rules/kleosr.mdc)"
+    echo "Charter installed once as ~/.cursor/rules/kleosr.mdc. If Cursor Settings → User Rules still holds a copy of USER-RULES.paste.txt, remove it (double injection). Start a new chat."
     ;;
   *)
     echo "usage: FORCE=1 $0 {install|project-hooks|verify|all}" >&2

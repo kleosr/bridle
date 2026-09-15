@@ -1,5 +1,5 @@
 # Always-on / glob .mdc files installed to ~/.cursor/rules.
-# Always-on: core, testing. Companions: glob-triggered (inert unmatched).
+# Always-on: core, testing. Companions: host-attached on glob; law says treat as inert when the owning package does not match.
 core
 testing
 pnpm

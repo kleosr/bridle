@@ -8,7 +8,9 @@ Agent engineering pack: charter, `core.mdc` + `testing.mdc`, glob companions, sk
 FORCE=1 bash scripts/install.sh
 ```
 
-Then paste `shared/rules/USER-RULES.paste.txt` into Cursor Settings → User Rules and start a new chat.
+The charter (`shared/rules/USER-RULES.paste.txt`) is installed as `~/.cursor/rules/kleosr.mdc` (alwaysApply). Do not also paste it into Cursor Settings → User Rules; if an older paste is there, remove it. Start a new chat.
+
+`jq` is required for `scripts/` and `tests/` (not for the hooks). Windows: `winget install jqlang.jq`, then make sure `%LOCALAPPDATA%\Microsoft\WinGet\Links` is on your user PATH.
 
 Cloud agents (project hooks only, opt-in):
 
@@ -40,7 +42,7 @@ Run from Git Bash on Windows.
 | `shared/config/features.json` | Capability state (pass via `scripts/feature.sh`) |
 | `state/handoff.json` | Optional session snapshot (gitignored) |
 | `evals/tasks.json` | Deterministic harness eval index |
-| `shared/rules/` | Charter paste + always-on / glob `.mdc` |
+| `shared/rules/` | Charter source (`USER-RULES.paste.txt` → `kleosr.mdc`) + always-on / glob `.mdc` |
 | `shared/skills/` | On-demand skill bodies |
 | `shared/hosts/` | Portable `CLAUDE.md` |
 | `shared/agents/` | `hunter` / `cut` / `prove` specialists |

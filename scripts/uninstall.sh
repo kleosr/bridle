@@ -93,4 +93,4 @@ done
 
 rm -f "$HOME_C/kleosrules-owned.txt"
 
-echo "[done] kleosrules uninstall complete (User Rules paste in Cursor Settings is manual)"
+echo "[done] kleosrules uninstall complete (if you ever pasted the charter into Cursor Settings → User Rules, remove it manually)"
