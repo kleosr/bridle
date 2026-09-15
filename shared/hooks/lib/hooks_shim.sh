@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Windows: after merge, rewrite pack events to pwsh + git-bash-shim.ps1.
+# Windows: after merge, rewrite pack events to pwsh (or powershell.exe) + shim.
 
 is_windows_host() {
   case "$(uname -s 2>/dev/null)" in
@@ -17,15 +17,35 @@ shim_file_win() {
   fi
 }
 
+# pwsh when present; Windows PowerShell 5.1 otherwise. Unqualified `powershell`
+# is the leftover form tests rewrite away. Non-Windows fixtures keep `pwsh`.
+shim_ps_exe() {
+  if command -v pwsh >/dev/null 2>&1; then
+    printf 'pwsh'
+    return 0
+  fi
+  if is_windows_host; then
+    local p="${WINDIR:-/c/Windows}/System32/WindowsPowerShell/v1.0/powershell.exe"
+    if [[ -f "$p" || -x "$p" ]]; then
+      shim_file_win "$p"
+      return 0
+    fi
+  fi
+  printf 'pwsh'
+}
+
 apply_pwsh_shim_hooks() {
-  local dest="$1" hookdir shim tmp p
+  local dest="$1" hookdir shim tmp p exe
   hookdir="$(dirname "$dest")/hooks"
   shim="$hookdir/git-bash-shim.ps1"
   [[ -f "$dest" && -f "$shim" ]] || return 0
   if ! jq -e '.. | strings | select(test("bash-shim\\.ps1"))' "$dest" >/dev/null 2>&1; then
     is_windows_host || return 0
   fi
-  p="pwsh -NoProfile -ExecutionPolicy Bypass -File \"$(shim_file_win "$shim")\""
+  exe="$(shim_ps_exe)"
+  # Do not quote the exe: Cursor's hook runner treats \"C:\\...\\powershell.exe\" as
+  # a parse failure (process exit 1, failClosed). The -File path stays quoted.
+  p="${exe} -NoProfile -ExecutionPolicy Bypass -File \"$(shim_file_win "$shim")\""
   tmp="$(mktemp "${TMPDIR:-/tmp}/kleos-shimjson.XXXXXX")"
   if ! jq --arg p "$p" '
     def pack_cmd:

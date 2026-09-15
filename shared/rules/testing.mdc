@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Testing
 
-Test observable behavior at the narrowest stable boundary. Loop: understand → change → verify → correct. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence.
+Test observable behavior at the narrowest stable boundary. Loop: understand → change → verify → correct. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence. A failed check is the next repair job: pin it, rerun, keep the rest of the suite. "Done" is only that validator's command + exit (or a driven UI path).
 
 When no executable check covers the changed path, report the gap and the smallest next check. Do not substitute confidence for proof.
 

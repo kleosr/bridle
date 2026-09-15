@@ -66,27 +66,28 @@ json_emit() {
     json_run emit "$kind"
 }
 
+# Claude Code uses hookSpecificOutput.permissionDecision instead of {permission}.
+# detect_host is optional: host.sh may not be sourced (e.g. codec-only callers).
+emit_perm() {
+  local kind="$1" msg="$2" reason="$3" agent="${4:-}"
+  if type detect_host >/dev/null 2>&1 && [[ "$(detect_host)" == "claude" ]]; then
+    json_emit claude "$msg" "$reason" "" "" "$kind" && return 0
+  fi
+  json_emit "$kind" "$msg" "$reason" "$agent" && return 0
+  echo "{\"permission\":\"$kind\",\"user_message\":\"kleosrules: JSON tool required\",\"reason\":\"missing-json\"}"
+}
+
 emit_allow() {
   json_emit allow "${1:-}" && return 0
   echo '{"permission":"allow"}'
 }
 
 emit_deny() {
-  local msg="$1" agent="${2:-}" reason="${3:-deny}"
-  if type detect_host >/dev/null 2>&1 && [[ "$(detect_host)" == "claude" ]]; then
-    json_emit claude "$msg" "$reason" "" "" deny && return 0
-  fi
-  json_emit deny "$msg" "$reason" "$agent" && return 0
-  echo '{"permission":"deny","user_message":"kleosrules: JSON tool required","reason":"missing-json"}'
+  emit_perm deny "$1" "${3:-deny}" "$2"
 }
 
 emit_ask() {
-  local msg="$1" agent="${2:-}" reason="${3:-ask}"
-  if type detect_host >/dev/null 2>&1 && [[ "$(detect_host)" == "claude" ]]; then
-    json_emit claude "$msg" "$reason" "" "" ask && return 0
-  fi
-  json_emit ask "$msg" "$reason" "$agent" && return 0
-  echo '{"permission":"ask","user_message":"kleosrules: JSON tool required","reason":"missing-json"}'
+  emit_perm ask "$1" "${3:-ask}" "$2"
 }
 
 emit_quiet() { echo '{}'; }

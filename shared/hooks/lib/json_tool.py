@@ -149,7 +149,7 @@ def cmd_decode_shell():
 
 def cmd_decode_read():
     data = load_stdin()
-    path = first(data, ("file_path", "tool_input.file_path", "tool_input.path"))
+    path = first(data, ("file_path", "path", "tool_input.file_path", "tool_input.path"))
     sys.stdout.write("FILE_PATH=%s\n" % posix_sq(path if isinstance(path, str) else as_text(path)))
     return 0
 

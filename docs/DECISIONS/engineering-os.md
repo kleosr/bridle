@@ -25,7 +25,7 @@ The host owns the model loop. This pack is the durable engineering layer around 
 
 ## Source boundary
 
-The design adopts progressive disclosure, external verification, fail-closed boundary checks, feature pass-state, and isolated reviewers. Sources include OpenAI's harness-engineering guidance, Anthropic's context-engineering guidance, and the Learn Harness Engineering course.
+The design adopts progressive disclosure, external verification, fail-closed boundary checks, feature pass-state, isolated reviewers, and Hashimoto's ratchet (a mistake becomes a pin). Sources: Hashimoto; Fowler/Böckeler (guides vs sensors); Osmani / Google (instructions fail a test; loop engineering); LangChain (`Agent = Model + Harness`); OpenAI Codex (declarative constraints); Anthropic (structured permissions, not prompt-level trust). The X compilation is not the origin.
 
 It rejects a pack-owned ReAct loop, session-start prompt injection, extra hook events, self-modifying harnesses, timer loops, vector-memory stacks, multi-agent debate, and always-on policy encyclopedias. The host already provides those mechanisms or they add ceremony without proof.
 

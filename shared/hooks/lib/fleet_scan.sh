@@ -30,7 +30,10 @@ owned_hash() {
 symlink_force() {
   local src="$1" dst="$2"
   mkdir -p "$(dirname "$dst")"
-  if ln -sfn "$src" "$dst" 2>/dev/null && [[ -e "$dst" || -L "$dst" ]]; then
+  # Git Bash `ln -s` copies directories unless winsymlinks:nativestrict.
+  # Uninstall removes catalog skills only when they are real symlinks
+  # (directory copies need FORCE=1).
+  if (MSYS="${MSYS:+$MSYS }winsymlinks:nativestrict" ln -sfn "$src" "$dst") 2>/dev/null && [[ -L "$dst" ]]; then
     return 0
   fi
   rm -rf "$dst"
