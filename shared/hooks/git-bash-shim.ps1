@@ -5,13 +5,15 @@ $utf8 = New-Object System.Text.UTF8Encoding $false
 [Console]::InputEncoding = $utf8
 [Console]::OutputEncoding = $utf8
 $gitBash = 'C:\Program Files\Git\bin\bash.exe'
-# Stay under hooks.json timeouts (read=10s, shell=30s): first-byte wait + idle drain + bash.
-$stdinFirstByteMs = 2000
+# Stay under hooks.json timeouts (read/submit=30s, shell=60s): first-byte wait + idle drain + bash.
+$stdinFirstByteMs = 3000
 $stdinIdleMs = 400
 $stdinMaxMs = 8000
 $havePipePeek = $false
-try {
-  Add-Type -TypeDefinition @'
+# The P/Invoke helper is compiled once to a DLL beside this script and loaded
+# from there afterwards. Compiling C# in-process (csc.exe) on every hook cost
+# 1-3 s per invocation and, under load, exceeded the hook timeout.
+$pipeUtilSrc = @'
 using System;
 using System.Runtime.InteropServices;
 public static class KleosPipeUtil {
@@ -21,8 +23,19 @@ public static class KleosPipeUtil {
   public static extern bool PeekNamedPipe(IntPtr hPipe, byte[] lpBuffer, uint nBufferSize, out uint lpBytesRead, out uint lpTotalBytesAvail, out uint lpBytesLeftThisMessage);
 }
 '@
+$pipeUtilDll = Join-Path $PSScriptRoot 'KleosPipeUtil.dll'
+try {
+  if (-not (Test-Path -LiteralPath $pipeUtilDll)) {
+    $tmpDll = Join-Path ([System.IO.Path]::GetTempPath()) ('KleosPipeUtil-' + [guid]::NewGuid().ToString('n') + '.dll')
+    Add-Type -TypeDefinition $pipeUtilSrc -OutputAssembly $tmpDll
+    try { Move-Item -LiteralPath $tmpDll -Destination $pipeUtilDll -ErrorAction Stop }
+    catch { Remove-Item -LiteralPath $tmpDll -Force -ErrorAction SilentlyContinue }  # another shim won the race
+  }
+  Add-Type -Path $pipeUtilDll
   $havePipePeek = $true
-} catch {}
+} catch {
+  try { Add-Type -TypeDefinition $pipeUtilSrc; $havePipePeek = $true } catch {}
+}
 
 function Write-HookLog([string]$msg) {
   try {
@@ -58,6 +71,11 @@ function Emit-ShimFailure([string]$detail) {
 }
 
 function Unix-Path([string]$win) {
+  # Drive-letter paths convert in-process (C:\a\b -> /c/a/b); spawning bash for
+  # cygpath cost ~0.5-2 s each under load. Anything else falls back to cygpath.
+  if ($win -match '^([A-Za-z]):[\\/](.*)$') {
+    return '/' + $matches[1].ToLower() + '/' + ($matches[2] -replace '\\', '/')
+  }
   $env:KLEOS_CYG = $win
   $u = & $gitBash --noprofile --norc -c 'cygpath -u "$KLEOS_CYG"'
   if (-not $u) { throw 'cygpath failed' }

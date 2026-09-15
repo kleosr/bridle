@@ -22,7 +22,7 @@ if [[ ! -f "$POL" ]]; then
   exit 0
 fi
 FILE_PATH="$(canon_secret_path "${FILE_PATH:-}")"
-if [[ -n "$FILE_PATH" ]] && printf '%s' "$FILE_PATH" | grep -qiE -f "$POL"; then
+if [[ -n "$FILE_PATH" ]] && policy_match_i "$FILE_PATH" "$POL"; then
   emit_deny "AUTONOMY BLOCK: reading a sensitive path is blocked to protect secrets from model context. Read it yourself if needed." "" secret-path
   exit 0
 fi

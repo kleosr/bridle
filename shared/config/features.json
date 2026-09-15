@@ -31,7 +31,7 @@
         "command": "TESTS=gate_edges,sql_scope bash tests/run.sh",
         "exit": 0,
         "proves": "tests/gate_edges.sh",
-        "recordedAt": "2026-09-14T16:30:47Z"
+        "recordedAt": "2026-09-15T05:22:47Z"
       }
     },
     {
