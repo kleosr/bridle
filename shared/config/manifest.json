@@ -1,6 +1,6 @@
 {
   "owner": "kleosrules",
-  "version": 4,
+  "version": 5,
   "hookEvents": {
     "beforeSubmitPrompt": "before_submit_prompt.sh",
     "beforeShellExecution": "before_shell.sh",
@@ -15,6 +15,7 @@
     "sql_scope.sh",
     "verify_gate.sh",
     "feature_gate.sh",
+    "complete_gate.sh",
     "json_tool.py",
     "json_tool.js"
   ],

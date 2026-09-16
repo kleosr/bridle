@@ -6,6 +6,7 @@ source "$HERE/lib/common.sh"
 source "$HERE/lib/diff_gate.sh"
 source "$HERE/lib/verify_gate.sh"
 source "$HERE/lib/feature_gate.sh"
+source "$HERE/lib/complete_gate.sh"
 INPUT="$(hook_stdin)"
 json_available || { emit_quiet; exit 0; }
 if ! DECODE="$(printf '%s' "$INPUT" | json_run decode-stop)"; then
@@ -20,6 +21,7 @@ git -C "$WR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { emit_quiet; ex
 MSG="$(gate_diff "$WR" || true)"
 VER="$(gate_verify "$WR" || true)"
 FEAT="$(gate_features "$WR" || true)"
-MSG="${MSG}${VER}${FEAT}"
+COMP="$(gate_completion "$WR" || true)"
+MSG="${MSG}${VER}${FEAT}${COMP}"
 [[ -n "$MSG" ]] || { emit_quiet; exit 0; }
 emit_followup "$MSG"
