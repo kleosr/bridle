@@ -48,6 +48,19 @@ printf "import { a } from './a'\nexport const b = a + 1\n" > "$CE_TMP/clean/b.ts
 RESULT="$(ce_stop "$CE_TMP/clean" | jq -c .)"
 run_test "stop: clean wired edit is quiet" "{}" "$RESULT"
 
+# --- prose "not implemented" is not a stub (near-zero-false-positive subset) ---
+ce_repo "$CE_TMP/prose"
+printf 'export const a = 1\n' > "$CE_TMP/prose/a.ts"
+printf "import { a } from './a'\nexport const b = a\n" > "$CE_TMP/prose/b.ts"
+ce_commit "$CE_TMP/prose" base
+printf "import { a } from './a'\nexport const b = a + 1 // not implemented in older runtimes\n" > "$CE_TMP/prose/b.ts"
+RESULT="$(ce_stop "$CE_TMP/prose" | jq -c .)"
+run_test "regression: stub detector does not match ordinary not-implemented prose (stop quiet)" "{}" "$RESULT"
+CE_PROSE_OUT="$(bash "$COMPLETE" check "$CE_TMP/prose"; echo "exit=$?")"
+run_test "regression: stub detector does not match ordinary not-implemented prose (exit 0)" "exit=0" "$(printf '%s' "$CE_PROSE_OUT" | tail -1)"
+run_test "regression: stub detector does not match ordinary not-implemented prose (no stub)" "0" "$(printf '%s' "$CE_PROSE_OUT" | sed '$d' | jq -r '.counts.stub')"
+run_test "regression: stub detector does not match ordinary not-implemented prose (act)" "act" "$(printf '%s' "$CE_PROSE_OUT" | sed '$d' | jq -r '.verdict')"
+
 # --- complete.sh: clean wired edit scores 100 / act / exit 0 ---
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"
 run_test "complete: clean wired edit exits 0 (act)" "exit=0" "$(printf '%s' "$RESULT" | tail -1)"
