@@ -6,13 +6,25 @@ set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=shared/hooks/lib/common.sh
 source "$PACK/shared/hooks/lib/common.sh"
+# shellcheck source=shared/hooks/lib/feature_gate.sh
+source "$PACK/shared/hooks/lib/feature_gate.sh"
 require_jq
-FILE="${FEATURE_FILE:-$PACK/shared/config/features.json}"
-ROOT="${FEATURE_ROOT:-$PACK}"
+# The ledger describes the workspace this command runs in: this pack when the
+# cwd is inside it, otherwise <repo>/.cursor/bridle/features.json.
+WS="$(ledger_root)"
+ledger_paths "$WS"
+FILE="${FEATURE_FILE:-$LEDGER_FILE}"
+ROOT="${FEATURE_ROOT:-$WS}"
+if [[ -n "${FEATURE_FILE:-}" ]]; then
+  TREE_EXCLUDE="$(ledger_rel "$ROOT" "$FILE")"
+else
+  TREE_EXCLUDE="$LEDGER_EXCLUDE"
+fi
 CMD="${1:-}"
 
 usage() {
   echo "usage: bash scripts/feature.sh {list|next|check|start <id>|pass <id>|note <id> <hypothesis>|block <id> <reason>}" >&2
+  echo "ledger: this pack -> shared/config/features.json; any other repo -> <root>/.cursor/bridle/features.json (FEATURE_FILE / FEATURE_ROOT override)." >&2
   echo "note: replaces lastFailure.nextExperiment with the agent's diagnosis. Requires a recorded failure." >&2
   exit 2
 }
@@ -56,7 +68,7 @@ cmd_next() {
 }
 
 cmd_check() {
-  local dup n_active limit invalid
+  local dup n_active limit invalid tree stale
   need_file
   dup="$(jq -r '.features | group_by(.id) | map(select(length > 1)[0].id) | .[]?' "$FILE")"
   [[ -z "$dup" ]] || { echo "duplicate feature id: $dup" >&2; exit 1; }
@@ -72,7 +84,7 @@ cmd_check() {
       and (.behavior | type == "string" and length > 0)
       and (.verification | type == "string" and length > 0)
       and (.status == "not_started" or .status == "in_progress" or .status == "blocked" or .status == "passing")
-      and ((has("evidence") | not) or (.evidence | type == "object"))
+      and ((has("evidence") | not) or (.evidence | type == "object" and ((has("tree") | not) or (.tree | type == "string"))))
       and ((has("lastFailure") | not) or (
         .lastFailure | type == "object"
         and (.command | type == "string" and length > 0)
@@ -100,6 +112,16 @@ cmd_check() {
     ) | .id
   ' "$FILE")"
   [[ -z "$invalid" ]] || { echo "passing feature lacks valid evidence: $invalid" >&2; exit 1; }
+  # Passing means passing for this workspace. A row whose evidence.tree differs
+  # from the tree now is stale. Rows without a tree predate this check and are
+  # accepted here so the pack can bootstrap; the stop sensor still names them.
+  tree="$(ledger_tree "$ROOT" "$TREE_EXCLUDE")"
+  stale="$(jq -r --arg t "$tree" '
+    .features[] |
+    select(.status == "passing" and has("evidence") and (.evidence | has("tree")) and .evidence.tree != $t) |
+    .id
+  ' "$FILE")"
+  [[ -z "$stale" ]] || { echo "passing feature has stale evidence (workspace changed since pass): $stale" >&2; echo "fix: bash scripts/feature.sh pass <id>" >&2; exit 1; }
   while IFS= read -r proves; do
     [[ -z "$proves" ]] && continue
     [[ -e "$ROOT/$proves" ]] || { echo "evidence.proves missing: $proves" >&2; exit 1; }
@@ -126,7 +148,7 @@ cmd_start() {
 }
 
 cmd_pass() {
-  local id="$1" verify ec now
+  local id="$1" verify ec now tree
   [[ -n "$id" ]] || usage
   need_file
   has_id "$id" || { echo "unknown feature: $id" >&2; exit 1; }
@@ -149,12 +171,13 @@ cmd_pass() {
     echo "fix: $verify ; then bash scripts/feature.sh pass $id" >&2
     exit "$ec"
   fi
-  jq --arg id "$id" --arg cmd "$verify" --argjson exit "$ec" --arg at "$now" '
+  tree="$(ledger_tree "$ROOT" "$TREE_EXCLUDE")"
+  jq --arg id "$id" --arg cmd "$verify" --argjson exit "$ec" --arg at "$now" --arg tree "$tree" '
     .features |= map(
       if .id == $id then
         del(.lastFailure) |
         .status = "passing" |
-        .evidence = ((.evidence // {}) + {command: $cmd, exit: $exit, recordedAt: $at})
+        .evidence = ((.evidence // {}) + {command: $cmd, exit: $exit, recordedAt: $at, tree: $tree})
       else . end
     )
   ' "$FILE" | write_json
