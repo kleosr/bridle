@@ -13,7 +13,6 @@
     "shell_gate.sh",
     "diff_gate.sh",
     "sql_scope.sh",
-    "host.sh",
     "verify_gate.sh",
     "feature_gate.sh",
     "json_tool.py",
@@ -33,7 +32,8 @@
     "stop_gate.sh",
     "lean_gate.sh",
     "pre_tool_use.sh",
-    "post_tool_use.sh"
+    "post_tool_use.sh",
+    "lib/host.sh"
   ],
   "legacyLibCleanup": [
     "shell_fleet.sh"

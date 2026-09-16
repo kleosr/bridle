@@ -98,7 +98,7 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/host.sh lib/verify_gate.sh lib/feature_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/verify_gate.sh lib/feature_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else

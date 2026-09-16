@@ -46,14 +46,12 @@ I built this so I could finally let go—knowing the boundary holds, the proof i
 
 The rules rely on Cursor's native instruction hierarchy and rule attachments. The hooks bind to Cursor's four lifecycle events, its JSON IPC schema, its `failClosed` contract, and its process runner. The installer configures `~/.cursor`. Every single test, benchmark, and live probe in `docs/host-capability.md` was executed against Cursor.
 
-If you attempt to port this to Claude Code, Codex, Windsurf, Aider, or a custom LLM runner:
+If you attempt to port this to any other agent host:
 
 - **I will not help you.**
 - **I will not answer issues, discussions, or forum posts about it.**
 - **I will not review or merge pull requests for other hosts.**
 - **I will not maintain or support external adapters.**
-
-There are leftover experimental files in `shared/hosts/` and a `KLEOS_HOST` toggle in the codebase from an earlier exploration. They are completely unsupported, unmaintained, and will likely be deleted. 
 
 If you use another tool, you are completely on your own. This is not a negotiation.
 

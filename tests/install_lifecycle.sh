@@ -9,7 +9,7 @@ LC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-lc.XXXXXX")"
 HOOKS_DIR="$PACK/shared/hooks"
 # shellcheck source=shared/hooks/lib/fleet_install.sh
 source "$HOOKS_DIR/lib/fleet_install.sh"
-EXPECTED_HOOK_SH=$((4 + 8))
+EXPECTED_HOOK_SH=$((4 + 7))
 
 INSTALL1_EC=0
 HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
@@ -37,9 +37,11 @@ ANIMATE_SKILL="$(test -e "$LC_HOME/.cursor/skills/animate/SKILL.md" && echo yes 
 run_test "install links vendor animate skill from catalog" "yes" "$ANIMATE_SKILL"
 SHELL_FLEET="$(test -e "$LC_HOME/.cursor/hooks/lib/shell_fleet.sh" && echo yes || echo no)"
 run_test "install does not ship v1 shell_fleet.sh" "no" "$SHELL_FLEET"
+HOST_SH="$(test -e "$LC_HOME/.cursor/hooks/lib/host.sh" && echo yes || echo no)"
+run_test "regression: install does not ship lib/host.sh" "no" "$HOST_SH"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
-run_test "double install hook script count matches (4 scripts + 8 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+run_test "double install hook script count matches (4 scripts + 7 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
 
 DUP_BASENAMES="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' -exec basename {} \; 2>/dev/null | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "double install has no duplicate hook script basenames" "0" "$DUP_BASENAMES"
