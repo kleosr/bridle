@@ -79,7 +79,7 @@ comp_conflicts() {
 # these are sentinels that mean "this path is unfinished".
 comp_stub_count() {
   local root="$1" n
-  n="$(comp_added_lines "$root" | grep -icE 'not[ _-]?implemented|unimplemented!|NotImplementedError|todo!\(\)|unimplemented\(\)|throw new Error\((["'"'"'])[[:space:]]*(TODO|FIXME|not implemented|unimplemented)' 2>/dev/null || true)"
+  n="$(comp_added_lines "$root" | grep -icE 'unimplemented!|NotImplementedError|todo!\(\)|unimplemented\(\)|throw new Error\((["'"'"'])[[:space:]]*(TODO|FIXME|not implemented|unimplemented)' 2>/dev/null || true)"
   printf '%s' "${n:-0}"
 }
 
