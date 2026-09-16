@@ -38,7 +38,8 @@ TESTS=gate_edges bash tests/run.sh
 # 6. Check eval dimension coverage
 bash scripts/eval.sh check
 
-# 7. Check feature state ledger
+# 7. Check feature state ledger (this pack: shared/config/features.json;
+#    any other repo: <root>/.cursor/bridle/features.json — resolved from the cwd)
 bash scripts/feature.sh check
 
 # 8. Check session handoff schema

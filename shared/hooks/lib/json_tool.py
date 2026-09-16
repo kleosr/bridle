@@ -167,7 +167,9 @@ def cmd_has_scripts_test(path):
     return 1
 
 
-def cmd_features_advise(path):
+def cmd_features_advise(path, tree="", dirty=""):
+    # tree: the workspace tree now (see feature_gate.sh ledger_tree); dirty:
+    # "1" when the working tree has uncommitted changes outside the ledger.
     with open(path, "r") as handle:
         data = json.load(handle)
     features = data.get("features") if isinstance(data, dict) else None
@@ -209,6 +211,29 @@ def cmd_features_advise(path):
             "Run `bash scripts/feature.sh pass <id>` (or the listed verification) "
             "before claiming done. Editing JSON to passing is not done.\n" % " ".join(ids)
         )
+    if tree:
+        stale = []
+        for item in features:
+            if not isinstance(item, dict):
+                continue
+            if (item.get("status") or item.get("state")) not in ("passing", "pass"):
+                continue
+            evidence = item.get("evidence")
+            if not isinstance(evidence, dict) or not (evidence.get("proves") or evidence.get("command")):
+                continue
+            if evidence.get("tree") != tree:
+                stale.append(item.get("id") or "unknown")
+        if stale:
+            sys.stdout.write(
+                "FEATURE (advisory): passing with stale evidence (workspace changed since pass): %s.\n"
+                "Re-run `bash scripts/feature.sh pass <id>` before claiming done.\n" % " ".join(stale)
+            )
+    if dirty == "1" and active:
+        sys.stdout.write(
+            "FEATURE (advisory): %s is in_progress and the working tree has uncommitted changes.\n"
+            "Run `bash scripts/feature.sh pass <id>`, or commit and write the handoff, "
+            "before claiming done.\n" % " ".join(item.get("id") or "unknown" for item in active)
+        )
     return 0
 
 
@@ -240,7 +265,7 @@ def main(argv):
         if cmd == "has-scripts-test":
             return cmd_has_scripts_test(argv[2])
         if cmd == "features-advise":
-            return cmd_features_advise(argv[2])
+            return cmd_features_advise(argv[2], argv[3] if len(argv) > 3 else "", argv[4] if len(argv) > 4 else "")
         return 1
     except (ValueError, TypeError, json.JSONDecodeError, OSError, IndexError):
         return 2
