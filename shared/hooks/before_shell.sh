@@ -4,7 +4,6 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
-source "$HERE/lib/host.sh"
 source "$HERE/lib/shell_gate.sh"
 source "$HERE/lib/sql_scope.sh"
 INPUT="$(hook_stdin)"

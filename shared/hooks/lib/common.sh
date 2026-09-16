@@ -104,17 +104,12 @@ canon_secret_path() {
 json_emit() {
   local kind="$1"
   KLEOS_JSON_MSG="${2:-}" KLEOS_JSON_REASON="${3:-}" KLEOS_JSON_AGENT="${4:-}" \
-    KLEOS_JSON_CONTINUE="${5:-}" KLEOS_JSON_PERM="${6:-}" \
+    KLEOS_JSON_CONTINUE="${5:-}" \
     json_run emit "$kind"
 }
 
-# Claude Code uses hookSpecificOutput.permissionDecision instead of {permission}.
-# detect_host is optional: host.sh may not be sourced (e.g. codec-only callers).
 emit_perm() {
   local kind="$1" msg="$2" reason="$3" agent="${4:-}"
-  if type detect_host >/dev/null 2>&1 && [[ "$(detect_host)" == "claude" ]]; then
-    json_emit claude "$msg" "$reason" "" "" "$kind" && return 0
-  fi
   json_emit "$kind" "$msg" "$reason" "$agent" && return 0
   echo "{\"permission\":\"$kind\",\"user_message\":\"kleosrules: JSON tool required\",\"reason\":\"missing-json\"}"
 }

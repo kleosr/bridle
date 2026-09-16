@@ -14,7 +14,6 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/lib/common.sh"
-source "$HERE/lib/host.sh"
 INPUT="$(hook_stdin)"
 POL="$HERE/policy/secret_paths.ere"
 if [[ ! -f "$POL" ]]; then

@@ -73,6 +73,11 @@ run_test "pre-action gate: shell redirect into .ts denied before write" "deny" "
 RESULT="$(echo '{"command":"bash tests/run.sh && bash scripts/doctor.sh","cwd":"/tmp"}' | bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "pre-action gate: repo proof command allowed" "allow" "$RESULT"
 
+[[ -e "$PACK/shared/hooks/lib/host.sh" ]] && HOSTLIB=present || HOSTLIB=absent
+run_test "regression: pack does not ship lib/host.sh" "absent" "$HOSTLIB"
+[[ -e "$PACK/shared/hosts" ]] && HOSTDIR=present || HOSTDIR=absent
+run_test "regression: pack does not ship shared/hosts" "absent" "$HOSTDIR"
+
 CHARTER="$PACK/shared/rules/USER-RULES.paste.txt"
 if grep -qE 'Never above|useEffect|failClosed|globs:' "$CHARTER"; then CHARTER_DUP=fail; else CHARTER_DUP=ok; fi
 run_test "regression: charter does not restate core.mdc or hook internals" "ok" "$CHARTER_DUP"

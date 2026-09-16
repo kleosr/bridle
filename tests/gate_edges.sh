@@ -166,5 +166,6 @@ run_test "regression: read allows terminals poll payload with contents" "allow" 
 run_test "regression: read still denies .env via path field" "deny" "$(jq -n --arg p /repo/.env '{path:$p}' | bash "$PACK/shared/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: quoted read of .env denies" "deny" "$(read_verdict '"/home/ubuntu/.env"')"
 
-RESULT="$(echo '{"command":"rm -rf /","cwd":"/tmp"}' | KLEOS_HOST=claude bash "$PACK/shared/hooks/before_shell.sh" | jq -r '.hookSpecificOutput.permissionDecision // "none"')"
-run_test "regression: KLEOS_HOST=claude emits permissionDecision deny" "deny" "$RESULT"
+RESULT="$(echo '{"command":"rm -rf /","cwd":"/tmp"}' | KLEOS_HOST=claude CLAUDE_PROJECT_DIR=/tmp bash "$PACK/shared/hooks/before_shell.sh")"
+run_test "regression: leftover host env still emits Cursor permission deny" "deny" "$(printf '%s' "$RESULT" | jq -r '.permission // "none"')"
+run_test "regression: leftover host env does not emit hookSpecificOutput" "none" "$(printf '%s' "$RESULT" | jq -r '.hookSpecificOutput.permissionDecision // "none"')"
