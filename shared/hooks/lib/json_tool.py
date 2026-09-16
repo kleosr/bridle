@@ -114,19 +114,6 @@ def cmd_emit(kind):
     if kind == "followup":
         emit_obj({"followup_message": msg})
         return 0
-    if kind == "claude":
-        perm = env("KLEOS_JSON_PERM") or "deny"
-        emit_obj(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": perm,
-                    "permissionDecisionReason": msg,
-                },
-                "reason": reason,
-            }
-        )
-        return 0
     return 1
 
 

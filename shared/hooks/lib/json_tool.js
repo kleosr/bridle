@@ -93,17 +93,6 @@ function cmdEmit(kind) {
     emitObj({ followup_message: msg });
     return 0;
   }
-  if (kind === "claude") {
-    emitObj({
-      hookSpecificOutput: {
-        hookEventName: "PreToolUse",
-        permissionDecision: env("KLEOS_JSON_PERM") || "deny",
-        permissionDecisionReason: msg,
-      },
-      reason,
-    });
-    return 0;
-  }
   return 1;
 }
 
