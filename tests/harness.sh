@@ -98,19 +98,71 @@ hf_repo "$HARNESS_TMP/falsewin"
 printf 'echo ok\n' > "$HARNESS_TMP/falsewin/ok.sh"
 git -C "$HARNESS_TMP/falsewin" add ok.sh
 git -C "$HARNESS_TMP/falsewin" -c user.email=t@t -c user.name=t commit -q -m base
+mkdir -p "$HARNESS_TMP/falsewin/.cursor/bridle"
 printf '%s\n' '{"version":1,"features":[{"id":"F01","priority":1,"area":"x","title":"t","behavior":"b","verification":"true","status":"passing"}]}' \
-  > "$HARNESS_TMP/falsewin/feature_list.json"
-RESULT="$(hf_stop "$HARNESS_TMP/falsewin" | jq -r '.followup_message // "" | test("FEATURE")')"
-run_test "regression: stop advisory when feature_list.json is passing without evidence" "true" "$RESULT"
+  > "$HARNESS_TMP/falsewin/.cursor/bridle/features.json"
+RESULT="$(hf_stop "$HARNESS_TMP/falsewin" | jq -r '.followup_message // "" | test("passing without evidence")')"
+run_test "regression: stop advisory when the workspace ledger is passing without evidence" "true" "$RESULT"
 
-hf_repo "$HARNESS_TMP/truewin"
-printf 'echo ok\n' > "$HARNESS_TMP/truewin/ok.sh"
-git -C "$HARNESS_TMP/truewin" add ok.sh
-git -C "$HARNESS_TMP/truewin" -c user.email=t@t -c user.name=t commit -q -m base
-printf '%s\n' '{"version":1,"features":[{"id":"F01","priority":1,"area":"x","title":"t","behavior":"b","verification":"true","status":"passing","evidence":{"command":"true","exit":0}}]}' \
-  > "$HARNESS_TMP/truewin/feature_list.json"
-RESULT="$(hf_stop "$HARNESS_TMP/truewin" | jq -c .)"
-run_test "stop is quiet when feature_list.json passing has evidence and no other sensor hits" "{}" "$RESULT"
+# Ledger follows the workspace: pack cwd -> pack ledger; any other repo ->
+# <root>/.cursor/bridle. Passing means passing for the tree as it is now.
+RESULT="$(cd "$PACK" && bash "$FEAT" list | cut -f1 | head -1)"
+run_test "feature.sh in the pack reads the pack ledger" "H01" "$RESULT"
+EXT="$HARNESS_TMP/ext"
+hf_repo "$EXT"
+printf 'echo ok\n' > "$EXT/ok.sh"
+git -C "$EXT" add ok.sh
+git -C "$EXT" -c user.email=t@t -c user.name=t commit -q -m base
+mkdir -p "$EXT/.cursor/bridle"
+jq -n '{version:1,activeLimit:1,features:[
+  {id:"F01",priority:1,area:"x",title:"first",behavior:"b",verification:"true",status:"not_started"},
+  {id:"F02",priority:2,area:"x",title:"second",behavior:"b",verification:"true",status:"not_started"}
+]}' > "$EXT/.cursor/bridle/features.json"
+RESULT="$(cd "$EXT" && bash "$FEAT" list | cut -f1 | head -1)"
+run_test "regression: feature.sh in another repo reads <root>/.cursor/bridle/features.json" "F01" "$RESULT"
+RESULT="$(cd "$EXT" && bash "$FEAT" pass F01 >/dev/null && echo ok || echo fail)"
+run_test "external workspace: feature.sh pass records passing" "ok" "$RESULT"
+RESULT="$(jq -r '.features[0].evidence.tree // "" | length > 20' "$EXT/.cursor/bridle/features.json")"
+run_test "external workspace: pass records evidence.tree" "true" "$RESULT"
+RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "external workspace: check passes right after pass" "ok" "$RESULT"
+RESULT="$(hf_stop "$EXT" | jq -c .)"
+run_test "stop is quiet when the workspace ledger is fresh and the tree is clean" "{}" "$RESULT"
+
+printf 'echo changed\n' > "$EXT/ok.sh"
+RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "regression: an edit after pass makes check reject the stale passing row" "fail" "$RESULT"
+RESULT="$(hf_stop "$EXT" | jq -r '.followup_message // "" | test("stale evidence")')"
+run_test "regression: stop names passing rows with stale evidence" "true" "$RESULT"
+git -C "$EXT" add ok.sh
+git -C "$EXT" -c user.email=t@t -c user.name=t commit -q -m change
+RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "committing the edit does not refresh stale evidence" "fail" "$RESULT"
+RESULT="$(cd "$EXT" && bash "$FEAT" pass F01 >/dev/null && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "re-running pass after the edit makes check pass again" "ok" "$RESULT"
+RESULT="$(hf_stop "$EXT" | jq -c .)"
+run_test "stop is quiet again after re-pass on a clean tree" "{}" "$RESULT"
+
+RESULT="$(cd "$EXT" && bash "$FEAT" start F02 >/dev/null && echo ok || echo fail)"
+run_test "external workspace: feature.sh start sets in_progress" "ok" "$RESULT"
+RESULT="$(hf_stop "$EXT" | jq -c .)"
+run_test "stop is quiet with in_progress work on a clean tree" "{}" "$RESULT"
+printf 'echo wip\n' > "$EXT/ok.sh"
+RESULT="$(hf_stop "$EXT" | jq -r '.followup_message // "" | test("F02 is in_progress and the working tree has uncommitted changes")')"
+run_test "regression: stop names in_progress work left on a dirty tree" "true" "$RESULT"
+
+RESULT="$(cd "$EXT" && bash "$HAND" check)"
+run_test "handoff.sh in another repo treats absence as ok" "handoff absent (ok)" "$RESULT"
+printf '%s\n' '{"version":1,"task":"t","verified":{"command":"true","exit":0},"remaining":["x"],"nextAction":"continue"}' \
+  | (cd "$EXT" && bash "$HAND" write >/dev/null)
+RESULT="$(test -f "$EXT/.cursor/bridle/handoff.json" && echo yes || echo no)"
+run_test "handoff.sh in another repo writes <root>/.cursor/bridle/handoff.json" "yes" "$RESULT"
+RESULT="$(cd "$EXT" && bash "$FEAT" pass F02 >/dev/null && bash "$FEAT" pass F01 >/dev/null && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "external workspace: both rows fresh after re-pass on the dirty tree" "ok" "$RESULT"
+printf '%s\n' '{"version":1,"task":"t2","verified":{"command":"true","exit":0},"remaining":[],"nextAction":"done"}' \
+  | (cd "$EXT" && bash "$HAND" write >/dev/null)
+RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "handoff write does not stale the ledger (excluded from the tree)" "ok" "$RESULT"
 
 RESULT="$(jq -r '.hooks.stop[0].loop_limit' "$PACK/shared/hooks/hooks.json")"
 run_test "stop remains advisory (loop_limit 1; no new hook events)" "1" "$RESULT"

@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Core
 
-Understand the files you will change. Change them. Verify the behavior this change can break. Correct failures. Do not claim done on stale evidence. Cite command + exit (or a driven UI path). A missing or nonzero observation is not success.
+Establish the change surface — the code you will change plus its callers, registrations, config, and tests — then change it. Verify the behavior this change can break. Correct failures.
 
 ## Change
 State the intended behavior and non-goals when the task leaves them open. Trace callers and contracts before changing a boundary. Preserve unrelated work. If the same check fails twice, stop repeating it: record the evidence, change the hypothesis, or name the missing input. Remove temporary instrumentation when the investigation ends.
@@ -43,5 +43,5 @@ Hand-written edits through the host’s native edit tools. Shell for builds, tes
 Retrieval: native codebase search for behavior and concept questions (it ranks by meaning, not by name); Grep / Glob for exact symbols and paths. A search hit is a pointer, not evidence — Read the file before you cite or edit it, and do not widen a read to a whole tree when one path answers the question.
 
 ## Harness
-Agent = Model + Harness. Prompting is not the control plane. Guides: charter, this file, `testing.mdc`, skills, `AGENTS.md`. Sensors: four hooks + the verify this change can break. Do not add hook events.
+Guides: charter, this file, `testing.mdc`, skills, `AGENTS.md`. Sensors: four hooks + the verify this change can break. Do not add hook events.
 Map: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. `hunter` / `cut` / `prove` on match.

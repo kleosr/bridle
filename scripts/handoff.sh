@@ -6,12 +6,16 @@ set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=shared/hooks/lib/common.sh
 source "$PACK/shared/hooks/lib/common.sh"
+# shellcheck source=shared/hooks/lib/feature_gate.sh
+source "$PACK/shared/hooks/lib/feature_gate.sh"
 require_jq
-FILE="${HANDOFF_FILE:-$PACK/state/handoff.json}"
+ledger_paths "$(ledger_root)"
+FILE="${HANDOFF_FILE:-$LEDGER_HANDOFF}"
 CMD="${1:-}"
 
 usage() {
   echo "usage: bash scripts/handoff.sh {check|print|write}" >&2
+  echo "file: this pack -> state/handoff.json; any other repo -> <root>/.cursor/bridle/handoff.json (HANDOFF_FILE override)." >&2
   echo "write reads JSON on stdin." >&2
   exit 2
 }

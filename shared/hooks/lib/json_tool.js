@@ -96,7 +96,9 @@ function cmdEmit(kind) {
   return 1;
 }
 
-function featuresAdvise(path) {
+// tree: the workspace tree now (see feature_gate.sh ledger_tree); dirty: "1"
+// when the working tree has uncommitted changes outside the ledger.
+function featuresAdvise(path, tree, dirty) {
   const data = JSON.parse(fs.readFileSync(path, "utf8"));
   const features = data && data.features;
   if (!Array.isArray(features)) {
@@ -138,6 +140,31 @@ function featuresAdvise(path) {
       "FEATURE (advisory): passing without evidence: " +
         ids.join(" ") +
         ".\nRun `bash scripts/feature.sh pass <id>` (or the listed verification) before claiming done. Editing JSON to passing is not done.\n"
+    );
+  }
+  if (tree) {
+    const stale = [];
+    for (const item of features) {
+      if (!item || typeof item !== "object") continue;
+      const status = item.status || item.state;
+      if (status !== "passing" && status !== "pass") continue;
+      const evidence = item.evidence;
+      if (!evidence || typeof evidence !== "object" || (!evidence.proves && !evidence.command)) continue;
+      if (evidence.tree !== tree) stale.push(item.id || "unknown");
+    }
+    if (stale.length) {
+      process.stdout.write(
+        "FEATURE (advisory): passing with stale evidence (workspace changed since pass): " +
+          stale.join(" ") +
+          ".\nRe-run `bash scripts/feature.sh pass <id>` before claiming done.\n"
+      );
+    }
+  }
+  if (dirty === "1" && active.length) {
+    process.stdout.write(
+      "FEATURE (advisory): " +
+        active.map((item) => item.id || "unknown").join(" ") +
+        " is in_progress and the working tree has uncommitted changes.\nRun `bash scripts/feature.sh pass <id>`, or commit and write the handoff, before claiming done.\n"
     );
   }
   return 0;
@@ -195,7 +222,7 @@ function main(argv) {
     const data = JSON.parse(fs.readFileSync(argv[3], "utf8"));
     return data && data.scripts && data.scripts.test ? 0 : 1;
   }
-  if (cmd === "features-advise") return featuresAdvise(argv[3]);
+  if (cmd === "features-advise") return featuresAdvise(argv[3], argv[4] || "", argv[5] || "");
   return 1;
 }
 

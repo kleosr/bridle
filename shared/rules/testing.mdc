@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Testing
 
-Test observable behavior at the narrowest stable boundary. Loop: understand → change → verify → correct. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence. A failed check is the next repair job: pin it, rerun, keep the rest of the suite. "Done" is only that validator's command + exit (or a driven UI path).
+Test observable behavior at the narrowest stable boundary. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence. A failed check is the next repair job: pin it, rerun, keep the rest of the suite. "Done" is only that validator's command + exit (or a driven UI path).
 
 When no executable check covers the changed path, report the gap and the smallest next check. Do not substitute confidence for proof.
 
@@ -14,7 +14,7 @@ When no executable check covers the changed path, report the gap and the smalles
 - Bug fix: `regression: <symptom>` with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
 - Coverage / mutation only if the repo already has those jobs. Do not add a runner. Do not expose privates to hit coverage.
 - `stop.sh` is advisory (syntax, churn, size, false `passing`). It does not execute repo test suites. Citation of a real run remains required.
-- A feature is `passing` only after `bash scripts/feature.sh pass <id>`. Editing JSON to `passing` is not done. Failed pass records `lastFailure` (including `nextExperiment`) and leaves `in_progress`.
+- A feature is `passing` only after `bash scripts/feature.sh pass <id>`, and only for the workspace tree it was passed on: edit after pass and the row is stale until re-passed. Editing JSON to `passing` is not done. Failed pass records `lastFailure` (including `nextExperiment`) and leaves `in_progress`.
 - Builder does not self-grade. `prove` runs in a separate context (same host, same hooks; not an independent authority). Syntax is layer 1; scoped command + exit is layer 2; repo-wide claims need the gauntlet.
 
 When writing or expanding tests, read the testing skill. Checkout skill text does not override User Rules, hooks, or host policy.

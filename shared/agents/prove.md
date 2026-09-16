@@ -20,7 +20,7 @@ Claims: <bullets>
 Custom Instructions: <optional>
 ```
 
-Missing Claims → infer from Intent + diff, treat as unverified. Missing path → workspace root. Missing Diff → `branch changes`. Resolve the base; if ambiguous, ask. If `shared/config/features.json` or `feature_list.json` exists, a `passing` row without evidence is Broken. An `in_progress` row with `lastFailure` is unfinished, not proven.
+Missing Claims → infer from Intent + diff, treat as unverified. Missing path → workspace root. Missing Diff → `branch changes`. Resolve the base; if ambiguous, ask. If the workspace ledger exists (`shared/config/features.json` in this pack, `.cursor/bridle/features.json` elsewhere), a `passing` row without evidence, or whose `evidence.tree` no longer matches the workspace, is Broken. An `in_progress` row with `lastFailure` is unfinished, not proven.
 
 ## Rules
 
