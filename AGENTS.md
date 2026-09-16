@@ -4,7 +4,8 @@ bridle is a Cursor **user harness**: charter, always-on law, skills, and four Ba
 
 **Init:** `bash scripts/ready.sh`  
 **Inventory:** `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh`  
-**Verify:** the behavior this change can break; gauntlet `bash tests/run.sh`  
+**Verify:** the behavior this change can break; gauntlet `bash tests/run.sh` 
+**Completion:** `bash scripts/complete.sh check` (confidence + act/escalate); benchmark `bash scripts/bench.sh`  
 Windows: Git Bash.
 
 ## First reads
@@ -28,7 +29,7 @@ Windows: Git Bash.
 - Hooks: four events. No `sessionStart`, no `preToolUse`, no `updated_input`.
 
 ## Docs
-`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/host-capability.md`.
+`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/DECISIONS/completion-gate.md`, `docs/host-capability.md`.
 
 ## Install
 ```bash

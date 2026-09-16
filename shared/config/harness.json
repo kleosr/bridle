@@ -1,6 +1,6 @@
 {
   "owner": "kleosrules",
-  "version": 6,
+  "version": 7,
   "runtime": {
     "loop": "host",
     "shell": "bash",
@@ -10,7 +10,9 @@
     "init": "bash scripts/ready.sh",
     "inventory": "DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh",
     "verify": "bash tests/run.sh",
-    "install": "FORCE=1 bash scripts/install.sh"
+    "install": "FORCE=1 bash scripts/install.sh",
+    "complete": "bash scripts/complete.sh check",
+    "bench": "bash scripts/bench.sh"
   },
   "verification": {
     "default": "scoped"
@@ -32,7 +34,8 @@
     "verification",
     "scope",
     "lifecycle",
-    "continuity"
+    "continuity",
+    "integration"
   ],
   "requiredEvalDimensions": [
     "completion",
@@ -44,7 +47,8 @@
     "false_completion",
     "instruction_conflict",
     "execution_reliability",
-    "continuity"
+    "continuity",
+    "integration"
   ],
   "extend": {
     "rules": "shared/config/rules.global.txt",

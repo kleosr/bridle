@@ -11,7 +11,8 @@
     "continuity",
     "execution_reliability",
     "context_efficiency",
-    "regression"
+    "regression",
+    "integration"
   ],
   "tasks": [
     {
@@ -79,6 +80,18 @@
       "dimension": "regression",
       "layer": "verification",
       "proves": "tests/harness.sh"
+    },
+    {
+      "id": "integration-unwired-orphan",
+      "dimension": "integration",
+      "layer": "integration",
+      "proves": "tests/complete_edges.sh"
+    },
+    {
+      "id": "completion-confidence-verdict",
+      "dimension": "completion",
+      "layer": "integration",
+      "proves": "tests/complete_edges.sh"
     }
   ]
 }
