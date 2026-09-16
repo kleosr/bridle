@@ -255,6 +255,36 @@
         "exit": 0,
         "recordedAt": "2026-09-15T18:42:56Z"
       }
+    },
+    {
+      "id": "H17",
+      "priority": 17,
+      "area": "integration",
+      "layer": "integration",
+      "title": "Completion / integration stop advisory",
+      "behavior": "stop.sh emits one advisory when the working tree has unresolved VCS conflict markers or not-implemented stubs added in the change. It stays quiet on wired edits and does not fire on orphan modules alone (orphan analysis is CLI-only to keep the hook near-zero false positive). It cannot refuse completion.",
+      "verification": "TESTS=complete_edges bash tests/run.sh",
+      "status": "not_started"
+    },
+    {
+      "id": "H18",
+      "priority": 18,
+      "area": "integration",
+      "layer": "verification",
+      "title": "Completion-confidence scorer",
+      "behavior": "scripts/complete.sh check scores the working tree vs HEAD into a deterministic confidence (0-100) and a verdict: act when confidence >= COMPLETE_MIN_CONFIDENCE (default 80, exit 0), escalate otherwise (exit 3). Conflicts and changed-file syntax errors are critical (confidence 0); source added but never referenced (orphan) and not-implemented stubs are heavy; ownerless TODOs are a light nudge. It never executes repo code and never replaces the repo verify command.",
+      "verification": "TESTS=complete_edges bash tests/run.sh",
+      "status": "not_started"
+    },
+    {
+      "id": "H19",
+      "priority": 19,
+      "area": "evals",
+      "layer": "integration",
+      "title": "Completion-confidence benchmark",
+      "behavior": "scripts/bench.sh materialises the labelled corpus in evals/bench/cases.json as scratch git repos and scores the completion verdict against the label, reporting accuracy/precision/recall/false-positive-rate and a before/after against the no-completion-detection baseline. It exits 0 only when accuracy and false-positive-rate meet the corpus target.",
+      "verification": "bash scripts/bench.sh",
+      "status": "not_started"
     }
   ]
 }
