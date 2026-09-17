@@ -92,6 +92,12 @@
       "dimension": "completion",
       "layer": "integration",
       "proves": "tests/complete_edges.sh"
+    },
+    {
+      "id": "integration-dangling-reference",
+      "dimension": "regression",
+      "layer": "integration",
+      "proves": "tests/complete_edges.sh"
     }
   ]
 }

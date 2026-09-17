@@ -2,8 +2,10 @@
 # Completion / integration sensor. Advisory only. Reads the working tree vs
 # HEAD and reports end-to-end incompleteness signals: VCS conflict markers,
 # explicit not-implemented placeholders left in shipped code, ownerless
-# TODO/FIXME added in this change, and source modules added but never
-# referenced anywhere (compiles-but-unwired). It never executes repo code.
+# TODO/FIXME added in this change, source modules added but never referenced
+# anywhere (compiles-but-unwired), and declarations removed but still referenced
+# by surviving code (dangling reference / incomplete refactor). It never
+# executes repo code.
 #
 # Two entry points share the detectors:
 #   gate_completion ROOT   stop.sh: cheap, near-zero-false-positive signals
@@ -17,7 +19,7 @@ COMPLETE_SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|hp
 COMPLETE_ENTRY_RE='(^|/)(index|main|mod|__init__|__main__|setup|conftest|app|server|cli|middleware|route|router|routes|page|layout|loading|error|not-found|handler|worker|__mocks__)\.'
 COMPLETE_AUTODIR_RE='(^|/)(pages|app|routes|migrations|migrate|seeds|fixtures|__tests__|__mocks__|test|tests|spec|specs|e2e|cypress|stories|node_modules|dist|build|vendor|coverage)/'
 COMPLETE_TEST_RE='(\.(test|spec|stories)\.|_test\.|_spec\.|_test$)'
-COMPLETE_MAX_SCAN_FILES=5000
+COMPLETE_MAX_SCAN_FILES="${COMPLETE_MAX_SCAN_FILES:-5000}"
 
 comp_has_head() { git -C "$1" rev-parse --verify -q HEAD >/dev/null 2>&1; }
 
@@ -110,7 +112,8 @@ comp_anchored_by_existing() {
     for a in ${added[@]+"${added[@]}"}; do [[ "$f" == "$a" ]] && continue 2; done
     comp_file_refs "$root" "$f" "$base" && return 0
     count=$((count + 1))
-    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 1
+    # Cap: treat remainder as present so an unscanned tree stays quiet.
+    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 0
   done < <({ git -C "$root" ls-files -- 2>/dev/null; git -C "$root" ls-files -o --exclude-standard -- 2>/dev/null; } | sort -u)
   return 1
 }
@@ -155,6 +158,65 @@ comp_orphans() {
   return 0
 }
 
+# Exported / top-level declarations removed by this change (JS/TS export, python
+# def|class, go func). One symbol name per line. High-signal only — locals and
+# non-exported members are intentionally out of scope to keep precision high.
+comp_removed_symbols() {
+  local root="$1"
+  comp_has_head "$root" || return 0
+  git -C "$root" diff --no-color HEAD -- 2>/dev/null \
+    | grep -E '^-' | grep -vE '^---' | sed -E 's/^-//' \
+    | grep -oE '^export[[:space:]]+(default[[:space:]]+)?(async[[:space:]]+)?(function|class|const|let|var|interface|type|enum)[[:space:]]+[A-Za-z_][A-Za-z0-9_]+|^((async[[:space:]]+)?def|class|func)[[:space:]]+[A-Za-z_][A-Za-z0-9_]+' \
+    | awk '{print $NF}' | sort -u
+}
+
+# Iterate tracked + untracked working-tree files (untracked new files matter:
+# a moved declaration lands in a not-yet-staged file). Bounded by file count.
+comp_tree_files() {
+  { git -C "$1" ls-files -- 2>/dev/null; git -C "$1" ls-files -o --exclude-standard -- 2>/dev/null; } | sort -u
+}
+
+# True when $2 is still declared somewhere in the current tree (moved or
+# redeclared, not deleted). Guards against flagging renames-in-place and moves.
+comp_decl_present() {
+  local root="$1" name="$2" f count=0
+  local pat="(function|class|const|let|var|interface|type|enum|def|func)[[:space:]]+${name}([^A-Za-z0-9_]|\$)"
+  while IFS= read -r f; do
+    [[ -n "$f" && -f "$root/$f" ]] || continue
+    grep -IqE -- "$pat" "$root/$f" 2>/dev/null && return 0
+    count=$((count + 1))
+    # Cap: assume the declaration remains so dangling stays silent.
+    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 0
+  done < <(comp_tree_files "$root")
+  return 1
+}
+
+# True when $2 still appears as a whole word anywhere in the current tree.
+comp_symbol_used() {
+  local root="$1" name="$2" f count=0
+  while IFS= read -r f; do
+    [[ -n "$f" && -f "$root/$f" ]] || continue
+    grep -Iqw -F -- "$name" "$root/$f" 2>/dev/null && return 0
+    count=$((count + 1)); [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 1
+  done < <(comp_tree_files "$root")
+  return 1
+}
+
+# Symbols a declaration was removed for that no longer resolve anywhere yet are
+# still referenced by surviving code: a deleted/renamed export with a caller
+# left behind — the classic incomplete-refactor regression. One name per line.
+comp_dangling() {
+  local root="$1" name
+  comp_has_head "$root" || return 0
+  while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    [[ "${#name}" -ge 3 ]] || continue
+    comp_decl_present "$root" "$name" && continue
+    comp_symbol_used "$root" "$name" && printf '%s\n' "$name"
+  done < <(comp_removed_symbols "$root")
+  return 0
+}
+
 # stop.sh sensor: only the unambiguous signals. Emit advisory text or nothing.
 gate_completion() {
   local root="$1" out="" f stubs
@@ -185,6 +247,9 @@ complete_scan() {
   while IFS= read -r f; do
     [[ -n "$f" ]] && printf 'orphan\t%s\n' "$f"
   done < <(comp_orphans "$root")
+  while IFS= read -r f; do
+    [[ -n "$f" ]] && printf 'dangling\t%s (removed declaration still referenced)\n' "$f"
+  done < <(comp_dangling "$root")
   n="$(comp_todo_count "$root")"
   [[ "$n" =~ ^[0-9]+$ && "$n" -gt 0 ]] && printf 'todo\t%s ownerless TODO/FIXME line(s)\n' "$n"
   return 0
