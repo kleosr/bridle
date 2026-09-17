@@ -145,9 +145,9 @@
         { "path": "src/app.ts", "content": "export const app = 1\n" }
       ],
       "change": [
-        { "path": "src/app.ts", "content": "import { A } from './A'\nexport const app = new A()\n" },
-        { "path": "src/A.ts", "content": "import { B } from './B'\nexport class A { b() { return new B() } }\n" },
-        { "path": "src/B.ts", "content": "export class B {}\n" }
+        { "path": "src/app.ts", "content": "import { Alpha } from './Alpha'\nexport const app = new Alpha()\n" },
+        { "path": "src/Alpha.ts", "content": "import { Beta } from './Beta'\nexport class Alpha { b() { return new Beta() } }\n" },
+        { "path": "src/Beta.ts", "content": "export class Beta {}\n" }
       ]
     }
   ]

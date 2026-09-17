@@ -70,13 +70,23 @@ printf "import { Svc } from './Svc'\nexport class Ctl { s() { return new Svc() }
 run_test "complete: disconnected new-file island counts 2 orphans" "2" "$(bash "$COMPLETE" check "$CE_TMP/island" | jq -r '.counts.orphan')"
 
 # --- orphan reachability: new modules chained through existing code stay clean ---
+# Basenames must be >= 3 chars or comp_orphans drops them before the walk.
 ce_repo "$CE_TMP/chain"
 printf 'export const app = 1\n' > "$CE_TMP/chain/app.ts"
 ce_commit "$CE_TMP/chain" base
-printf "import { A } from './A'\nexport const app = new A()\n" > "$CE_TMP/chain/app.ts"
-printf "import { B } from './B'\nexport class A { b() { return new B() } }\n" > "$CE_TMP/chain/A.ts"
-printf 'export class B {}\n' > "$CE_TMP/chain/B.ts"
+printf "import { Alpha } from './Alpha'\nexport const app = new Alpha()\n" > "$CE_TMP/chain/app.ts"
+printf "import { Beta } from './Beta'\nexport class Alpha { b() { return new Beta() } }\n" > "$CE_TMP/chain/Alpha.ts"
+printf 'export class Beta {}\n' > "$CE_TMP/chain/Beta.ts"
 run_test "complete: new modules reachable from existing code are not orphans" "0" "$(bash "$COMPLETE" check "$CE_TMP/chain" | jq -r '.counts.orphan')"
+
+# --- orphan reachability: an unfinished scan must not flag a wired module ---
+ce_repo "$CE_TMP/scanbound"
+printf 'export const early = 1\n' > "$CE_TMP/scanbound/aaa.ts"
+printf 'export const late = 1\n' > "$CE_TMP/scanbound/zzz.ts"
+ce_commit "$CE_TMP/scanbound" base
+printf 'export class PaymentService {}\n' > "$CE_TMP/scanbound/PaymentService.ts"
+printf "import { PaymentService } from './PaymentService'\nexport const late = new PaymentService()\n" > "$CE_TMP/scanbound/zzz.ts"
+run_test "regression: scan budget exhaustion does not flag a wired module as an orphan" "0" "$(COMPLETE_MAX_SCAN_FILES=1 bash "$COMPLETE" check "$CE_TMP/scanbound" | jq -r '.counts.orphan')"
 
 # --- complete.sh: clean wired edit scores 100 / act / exit 0 ---
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"
