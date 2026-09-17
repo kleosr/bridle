@@ -41,7 +41,7 @@ Four deterministic hooks intercept execution before actions take physical effect
 - **`beforeSubmitPrompt`**: Scans outgoing prompts for secret tokens, API keys (`ghp_`, `sk-`, `AKIA`), and private keys. Blocks transmission (`continue:false`). Fail-closed.
 - **`beforeShellExecution`**: Splits commands on shell operators outside quotes. Denies destructive operations (`rm -rf /`, force push, `reset --hard`), secret-path reads, lint-suppression tampering, and shell source overwrites. Asks on infrastructure/database mutation. Fail-closed.
 - **`beforeReadFile`**: Canonicalizes paths and denies reads targeting credentials, environments, and certificates. Fail-closed.
-- **`stop`**: Evaluates turn conclusion. Emits a single non-blocking advisory if churn, syntax failures, or unverified `passing` states are detected. Never blocks loop completion.
+- **`stop`**: Evaluates turn conclusion. Emits a single non-blocking advisory if churn, syntax failures, unfinished-work markers (unresolved conflicts, not-implemented stubs), or unverified `passing` states are detected. Never blocks loop completion. The deeper change-shape checks (unwired/dangling/undeclared) are on-demand via `bash scripts/complete.sh check`, not the per-turn hook.
 
 Hook communication uses clean JSON across stdin and stdout. Missing input, malformed payloads, or absent policy files trigger an immediate environment failure (`failClosed`), forcing the agent to diagnose environment health (`scripts/doctor.sh`) rather than silently slipping past policy.
 
