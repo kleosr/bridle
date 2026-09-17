@@ -126,6 +126,29 @@
       "change": [
         { "path": "src/a.ts", "content": "export const a = 1 // TODO tighten the type later\n" }
       ]
+    },
+    {
+      "id": "orphan-island",
+      "label": "incomplete",
+      "base": [
+        { "path": "src/app.ts", "content": "export const app = 1\n" }
+      ],
+      "change": [
+        { "path": "src/PaymentService.ts", "content": "import { PaymentController } from './PaymentController'\nexport class PaymentService { c() { return new PaymentController() } }\n" },
+        { "path": "src/PaymentController.ts", "content": "import { PaymentService } from './PaymentService'\nexport class PaymentController { s() { return new PaymentService() } }\n" }
+      ]
+    },
+    {
+      "id": "chained-new-modules-wired",
+      "label": "complete",
+      "base": [
+        { "path": "src/app.ts", "content": "export const app = 1\n" }
+      ],
+      "change": [
+        { "path": "src/app.ts", "content": "import { A } from './A'\nexport const app = new A()\n" },
+        { "path": "src/A.ts", "content": "import { B } from './B'\nexport class A { b() { return new B() } }\n" },
+        { "path": "src/B.ts", "content": "export class B {}\n" }
+      ]
     }
   ]
 }
