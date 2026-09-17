@@ -78,6 +78,34 @@ printf "import { B } from './B'\nexport class A { b() { return new B() } }\n" > 
 printf 'export class B {}\n' > "$CE_TMP/chain/B.ts"
 run_test "complete: new modules reachable from existing code are not orphans" "0" "$(bash "$COMPLETE" check "$CE_TMP/chain" | jq -r '.counts.orphan')"
 
+# --- reference integrity: removed export with a caller left behind is dangling ---
+ce_repo "$CE_TMP/dangling"
+printf 'export function refund() { return 1 }\nexport const rate = 2\n' > "$CE_TMP/dangling/billing.ts"
+printf "import { refund } from './billing'\nexport const run = () => refund()\n" > "$CE_TMP/dangling/api.ts"
+ce_commit "$CE_TMP/dangling" base
+printf 'export const rate = 2\n' > "$CE_TMP/dangling/billing.ts"
+run_test "complete: removed export with surviving caller is dangling" "1" "$(bash "$COMPLETE" check "$CE_TMP/dangling" | jq -r '.counts.dangling')"
+run_test "complete: dangling reference escalates" "escalate" "$(bash "$COMPLETE" check "$CE_TMP/dangling" | jq -r '.verdict')"
+
+# --- reference integrity: a symbol moved to a new file is not dangling ---
+ce_repo "$CE_TMP/moved"
+printf 'export function refund() { return 1 }\n' > "$CE_TMP/moved/billing.ts"
+printf "import { refund } from './billing'\nexport const run = () => refund()\n" > "$CE_TMP/moved/api.ts"
+ce_commit "$CE_TMP/moved" base
+printf 'export const rate = 2\n' > "$CE_TMP/moved/billing.ts"
+printf 'export function refund() { return 1 }\n' > "$CE_TMP/moved/refunds.ts"
+printf "import { refund } from './refunds'\nexport const run = () => refund()\n" > "$CE_TMP/moved/api.ts"
+run_test "complete: a moved (still-declared) symbol is not dangling" "0" "$(bash "$COMPLETE" check "$CE_TMP/moved" | jq -r '.counts.dangling')"
+
+# --- reference integrity: renaming with all callers updated is clean ---
+ce_repo "$CE_TMP/rename"
+printf 'export function refund() { return 1 }\n' > "$CE_TMP/rename/billing.ts"
+printf "import { refund } from './billing'\nexport const run = () => refund()\n" > "$CE_TMP/rename/api.ts"
+ce_commit "$CE_TMP/rename" base
+printf 'export function reimburse() { return 1 }\n' > "$CE_TMP/rename/billing.ts"
+printf "import { reimburse } from './billing'\nexport const run = () => reimburse()\n" > "$CE_TMP/rename/api.ts"
+run_test "complete: rename with all callers updated is not dangling" "0" "$(bash "$COMPLETE" check "$CE_TMP/rename" | jq -r '.counts.dangling')"
+
 # --- complete.sh: clean wired edit scores 100 / act / exit 0 ---
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"
 run_test "complete: clean wired edit exits 0 (act)" "exit=0" "$(printf '%s' "$RESULT" | tail -1)"

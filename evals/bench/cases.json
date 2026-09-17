@@ -149,6 +149,53 @@
         { "path": "src/A.ts", "content": "import { B } from './B'\nexport class A { b() { return new B() } }\n" },
         { "path": "src/B.ts", "content": "export class B {}\n" }
       ]
+    },
+    {
+      "id": "dangling-removed-symbol",
+      "label": "incomplete",
+      "base": [
+        { "path": "src/billing.ts", "content": "export function refund() { return 1 }\nexport const rate = 2\n" },
+        { "path": "src/api.ts", "content": "import { refund } from './billing'\nexport const run = () => refund()\n" }
+      ],
+      "change": [
+        { "path": "src/billing.ts", "content": "export const rate = 2\n" }
+      ]
+    },
+    {
+      "id": "rename-all-callers-updated",
+      "label": "complete",
+      "base": [
+        { "path": "src/billing.ts", "content": "export function refund() { return 1 }\n" },
+        { "path": "src/api.ts", "content": "import { refund } from './billing'\nexport const run = () => refund()\n" }
+      ],
+      "change": [
+        { "path": "src/billing.ts", "content": "export function reimburse() { return 1 }\n" },
+        { "path": "src/api.ts", "content": "import { reimburse } from './billing'\nexport const run = () => reimburse()\n" }
+      ]
+    },
+    {
+      "id": "moved-symbol-reimport",
+      "label": "complete",
+      "base": [
+        { "path": "src/billing.ts", "content": "export function refund() { return 1 }\n" },
+        { "path": "src/api.ts", "content": "import { refund } from './billing'\nexport const run = () => refund()\n" }
+      ],
+      "change": [
+        { "path": "src/billing.ts", "content": "export const rate = 2\n" },
+        { "path": "src/refunds.ts", "content": "export function refund() { return 1 }\n" },
+        { "path": "src/api.ts", "content": "import { refund } from './refunds'\nexport const run = () => refund()\n" }
+      ]
+    },
+    {
+      "id": "delete-unused-export",
+      "label": "complete",
+      "base": [
+        { "path": "src/util.ts", "content": "export function unusedHelper() { return 1 }\nexport const keep = 2\n" },
+        { "path": "src/main.ts", "content": "import { keep } from './util'\nexport const v = keep\n" }
+      ],
+      "change": [
+        { "path": "src/util.ts", "content": "export const keep = 2\n" }
+      ]
     }
   ]
 }
