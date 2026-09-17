@@ -13,7 +13,12 @@ Bridle already enforced the *inputs* to good work (secret gates, shell gates), t
 
 Add one sensor library and one scorer, within the frozen four-hook surface:
 
-- `shared/hooks/lib/complete_gate.sh` — deterministic detectors over the working tree vs `HEAD`:
+The detectors are split by job and cost so the per-turn hook never pays for whole-repo analysis:
+
+- `shared/hooks/lib/complete_gate.sh` — the **cheap half**, safe on the stop hook: conflict markers, not-implemented stubs, ownerless TODOs, and the shared change-surface primitives (`comp_changed_paths`, `comp_added_lines`). No whole-repo scan.
+- `shared/hooks/lib/complete_graph.sh` — the **whole-repo half**, CLI-only via `scripts/complete.sh` (sourced after the gate, whose primitives it reuses): orphan reachability, dangling reference integrity, and the import extractor behind dependency integrity. The stop hook never loads it.
+
+Deterministic detectors over the working tree vs `HEAD`:
   - **conflict**: files containing both `<<<<<<<` and `>>>>>>>` markers (genuine unresolved merge).
   - **stub**: not-implemented sentinels added in the change (`throw new Error('TODO…')`, `NotImplementedError`, `todo!()`, `unimplemented!`).
   - **orphan**: a source module *added* by the change whose basename is never referenced by any other file — added but not wired/registered/imported. Uses transitive reachability from pre-existing anchors, so a disconnected island of new files that only import each other is also caught. Entrypoints (`index`, `main`, `__init__`…), framework auto-discovery dirs (`app/`, `pages/`, `routes/`, `migrations/`…), and test files are excluded so the detector stays high-precision.
