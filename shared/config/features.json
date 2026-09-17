@@ -268,9 +268,7 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:31:18Z",
-        "tree": "4ba7821ba485905d3ca4e9d7e4c9d52e82b8653f"
-      }
+        "recordedAt": "2026-09-17T00:53:07Z"      }
     },
     {
       "id": "H18",
@@ -284,9 +282,7 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:32:48Z",
-        "tree": "4ba7821ba485905d3ca4e9d7e4c9d52e82b8653f"
-      }
+        "recordedAt": "2026-09-17T00:54:39Z"      }
     },
     {
       "id": "H19",
@@ -300,9 +296,21 @@
       "evidence": {
         "command": "bash scripts/bench.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:29:49Z",
-        "tree": "4ba7821ba485905d3ca4e9d7e4c9d52e82b8653f"
-      }
+        "recordedAt": "2026-09-17T00:51:36Z"      }
+    },
+    {
+      "id": "H20",
+      "priority": 20,
+      "area": "integration",
+      "layer": "integration",
+      "title": "Reference-integrity (dangling symbol) detection",
+      "behavior": "complete_gate.sh flags a declaration removed by the change (exported JS/TS symbol, python def/class, go func) that no longer resolves anywhere yet is still referenced by surviving code — the incomplete-refactor regression. Renames with all callers updated, symbols moved to another file, and deletions of truly unused exports are not flagged. CLI-only via scripts/complete.sh (whole-tree scan); the stop hook is unchanged.",
+      "verification": "TESTS=complete_edges bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "TESTS=complete_edges bash tests/run.sh",
+        "exit": 0,
+        "recordedAt": "2026-09-17T00:56:38Z"      }
     }
   ]
 }
