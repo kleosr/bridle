@@ -91,34 +91,67 @@ comp_todo_count() {
   printf '%s' "${n:-0}"
 }
 
-# True when $base (a module name) is referenced as a whole word by any file in
-# the repo other than $self. Scans tracked + untracked; bounded by file count.
-comp_referenced() {
-  local root="$1" base="$2" self="$3" f count=0
+# True when file $2 (path under root $1) references module name $3 as a word.
+comp_file_refs() {
+  local root="$1" file="$2" base="$3"
+  [[ -f "$root/$file" ]] || return 1
+  grep -Iqw -F -- "$base" "$root/$file" 2>/dev/null
+}
+
+# True when $base is referenced by any file NOT in the added set (i.e. anchored
+# to pre-existing code). Remaining args are the added paths to exclude, so a new
+# file's only references coming from other new files do not count as anchoring.
+comp_anchored_by_existing() {
+  local root="$1" base="$2"; shift 2
+  local -a added=("$@")
+  local f a count=0
   while IFS= read -r f; do
     [[ -n "$f" ]] || continue
-    [[ "$f" == "$self" ]] && continue
-    [[ -f "$root/$f" ]] || continue
-    if grep -Iqw -F -- "$base" "$root/$f" 2>/dev/null; then
-      return 0
-    fi
+    for a in ${added[@]+"${added[@]}"}; do [[ "$f" == "$a" ]] && continue 2; done
+    comp_file_refs "$root" "$f" "$base" && return 0
     count=$((count + 1))
-    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 0
+    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 1
   done < <({ git -C "$root" ls-files -- 2>/dev/null; git -C "$root" ls-files -o --exclude-standard -- 2>/dev/null; } | sort -u)
   return 1
 }
 
-# Added source modules whose basename is never referenced elsewhere: added but
-# not imported, registered, or otherwise wired in. One path per line.
+# Added source modules not reachable from pre-existing code: a single unimported
+# file, or a whole island of new files that only reference each other. Anchors
+# are added files referenced by existing code; reachability then propagates
+# across the added set to its fixpoint. Remainder is unwired. One path per line.
 comp_orphans() {
-  local root="$1" f base
+  local root="$1" f b i j n changed
   comp_has_head "$root" || return 0
+  local -a added=() base=() anchored=()
   while IFS= read -r f; do
     [[ -n "$f" ]] || continue
-    base="${f##*/}"; base="${base%.*}"
-    [[ "${#base}" -ge 3 ]] || continue
-    comp_referenced "$root" "$base" "$f" || printf '%s\n' "$f"
+    b="${f##*/}"; b="${b%.*}"
+    [[ "${#b}" -ge 3 ]] || continue
+    added[${#added[@]}]="$f"; base[${#base[@]}]="$b"
   done < <(comp_added_sources "$root")
+  n="${#added[@]}"
+  [[ "$n" -gt 0 ]] || return 0
+  for ((i = 0; i < n; i++)); do
+    anchored[i]=0
+    comp_anchored_by_existing "$root" "${base[i]}" ${added[@]+"${added[@]}"} && anchored[i]=1
+  done
+  changed=1
+  while [[ "$changed" -eq 1 ]]; do
+    changed=0
+    for ((i = 0; i < n; i++)); do
+      [[ "${anchored[i]}" -eq 1 ]] || continue
+      for ((j = 0; j < n; j++)); do
+        [[ "${anchored[j]}" -eq 0 ]] || continue
+        [[ "$i" -eq "$j" ]] && continue
+        if comp_file_refs "$root" "${added[i]}" "${base[j]}"; then
+          anchored[j]=1; changed=1
+        fi
+      done
+    done
+  done
+  for ((i = 0; i < n; i++)); do
+    [[ "${anchored[i]}" -eq 0 ]] && printf '%s\n' "${added[i]}"
+  done
   return 0
 }
 
