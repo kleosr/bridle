@@ -61,6 +61,23 @@ run_test "regression: stub detector does not match ordinary not-implemented pros
 run_test "regression: stub detector does not match ordinary not-implemented prose (no stub)" "0" "$(printf '%s' "$CE_PROSE_OUT" | sed '$d' | jq -r '.counts.stub')"
 run_test "regression: stub detector does not match ordinary not-implemented prose (act)" "act" "$(printf '%s' "$CE_PROSE_OUT" | sed '$d' | jq -r '.verdict')"
 
+# --- orphan reachability: a disconnected island of new files is caught ---
+ce_repo "$CE_TMP/island"
+printf 'export const app = 1\n' > "$CE_TMP/island/app.ts"
+ce_commit "$CE_TMP/island" base
+printf "import { Ctl } from './Ctl'\nexport class Svc { c() { return new Ctl() } }\n" > "$CE_TMP/island/Svc.ts"
+printf "import { Svc } from './Svc'\nexport class Ctl { s() { return new Svc() } }\n" > "$CE_TMP/island/Ctl.ts"
+run_test "complete: disconnected new-file island counts 2 orphans" "2" "$(bash "$COMPLETE" check "$CE_TMP/island" | jq -r '.counts.orphan')"
+
+# --- orphan reachability: new modules chained through existing code stay clean ---
+ce_repo "$CE_TMP/chain"
+printf 'export const app = 1\n' > "$CE_TMP/chain/app.ts"
+ce_commit "$CE_TMP/chain" base
+printf "import { A } from './A'\nexport const app = new A()\n" > "$CE_TMP/chain/app.ts"
+printf "import { B } from './B'\nexport class A { b() { return new B() } }\n" > "$CE_TMP/chain/A.ts"
+printf 'export class B {}\n' > "$CE_TMP/chain/B.ts"
+run_test "complete: new modules reachable from existing code are not orphans" "0" "$(bash "$COMPLETE" check "$CE_TMP/chain" | jq -r '.counts.orphan')"
+
 # --- complete.sh: clean wired edit scores 100 / act / exit 0 ---
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"
 run_test "complete: clean wired edit exits 0 (act)" "exit=0" "$(printf '%s' "$RESULT" | tail -1)"
