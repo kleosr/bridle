@@ -40,7 +40,7 @@ if ! git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 2
 fi
 
-conflicts=0 orphans=0 stubs=0 todos=0 syntax=0
+conflicts=0 orphans=0 dangling=0 stubs=0 todos=0 syntax=0
 declare -a SIGNALS=()
 
 while IFS=$'\t' read -r kind detail; do
@@ -48,6 +48,7 @@ while IFS=$'\t' read -r kind detail; do
   case "$kind" in
     conflict) conflicts=$((conflicts + 1)); SIGNALS+=("conflict:$detail") ;;
     orphan)   orphans=$((orphans + 1));     SIGNALS+=("orphan:$detail") ;;
+    dangling) dangling=$((dangling + 1));   SIGNALS+=("dangling:$detail") ;;
     stub)     stubs=1;                      SIGNALS+=("stub:$detail") ;;
     todo)     todos=1;                      SIGNALS+=("todo:$detail") ;;
   esac
@@ -69,6 +70,8 @@ critical=0
 [[ "$syntax" -gt 0 ]] && critical=1
 orphan_pen=$((orphans * 30)); [[ "$orphan_pen" -gt 60 ]] && orphan_pen=60
 score=$((score - orphan_pen))
+dangling_pen=$((dangling * 40)); [[ "$dangling_pen" -gt 80 ]] && dangling_pen=80
+score=$((score - dangling_pen))
 [[ "$stubs" -gt 0 ]] && score=$((score - 40))
 [[ "$todos" -gt 0 ]] && score=$((score - 15))
 [[ "$critical" -eq 1 ]] && score=0
@@ -83,7 +86,7 @@ jq -n \
   --arg verdict "$verdict" \
   --argjson threshold "$THRESHOLD" \
   --argjson critical "$([[ "$critical" -eq 1 ]] && echo true || echo false)" \
-  --argjson counts "{\"conflict\":$conflicts,\"orphan\":$orphans,\"stub\":$stubs,\"todo\":$todos,\"syntax\":$syntax}" \
+  --argjson counts "{\"conflict\":$conflicts,\"orphan\":$orphans,\"dangling\":$dangling,\"stub\":$stubs,\"todo\":$todos,\"syntax\":$syntax}" \
   --argjson signals "$sig_json" \
   '{confidence:$confidence,verdict:$verdict,threshold:$threshold,critical:$critical,counts:$counts,signals:$signals}'
 
