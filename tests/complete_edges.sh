@@ -73,9 +73,9 @@ run_test "complete: disconnected new-file island counts 2 orphans" "2" "$(bash "
 ce_repo "$CE_TMP/chain"
 printf 'export const app = 1\n' > "$CE_TMP/chain/app.ts"
 ce_commit "$CE_TMP/chain" base
-printf "import { A } from './A'\nexport const app = new A()\n" > "$CE_TMP/chain/app.ts"
-printf "import { B } from './B'\nexport class A { b() { return new B() } }\n" > "$CE_TMP/chain/A.ts"
-printf 'export class B {}\n' > "$CE_TMP/chain/B.ts"
+printf "import { Alpha } from './Alpha'\nexport const app = new Alpha()\n" > "$CE_TMP/chain/app.ts"
+printf "import { Beta } from './Beta'\nexport class Alpha { b() { return new Beta() } }\n" > "$CE_TMP/chain/Alpha.ts"
+printf 'export class Beta {}\n' > "$CE_TMP/chain/Beta.ts"
 run_test "complete: new modules reachable from existing code are not orphans" "0" "$(bash "$COMPLETE" check "$CE_TMP/chain" | jq -r '.counts.orphan')"
 
 # --- reference integrity: removed export with a caller left behind is dangling ---
@@ -105,6 +105,35 @@ ce_commit "$CE_TMP/rename" base
 printf 'export function reimburse() { return 1 }\n' > "$CE_TMP/rename/billing.ts"
 printf "import { reimburse } from './billing'\nexport const run = () => reimburse()\n" > "$CE_TMP/rename/api.ts"
 run_test "complete: rename with all callers updated is not dangling" "0" "$(bash "$COMPLETE" check "$CE_TMP/rename" | jq -r '.counts.dangling')"
+
+# --- reference integrity: a removed local is not a dangling export ---
+ce_repo "$CE_TMP/local"
+printf 'export function refund() {\n  const result = 1\n  return result\n}\nexport const note = "result is cached"\n' > "$CE_TMP/local/billing.ts"
+printf "import { refund } from './billing'\nexport const run = () => refund()\n" > "$CE_TMP/local/api.ts"
+ce_commit "$CE_TMP/local" base
+printf 'export function refund() { return 1 }\nexport const note = "result is cached"\n' > "$CE_TMP/local/billing.ts"
+run_test "regression: removed local const is not a dangling symbol" "0" "$(bash "$COMPLETE" check "$CE_TMP/local" | jq -r '.counts.dangling')"
+run_test "regression: removed local const does not escalate" "act" "$(bash "$COMPLETE" check "$CE_TMP/local" | jq -r '.verdict')"
+
+# --- scan cap fail-open: a wired module past the cap is not an orphan ---
+ce_repo "$CE_TMP/scanlim"
+printf 'export const other = 1\n' > "$CE_TMP/scanlim/aaa.ts"
+printf 'export const app = 1\n' > "$CE_TMP/scanlim/app.ts"
+ce_commit "$CE_TMP/scanlim" base
+printf "import { PaymentService } from './PaymentService'\nexport const app = new PaymentService()\n" > "$CE_TMP/scanlim/app.ts"
+printf 'export class PaymentService {}\n' > "$CE_TMP/scanlim/PaymentService.ts"
+run_test "regression: scan limit does not orphan a wired module" "0" "$(COMPLETE_MAX_SCAN_FILES=1 bash "$COMPLETE" check "$CE_TMP/scanlim" | jq -r '.counts.orphan')"
+
+# --- scan cap fail-open: a still-declared symbol past the cap is not dangling ---
+ce_repo "$CE_TMP/scanlimd"
+printf 'export const note = "refund later"\n' > "$CE_TMP/scanlimd/aaa.ts"
+printf 'export function refund() { return 1 }\n' > "$CE_TMP/scanlimd/billing.ts"
+printf "import { refund } from './billing'\nexport const run = () => refund()\n" > "$CE_TMP/scanlimd/api.ts"
+ce_commit "$CE_TMP/scanlimd" base
+printf 'export const rate = 2\n' > "$CE_TMP/scanlimd/billing.ts"
+printf 'export function refund() { return 1 }\n' > "$CE_TMP/scanlimd/zzz.ts"
+printf "import { refund } from './zzz'\nexport const run = () => refund()\n" > "$CE_TMP/scanlimd/api.ts"
+run_test "regression: scan limit does not flag a moved symbol as dangling" "0" "$(COMPLETE_MAX_SCAN_FILES=1 bash "$COMPLETE" check "$CE_TMP/scanlimd" | jq -r '.counts.dangling')"
 
 # --- complete.sh: clean wired edit scores 100 / act / exit 0 ---
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"

@@ -19,7 +19,7 @@ COMPLETE_SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cc|cpp|h|hp
 COMPLETE_ENTRY_RE='(^|/)(index|main|mod|__init__|__main__|setup|conftest|app|server|cli|middleware|route|router|routes|page|layout|loading|error|not-found|handler|worker|__mocks__)\.'
 COMPLETE_AUTODIR_RE='(^|/)(pages|app|routes|migrations|migrate|seeds|fixtures|__tests__|__mocks__|test|tests|spec|specs|e2e|cypress|stories|node_modules|dist|build|vendor|coverage)/'
 COMPLETE_TEST_RE='(\.(test|spec|stories)\.|_test\.|_spec\.|_test$)'
-COMPLETE_MAX_SCAN_FILES=5000
+COMPLETE_MAX_SCAN_FILES="${COMPLETE_MAX_SCAN_FILES:-5000}"
 
 comp_has_head() { git -C "$1" rev-parse --verify -q HEAD >/dev/null 2>&1; }
 
@@ -112,7 +112,8 @@ comp_anchored_by_existing() {
     for a in ${added[@]+"${added[@]}"}; do [[ "$f" == "$a" ]] && continue 2; done
     comp_file_refs "$root" "$f" "$base" && return 0
     count=$((count + 1))
-    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 1
+    # Cap: treat remainder as present so an unscanned tree stays quiet.
+    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 0
   done < <({ git -C "$root" ls-files -- 2>/dev/null; git -C "$root" ls-files -o --exclude-standard -- 2>/dev/null; } | sort -u)
   return 1
 }
@@ -165,7 +166,7 @@ comp_removed_symbols() {
   comp_has_head "$root" || return 0
   git -C "$root" diff --no-color HEAD -- 2>/dev/null \
     | grep -E '^-' | grep -vE '^---' | sed -E 's/^-//' \
-    | grep -oE '(export[[:space:]]+(default[[:space:]]+)?)?(async[[:space:]]+)?(function|class|const|let|var|interface|type|enum|def|func)[[:space:]]+[A-Za-z_][A-Za-z0-9_]+' \
+    | grep -oE '^export[[:space:]]+(default[[:space:]]+)?(async[[:space:]]+)?(function|class|const|let|var|interface|type|enum)[[:space:]]+[A-Za-z_][A-Za-z0-9_]+|^((async[[:space:]]+)?def|class|func)[[:space:]]+[A-Za-z_][A-Za-z0-9_]+' \
     | awk '{print $NF}' | sort -u
 }
 
@@ -183,7 +184,9 @@ comp_decl_present() {
   while IFS= read -r f; do
     [[ -n "$f" && -f "$root/$f" ]] || continue
     grep -IqE -- "$pat" "$root/$f" 2>/dev/null && return 0
-    count=$((count + 1)); [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 1
+    count=$((count + 1))
+    # Cap: assume the declaration remains so dangling stays silent.
+    [[ "$count" -ge "$COMPLETE_MAX_SCAN_FILES" ]] && return 0
   done < <(comp_tree_files "$root")
   return 1
 }
