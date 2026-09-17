@@ -21,6 +21,8 @@ source "$PACK/shared/hooks/lib/common.sh"
 source "$PACK/shared/hooks/lib/verify_gate.sh"
 # shellcheck source=shared/hooks/lib/complete_gate.sh
 source "$PACK/shared/hooks/lib/complete_gate.sh"
+# shellcheck source=shared/hooks/lib/complete_graph.sh
+source "$PACK/shared/hooks/lib/complete_graph.sh"
 require_jq
 
 CMD="${1:-}"
