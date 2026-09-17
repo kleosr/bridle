@@ -268,8 +268,8 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-16T19:40:46Z",
-        "tree": "a9a23346fab735c364eb8ca5fc29f026e53bb4d2"
+        "recordedAt": "2026-09-17T00:24:40Z",
+        "tree": "6b0a0695af27678360ff965af165735efec83dc4"
       }
     },
     {
@@ -284,8 +284,8 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-16T19:41:46Z",
-        "tree": "a9a23346fab735c364eb8ca5fc29f026e53bb4d2"
+        "recordedAt": "2026-09-17T00:25:43Z",
+        "tree": "6b0a0695af27678360ff965af165735efec83dc4"
       }
     },
     {
@@ -300,8 +300,8 @@
       "evidence": {
         "command": "bash scripts/bench.sh",
         "exit": 0,
-        "recordedAt": "2026-09-16T19:39:46Z",
-        "tree": "a9a23346fab735c364eb8ca5fc29f026e53bb4d2"
+        "recordedAt": "2026-09-17T00:23:13Z",
+        "tree": "6b0a0695af27678360ff965af165735efec83dc4"
       }
     }
   ]
