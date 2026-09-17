@@ -20,6 +20,10 @@ COMPLETE_ENTRY_RE='(^|/)(index|main|mod|__init__|__main__|setup|conftest|app|ser
 COMPLETE_AUTODIR_RE='(^|/)(pages|app|routes|migrations|migrate|seeds|fixtures|__tests__|__mocks__|test|tests|spec|specs|e2e|cypress|stories|node_modules|dist|build|vendor|coverage)/'
 COMPLETE_TEST_RE='(\.(test|spec|stories)\.|_test\.|_spec\.|_test$)'
 COMPLETE_MAX_SCAN_FILES="${COMPLETE_MAX_SCAN_FILES:-5000}"
+COMPLETE_JS_EXT='(ts|tsx|js|jsx|mjs|cjs)'
+# Node core modules: reachable without a package.json entry. A leading `node:`
+# is always core and is stripped before this check.
+COMPLETE_NODE_BUILTINS=' assert async_hooks buffer child_process cluster console constants crypto dgram diagnostics_channel dns domain events fs http http2 https inspector module net os path perf_hooks process punycode querystring readline repl stream string_decoder sys timers tls trace_events tty url util v8 vm wasi worker_threads zlib '
 
 comp_has_head() { git -C "$1" rev-parse --verify -q HEAD >/dev/null 2>&1; }
 
@@ -62,6 +66,34 @@ comp_added_lines() {
     [[ -f "$root/$f" ]] || continue
     sed 's/^/+/' "$root/$f" 2>/dev/null
   done < <(git -C "$root" ls-files -o --exclude-standard -- 2>/dev/null)
+}
+
+# Bare (non-relative) package specifiers newly imported by this change in JS/TS
+# files, normalized to the installable package name: subpaths are dropped
+# (lodash/merge -> lodash; @scope/pkg/x -> @scope/pkg), a leading node: is
+# stripped, relative paths (./ ../) and Node core modules are excluded. One
+# package per line. No jq: safe to source in the stop hook (which never calls
+# it). Callers resolve declared-vs-undeclared against the manifest.
+comp_added_imports() {
+  local root="$1" line spec pkg
+  comp_added_lines "$root" \
+    | grep -oE "((import|export)[^\"']*from[[:space:]]*|import[[:space:]]*|require\(|import\()[[:space:]]*[\"'][^\"']+[\"']" 2>/dev/null \
+    | grep -oE "[\"'][^\"']+[\"']" \
+    | sed -E "s/^[\"']//; s/[\"']$//" \
+    | while IFS= read -r spec; do
+        [[ -n "$spec" ]] || continue
+        case "$spec" in
+          .*|/*) continue ;;
+          node:*) continue ;;
+        esac
+        if [[ "$spec" == @*/* ]]; then
+          pkg="$(printf '%s' "$spec" | cut -d/ -f1-2)"
+        else
+          pkg="${spec%%/*}"
+        fi
+        case "$COMPLETE_NODE_BUILTINS" in *" $pkg "*) continue ;; esac
+        printf '%s\n' "$pkg"
+      done | sort -u
 }
 
 # Files that contain BOTH opening and closing VCS conflict markers (a genuine
