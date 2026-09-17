@@ -196,6 +196,41 @@
       "change": [
         { "path": "src/util.ts", "content": "export const keep = 2\n" }
       ]
+    },
+    {
+      "id": "undeclared-dependency",
+      "label": "incomplete",
+      "base": [
+        { "path": "package.json", "content": "{ \"name\": \"app\", \"dependencies\": { \"react\": \"^18\" } }\n" },
+        { "path": "src/app.ts", "content": "import { useState } from 'react'\nexport const app = useState\n" }
+      ],
+      "change": [
+        { "path": "src/app.ts", "content": "import { S3Client } from '@aws-sdk/client-s3'\nexport const app = new S3Client({})\n" }
+      ]
+    },
+    {
+      "id": "declared-dependency-import",
+      "label": "complete",
+      "base": [
+        { "path": "package.json", "content": "{ \"name\": \"app\", \"dependencies\": { \"react\": \"^18\", \"lodash\": \"^4\" } }\n" },
+        { "path": "src/app.ts", "content": "export const app = 1\n" },
+        { "path": "src/main.ts", "content": "import { app } from './app'\nexport const run = app\n" }
+      ],
+      "change": [
+        { "path": "src/main.ts", "content": "import { app } from './app'\nimport { useState } from 'react'\nimport merge from 'lodash/merge'\nexport const run = merge(app, useState)\n" }
+      ]
+    },
+    {
+      "id": "builtin-and-relative-import",
+      "label": "complete",
+      "base": [
+        { "path": "package.json", "content": "{ \"name\": \"app\", \"dependencies\": {} }\n" },
+        { "path": "src/helper.ts", "content": "export const helper = 1\n" },
+        { "path": "src/main.ts", "content": "import { helper } from './helper'\nexport const run = helper\n" }
+      ],
+      "change": [
+        { "path": "src/main.ts", "content": "import { helper } from './helper'\nimport { readFile } from 'node:fs/promises'\nimport path from 'path'\nexport const run = { helper, readFile, path }\n" }
+      ]
     }
   ]
 }

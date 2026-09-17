@@ -135,6 +135,34 @@ printf 'export function refund() { return 1 }\n' > "$CE_TMP/scanlimd/zzz.ts"
 printf "import { refund } from './zzz'\nexport const run = () => refund()\n" > "$CE_TMP/scanlimd/api.ts"
 run_test "regression: scan limit does not flag a moved symbol as dangling" "0" "$(COMPLETE_MAX_SCAN_FILES=1 bash "$COMPLETE" check "$CE_TMP/scanlimd" | jq -r '.counts.dangling')"
 
+# --- dependency integrity: a package imported but not declared is flagged ---
+ce_repo "$CE_TMP/undeclared"
+printf '{ "name": "app", "dependencies": { "react": "^18" } }\n' > "$CE_TMP/undeclared/package.json"
+printf "import { useState } from 'react'\nexport const app = useState\n" > "$CE_TMP/undeclared/app.ts"
+ce_commit "$CE_TMP/undeclared" base
+printf "import { S3Client } from '@aws-sdk/client-s3'\nexport const app = new S3Client({})\n" > "$CE_TMP/undeclared/app.ts"
+run_test "complete: undeclared import is flagged" "1" "$(bash "$COMPLETE" check "$CE_TMP/undeclared" | jq -r '.counts.undeclared')"
+run_test "complete: undeclared import escalates" "escalate" "$(bash "$COMPLETE" check "$CE_TMP/undeclared" | jq -r '.verdict')"
+
+# --- dependency integrity: declared deps, subpaths, builtins, relatives clean ---
+ce_repo "$CE_TMP/declared"
+printf '{ "name": "app", "dependencies": { "react": "^18", "lodash": "^4" } }\n' > "$CE_TMP/declared/package.json"
+printf 'export const app = 1\n' > "$CE_TMP/declared/app.ts"
+printf "import { app } from './app'\nexport const run = app\n" > "$CE_TMP/declared/main.ts"
+ce_commit "$CE_TMP/declared" base
+printf "import { app } from './app'\nimport { useState } from 'react'\nimport merge from 'lodash/merge'\nimport fs from 'node:fs'\nexport const run = merge(app, useState, fs)\n" > "$CE_TMP/declared/main.ts"
+run_test "complete: declared deps + subpath + builtin are not undeclared" "0" "$(bash "$COMPLETE" check "$CE_TMP/declared" | jq -r '.counts.undeclared')"
+
+# --- dependency integrity: a dep declared in any package.json (monorepo) is clean ---
+ce_repo "$CE_TMP/mono"
+mkdir -p "$CE_TMP/mono/packages/api"
+printf '{ "name": "root", "workspaces": ["packages/*"] }\n' > "$CE_TMP/mono/package.json"
+printf '{ "name": "api", "dependencies": { "express": "^4" } }\n' > "$CE_TMP/mono/packages/api/package.json"
+printf 'export const s = 1\n' > "$CE_TMP/mono/packages/api/server.ts"
+ce_commit "$CE_TMP/mono" base
+printf "import express from 'express'\nexport const s = express()\n" > "$CE_TMP/mono/packages/api/server.ts"
+run_test "complete: dep declared in a sub-package manifest is not undeclared" "0" "$(bash "$COMPLETE" check "$CE_TMP/mono" | jq -r '.counts.undeclared')"
+
 # --- complete.sh: clean wired edit scores 100 / act / exit 0 ---
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"
 run_test "complete: clean wired edit exits 0 (act)" "exit=0" "$(printf '%s' "$RESULT" | tail -1)"
