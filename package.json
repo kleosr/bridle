@@ -9,6 +9,8 @@
     "test": "bash tests/run.sh",
     "ready": "bash scripts/ready.sh",
     "eval": "bash scripts/eval.sh check",
+    "complete": "bash scripts/complete.sh check",
+    "bench": "bash scripts/bench.sh",
     "feature": "bash scripts/feature.sh",
     "handoff": "bash scripts/handoff.sh",
     "install:rules": "bash scripts/install.sh",
