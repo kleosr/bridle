@@ -25,7 +25,7 @@ Physical security belongs in deterministic sensors. Coding standards belong in `
 | `before_submit_prompt.sh` | `beforeSubmitPrompt` | Blocks secret tokens (`ghp_`, `sk-`, `AKIA`, private keys) from leaving the machine into model context | Fail-closed (`continue:false`) |
 | `before_shell.sh` | `beforeShellExecution` | Evaluates command segments; denies destructive actions, secret reads, source rewrites, and lint-disable tampering; asks on infra changes | Fail-closed (`permission:deny`) |
 | `before_read_file.sh` | `beforeReadFile` | Canonicalizes paths and denies reads targeting sensitive files (`.env`, certificates, SSH keys) | Fail-closed (`permission:deny`) |
-| `stop.sh` | `stop` | Evaluates turn output and emits one non-blocking advisory if churn, syntax errors, or false feature completion is detected | Non-blocking (`loop_limit:1`, `failClosed:false`) |
+| `stop.sh` | `stop` | Evaluates turn output and emits one non-blocking advisory if churn, syntax errors, unfinished-work markers (unresolved conflicts, not-implemented stubs), or false feature completion is detected | Non-blocking (`loop_limit:1`, `failClosed:false`) |
 
 ## What We Protect (And What Remains Outside the Boundary)
 
