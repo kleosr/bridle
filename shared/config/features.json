@@ -268,7 +268,8 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:53:07Z"      }
+        "recordedAt": "2026-09-17T00:53:07Z"
+      }
     },
     {
       "id": "H18",
@@ -282,7 +283,8 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:54:39Z"      }
+        "recordedAt": "2026-09-17T00:54:39Z"
+      }
     },
     {
       "id": "H19",
@@ -296,7 +298,8 @@
       "evidence": {
         "command": "bash scripts/bench.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:51:36Z"      }
+        "recordedAt": "2026-09-17T00:51:36Z"
+      }
     },
     {
       "id": "H20",
@@ -310,7 +313,23 @@
       "evidence": {
         "command": "TESTS=complete_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:56:38Z"      }
+        "recordedAt": "2026-09-17T00:56:38Z"
+      }
+    },
+    {
+      "id": "H21",
+      "priority": 21,
+      "area": "integration",
+      "layer": "integration",
+      "title": "Dependency-integrity (undeclared import) detection",
+      "behavior": "scripts/complete.sh flags a package newly imported by the change that is not declared in any package.json in the tree (union across manifests, so monorepo sub-package deps count). Relative imports, node: and Node core builtins are excluded; scoped and subpath specifiers are normalized to the installable package (@scope/pkg/x -> @scope/pkg, lodash/merge -> lodash). jq-backed manifest read, so it lives in complete.sh, not the hook-safe gate library; the stop hook is unchanged.",
+      "verification": "TESTS=complete_edges bash tests/run.sh",
+      "status": "passing",
+      "evidence": {
+        "command": "TESTS=complete_edges bash tests/run.sh",
+        "exit": 0,
+        "recordedAt": "2026-09-17T20:29:54Z"
+      }
     }
   ]
 }

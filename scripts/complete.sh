@@ -21,6 +21,8 @@ source "$PACK/shared/hooks/lib/common.sh"
 source "$PACK/shared/hooks/lib/verify_gate.sh"
 # shellcheck source=shared/hooks/lib/complete_gate.sh
 source "$PACK/shared/hooks/lib/complete_gate.sh"
+# shellcheck source=shared/hooks/lib/complete_graph.sh
+source "$PACK/shared/hooks/lib/complete_graph.sh"
 require_jq
 
 CMD="${1:-}"
@@ -40,7 +42,7 @@ if ! git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 2
 fi
 
-conflicts=0 orphans=0 dangling=0 stubs=0 todos=0 syntax=0
+conflicts=0 orphans=0 dangling=0 undeclared=0 stubs=0 todos=0 syntax=0
 declare -a SIGNALS=()
 
 while IFS=$'\t' read -r kind detail; do
@@ -62,6 +64,30 @@ if [[ -n "$SYN" ]]; then
   done <<<"$SYN"
 fi
 
+# Dependency integrity: a package newly imported by this change that is not
+# declared in package.json (any dependency field). jq-backed, so it lives here
+# rather than in the hook-safe gate library. Only runs when a manifest exists;
+# workspace protocol entries and Node built-ins are not flagged.
+# Declared set is the union across every package.json in the tree (not just the
+# root), so a monorepo's per-package dependency does not read as undeclared.
+MANIFESTS="$({ git -C "$ROOT" ls-files -- '*package.json' 2>/dev/null; git -C "$ROOT" ls-files -o --exclude-standard -- '*package.json' 2>/dev/null; } | { grep -vE '(^|/)node_modules/' || true; } | sort -u)"
+if [[ -n "$MANIFESTS" ]]; then
+  DECLARED=""
+  while IFS= read -r mf; do
+    [[ -n "$mf" && -f "$ROOT/$mf" ]] || continue
+    jq empty "$ROOT/$mf" >/dev/null 2>&1 || continue
+    DECLARED="$DECLARED
+$(jq -r '[(.dependencies//{}),(.devDependencies//{}),(.peerDependencies//{}),(.optionalDependencies//{})] | add // {} | keys[]' "$ROOT/$mf" 2>/dev/null)"
+  done <<<"$MANIFESTS"
+  DECLARED="$(printf '%s\n' "$DECLARED" | sort -u)"
+  while IFS= read -r pkg; do
+    [[ -n "$pkg" ]] || continue
+    printf '%s\n' "$DECLARED" | grep -qxF -- "$pkg" && continue
+    undeclared=$((undeclared + 1))
+    SIGNALS+=("undeclared:$pkg (imported but not declared in any package.json)")
+  done < <(comp_added_imports "$ROOT")
+fi
+
 # Deterministic scoring. Broken states (conflict, syntax red) clamp low; unwired
 # and stub code are heavy; ownerless TODOs are a lighter nudge.
 score=100
@@ -72,6 +98,8 @@ orphan_pen=$((orphans * 30)); [[ "$orphan_pen" -gt 60 ]] && orphan_pen=60
 score=$((score - orphan_pen))
 dangling_pen=$((dangling * 40)); [[ "$dangling_pen" -gt 80 ]] && dangling_pen=80
 score=$((score - dangling_pen))
+undeclared_pen=$((undeclared * 40)); [[ "$undeclared_pen" -gt 80 ]] && undeclared_pen=80
+score=$((score - undeclared_pen))
 [[ "$stubs" -gt 0 ]] && score=$((score - 40))
 [[ "$todos" -gt 0 ]] && score=$((score - 15))
 [[ "$critical" -eq 1 ]] && score=0
@@ -86,7 +114,7 @@ jq -n \
   --arg verdict "$verdict" \
   --argjson threshold "$THRESHOLD" \
   --argjson critical "$([[ "$critical" -eq 1 ]] && echo true || echo false)" \
-  --argjson counts "{\"conflict\":$conflicts,\"orphan\":$orphans,\"dangling\":$dangling,\"stub\":$stubs,\"todo\":$todos,\"syntax\":$syntax}" \
+  --argjson counts "{\"conflict\":$conflicts,\"orphan\":$orphans,\"dangling\":$dangling,\"undeclared\":$undeclared,\"stub\":$stubs,\"todo\":$todos,\"syntax\":$syntax}" \
   --argjson signals "$sig_json" \
   '{confidence:$confidence,verdict:$verdict,threshold:$threshold,critical:$critical,counts:$counts,signals:$signals}'
 
