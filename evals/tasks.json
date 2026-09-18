@@ -34,6 +34,12 @@
       "proves": "tests/grounding.sh"
     },
     {
+      "id": "instruction-conflict-authority",
+      "dimension": "instruction_conflict",
+      "layer": "instructions",
+      "proves": "tests/grounding.sh"
+    },
+    {
       "id": "scope-churn",
       "dimension": "unnecessary_edits",
       "layer": "scope",
