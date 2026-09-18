@@ -13,7 +13,7 @@ When no executable check covers the changed path, report the gap and the smalles
 - Docs-only: no house gauntlet. Trusted workspace: run in-scope checks; network, credentials, and destructive effects still need authorization.
 - Bug fix: `regression: <symptom>` with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
 - Coverage / mutation only if the repo already has those jobs. Do not add a runner. Do not expose privates to hit coverage.
-- `stop.sh` is advisory (syntax, churn, size, false `passing`). It does not execute repo test suites. Citation of a real run remains required.
+- `stop.sh` is advisory (syntax, churn, size, completion, false `passing`); `bash scripts/complete.sh check` scores change-shape completeness (unwired/dangling/undeclared) as act/escalate. Both are shape checks, not proof: neither executes repo test suites, and citation of a real run remains required.
 - A feature is `passing` only after `bash scripts/feature.sh pass <id>`, and only for the workspace tree it was passed on: edit after pass and the row is stale until re-passed. Editing JSON to `passing` is not done. Failed pass records `lastFailure` (including `nextExperiment`) and leaves `in_progress`.
 - Builder does not self-grade. `prove` runs in a separate context (same host, same hooks; not an independent authority). Syntax is layer 1; scoped command + exit is layer 2; repo-wide claims need the gauntlet.
 
