@@ -20,8 +20,10 @@ Windows: Git Bash.
 2. Boundary: `SECURITY.md` (read on demand; outranks on boundary questions)
 3. Always-on: `core.mdc`, `testing.mdc`
 4. Glob companions: host-attached on path; treat as inert when the owning package does not match
-5. Skills on match: catalog `shared/config/skills.txt` (pack: `debugging`, `testing`, `handoff`; vendor UI/motion on match)
+5. Skills on match: catalog `shared/config/skills.txt` (pack: `kleosr` session router, `debugging`, `testing`, `handoff`; vendor UI/motion on match)
 6. Specialists: `hunter` / `cut` / `prove` — invoke only
+
+`kleosr` is a session router (`mode: true`, `disable-model-invocation: true`). This file is the map, not a law layer above `core.mdc` / `testing.mdc`.
 
 ## Config
 - Extend via `skills.txt` and glob companions.
@@ -29,7 +31,7 @@ Windows: Git Bash.
 - Hooks: four events. No `sessionStart`, no `preToolUse`, no `updated_input`.
 
 ## Docs
-`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/DECISIONS/completion-gate.md`, `docs/host-capability.md`.
+`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/DECISIONS/completion-gate.md`, `docs/DECISIONS/2026-09-18-instruction-hierarchy-audit.md`, `docs/host-capability.md`.
 
 ## Install
 ```bash

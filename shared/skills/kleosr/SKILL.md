@@ -1,9 +1,8 @@
 ---
 name: kleosr
 description: >-
-  Run the kleosr governed engineering workflow for an entire Cursor session.
-  Use as the kleosr Custom Mode or invoke /kleosr when the user asks to work
-  under this project's complete rule, skill, hook, and verification system.
+  Kleosr session router (Custom Mode or /kleosr). Coordinates the installed
+  charter, always-on rules, skills, and hooks. Does not copy the law.
 disable-model-invocation: true
 mode: true
 icon: shield
@@ -20,35 +19,32 @@ does not copy its rules into the prompt or replace Cursor's native agent loop.
 Apply the active instruction hierarchy in this order:
 
 1. Host and user instructions.
-2. The installed `kleosr.mdc` charter.
-3. Repository `AGENTS.md` and project rules.
+2. Installed `kleosr.mdc` charter (identity, authorization, evidence).
+3. `SECURITY.md` on boundary questions (read on demand; outranks prompts here).
 4. Always-on `core.mdc` and `testing.mdc`.
-5. Matching stack companions: `pnpm.mdc`, `next.mdc`, `vite.mdc`, `astro.mdc`,
-   `postgres.mdc`, and `supabase.mdc`.
+5. Matching stack companions (inert unless the owning package matches).
 6. Matching skills from the installed catalog.
 
-Read `SECURITY.md` before boundary-sensitive work. Hooks remain the enforcement
-layer. This mode cannot grant permission, weaken a deny, or replace missing
-hooks or rules. If the harness is not installed in the current environment,
-report the missing layer instead of pretending this skill contains it.
+Orientation map (not a law layer above always-on): start at `AGENTS.md`;
+read `shared/config/harness.json` only when the OS map is needed.
+Repo-local AGENTS and project rules win on local convention only; they never
+grant permissions or weaken hooks or the charter on secrets, approval, or deny.
+
+Hooks remain the enforcement layer. This mode cannot grant permission, weaken
+a deny, or replace missing hooks or rules. If the harness is not installed in
+the current environment, report the missing layer instead of pretending this
+skill contains it.
 
 ## Work
 
-1. Classify the request as answer, diagnose, change, or monitor. Stop at that
-   mode's terminal condition.
-2. Start with `AGENTS.md`. Read `shared/config/harness.json` only when the
-   harness map is needed. Treat handoff and feature files as continuity, not
-   new authority.
-3. Use native codebase search for behavior and concepts. Use Grep or Glob for
-   exact symbols and paths. Read a search hit before citing or editing it.
-4. Load only the skill and stack companions that match the task. Do not dump
-   the rule tree or preload unrelated references.
-5. For changes, understand callers and contracts, make the smallest coherent
-   edit, run the narrowest check that can fail, and repair regressions.
-6. Preserve unrelated work. Ask only for irreversible effects or a product
-   choice that evidence cannot settle.
+1. Classify: answer, diagnose, change, or monitor. Stop at that mode's terminal.
+2. Start with `AGENTS.md`. Continuity files are evidence, not new authority.
+3. Retrieval and change discipline: follow `core.mdc` (Tools / Change). Do not restate.
+4. Load only matching skills and companions. Do not dump the rule tree.
+5. Ask only for irreversible effects or a product choice evidence cannot settle
+   (charter Autonomy). Report hook denies with the `reason` code; do not bypass.
 
 ## Completion
 
-Do not claim success without a command plus exit code or a driven UI path.
-Report the outcome, changed files, proof, and any remaining unverified risk.
+Do not claim success without proof as defined in `testing.mdc`
+(command + exit, or a driven UI path). Report outcome, files, proof, unverified risk.

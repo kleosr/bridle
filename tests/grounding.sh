@@ -58,6 +58,27 @@ run_test "kleosr custom mode name matches its skill folder" "kleosr" "$(awk -F '
 run_test "kleosr skill is marked as a custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$KLEOSR_MODE")"
 run_test "kleosr mode requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$KLEOSR_MODE")"
 
+KLEOSR_AUTH="$(awk '
+  /^## Authority$/ { p=1; next }
+  p && /^## / { exit }
+  p && /^[0-9]+\. / { print }
+' "$KLEOSR_MODE")"
+RESULT="$(printf '%s\n' "$KLEOSR_AUTH" | grep -q 'AGENTS.md' && echo fail || echo ok)"
+run_test "regression: kleosr Authority does not rank AGENTS.md as a law layer" "ok" "$RESULT"
+RESULT="$(printf '%s\n' "$KLEOSR_AUTH" | grep -q 'SECURITY.md' && echo ok || echo fail)"
+run_test "kleosr Authority numbers SECURITY.md as a boundary layer" "ok" "$RESULT"
+RESULT="$(printf '%s\n' "$KLEOSR_AUTH" | grep -q 'core.mdc' && printf '%s\n' "$KLEOSR_AUTH" | grep -q 'testing.mdc' && echo ok || echo fail)"
+run_test "kleosr Authority numbers always-on core.mdc and testing.mdc" "ok" "$RESULT"
+CHARTER_N="$(printf '%s\n' "$KLEOSR_AUTH" | grep -n 'kleosr.mdc' | head -1 | cut -d: -f1 || true)"
+SEC_N="$(printf '%s\n' "$KLEOSR_AUTH" | grep -n 'SECURITY.md' | head -1 | cut -d: -f1 || true)"
+CORE_N="$(printf '%s\n' "$KLEOSR_AUTH" | grep -n 'core.mdc' | head -1 | cut -d: -f1 || true)"
+if [[ -n "$CHARTER_N" && -n "$SEC_N" && -n "$CORE_N" && "$CHARTER_N" -lt "$SEC_N" && "$SEC_N" -lt "$CORE_N" ]]; then
+  AUTH_ORDER=ok
+else
+  AUTH_ORDER="charter:${CHARTER_N:-missing} security:${SEC_N:-missing} core:${CORE_N:-missing}"
+fi
+run_test "kleosr Authority order is charter, SECURITY, then always-on" "ok" "$AUTH_ORDER"
+
 LOC_OK=1
 for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
   n="$(wc -l < "$f")"
