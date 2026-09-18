@@ -43,5 +43,5 @@ Hand-written edits through the host’s native edit tools. Shell for builds, tes
 Retrieval: native codebase search for behavior and concept questions (it ranks by meaning, not by name); Grep / Glob for exact symbols and paths. A search hit is a pointer, not evidence — Read the file before you cite or edit it, and do not widen a read to a whole tree when one path answers the question.
 
 ## Harness
-Guides: charter, this file, `testing.mdc`, skills, `AGENTS.md`. Sensors: four hooks + the verify this change can break. Do not add hook events.
-Map: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. `hunter` / `cut` / `prove` on match.
+Guides: charter, this file, `testing.mdc`, matching skills. Sensors: four hooks + the verify this change can break. Do not add hook events.
+Map: `AGENTS.md`; contract: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. `hunter` / `cut` / `prove` on match.
