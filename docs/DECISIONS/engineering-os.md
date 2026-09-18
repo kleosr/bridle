@@ -38,6 +38,7 @@ Cursor owns the loop, the sandbox, the tools, and context compaction. `bridle` i
 | Verification discipline & regression naming | Always-on rules | `testing.mdc` (≤80 LOC) |
 | Framework-specific idioms & patterns | Glob companions | `next.mdc`, `vite.mdc`, `postgres.mdc`, etc. |
 | Specialized task procedures | On-demand skills | `shared/skills/` (invoked on match) |
+| Session coordinator | Custom-mode skill (explicit invoke) | `shared/skills/kleosr/SKILL.md` (`mode: true`, `disable-model-invocation: true`) |
 | Deterministic boundary interception | Fail-closed hooks | Four event scripts in `shared/hooks/` |
 | Capability ledger & progress verification | Machine contract | `shared/config/features.json` via `scripts/feature.sh` |
 | Cross-session continuity | Schema-validated state | `state/handoff.json` via `scripts/handoff.sh` |
