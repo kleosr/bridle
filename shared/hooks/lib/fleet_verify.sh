@@ -25,9 +25,9 @@ verify_smoke() {
     | bash "$HOOKS_DIR/stop.sh" | jq -e '. == {}' >/dev/null
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
-    if [[ ! -L "$HOME_C/skills/$skill" ]]; then
-      echo "[fail] skill not symlink: $skill"; bad=1
-    elif [[ "$(canon "$HOME_C/skills/$skill")" != "$(canon "$PACK/shared/skills/$skill")" ]]; then
+    if [[ ! -e "$HOME_C/skills/$skill/SKILL.md" ]]; then
+      echo "[fail] skill missing: $skill"; bad=1
+    elif [[ -L "$HOME_C/skills/$skill" && "$(canon "$HOME_C/skills/$skill")" != "$(canon "$PACK/shared/skills/$skill")" ]]; then
       echo "[fail] skill wrong target: $skill -> $(readlink "$HOME_C/skills/$skill")"; bad=1
     fi
   done < <(load_lines "$PACK/shared/config/skills.txt")

@@ -33,6 +33,8 @@ TESTING_SKILL="$(test -e "$LC_HOME/.cursor/skills/testing/SKILL.md" && echo yes 
 run_test "install links testing skill" "yes" "$TESTING_SKILL"
 HANDOFF_SKILL="$(test -e "$LC_HOME/.cursor/skills/handoff/SKILL.md" && echo yes || echo no)"
 run_test "install links handoff skill" "yes" "$HANDOFF_SKILL"
+KLEOSR_SKILL="$(test -e "$LC_HOME/.cursor/skills/kleosr/SKILL.md" && echo yes || echo no)"
+run_test "install links kleosr custom mode skill" "yes" "$KLEOSR_SKILL"
 ANIMATE_SKILL="$(test -e "$LC_HOME/.cursor/skills/animate/SKILL.md" && echo yes || echo no)"
 run_test "install links vendor animate skill from catalog" "yes" "$ANIMATE_SKILL"
 SHELL_FLEET="$(test -e "$LC_HOME/.cursor/hooks/lib/shell_fleet.sh" && echo yes || echo no)"
