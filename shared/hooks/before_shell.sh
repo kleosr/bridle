@@ -26,7 +26,8 @@ esac
 # Command cwd comes from the payload when the host provides it; the hook
 # process cwd is the hook dir, not the workspace, so never assume ".".
 if shell_is_fleet_sync "$CMD"; then
-  if [[ -n "${CWD:-}" && -d "$CWD" && -f "$CWD/shared/config/manifest.json" && -f "$CWD/shared/hooks/fleet_sync.sh" && -f "$CWD/scripts/install.sh" ]]; then
+  norm_cwd="$(posix_slashes "${CWD:-}")"
+  if [[ -n "$norm_cwd" && -d "$norm_cwd" && -f "$norm_cwd/shared/config/manifest.json" && -f "$norm_cwd/shared/hooks/fleet_sync.sh" && -f "$norm_cwd/scripts/install.sh" ]]; then
     emit_ask "Harness activation request: a relative installer path is not proof of trust. Approve only if this checkout is the trusted kleosrules pack." "" activation
   else
     emit_deny "kleosrules: installer path without pack markers denied. Run from the pack root." "" activation
