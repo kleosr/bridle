@@ -53,6 +53,11 @@ while IFS= read -r skill; do
 done < <(load_lines "$PACK/shared/config/skills.txt")
 run_test "every catalog skill has a description routing contract" "ok" "$SK_DESC"
 
+KLEOSR_MODE="$PACK/shared/skills/kleosr/SKILL.md"
+run_test "kleosr custom mode name matches its skill folder" "kleosr" "$(awk -F ': ' '$1 == "name" { print $2; exit }' "$KLEOSR_MODE")"
+run_test "kleosr skill is marked as a custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$KLEOSR_MODE")"
+run_test "kleosr mode requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$KLEOSR_MODE")"
+
 LOC_OK=1
 for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
   n="$(wc -l < "$f")"

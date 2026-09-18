@@ -2,6 +2,7 @@
 testing
 debugging
 handoff
+kleosr
 
 # Vendor: https://github.com/jakubkrehel/skills (MIT)
 better-accessibility
