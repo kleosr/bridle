@@ -100,6 +100,21 @@ Verified: `TESTS=fixtures,gate_edges,harness,overlay_edges bash tests/run.sh` â†
 
 ---
 
+### 2026-09-21 â€” Rules versus compaction
+
+This is not a Desktop compact-and-recheck. It records the prompt assembly of one cloud-agent run, and a Cursor staff description of the mechanism.
+
+| Observation | What was seen | Class |
+|---|---|---|
+| Always-applied pack files | `AGENTS.md`, `core.mdc`, and `testing.mdc` arrived as always-applied workspace rules, separate from the user message. | This run |
+| Installed charter | `~/.cursor/rules/kleosr.mdc` was absent. A user-rule charter was present and did not match `shared/rules/USER-RULES.paste.txt` (`Observability is command + exit` versus `Proof standard: testing.mdc`). Doctor cannot see Cursor Settings. The on-disk install, when it exists, must match the paste. | This run |
+| Compression | Cursor staff (Dean Rie, 2026-04-10): rules are not deleted by compression. They stay in the system prompt and user info, which are not summarized. After the transcript becomes a summary, the model can follow those rules worse. That is attention, not deletion. [Forum thread](https://forum.cursor.com/t/critical-rules-do-not-survive-context-compression-events/157249/5). | Staff description |
+| Injection regression | `alwaysApply: true` has been reported landing in the requestable bucket, including after summarization. Staff said the injection fix shipped in client 3.2. This run saw the three pack files in the always-applied bucket. That does not certify every client build. | Forum reports, not re-tested here |
+
+**Decision:** no session-constraint extractor, no `sessionStart` hook, no compaction rewriter in this pack. Pack law the host reattaches sits outside the summarized transcript. A constraint that exists only in the chat can still be dropped. Durable continuity for that case is `state/handoff.json`, read when the file is present, and it is still not authority. A dated Desktop log that watches one compact and the next turn is still missing.
+
+---
+
 ## The Rule We Live By
 
 Treat `beforeShellExecution` deny as **authoritatively confirmed by host behavior**. 

@@ -1,6 +1,6 @@
 ---
 name: better-accessibility
-description: Helps your project comply with accessibility standards and best practices.
+description: Use when changing UI that must meet accessibility standards.
 ---
 
 # Accessibility
