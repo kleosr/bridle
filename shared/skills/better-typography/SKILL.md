@@ -1,6 +1,6 @@
 ---
 name: better-typography
-description: Focuses on type scale, spacing, sizing, variable fonts, OpenType features, wrapping, truncation and other details that make typography feel great across your product.
+description: Use when changing type scale, measure, or font features.
 ---
 
 # Typography

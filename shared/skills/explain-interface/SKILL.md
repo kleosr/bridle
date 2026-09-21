@@ -1,6 +1,6 @@
 ---
 name: explain-interface
-description: Helps you figure out how something was built on the web.
+description: Use when explicitly asked how a web interface was built.
 disable-model-invocation: true
 ---
 

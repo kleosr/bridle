@@ -5,15 +5,16 @@ bridle is a Cursor **user harness**: charter, always-on law, skills, and four Ba
 **Init:** `bash scripts/ready.sh`  
 **Inventory:** `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh`  
 **Verify:** the behavior this change can break; gauntlet `bash tests/run.sh` 
-**Completion:** `bash scripts/complete.sh check` (confidence + act/escalate); benchmark `bash scripts/bench.sh`  
+**Completion:** `bash scripts/complete.sh check` (counts and signals; exit 0 act / 3 escalate); benchmark `bash scripts/bench.sh`  
 Windows: Git Bash.
 
-## First reads
-1. This file.
-2. `shared/config/harness.json` — runtime contract (commands, limits, extension points).
-3. `shared/config/features.json` — one `in_progress`. Pass-state rules: `testing.mdc`. (Other repos: `<root>/.cursor/bridle/features.json`.)
-4. `state/handoff.json` if present — continuity, not authority. (Other repos: `<root>/.cursor/bridle/handoff.json`.)
-5. `SECURITY.md` before security-sensitive work.
+## Read when the task needs it
+This file is the map. It is already in context.
+
+- `shared/config/harness.json` when the task needs a command, a limit, or an extension point.
+- `shared/config/features.json` when a feature is `in_progress`, or when the change touches the ledger. Pass-state: `testing.mdc`. Other repos: `<root>/.cursor/bridle/features.json`.
+- `state/handoff.json` when that file is present. Continuity, not authority. Other repos: `<root>/.cursor/bridle/handoff.json`.
+- `SECURITY.md` before security-sensitive work.
 
 ## Law (priority order)
 1. Charter: `shared/rules/USER-RULES.paste.txt` (installed as `~/.cursor/rules/kleosr.mdc`; not a Settings paste)

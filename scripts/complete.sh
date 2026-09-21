@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Completion-confidence scorer. Turns the deterministic signals in
-# complete_gate.sh into a single confidence (0-100) and a verdict the caller
-# can branch on: act when confidence is high, escalate when it is not.
+# Completion report. The JSON leads with counts and signals. confidence
+# (0-100) exists so the exit code can branch: act when it is high, escalate
+# when it is not. Cite counts and signals; do not cite the number alone.
 #
 #   bash scripts/complete.sh check [dir]   JSON on stdout; exit 0 = act,
 #                                          exit 3 = escalate, exit 2 = usage.
@@ -31,7 +31,7 @@ THRESHOLD="${COMPLETE_MIN_CONFIDENCE:-80}"
 
 usage() {
   echo "usage: bash scripts/complete.sh check [dir]" >&2
-  echo "what: deterministic completion-confidence score for the working tree vs HEAD." >&2
+  echo "what: counts and signals for the working tree vs HEAD. confidence only sets the exit." >&2
   echo "exit: 0 act (>= COMPLETE_MIN_CONFIDENCE, default 80), 3 escalate, 2 usage." >&2
   exit 2
 }
@@ -116,7 +116,7 @@ jq -n \
   --argjson critical "$([[ "$critical" -eq 1 ]] && echo true || echo false)" \
   --argjson counts "{\"conflict\":$conflicts,\"orphan\":$orphans,\"dangling\":$dangling,\"undeclared\":$undeclared,\"stub\":$stubs,\"todo\":$todos,\"syntax\":$syntax}" \
   --argjson signals "$sig_json" \
-  '{confidence:$confidence,verdict:$verdict,threshold:$threshold,critical:$critical,counts:$counts,signals:$signals}'
+  '{counts:$counts,signals:$signals,verdict:$verdict,threshold:$threshold,critical:$critical,confidence:$confidence}'
 
 [[ "$verdict" == "act" ]] && exit 0
 exit 3
