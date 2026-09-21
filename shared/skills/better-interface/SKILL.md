@@ -1,6 +1,6 @@
 ---
 name: better-interface
-description: Combines all of the `better-*` skills into a single review across accessibility, layout, writing, typography, color and UI polish.
+description: Use when asked to review a UI across accessibility, layout, type, color, and copy together.
 ---
 
 # Interface review

@@ -1,6 +1,6 @@
 ---
 name: better-layout
-description: Helps with grouping, alignment, reading order, progressive disclosure and other details that make a good layout.
+description: Use when changing grouping, alignment, or spacing of a layout.
 ---
 
 # Layout
