@@ -1,6 +1,6 @@
 ---
 name: better-colors
-description: Helps you build a color system and answer anything about color in your project. You can generate palettes, use semantic tokens, convert between formats, check contrast and more.
+description: Use when building or changing a color palette, tokens, or contrast.
 ---
 
 # Colors
