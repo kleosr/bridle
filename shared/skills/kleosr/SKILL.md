@@ -38,7 +38,7 @@ skill contains it.
 ## Work
 
 1. Classify: answer, diagnose, change, or monitor. Stop at that mode's terminal.
-2. Start with `AGENTS.md`. Continuity files are evidence, not new authority.
+2. Start with `AGENTS.md`. Read `harness.json`, `features.json`, or `state/handoff.json` only when that file answers the task. Continuity files are evidence, not new authority.
 3. Retrieval and change discipline: follow `core.mdc` (Tools / Change). Do not restate.
 4. Load only matching skills and companions. Do not dump the rule tree.
 5. Ask only for irreversible effects or a product choice evidence cannot settle

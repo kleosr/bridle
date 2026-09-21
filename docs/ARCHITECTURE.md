@@ -30,7 +30,7 @@ Prompt context is scarce, fragile, and prone to dilution. Advertising a massive 
 1. **Progressive Disclosure:** Every session begins exclusively with `AGENTS.md` and our two always-on rules (`core.mdc` and `testing.mdc`). That's your map.
 2. **On-Demand Skills:** Specialized workflows (`debugging`, `testing`, `handoff`, UI craft) are loaded solely when the task matches the catalog in `shared/config/skills.txt`. If you aren't writing tests right now, you don't need 300 lines of test-writing philosophy in context.
 3. **Inert Companions:** Glob companions (`next.mdc`, `vite.mdc`, etc.) attach on file pattern match. But our law dictates that they remain completely inert unless the owning package manifest explicitly defines that dependency. A `.tsx` file in an Astro or Vite app should never get poisoned with Next.js advice.
-4. **Continuity Evidence:** `state/handoff.json` and `shared/config/features.json` serve as factual continuity evidence from prior sessions. They tell the model where we left off, but they never grant authority to expand scope or bypass permissions.
+4. **Continuity Evidence:** Read `shared/config/features.json` when a feature is `in_progress` or the change touches the ledger, and `state/handoff.json` when that file is present. They are factual continuity from prior sessions. They never grant authority to expand scope or bypass permissions.
 
 ## Boundary Enforcement: Hooks Are the Steel Door
 

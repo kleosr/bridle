@@ -53,6 +53,6 @@ Cuts:
 
 X/Reddit/blog amplification is observation, not a PR base.
 
-## Follow-up (one next action)
+## Follow-up
 
-Measure vendor skill description activation/cost before any catalog purge.
+Vendor skill bodies stay. Descriptions are one trigger sentence. Overlapping motion skills and `emil-design-eng` are `disable-model-invocation` except `animate`, which routes to them. Activation rate is still unmeasured. No catalog purge until that measurement exists.
