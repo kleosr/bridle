@@ -107,3 +107,33 @@ run_test "regression: pack does not ship shared/hosts" "absent" "$HOSTDIR"
 CHARTER="$PACK/shared/rules/USER-RULES.paste.txt"
 if grep -qE 'Never above|useEffect|failClosed|globs:' "$CHARTER"; then CHARTER_DUP=fail; else CHARTER_DUP=ok; fi
 run_test "regression: charter does not restate core.mdc or hook internals" "ok" "$CHARTER_DUP"
+
+CHARTER_COPIES="$(grep -Rnl 'You are kleosr'"'"'s engineering partner' "$PACK/shared" "$PACK/AGENTS.md" "$PACK/docs" 2>/dev/null | wc -l | tr -d ' ')"
+run_test "regression: charter body has one copy in the pack" "1" "$CHARTER_COPIES"
+if grep -q 'Observability is command' "$CHARTER"; then CHARTER_DRIFT=fail; else CHARTER_DRIFT=ok; fi
+run_test "regression: paste stays the thin charter (no settings-copy essay)" "ok" "$CHARTER_DRIFT"
+
+if grep -q '## First reads' "$PACK/AGENTS.md"; then READS=fail; else READS=ok; fi
+run_test "regression: AGENTS.md does not mandate a first-read stack" "ok" "$READS"
+FEAT_LINE="$(grep 'features.json' "$PACK/AGENTS.md" || true)"
+if printf '%s' "$FEAT_LINE" | grep -q 'in_progress'; then FEAT_COND=ok; else FEAT_COND=fail; fi
+run_test "regression: features.json is read only when a feature is in_progress or the ledger changes" "ok" "$FEAT_COND"
+
+DESC_OK=ok
+while IFS= read -r skill; do
+  [[ -z "$skill" || "$skill" == "testing" || "$skill" == "debugging" || "$skill" == "handoff" || "$skill" == "kleosr" ]] && continue
+  file="$PACK/shared/skills/$skill/SKILL.md"
+  dline="$(grep '^description:' "$file" | head -1)"
+  dlen="${#dline}"
+  # "description: " is 13 characters. One trigger sentence stays under 160 of text.
+  if [[ "$dlen" -gt 173 ]]; then DESC_OK="long:$skill:$dlen"; fi
+  if [[ "$dline" == *">"* ]]; then DESC_OK="folded:$skill"; fi
+done < <(load_lines "$PACK/shared/config/skills.txt")
+run_test "vendor skill descriptions are one short trigger" "ok" "$DESC_OK"
+
+MOTION_OK=ok
+for skill in animate-expo animation-vocabulary find-animation-opportunities improve-animations emil-design-eng review-animations; do
+  grep -q '^disable-model-invocation: true' "$PACK/shared/skills/$skill/SKILL.md" || MOTION_OK="auto:$skill"
+done
+if grep -q '^disable-model-invocation:' "$PACK/shared/skills/animate/SKILL.md"; then MOTION_OK="animate-manual"; fi
+run_test "motion cluster is explicit-invoke except the animate router" "ok" "$MOTION_OK"

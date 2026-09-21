@@ -1,6 +1,6 @@
 ---
 name: variant
-description: Builds multiple variants of a component you're working on and helps you iterate and pick one.
+description: Use when explicitly asked to build several versions of a component.
 disable-model-invocation: true
 ---
 

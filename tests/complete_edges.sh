@@ -167,6 +167,7 @@ run_test "complete: dep declared in a sub-package manifest is not undeclared" "0
 RESULT="$(bash "$COMPLETE" check "$CE_TMP/clean"; echo "exit=$?")"
 run_test "complete: clean wired edit exits 0 (act)" "exit=0" "$(printf '%s' "$RESULT" | tail -1)"
 run_test "complete: clean wired edit confidence 100" "100" "$(printf '%s' "$RESULT" | sed '$d' | jq -r '.confidence')"
+run_test "complete: report leads with counts" "counts" "$(printf '%s' "$RESULT" | sed '$d' | jq -r 'keys_unsorted[0]')"
 run_test "complete: clean wired edit verdict act" "act" "$(printf '%s' "$RESULT" | sed '$d' | jq -r '.verdict')"
 
 # --- complete.sh: orphan module escalates (exit 3) without a critical flag ---

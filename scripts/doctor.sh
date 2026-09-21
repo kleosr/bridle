@@ -117,7 +117,16 @@ if grep -q 'Agent = Model + Harness' "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc" 
 else
   fail "fixture install: kleosr.mdc missing or not the charter"
 fi
-rm -rf "$DOCTOR_FIXTURE"
+# shellcheck source=shared/hooks/lib/fleet_install.sh
+source "$PACK/shared/hooks/lib/fleet_install.sh"
+CHARTER_EXPECT="$(mktemp -d "${TMPDIR:-/tmp}/kleos-charter.XXXXXX")"
+if write_charter_mdc "$CHARTER_EXPECT" \
+  && cmp -s "$CHARTER_EXPECT/kleosr.mdc" "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc"; then
+  ok "fixture install: kleosr.mdc is the paste, not a second charter"
+else
+  fail "fixture install: kleosr.mdc drifted from USER-RULES.paste.txt"
+fi
+rm -rf "$CHARTER_EXPECT" "$DOCTOR_FIXTURE"
 fi
 
 if [[ "${DOCTOR_SKIP_LIVE:-0}" != "1" ]]; then
@@ -125,6 +134,18 @@ if jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh
   ok "live: ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
 else
   echo "[info] live: ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh)"
+fi
+if [[ -f "${HOME}/.cursor/rules/kleosr.mdc" ]]; then
+  # shellcheck source=shared/hooks/lib/fleet_install.sh
+  source "$PACK/shared/hooks/lib/fleet_install.sh"
+  LIVE_CHARTER="$(mktemp -d "${TMPDIR:-/tmp}/kleos-charter-live.XXXXXX")"
+  if write_charter_mdc "$LIVE_CHARTER" \
+    && cmp -s "$LIVE_CHARTER/kleosr.mdc" "${HOME}/.cursor/rules/kleosr.mdc"; then
+    ok "live: kleosr.mdc matches USER-RULES.paste.txt"
+  else
+    fail "live: kleosr.mdc drifted from USER-RULES.paste.txt (FORCE=1 bash scripts/install.sh; remove any Settings user-rule copy)"
+  fi
+  rm -rf "$LIVE_CHARTER"
 fi
 fi
 
