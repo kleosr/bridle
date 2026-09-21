@@ -23,6 +23,8 @@ jobs:
         run: bash scripts/doctor.sh
       - name: Tests
         run: bash tests/run.sh
+      - name: Completion-scorer benchmark (detector, not an agent score)
+        run: bash scripts/bench.sh
 
   gauntlet-macos:
     runs-on: macos-latest
@@ -38,3 +40,5 @@ jobs:
         run: /bin/bash scripts/doctor.sh
       - name: Tests (stock macOS bash + BSD userland)
         run: /bin/bash tests/run.sh
+      - name: Completion-scorer benchmark (detector, not an agent score)
+        run: /bin/bash scripts/bench.sh
