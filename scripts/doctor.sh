@@ -111,7 +111,7 @@ if [[ -f "$DOCTOR_FIXTURE/.cursor/rules/core.mdc" ]]; then
 else
   fail "fixture install: core.mdc missing from user rules"
 fi
-if grep -q 'Agent = Model + Harness' "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc" 2>/dev/null \
+if grep -q 'You are kleosr'"'"'s engineering partner' "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc" 2>/dev/null \
   && grep -q '^alwaysApply: true' "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc"; then
   ok "fixture install: kleosr.mdc charter alwaysApply"
 else
@@ -124,7 +124,7 @@ if write_charter_mdc "$CHARTER_EXPECT" \
   && cmp -s "$CHARTER_EXPECT/kleosr.mdc" "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc"; then
   ok "fixture install: kleosr.mdc is the paste, not a second charter"
 else
-  fail "fixture install: kleosr.mdc drifted from USER-RULES.paste.txt"
+  fail "fixture install: kleosr.mdc drifted from charter.txt"
 fi
 rm -rf "$CHARTER_EXPECT" "$DOCTOR_FIXTURE"
 fi
@@ -141,9 +141,9 @@ if [[ -f "${HOME}/.cursor/rules/kleosr.mdc" ]]; then
   LIVE_CHARTER="$(mktemp -d "${TMPDIR:-/tmp}/kleos-charter-live.XXXXXX")"
   if write_charter_mdc "$LIVE_CHARTER" \
     && cmp -s "$LIVE_CHARTER/kleosr.mdc" "${HOME}/.cursor/rules/kleosr.mdc"; then
-    ok "live: kleosr.mdc matches USER-RULES.paste.txt"
+    ok "live: kleosr.mdc matches charter.txt"
   else
-    fail "live: kleosr.mdc drifted from USER-RULES.paste.txt (FORCE=1 bash scripts/install.sh; remove any Settings user-rule copy)"
+    fail "live: kleosr.mdc drifted from charter.txt (FORCE=1 bash scripts/install.sh; remove any Settings user-rule copy)"
   fi
   rm -rf "$LIVE_CHARTER"
 fi
@@ -182,7 +182,7 @@ for f in "$PACK/shared/rules/core.mdc" \
   "$PACK/shared/rules/next.mdc" "$PACK/shared/rules/vite.mdc" \
   "$PACK/shared/rules/astro.mdc" \
   "$PACK/shared/rules/pnpm.mdc" "$PACK/shared/rules/testing.mdc" \
-  "$PACK/shared/rules/USER-RULES.paste.txt"; do
+  "$PACK/shared/rules/charter.txt"; do
   [[ -f "$f" ]] || { LAW_STALE="$LAW_STALE missing:${f#$PACK/}"; continue; }
   if grep -qE 'stop_gate|lean_gate|post_tool_use|pre_tool_use|before_mcp' "$f"; then
     LAW_STALE="$LAW_STALE ${f#$PACK/}"
@@ -201,13 +201,13 @@ else fail "core.mdc or testing.mdc is not alwaysApply"; fi
 if grep -q 'Never above \*\*22\*\*' "$PACK/shared/rules/core.mdc"; then ok "core.mdc has the cyclo-22 ceiling"
 else fail "core.mdc missing cyclo-22 ceiling"; fi
 
-PASTE="$PACK/shared/rules/USER-RULES.paste.txt"
+PASTE="$PACK/shared/rules/charter.txt"
 PASTE_HEADS=ok
 for h in Identity Stance Autonomy Session Retrieval Host; do
   grep -q "## $h" "$PASTE" || PASTE_HEADS="missing:$h"
 done
-if [[ "$PASTE_HEADS" == ok ]]; then ok "USER-RULES.paste.txt keeps charter headings"
-else fail "USER-RULES.paste.txt missing charter heading ($PASTE_HEADS)"; fi
+if [[ "$PASTE_HEADS" == ok ]]; then ok "charter.txt keeps charter headings"
+else fail "charter.txt missing charter heading ($PASTE_HEADS)"; fi
 
 if grep -qE 'rm -rf "\$HOME_C/hooks"' "$PACK/scripts/uninstall.sh" \
   || grep -qE 'rm -f "\$HOME_C/hooks.json"' "$PACK/scripts/uninstall.sh"; then

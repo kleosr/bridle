@@ -101,7 +101,7 @@ install_home_hooks() {
 }
 
 write_charter_mdc() {
-  local dest="$1" src="$PACK/shared/rules/USER-RULES.paste.txt"
+  local dest="$1" src="$PACK/shared/rules/charter.txt"
   [[ -f "$src" ]] || { echo "[fail] missing $src"; return 1; }
   mkdir -p "$dest"
   {
