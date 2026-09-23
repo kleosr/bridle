@@ -123,3 +123,29 @@ run_test "regression: read denies secret target even with clean attachments" "de
 run_test "regression: read denies secret path field beside clean attachment file_path" "deny secret-path" \
   "$(read_v '{"path":"/repo/.env","attachments":[{"file_path":"/repo/ok.ts"}]}')"
 run_test "regression: read decodes \\u escapes through the codec" "deny secret-path" "$(read_v '{"file_path":"/repo/caf\u00e9/.env"}')"
+
+# A dead external dirname used to exit the hook before any JSON (MSYS cygheap
+# fork failure → `cd` null directory → failClosed). The mark file is written
+# only if that binary runs.
+POISON="$(mktemp -d "${TMPDIR:-/tmp}/kleos-dirname.XXXXXX")"
+POISON_MARK="$POISON/called"
+printf '%s\n' '#!/bin/sh' "echo called >> '$POISON_MARK'" 'exit 1' > "$POISON/dirname"
+chmod +x "$POISON/dirname"
+hook_poison() { PATH="$POISON:$PATH" bash "$1"; }
+S_OUT="$(printf '%s' '{"command":"git status","cwd":"/tmp"}' | hook_poison "$PACK/shared/hooks/before_shell.sh" || true)"
+R_OUT="$(printf '%s' '{"file_path":"/repo/a.ts","content":"x"}' | hook_poison "$PACK/shared/hooks/before_read_file.sh" || true)"
+P_OUT="$(printf '%s' '{"prompt":"hello"}' | hook_poison "$PACK/shared/hooks/before_submit_prompt.sh" || true)"
+T_OUT="$(printf '%s' '{}' | hook_poison "$PACK/shared/hooks/stop.sh" || true)"
+S_PERM="$(printf '%s' "$S_OUT" | jq -r '.permission // "none"' 2>/dev/null || echo none)"
+R_PERM="$(printf '%s' "$R_OUT" | jq -r '.permission // "none"' 2>/dev/null || echo none)"
+P_CONT="$(printf '%s' "$P_OUT" | jq -r '.continue // "none"' 2>/dev/null || echo none)"
+T_KIND="$(printf '%s' "$T_OUT" | jq -r 'type' 2>/dev/null || echo none)"
+if [[ -f "$POISON_MARK" ]]; then DIRNAME_CALLED=yes; else DIRNAME_CALLED=no; fi
+run_test "regression: dead dirname does not fail the shell hook closed" "allow" "$S_PERM"
+run_test "regression: dead dirname does not fail the read hook closed" "allow" "$R_PERM"
+run_test "regression: dead dirname does not fail the submit hook closed" "true" "$P_CONT"
+run_test "regression: dead dirname does not fail the stop hook closed" "object" "$T_KIND"
+run_test "regression: event hooks do not exec dirname" "no" "$DIRNAME_CALLED"
+REL_PERM="$(cd "$PACK" && printf '%s' '{"command":"git status","cwd":"/tmp"}' | bash shared/hooks/before_shell.sh | jq -r '.permission // "none"' || true)"
+run_test "shell hook resolves its lib from a relative path" "allow" "$REL_PERM"
+rm -rf "$POISON"

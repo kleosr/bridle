@@ -5,7 +5,17 @@
 # _DIR). Every hook used to re-probe on each json_run inside a $(...) subshell,
 # which threw the cache away and cost 2-3 extra interpreter spawns per event
 # (~100 ms each on MSYS) on the native Read/Shell hot path.
-KLEOS_JSON_DIR="${KLEOS_JSON_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+if ! declare -F kleos_abs_dir >/dev/null 2>&1; then
+  _jsrc="${BASH_SOURCE[0]//\\//}"
+  _jlib="${_jsrc%/*}"
+  [[ "$_jlib" == "$_jsrc" || -z "$_jlib" ]] && _jlib="."
+  # shellcheck source=selfdir.sh
+  source "$_jlib/selfdir.sh"
+  unset _jsrc _jlib
+fi
+_jsrc="${BASH_SOURCE[0]//\\//}"
+KLEOS_JSON_DIR="${KLEOS_JSON_DIR:-$(kleos_abs_dir "$_jsrc")}"
+unset _jsrc
 
 json_lib_dir() {
   printf '%s\n' "$KLEOS_JSON_DIR"
