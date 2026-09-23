@@ -238,6 +238,12 @@ ON_CAP="$(jq -r '.invariants.alwaysOnMaxLines' "$PACK/shared/config/harness.json
 if [[ "$((CORE_N + TEST_N))" -le "$ON_CAP" ]]; then ON_OK=ok; else ON_OK="lines:$((CORE_N + TEST_N))>$ON_CAP"; fi
 run_test "always-on core.mdc+testing.mdc stay under alwaysOnMaxLines" "ok" "$ON_OK"
 
+# Lines undercount paragraph prose; bytes track the per-request token cost.
+ON_BYTES="$(cat "$PACK/shared/rules/charter.txt" "$PACK/shared/rules/core.mdc" "$PACK/shared/rules/testing.mdc" | wc -c | tr -d ' ')"
+BYTE_CAP="$(jq -r '.invariants.alwaysOnMaxBytes' "$PACK/shared/config/harness.json")"
+if [[ "$ON_BYTES" -le "$BYTE_CAP" ]]; then ON_OK=ok; else ON_OK="bytes:$ON_BYTES>$BYTE_CAP"; fi
+run_test "always-on charter+core+testing stay under alwaysOnMaxBytes" "ok" "$ON_OK"
+
 RESULT="$(jq -r '.verification.default' "$PACK/shared/config/harness.json")"
 run_test "verify default is scoped, not whole-suite" "scoped" "$RESULT"
 RESULT="$(jq -r '.invariants.hooksFrozen' "$PACK/shared/config/harness.json")"
