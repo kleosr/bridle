@@ -58,26 +58,29 @@ run_test "kleosr custom mode name matches its skill folder" "kleosr" "$(awk -F '
 run_test "kleosr skill is marked as a custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$KLEOSR_MODE")"
 run_test "kleosr mode requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$KLEOSR_MODE")"
 
-KLEOSR_AUTH="$(awk '
-  /^## Authority$/ { p=1; next }
+# The instruction order is written once, in the charter's Session list.
+CHARTER_AUTH="$(awk '
+  /^## Session$/ { p=1; next }
   p && /^## / { exit }
   p && /^[0-9]+\. / { print }
-' "$KLEOSR_MODE")"
-RESULT="$(printf '%s\n' "$KLEOSR_AUTH" | grep -q 'AGENTS.md' && echo fail || echo ok)"
-run_test "regression: kleosr Authority does not rank AGENTS.md as a law layer" "ok" "$RESULT"
-RESULT="$(printf '%s\n' "$KLEOSR_AUTH" | grep -q 'SECURITY.md' && echo ok || echo fail)"
-run_test "kleosr Authority numbers SECURITY.md as a boundary layer" "ok" "$RESULT"
-RESULT="$(printf '%s\n' "$KLEOSR_AUTH" | grep -q 'core.mdc' && printf '%s\n' "$KLEOSR_AUTH" | grep -q 'testing.mdc' && echo ok || echo fail)"
-run_test "kleosr Authority numbers always-on core.mdc and testing.mdc" "ok" "$RESULT"
-CHARTER_N="$(printf '%s\n' "$KLEOSR_AUTH" | grep -n 'kleosr.mdc' | head -1 | cut -d: -f1 || true)"
-SEC_N="$(printf '%s\n' "$KLEOSR_AUTH" | grep -n 'SECURITY.md' | head -1 | cut -d: -f1 || true)"
-CORE_N="$(printf '%s\n' "$KLEOSR_AUTH" | grep -n 'core.mdc' | head -1 | cut -d: -f1 || true)"
+' "$PACK/shared/rules/charter.txt")"
+RESULT="$(printf '%s\n' "$CHARTER_AUTH" | grep -q 'AGENTS.md' && echo fail || echo ok)"
+run_test "regression: charter order does not rank AGENTS.md as a law layer" "ok" "$RESULT"
+RESULT="$(printf '%s\n' "$CHARTER_AUTH" | grep -q 'SECURITY.md' && echo ok || echo fail)"
+run_test "charter order numbers SECURITY.md as a boundary layer" "ok" "$RESULT"
+RESULT="$(printf '%s\n' "$CHARTER_AUTH" | grep -q 'core.mdc' && printf '%s\n' "$CHARTER_AUTH" | grep -q 'testing.mdc' && echo ok || echo fail)"
+run_test "charter order numbers always-on core.mdc and testing.mdc" "ok" "$RESULT"
+CHARTER_N="$(printf '%s\n' "$CHARTER_AUTH" | grep -n 'This charter' | head -1 | cut -d: -f1 || true)"
+SEC_N="$(printf '%s\n' "$CHARTER_AUTH" | grep -n 'SECURITY.md' | head -1 | cut -d: -f1 || true)"
+CORE_N="$(printf '%s\n' "$CHARTER_AUTH" | grep -n 'core.mdc' | head -1 | cut -d: -f1 || true)"
 if [[ -n "$CHARTER_N" && -n "$SEC_N" && -n "$CORE_N" && "$CHARTER_N" -lt "$SEC_N" && "$SEC_N" -lt "$CORE_N" ]]; then
   AUTH_ORDER=ok
 else
   AUTH_ORDER="charter:${CHARTER_N:-missing} security:${SEC_N:-missing} core:${CORE_N:-missing}"
 fi
-run_test "kleosr Authority order is charter, SECURITY, then always-on" "ok" "$AUTH_ORDER"
+run_test "charter order is charter, SECURITY, then always-on" "ok" "$AUTH_ORDER"
+RESULT="$(grep -qE '^[0-9]+\. ' "$KLEOSR_MODE" && grep -q 'SECURITY.md' "$KLEOSR_MODE" && echo restated || echo ok)"
+run_test "regression: kleosr mode does not restate the instruction order" "ok" "$RESULT"
 
 LOC_OK=1
 for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
@@ -104,7 +107,7 @@ run_test "regression: pack does not ship lib/host.sh" "absent" "$HOSTLIB"
 [[ -e "$PACK/shared/hosts" ]] && HOSTDIR=present || HOSTDIR=absent
 run_test "regression: pack does not ship shared/hosts" "absent" "$HOSTDIR"
 
-CHARTER="$PACK/shared/rules/USER-RULES.paste.txt"
+CHARTER="$PACK/shared/rules/charter.txt"
 if grep -qE 'Never above|useEffect|failClosed|globs:' "$CHARTER"; then CHARTER_DUP=fail; else CHARTER_DUP=ok; fi
 run_test "regression: charter does not restate core.mdc or hook internals" "ok" "$CHARTER_DUP"
 
