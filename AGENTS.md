@@ -16,15 +16,16 @@ This file is the map. It is already in context.
 - `state/handoff.json` when that file is present. Continuity, not authority. Other repos: `<root>/.cursor/bridle/handoff.json`.
 - `SECURITY.md` before security-sensitive work.
 
-## Law (priority order)
-1. Charter: `shared/rules/USER-RULES.paste.txt` (installed as `~/.cursor/rules/kleosr.mdc`; not a Settings paste)
-2. Boundary: `SECURITY.md` (read on demand; outranks on boundary questions)
-3. Always-on: `core.mdc`, `testing.mdc`
-4. Glob companions: host-attached on path; treat as inert when the owning package does not match
-5. Skills on match: catalog `shared/config/skills.txt` (pack: `kleosr` session router, `debugging`, `testing`, `handoff`; vendor UI/motion on match)
-6. Specialists: `hunter` / `cut` / `prove` — invoke only
+## Law
+Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/kleosr.mdc`), `shared/rules/*.mdc`, skills catalog `shared/config/skills.txt`. Instruction order is defined once, in the charter (Session). This file is the map, not a law layer.
 
-`kleosr` is a session router (`mode: true`, `disable-model-invocation: true`). This file is the map, not a law layer above `core.mdc` / `testing.mdc`.
+## Pack verification
+- Scoped: `TESTS=<fixture> bash tests/run.sh`. Gauntlet: `bash tests/run.sh`. Init does not run the suite.
+- Feature pass-state: `bash scripts/feature.sh pass <id>` (records evidence for the current tree; a failure records `lastFailure.nextExperiment`). `bash scripts/feature.sh note <id> <hypothesis>` after diagnosis.
+- Handoff: `bash scripts/handoff.sh write|check`.
+- `stop.sh` is advisory (syntax, churn, size, completion, false `passing`). `complete.sh check` exits 0 act / 3 escalate.
+- `tests/run.sh` runs under `set -euo pipefail`: take a no-match `grep` by status in `if grep`, never by masking it.
+- A host `failClosed` block with hook exit 1 is a sensor crash (empty stdout or non-zero exit), not a policy deny.
 
 ## Config
 - Extend via `skills.txt` and glob companions.

@@ -105,7 +105,7 @@ graph TD
   H["SECURITY.md: on demand, outranks rules on boundaries"] -.-> A
 ```
 
-1. **Charter.** `shared/rules/USER-RULES.paste.txt`, installed as `~/.cursor/rules/kleosr.mdc` with `alwaysApply`. Identity, what may proceed without asking, and what needs approval. Install it only there. A second copy in Cursor Settings → User Rules drifts.
+1. **Charter.** `shared/rules/charter.txt`, installed as `~/.cursor/rules/kleosr.mdc` with `alwaysApply`. Identity, what may proceed without asking, and what needs approval. Install it only there. A second copy in Cursor Settings → User Rules drifts.
 2. **Always-on law.** `core.mdc` and `testing.mdc`, each capped at 80 lines. Craft, size, the dependency ladder, and the verify loop.
 3. **Glob companions.** Framework rules attach on file match and stay inert unless that package’s manifest names the dependency.
 4. **Skills.** Catalog `shared/config/skills.txt`. Procedures only. They cannot grant a permission.

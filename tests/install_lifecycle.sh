@@ -23,7 +23,7 @@ run_test "double install registers the 4 required events" "4" "$EVT"
 
 CORE_HOME="$(test -f "$LC_HOME/.cursor/rules/core.mdc" && echo yes || echo no)"
 run_test "install copies core.mdc into isolated HOME rules" "yes" "$CORE_HOME"
-CHARTER_HOME="$(grep -q 'Agent = Model + Harness' "$LC_HOME/.cursor/rules/kleosr.mdc" 2>/dev/null && echo yes || echo no)"
+CHARTER_HOME="$(grep -q 'You are kleosr'"'"'s engineering partner' "$LC_HOME/.cursor/rules/kleosr.mdc" 2>/dev/null && echo yes || echo no)"
 run_test "install writes kleosr.mdc charter into isolated HOME rules" "yes" "$CHARTER_HOME"
 HUNTER_HOME="$(test -f "$LC_HOME/.cursor/agents/hunter.md" && echo yes || echo no)"
 CUT_HOME="$(test -f "$LC_HOME/.cursor/agents/cut.md" && echo yes || echo no)"

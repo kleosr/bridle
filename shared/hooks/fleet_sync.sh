@@ -61,7 +61,7 @@ case "$CMD" in
     install_agents
     verify_smoke
     echo "[done] fleet_sync all FORCE=$FORCE (local ~/.cursor only)"
-    echo "Charter installed once as ~/.cursor/rules/kleosr.mdc. If Cursor Settings → User Rules still holds a copy of USER-RULES.paste.txt, remove it (double injection). Start a new chat."
+    echo "Charter installed once as ~/.cursor/rules/kleosr.mdc. If Cursor Settings → User Rules still holds a copy of charter.txt, remove it (double injection). Start a new chat."
     ;;
   *)
     echo "usage: FORCE=1 $0 {install|project-hooks|verify|all}" >&2
