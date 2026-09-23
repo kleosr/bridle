@@ -109,4 +109,45 @@ gr_lines 50 > "$GR_TMP/thinnew/thin.ts"
 RESULT="$(gr_stop "$GR_TMP/thinnew" | jq -c .)"
 run_test "stop: new untracked file at 50 lines is quiet" "{}" "$RESULT"
 
+gr_repo "$GR_TMP/conflict"
+printf 'export const port = 3000\n' > "$GR_TMP/conflict/config.ts"
+git -C "$GR_TMP/conflict" add config.ts
+git -C "$GR_TMP/conflict" -c user.email=t@t -c user.name=t commit -q -m base
+printf '<<<<<<< HEAD\na\n=======\nb\n>>>>>>> x\n' > "$GR_TMP/conflict/config.ts"
+RESULT="$(gr_stop "$GR_TMP/conflict" | jq -r '.followup_message // "" | test("unresolved conflict markers")')"
+run_test "stop: unresolved conflict markers are a completion advisory" "true" "$RESULT"
+
+gr_repo "$GR_TMP/stub"
+printf 'export const run = 1\n' > "$GR_TMP/stub/billing.ts"
+git -C "$GR_TMP/stub" add billing.ts
+git -C "$GR_TMP/stub" -c user.email=t@t -c user.name=t commit -q -m base
+printf "export function refund() { throw new Error('TODO: not implemented') }\n" > "$GR_TMP/stub/billing.ts"
+RESULT="$(gr_stop "$GR_TMP/stub" | jq -r '.followup_message // "" | test("not-implemented stub")')"
+run_test "stop: not-implemented stub is a completion advisory" "true" "$RESULT"
+
+gr_repo "$GR_TMP/orphan"
+printf 'export const app = 1\n' > "$GR_TMP/orphan/app.ts"
+git -C "$GR_TMP/orphan" add app.ts
+git -C "$GR_TMP/orphan" -c user.email=t@t -c user.name=t commit -q -m base
+printf 'export class PaymentService {}\n' > "$GR_TMP/orphan/PaymentService.ts"
+RESULT="$(gr_stop "$GR_TMP/orphan" | jq -c .)"
+run_test "stop: a new untracked module alone stays quiet" "{}" "$RESULT"
+
+gr_repo "$GR_TMP/cleanedit"
+printf 'export const a = 1\n' > "$GR_TMP/cleanedit/a.ts"
+printf "import { a } from './a'\nexport const b = a\n" > "$GR_TMP/cleanedit/b.ts"
+git -C "$GR_TMP/cleanedit" add a.ts b.ts
+git -C "$GR_TMP/cleanedit" -c user.email=t@t -c user.name=t commit -q -m base
+printf "import { a } from './a'\nexport const b = a + 1\n" > "$GR_TMP/cleanedit/b.ts"
+RESULT="$(gr_stop "$GR_TMP/cleanedit" | jq -c .)"
+run_test "stop: a small wired edit is quiet" "{}" "$RESULT"
+
+gr_repo "$GR_TMP/prose"
+printf 'export const a = 1\n' > "$GR_TMP/prose/a.ts"
+git -C "$GR_TMP/prose" add a.ts
+git -C "$GR_TMP/prose" -c user.email=t@t -c user.name=t commit -q -m base
+printf 'export const a = 1 // not implemented in older runtimes\n' > "$GR_TMP/prose/a.ts"
+RESULT="$(gr_stop "$GR_TMP/prose" | jq -c .)"
+run_test "regression: stub detector does not match ordinary not-implemented prose" "{}" "$RESULT"
+
 rm -rf "$GR_TMP"

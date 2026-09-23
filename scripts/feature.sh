@@ -113,8 +113,8 @@ cmd_check() {
   ' "$FILE")"
   [[ -z "$invalid" ]] || { echo "passing feature lacks valid evidence: $invalid" >&2; exit 1; }
   # Passing means passing for this workspace. A row whose evidence.tree differs
-  # from the tree now is stale. Rows without a tree predate this check and are
-  # accepted here so the pack can bootstrap; the stop sensor still names them.
+  # from the tree now is stale. Rows without a tree predate this check. check
+  # and the stop sensor both accept them; a recorded tree that drifted is stale.
   tree="$(ledger_tree "$ROOT" "$TREE_EXCLUDE")"
   stale="$(jq -r --arg t "$tree" '
     .features[] |

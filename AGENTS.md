@@ -4,8 +4,7 @@ bridle is a Cursor **user harness**: charter, always-on law, skills, and four Ba
 
 **Init:** `bash scripts/ready.sh`  
 **Inventory:** `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh`  
-**Verify:** the behavior this change can break; gauntlet `bash tests/run.sh` 
-**Completion:** `bash scripts/complete.sh check` (counts and signals; exit 0 act / 3 escalate); benchmark `bash scripts/bench.sh`  
+**Verify:** the behavior this change can break; gauntlet `bash tests/run.sh`  
 Windows: Git Bash.
 
 ## Read when the task needs it
@@ -23,7 +22,7 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 - Scoped: `TESTS=<fixture> bash tests/run.sh`. Gauntlet: `bash tests/run.sh`. Init does not run the suite.
 - Feature pass-state: `bash scripts/feature.sh pass <id>` (records evidence for the current tree; a failure records `lastFailure.nextExperiment`). `bash scripts/feature.sh note <id> <hypothesis>` after diagnosis.
 - Handoff: `bash scripts/handoff.sh write|check`.
-- `stop.sh` is advisory (syntax, churn, size, completion, false `passing`). `complete.sh check` exits 0 act / 3 escalate.
+- `stop.sh` is advisory (syntax, churn, size, conflict markers, stubs, false `passing`). It cannot refuse completion.
 - `tests/run.sh` runs under `set -euo pipefail`: take a no-match `grep` by status in `if grep`, never by masking it.
 - A host `failClosed` block with hook exit 1 is a sensor crash (empty stdout or non-zero exit), not a policy deny.
 
@@ -33,7 +32,7 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 - Hooks: four events. No `sessionStart`, no `preToolUse`, no `updated_input`.
 
 ## Docs
-`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/DECISIONS/hooks.md`, `docs/DECISIONS/engineering-os.md`, `docs/DECISIONS/completion-gate.md`, `docs/DECISIONS/2026-09-18-instruction-hierarchy-audit.md`, `docs/host-capability.md`.
+`docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/host-capability.md`.
 
 ## Install
 ```bash

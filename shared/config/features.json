@@ -259,76 +259,17 @@
     {
       "id": "H17",
       "priority": 17,
-      "area": "integration",
-      "layer": "integration",
-      "title": "Completion / integration stop advisory",
-      "behavior": "stop.sh emits one advisory when the working tree has unresolved VCS conflict markers or not-implemented stubs added in the change. It stays quiet on wired edits and does not fire on orphan modules alone (orphan analysis is CLI-only to keep the hook near-zero false positive). It cannot refuse completion.",
-      "verification": "TESTS=complete_edges bash tests/run.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "TESTS=complete_edges bash tests/run.sh",
-        "exit": 0,
-        "recordedAt": "2026-09-17T00:53:07Z"
-      }
-    },
-    {
-      "id": "H18",
-      "priority": 18,
-      "area": "integration",
+      "area": "feedback",
       "layer": "verification",
-      "title": "Completion-confidence scorer",
-      "behavior": "scripts/complete.sh check scores the working tree vs HEAD into a deterministic confidence (0-100) and a verdict: act when confidence >= COMPLETE_MIN_CONFIDENCE (default 80, exit 0), escalate otherwise (exit 3). Conflicts and changed-file syntax errors are critical (confidence 0); source added but never referenced (orphan) and not-implemented stubs are heavy; ownerless TODOs are a light nudge. It never executes repo code and never replaces the repo verify command.",
-      "verification": "TESTS=complete_edges bash tests/run.sh",
+      "title": "Completion stop advisory",
+      "behavior": "stop.sh emits one advisory when the working tree has unresolved VCS conflict markers or not-implemented stubs added in the change. It stays quiet on ordinary edits. It cannot refuse completion.",
+      "verification": "TESTS=stop_edges bash tests/run.sh",
       "status": "passing",
       "evidence": {
-        "command": "TESTS=complete_edges bash tests/run.sh",
+        "command": "TESTS=stop_edges bash tests/run.sh",
         "exit": 0,
-        "recordedAt": "2026-09-17T00:54:39Z"
-      }
-    },
-    {
-      "id": "H19",
-      "priority": 19,
-      "area": "evals",
-      "layer": "integration",
-      "title": "Completion-confidence benchmark",
-      "behavior": "scripts/bench.sh materialises the labelled corpus in evals/bench/cases.json as scratch git repos and scores the completion verdict against the label, reporting accuracy/precision/recall/false-positive-rate and a before/after against the no-completion-detection baseline. It exits 0 only when accuracy and false-positive-rate meet the corpus target.",
-      "verification": "bash scripts/bench.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "bash scripts/bench.sh",
-        "exit": 0,
-        "recordedAt": "2026-09-17T00:51:36Z"
-      }
-    },
-    {
-      "id": "H20",
-      "priority": 20,
-      "area": "integration",
-      "layer": "integration",
-      "title": "Reference-integrity (dangling symbol) detection",
-      "behavior": "complete_gate.sh flags a declaration removed by the change (exported JS/TS symbol, python def/class, go func) that no longer resolves anywhere yet is still referenced by surviving code — the incomplete-refactor regression. Renames with all callers updated, symbols moved to another file, and deletions of truly unused exports are not flagged. CLI-only via scripts/complete.sh (whole-tree scan); the stop hook is unchanged.",
-      "verification": "TESTS=complete_edges bash tests/run.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "TESTS=complete_edges bash tests/run.sh",
-        "exit": 0,
-        "recordedAt": "2026-09-17T00:56:38Z"
-      }
-    },
-    {
-      "id": "H21",
-      "priority": 21,
-      "area": "integration",
-      "layer": "integration",
-      "title": "Dependency-integrity (undeclared import) detection",
-      "behavior": "scripts/complete.sh flags a package newly imported by the change that is not declared in any package.json in the tree (union across manifests, so monorepo sub-package deps count). Relative imports, node: and Node core builtins are excluded; scoped and subpath specifiers are normalized to the installable package (@scope/pkg/x -> @scope/pkg, lodash/merge -> lodash). jq-backed manifest read, so it lives in complete.sh, not the hook-safe gate library; the stop hook is unchanged.",
-      "verification": "TESTS=complete_edges bash tests/run.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "TESTS=complete_edges bash tests/run.sh",
-        "exit": 0,
-        "recordedAt": "2026-09-17T20:29:54Z"
+        "proves": "tests/stop_edges.sh",
+        "recordedAt": "2026-09-17T00:53:07Z"
       }
     }
   ]

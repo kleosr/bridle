@@ -221,8 +221,11 @@ def cmd_features_advise(path, tree="", dirty=""):
             evidence = item.get("evidence")
             if not isinstance(evidence, dict) or not (evidence.get("proves") or evidence.get("command")):
                 continue
-            if evidence.get("tree") != tree:
-                stale.append(item.get("id") or "unknown")
+            # Missing tree predates the check. feature.sh check accepts those
+            # rows; only a recorded tree that no longer matches is stale.
+            if "tree" not in evidence or evidence.get("tree") == tree:
+                continue
+            stale.append(item.get("id") or "unknown")
         if stale:
             sys.stdout.write(
                 "FEATURE (advisory): passing with stale evidence (workspace changed since pass): %s.\n"

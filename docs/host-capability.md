@@ -11,7 +11,7 @@ Does Cursor actually halt when `permission: deny` is emitted? Does it genuinely 
 
 Those questions can only be answered by real production sessions, real telemetry logs, and honest notes. That is what this document tracks. We never claim host guarantees that haven't been measured live.
 
-The single source of truth for script policies is `SECURITY.md`. The design rationale for hooks is in `docs/DECISIONS/hooks.md`.
+The single source of truth for script policies is `SECURITY.md`. The hook surface is `docs/ARCHITECTURE.md`.
 
 ---
 
