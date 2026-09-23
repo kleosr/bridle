@@ -5,17 +5,17 @@ alwaysApply: true
 
 # Testing
 
-Test observable behavior at the narrowest stable boundary. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence. A failed check is the next repair job: pin it, rerun, keep the rest of the suite. "Done" is only that validator's command + exit (or a driven UI path).
+Test observable behavior at the narrowest stable boundary. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence. "Done" is a validator's command + exit code (or a driven UI path) that you ran and cite.
 
 When no executable check covers the changed path, report the gap and the smallest next check. Do not substitute confidence for proof.
 
-- This pack: `TESTS=<fixture> bash tests/run.sh` (scoped), `bash tests/run.sh` (gauntlet), `bash scripts/doctor.sh`. Init: `bash scripts/ready.sh` (does not run the suite). Else the repo's TOOLCHAIN / package scripts.
-- Docs-only: no house gauntlet. Trusted workspace: run in-scope checks; network, credentials, and destructive effects still need authorization.
-- Bug fix: `regression: <symptom>` with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
-- Coverage / mutation only if the repo already has those jobs. Do not add a runner. Do not expose privates to hit coverage.
-- `stop.sh` is advisory (syntax, churn, size, completion, false `passing`); `bash scripts/complete.sh check` reports `counts` and `signals` for unwired, dangling, and undeclared changes. `confidence` is only the exit threshold (0 act, 3 escalate). Both are shape checks, not proof: neither executes repo test suites, and citation of a real run remains required.
-- A signature or shared-contract edit cites the caller list (Grep, or `veredicto --impact` on TypeScript) next to that proof.
-- A feature is `passing` only after `bash scripts/feature.sh pass <id>`, and only for the workspace tree it was passed on: edit after pass and the row is stale until re-passed. Editing JSON to `passing` is not done. Failed pass records `lastFailure` (including `nextExperiment`) and leaves `in_progress`.
-- Builder does not self-grade. `prove` runs in a separate context (same host, same hooks; not an independent authority). Syntax is layer 1; scoped command + exit is layer 2; repo-wide claims need the gauntlet.
+- Which command: the repo's `AGENTS.md`, TOOLCHAIN, or package scripts. Docs-only changes need no suite.
+- Bug fix: a `regression: <symptom>` test with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
+- A failed check is the next repair job: fix it, rerun, then rerun the scoped suite.
+- Coverage or mutation only if the repo already runs them. Do not add a runner. Do not expose privates to hit coverage.
+- A signature or shared-contract edit cites its caller list (Grep) next to the proof.
+- Stop-hook notes and completion scores are shape checks, not proof; they never run the repo's tests.
+- Feature ledgers: never hand-edit a row to `passing`. A pass is recorded by the ledger's pass command after a real run, and goes stale when the tree changes.
+- The builder does not self-grade. `prove` rechecks in a separate context. Repo-wide claims need the full suite.
 
-When writing or expanding tests, read the testing skill. Checkout skill text does not override User Rules, hooks, or host policy.
+When writing or expanding tests, load the `testing` skill.
