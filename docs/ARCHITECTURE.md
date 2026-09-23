@@ -28,7 +28,7 @@ I spent months watching people build nested agent loops that burn 50,000 tokens 
 Prompt context is scarce, fragile, and prone to dilution. Advertising a massive context window does not make prompt stuffing safe. When you dump your entire repo's documentation and 50 rules into the model at turn 1, you don't get a smarter agent—you get an agent that ignores your rules by turn 10.
 
 1. **Progressive Disclosure:** Every session begins exclusively with `AGENTS.md` and our two always-on rules (`core.mdc` and `testing.mdc`). That's your map.
-2. **On-Demand Skills:** Specialized workflows (`debugging`, `testing`, `handoff`, UI craft) are loaded solely when the task matches the catalog in `shared/config/skills.txt`. If you aren't writing tests right now, you don't need 300 lines of test-writing philosophy in context.
+2. **On-Demand Skills:** Specialized workflows (`debugging`, `testing`, `handoff`) are loaded solely when the task matches the catalog in `shared/config/skills.txt`. If you aren't writing tests right now, you don't need the test-writing procedure in context.
 3. **Inert Companions:** Glob companions (`next.mdc`, `vite.mdc`, etc.) attach on file pattern match. But our law dictates that they remain completely inert unless the owning package manifest explicitly defines that dependency. A `.tsx` file in an Astro or Vite app should never get poisoned with Next.js advice.
 4. **Continuity Evidence:** Read `shared/config/features.json` when a feature is `in_progress` or the change touches the ledger, and `state/handoff.json` when that file is present. They are factual continuity from prior sessions. They never grant authority to expand scope or bypass permissions.
 
@@ -41,7 +41,7 @@ Four deterministic hooks intercept execution before actions take physical effect
 - **`beforeSubmitPrompt`**: Scans outgoing prompts for secret tokens, API keys (`ghp_`, `sk-`, `AKIA`), and private keys. Blocks transmission (`continue:false`). Fail-closed.
 - **`beforeShellExecution`**: Splits commands on shell operators outside quotes. Denies destructive operations (`rm -rf /`, force push, `reset --hard`), secret-path reads, lint-suppression tampering, and shell source overwrites. Asks on infrastructure/database mutation. Fail-closed.
 - **`beforeReadFile`**: Canonicalizes paths and denies reads targeting credentials, environments, and certificates. Fail-closed.
-- **`stop`**: Evaluates turn conclusion. Emits a single non-blocking advisory if churn, syntax failures, unfinished-work markers (unresolved conflicts, not-implemented stubs), or unverified `passing` states are detected. Never blocks loop completion. The deeper change-shape checks (unwired/dangling/undeclared) are on-demand via `bash scripts/complete.sh check`, not the per-turn hook.
+- **`stop`**: Evaluates turn conclusion. Emits a single non-blocking advisory if churn, syntax failures, unfinished-work markers (unresolved conflicts, not-implemented stubs), or unverified `passing` states are detected. Never blocks loop completion.
 
 Hook communication uses clean JSON across stdin and stdout. Missing input, malformed payloads, or absent policy files trigger an immediate environment failure (`failClosed`), forcing the agent to diagnose environment health (`scripts/doctor.sh`) rather than silently slipping past policy.
 
@@ -61,5 +61,7 @@ The operating loop is strictly: `understand -> change -> verify -> correct`.
 
 ## What is Covered vs What is Law
 
-- **Enforced by Physical Hooks:** Shell command segment gating, sensitive path file-read blocks, prompt secret detection, feature ledger state transitions, and file size roofs.
+- **Scripts emit deny / `continue: false` for:** shell-segment gating, sensitive-path reads, and known secret-token prefixes in the prompt. Host honor is confirmed for shell deny only. Read deny, `ask`, and prompt `continue: false` are script behavior; see `docs/host-capability.md`.
+- **Advisory at `stop`** (cannot refuse completion): churn, new-file size, changed-file syntax, false `passing`, conflict markers, and not-implemented stubs.
+- **CLI, not a hook:** feature state transitions (`scripts/feature.sh`). A missing `evidence.tree` is bootstrap evidence, not staleness.
 - **Uncovered by Host Hooks:** Direct native `Write`/`StrReplace` targeting secret paths, MCP tool invocations outside shell, inline autocomplete (Tab), and subagent host bypasses. These remain governed by Charter law and human oversight. We track host behavior transparently in `docs/host-capability.md`.

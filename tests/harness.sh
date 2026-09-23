@@ -129,6 +129,21 @@ run_test "external workspace: check passes right after pass" "ok" "$RESULT"
 RESULT="$(hf_stop "$EXT" | jq -c .)"
 run_test "stop is quiet when the workspace ledger is fresh and the tree is clean" "{}" "$RESULT"
 
+# Rows recorded before evidence.tree existed are accepted by feature.sh check.
+# Calling them "workspace changed since pass" is false and fires on every stop.
+NOTREE="$HARNESS_TMP/notree"
+hf_repo "$NOTREE"
+printf 'echo ok\n' > "$NOTREE/ok.sh"
+git -C "$NOTREE" add ok.sh
+git -C "$NOTREE" -c user.email=t@t -c user.name=t commit -q -m base
+mkdir -p "$NOTREE/.cursor/bridle"
+jq -n '{version:1,features:[{id:"F01",priority:1,area:"x",title:"t",behavior:"b",verification:"true",status:"passing",evidence:{command:"true",exit:0,proves:"ok.sh"}}]}' \
+  > "$NOTREE/.cursor/bridle/features.json"
+RESULT="$(cd "$NOTREE" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
+run_test "feature.sh check accepts passing evidence that predates evidence.tree" "ok" "$RESULT"
+RESULT="$(hf_stop "$NOTREE" | jq -r '.followup_message // "" | test("stale evidence")')"
+run_test "regression: stop does not call pre-tree evidence stale" "false" "$RESULT"
+
 printf 'echo changed\n' > "$EXT/ok.sh"
 RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "regression: an edit after pass makes check reject the stale passing row" "fail" "$RESULT"

@@ -122,13 +122,13 @@ graph TD
 | `beforeReadFile` | `before_read_file.sh` | Fail closed. Canonical path, then deny `.env`, private keys, and certificates. |
 | `stop` | `stop.sh` | Advisory. One follow-up per turn (`loop_limit: 1`, `failClosed: false`). |
 
-`stop` runs after the turn. It reports churn, syntax errors, size violations, a `passing` row with no evidence, conflict markers, and not-implemented stubs. It leaves the decision to the person and to the verify command. A fail-closed `stop` would still not undo the edit, and it would block a finished turn on a shape warning. The whole-repo checks (unwired files, dangling references, undeclared imports) live in `bash scripts/complete.sh check`, which exits `0` to act and `3` to escalate. That scan stays off the per-turn hook. The decision is [`docs/DECISIONS/completion-gate.md`](docs/DECISIONS/completion-gate.md). False completion of a feature is still a failed `feature.sh pass`, plus this advisory when a ledger claims `passing` without evidence.
+`stop` runs after the turn. It reports churn, syntax errors, size violations, a `passing` row with no evidence, conflict markers, and not-implemented stubs. It leaves the decision to the person and to the verify command. A fail-closed `stop` would still not undo the edit, and it would block a finished turn on a shape warning. False completion of a feature is still a failed `feature.sh pass`, plus this advisory when a ledger claims `passing` without evidence.
 
-There is no `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/DECISIONS/hooks.md`](docs/DECISIONS/hooks.md).
+There is no `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ### Shell-hook timing
 
-Matching in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` stays inside Bash (`[[ =~ ]]`). On Windows Git Bash, a pipeline of `grep` / `sed` / `tr` cost about 50 ms per spawn. A 30-segment command took **45.0 s** and Cursor killed it (`exit code 1` under `failClosed`). After the in-process rewrite the same command took **3.2 s** end to end through the PowerShell shim. Measured 2026-09-15 on Cursor 3.20.15, Windows 11. Numbers and the probe log: [`docs/host-capability.md`](docs/host-capability.md). Write-up: [`docs/DECISIONS/hooks.md`](docs/DECISIONS/hooks.md).
+Matching in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` stays inside Bash (`[[ =~ ]]`). On Windows Git Bash, a pipeline of `grep` / `sed` / `tr` cost about 50 ms per spawn. A 30-segment command took **45.0 s** and Cursor killed it (`exit code 1` under `failClosed`). After the in-process rewrite the same command took **3.2 s** end to end through the PowerShell shim. Measured 2026-09-15 on Cursor 3.20.15, Windows 11. Numbers and the probe log: [`docs/host-capability.md`](docs/host-capability.md).
 
 `git-bash-shim.ps1` compiles `~/.cursor/hooks/KleosPipeUtil.dll` once, maps Windows paths in PowerShell, and uses timeouts of 30 s (read, submit, stop) and 60 s (shell).
 
@@ -144,7 +144,7 @@ Claude, Devin, Cursor agents, and any other coding agent:
 4. `features.json` and `state/handoff.json` do not authorize a new goal or a new host.
 5. On Windows, run these scripts from Git Bash.
 
-`bash scripts/ready.sh` checks the bootstrap contract. `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` checks the repository. `bash scripts/doctor.sh` also checks the live `~/.cursor` install. `bash scripts/eval.sh check` and `bash scripts/feature.sh check` check coverage and ledger invariants. `scripts/complete.sh check` does not run the gauntlet.
+`bash scripts/ready.sh` checks the bootstrap contract. `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` checks the repository. `bash scripts/doctor.sh` also checks the live `~/.cursor` install. `bash scripts/eval.sh check` and `bash scripts/feature.sh check` check coverage and ledger invariants.
 
 ---
 
@@ -159,8 +159,8 @@ Claude, Devin, Cursor agents, and any other coding agent:
 | `shared/agents/` | `hunter`, `cut`, `prove` |
 | `shared/hooks/` | Event scripts, `git-bash-shim.ps1`, `lib/`, `policy/` |
 | `shared/config/` | `harness.json`, `features.json`, `skills.txt` |
-| `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh`, `ready.sh`, `eval.sh`, `feature.sh`, `complete.sh` |
+| `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh`, `ready.sh`, `eval.sh`, `feature.sh`, `handoff.sh` |
 | `tests/` | Gauntlet |
-| `docs/` | Architecture, toolchain, decisions, host capability |
+| `docs/` | Architecture, toolchain, host capability |
 
-Further reading: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md), [`docs/DECISIONS/hooks.md`](docs/DECISIONS/hooks.md), [`docs/host-capability.md`](docs/host-capability.md).
+Further reading: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md), [`docs/host-capability.md`](docs/host-capability.md).
