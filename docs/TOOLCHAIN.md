@@ -42,12 +42,6 @@ bash scripts/eval.sh check
 #    any other repo: <root>/.cursor/bridle/features.json — resolved from the cwd)
 bash scripts/feature.sh check
 
-# 7a. Completion-confidence score for the working tree (act >= 80, else escalate)
-bash scripts/complete.sh check
-
-# 7b. Benchmark the completion scorer against the labelled corpus (before/after)
-bash scripts/bench.sh --verbose
-
 # 8. Check session handoff schema
 bash scripts/handoff.sh check
 

@@ -150,7 +150,10 @@ function featuresAdvise(path, tree, dirty) {
       if (status !== "passing" && status !== "pass") continue;
       const evidence = item.evidence;
       if (!evidence || typeof evidence !== "object" || (!evidence.proves && !evidence.command)) continue;
-      if (evidence.tree !== tree) stale.push(item.id || "unknown");
+      // Missing tree predates the check. feature.sh check accepts those rows;
+      // only a recorded tree that no longer matches is stale.
+      if (!Object.prototype.hasOwnProperty.call(evidence, "tree") || evidence.tree === tree) continue;
+      stale.push(item.id || "unknown");
     }
     if (stale.length) {
       process.stdout.write(

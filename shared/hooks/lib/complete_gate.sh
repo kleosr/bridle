@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
-# Completion / integration sensor — the cheap half, safe on the per-turn stop
-# hook. It reads the working tree vs HEAD and flags unambiguous unfinished-work
-# markers (VCS conflict markers, not-implemented stubs, ownerless TODO/FIXME)
-# without any whole-repo scan. It never executes repo code.
-#
-# The expensive graph/reference detectors (orphan, dangling, dependency
-# integrity) live in complete_graph.sh and are CLI-only via scripts/complete.sh.
-#
-#   gate_completion ROOT   stop.sh: conflicts + not-implemented stubs as one
-#                          advisory line. Never blocks completion.
-# comp_added_lines and comp_has_head are shared primitives reused by
-# complete_graph.sh, which sources this file first.
+# Stop-time unfinished-work sensor. Flags unresolved conflict markers and
+# not-implemented stubs added in the change. No whole-repo scan. Never
+# blocks completion.
 
 comp_has_head() { git -C "$1" rev-parse --verify -q HEAD >/dev/null 2>&1; }
 
@@ -59,14 +50,6 @@ comp_stub_count() {
   printf '%s' "${n:-0}"
 }
 
-# Ownerless TODO/FIXME/XXX/HACK added in this change. Softer signal than a stub;
-# CLI-only so the stop hook stays quiet on ordinary tracked TODOs.
-comp_todo_count() {
-  local root="$1" n
-  n="$(comp_added_lines "$root" | grep -icE '(^|[^A-Za-z])(TODO|FIXME|XXX|HACK)([^A-Za-z(]|$)' 2>/dev/null || true)"
-  printf '%s' "${n:-0}"
-}
-
 # stop.sh sensor: only the unambiguous signals. Emit advisory text or nothing.
 gate_completion() {
   local root="$1" out="" f stubs
@@ -82,5 +65,5 @@ gate_completion() {
 "
   fi
   [[ -n "$out" ]] || return 0
-  printf 'COMPLETION (advisory): the change looks unfinished.\n%sRun `bash scripts/complete.sh check` for the full completion score.\n' "$out"
+  printf 'COMPLETION (advisory): the change looks unfinished.\n%s' "$out"
 }

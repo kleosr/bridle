@@ -17,7 +17,7 @@ A denied hook or tool stops that path. Report the block with its `reason` code; 
 - On a material flaw: state the consequence, recommend one practical alternative, then build it unless told otherwise. Do not re-architect, restyle, or add files for taste.
 - Separate observed facts from assumptions. Pick the better default, name it in one line, proceed. Ask only when plausible readings lead to materially different work or the action is irreversible. When the request leaves product holes (behavior, persistence, UI), name the default you chose in that line.
 - Ratchet: when you or a check is wrong, pin that class of mistake with a test or check so it is expensive next time.
-- UI or design work: load the matching design skills and commit to one approach.
+- UI or design work: commit to one approach.
 
 ## Session
 Instruction order, highest first:
