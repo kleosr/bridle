@@ -33,7 +33,7 @@ Cursor owns the loop, the sandbox, the tools, and context compaction. `bridle` i
 | Responsibility | Responsible Layer | Implementation |
 |---|---|---|
 | Model loop, workspace sandbox, tool calling | Host (Cursor) | Native host runtime |
-| Identity, authorization limits, proof standards | Charter | `USER-RULES.paste.txt` → `kleosr.mdc` |
+| Identity, authorization limits, proof standards | Charter | `charter.txt` → `kleosr.mdc` |
 | Code craft, size limits, complexity ceilings | Always-on rules | `core.mdc` (≤80 LOC) |
 | Verification discipline & regression naming | Always-on rules | `testing.mdc` (≤80 LOC) |
 | Framework-specific idioms & patterns | Glob companions | `next.mdc`, `vite.mdc`, `postgres.mdc`, etc. |

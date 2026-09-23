@@ -1,5 +1,5 @@
 ---
-description: "Engineering roof: loop, craft, architecture, ladder, types, complexity, stack, harness."
+description: "Engineering roof: loop, craft, architecture, ladder, types, complexity, stack, tools."
 alwaysApply: true
 ---
 
@@ -33,7 +33,7 @@ Soft ~80 lines is a cohesion preference, not golf. Split when a module holds two
 Silent on untyped files. On typed files: fix the design, do not silence the compiler. No TS `any` (Go `any` differs). Narrow `unknown` before trusted domain use. No blind casts. No suppressions just to pass CI. Prefer sum types over parallel booleans. An escape hatch is a design bug.
 
 ## Complexity
-When an authoritative checker exists, satisfy it for touched functions (MEASURED). No checker: UNMEASURED — flat control flow; do not guess a cap; do not add a linter stack. Never above **22**; a stricter repo cap wins. Cognitive / Halstead / CRAP only if the repo already measures them (caps 22 / 80 / 25). Do not disable cyclomatic lint from the shell (`before_shell.sh` denies it).
+When the repo has a complexity checker, satisfy it for touched functions. No checker: keep control flow flat; do not add a linter stack. Cyclomatic complexity: Never above **22**; a stricter repo cap wins. Do not disable complexity lint to pass.
 
 ## Stack
 No `package.json` → stack pick is silent. Else resolve ownership per touched file: owning package → manifest → framework + manager. The host attaches companions on path match; treat one as inert unless the owning package matches. `"next"` → `next.mdc`. `"astro"` → `astro.mdc`. `"vite"` and no `next` → `vite.mdc`. JS installs: `pnpm.mdc` (glob). SQL → `postgres.mdc`. React data-flow rules live in `next.mdc` / `vite.mdc`.
@@ -41,7 +41,4 @@ No `package.json` → stack pick is silent. Else resolve ownership per touched f
 ## Tools
 Hand-written edits through the host’s native edit tools. Shell for builds, tests, git, and approved validation. Shell text-rewriting of source is denied. Over roof: write new modules, replace the original with imports, Grep callers.
 Retrieval: native codebase search for behavior and concept questions (it ranks by meaning, not by name); Grep / Glob for exact symbols and paths. A search hit is a pointer, not evidence — Read the file before you cite or edit it, and do not widen a read to a whole tree when one path answers the question.
-
-## Harness
-Guides: charter, this file, `testing.mdc`, matching skills. Sensors: four hooks + the verify this change can break. Do not add hook events.
-Map: `AGENTS.md`; contract: `shared/config/harness.json`. Pass-state: `scripts/feature.sh`. Init: `scripts/ready.sh`. `hunter` / `cut` / `prove` on match.
+Review passes: `hunter` (bugs, vulns), `cut` (over-engineering), `prove` (runs the checks) — separate context, invoke on match.
