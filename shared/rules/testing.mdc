@@ -5,17 +5,15 @@ alwaysApply: true
 
 # Testing
 
-Test observable behavior at the narrowest stable boundary. Run the verify this change can break — not the whole suite by default. Fail closed on red; report pre-existing or environment blockers. The agent's claim that tests passed is not evidence. "Done" is a validator's command + exit code (or a driven UI path) that you ran and cite.
-
-When no executable check covers the changed path, report the gap and the smallest next check. Do not substitute confidence for proof.
+Test observable behavior at the narrowest stable boundary. Run the verify this change can break, not the whole suite by default. "Done" is a validator's command + exit code (or a driven UI path) that you ran and cite; a claim that tests passed is not evidence. Fail closed on red; report pre-existing or environment blockers. When no check covers the changed path, report the gap and the smallest next check.
 
 - Which command: the repo's `AGENTS.md`, TOOLCHAIN, or package scripts. Docs-only changes need no suite.
-- Bug fix: a `regression: <symptom>` test with observed fail-before / pass-after when possible. Never fabricate a red. Flaky is broken.
-- A failed check is the next repair job: fix it, rerun, then rerun the scoped suite.
-- Coverage or mutation only if the repo already runs them. Do not add a runner. Do not expose privates to hit coverage.
-- A signature or shared-contract edit cites its caller list (Grep) next to the proof.
-- Stop-hook notes and completion scores are shape checks, not proof; they never run the repo's tests.
-- Feature ledgers: never hand-edit a row to `passing`. A pass is recorded by the ledger's pass command after a real run, and goes stale when the tree changes.
-- The builder does not self-grade. `prove` rechecks in a separate context. Repo-wide claims need the full suite.
+- Bug fix: a `regression: <symptom>` test with observed fail-before / pass-after when possible. Flaky is broken.
+- A failed check is the next repair job: fix it, rerun it, then rerun the scoped suite.
+- Coverage or mutation only if the repo already runs them; do not add a runner or expose privates.
+- A signature or shared-contract edit cites its caller list next to the proof.
+- Stop-hook notes are shape checks, not proof.
+- Feature ledgers: a row reaches `passing` only through the ledger's pass command after a real run, and goes stale when the tree changes.
+- Independent recheck: run `prove` when the user asks, before a feature pass, or before a repo-wide claim, not after every change. Repo-wide claims need the full suite.
 
 When writing or expanding tests, load the `testing` skill.

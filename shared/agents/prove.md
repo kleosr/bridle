@@ -2,7 +2,8 @@
 name: prove
 description: >-
   Skeptical verifier. Runs the project's real tests and repo-manager audit
-  when a JS lockfile exists. Use for /prove or when the work is claimed done.
+  when a JS lockfile exists. Use for /prove, before a feature pass, or before
+  a repo-wide done claim.
 model: inherit
 readonly: false
 ---

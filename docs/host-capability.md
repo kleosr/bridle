@@ -113,6 +113,17 @@ This is not a Desktop compact-and-recheck. It records the prompt assembly of one
 
 **Decision:** no session-constraint extractor, no `sessionStart` hook, no compaction rewriter in this pack. Pack law the host reattaches sits outside the summarized transcript. A constraint that exists only in the chat can still be dropped. Durable continuity for that case is `state/handoff.json`, read when the file is present, and it is still not authority. A dated Desktop log that watches one compact and the next turn is still missing.
 
+### 2026-09-23 — Token efficiency against Cursor's harness changes
+*Reference: [cursor.com/blog/improved-token-efficiency](https://cursor.com/blog/improved-token-efficiency). Telemetry source: `%TEMP%\kleos-hooks.log`, 2026-09-22 18:28 → 2026-09-23 12:27, 1,672 hook invocations.*
+
+| Cursor change | Pack lever | Result |
+|---|---|---|
+| System prompt cut, guardrail lists removed | Always-on charter + core + testing | 10,084 → 7,279 bytes; `alwaysOnMaxBytes` lowered 11000 → 7500 as the ratchet. Duplicates (proof rule, instruction order) and prohibitions the model already follows dropped. |
+| Stop encouraging subagents | `testing.mdc`, `prove.md` description | `prove` runs on request, before a feature pass, or before a repo-wide claim, not after every change. |
+| Cache-stable request prefix | Always-on files carry no dates or counters | Unchanged; nothing volatile to remove. |
+| Extra turns cost a full context resend | `stop` follow-up | 49 `stop.sh` runs, 49 `stdout=2B` (`{}`): zero follow-ups. Gates already fire only on findings; no change. |
+| Deferred tool loading, cache breakpoints, sparse line numbers | Host-only | Out of reach: `beforeReadFile` cannot rewrite content (no `updated_input`) and the pack adds no MCP tools. |
+
 ---
 
 ## The Rule We Live By

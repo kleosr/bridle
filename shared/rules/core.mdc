@@ -1,44 +1,35 @@
 ---
-description: "Engineering roof: loop, craft, architecture, ladder, types, complexity, stack, tools."
+description: "Engineering roof: change, craft, architecture, ladder, size, types, stack, tools."
 alwaysApply: true
 ---
 
 # Core
 
-Establish the change surface — the code you will change plus its callers, registrations, config, and tests — then change it. Verify the behavior this change can break. Correct failures.
+Establish the change surface (the code you change plus its callers, registrations, config, and tests), change it, verify the behavior it can break, and fix what fails.
 
 ## Change
-State the intended behavior and non-goals when the task leaves them open. Trace callers and contracts before changing a boundary. Preserve unrelated work. If the same check fails twice, stop repeating it: record the evidence, change the hypothesis, or name the missing input. Remove temporary instrumentation when the investigation ends.
+Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
 
 ## Craft
-Readable before clever. Explicit before magical. Simple before abstract. Meaningful names. Predictable control flow. Handle errors on purpose — no empty catch, no swallowed exit. Clarity, correctness, and changeability outrank line count. Do not write decorative abstractions, extra wrappers, or “AI-looking” patterns to satisfy a style. Domain-hard complexity is allowed when justified.
-
-Comments carry only what the code cannot: the why behind a decision, a non-obvious external constraint (platform, vendor, protocol), a warning, or a public API contract. Do not write narration of what the code already says, section banners, commented-out code, change history, or ownerless TODOs. Machine directives (shebang, pragma, license, `ts-expect-error` with reason) are not comments. Comments inside a function you edit fall under the same rule; wider sweeps are a `cut` task, not a drive-by.
+Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments carry only what the code cannot: the why, a non-obvious external constraint, a warning, or an API contract. Wider comment sweeps are a `cut` task.
 
 ## Architecture
-Own one job per module. Stable public interfaces; change internals before widening the contract. Minimal coupling and duplication. Match 1–2 siblings before Write. A local fix must not silently change ownership, layering, or call direction elsewhere. No speculative infrastructure, dead compatibility layers, or drive-by files. Named exports by default (framework-required default exports win). Remove dead code this task introduced or obsoleted. Cleanup is limited to the task.
+One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. No speculative infrastructure or compatibility layers. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted; cleanup stays in scope.
 
 ## Ladder
-Lowest sufficient rung when equally suitable. Choose for correctness and fit, not golf.
-1. No implementation change (config, delete, existing API)
-2. Existing repository code (Grep)
-3. Stdlib / platform APIs
-4. Installed dependencies (new dependency needs a one-line why)
-5. Small clear local implementation
+Lowest sufficient rung, chosen for fit: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
 
 ## Size
-Soft ~80 lines is a cohesion preference, not golf. Split when a module holds two jobs — not to hit a count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
+~80 lines is a cohesion preference; split by job, not count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
 
 ## Types
-Silent on untyped files. On typed files: fix the design, do not silence the compiler. No TS `any` (Go `any` differs). Narrow `unknown` before trusted domain use. No blind casts. No suppressions just to pass CI. Prefer sum types over parallel booleans. An escape hatch is a design bug.
+On typed files, fix the design instead of silencing the compiler: no TS `any`, no blind casts, narrow `unknown` before trusted use, prefer sum types over parallel booleans.
 
 ## Complexity
-When the repo has a complexity checker, satisfy it for touched functions. No checker: keep control flow flat; do not add a linter stack. Cyclomatic complexity: Never above **22**; a stricter repo cap wins. Do not disable complexity lint to pass.
+Satisfy the repo's complexity checker for touched functions; never disable it to pass. Cyclomatic complexity: Never above **22**; a stricter repo cap wins.
 
 ## Stack
-No `package.json` → stack pick is silent. Else resolve ownership per touched file: owning package → manifest → framework + manager. The host attaches companions on path match; treat one as inert unless the owning package matches. `"next"` → `next.mdc`. `"astro"` → `astro.mdc`. `"vite"` and no `next` → `vite.mdc`. JS installs: `pnpm.mdc` (glob). SQL → `postgres.mdc`. React data-flow rules live in `next.mdc` / `vite.mdc`.
+No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Host-attached companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
 
 ## Tools
-Hand-written edits through the host’s native edit tools. Shell for builds, tests, git, and approved validation. Shell text-rewriting of source is denied. Over roof: write new modules, replace the original with imports, Grep callers.
-Retrieval: native codebase search for behavior and concept questions (it ranks by meaning, not by name); Grep / Glob for exact symbols and paths. A search hit is a pointer, not evidence — Read the file before you cite or edit it, and do not widen a read to a whole tree when one path answers the question.
-Review passes: `hunter` (bugs, vulns), `cut` (over-engineering), `prove` (runs the checks) — separate context, invoke on match.
+Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs. `hunter` (bugs, vulns), `cut` (over-engineering), and `prove` (runs the checks) are separate-context passes that run only when invoked.
