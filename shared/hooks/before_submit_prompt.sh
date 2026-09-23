@@ -2,7 +2,11 @@
 # beforeSubmitPrompt: block prompts that look like they contain a secret/token.
 # Fail closed: unparseable input, missing policy, or missing JSON tool all block.
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
+_self="${BASH_SOURCE[0]//\\//}"
+_dir="${_self%/*}"; [[ "$_dir" == "$_self" || -z "$_dir" ]] && _dir="."
+# shellcheck source=lib/selfdir.sh
+source "$_dir/lib/selfdir.sh"
+HERE="$(kleos_abs_dir "$_self")"; unset _self _dir
 source "$HERE/lib/common.sh"
 INPUT="$(hook_stdin)"
 POL="$HERE/policy/secret_tokens.ere"
