@@ -19,7 +19,7 @@
     "hookEventCount": 4,
     "eventHookMaxLines": 80,
     "alwaysOnMaxLines": 80,
-    "alwaysOnMaxBytes": 11000,
+    "alwaysOnMaxBytes": 7500,
     "hooksFrozen": true,
     "noSessionStart": true,
     "noPreToolUse": true,
