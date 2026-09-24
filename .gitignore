@@ -2,7 +2,10 @@
 state/
 .cursor/
 # git-bash-shim.ps1 compiles its P/Invoke helper here on first run
+temp_auto_push.bat
 shared/hooks/KleosPipeUtil.dll
 # Editor / OS noise
 .DS_Store
 Thumbs.db
+.gitignore
+branch_structure.json
