@@ -2,7 +2,11 @@
 # beforeShellExecution: gate the shell command string. Deny > ask > allow.
 # Fail closed: non-JSON, non-string command, or missing JSON tool all deny.
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
+_self="${BASH_SOURCE[0]//\\//}"
+_dir="${_self%/*}"; [[ "$_dir" == "$_self" || -z "$_dir" ]] && _dir="."
+# shellcheck source=lib/selfdir.sh
+source "$_dir/lib/selfdir.sh"
+HERE="$(kleos_abs_dir "$_self")"; unset _self _dir
 source "$HERE/lib/common.sh"
 source "$HERE/lib/shell_gate.sh"
 source "$HERE/lib/sql_scope.sh"

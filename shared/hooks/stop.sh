@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # stop: one advisory churn/format/syntax note per turn, else {}. Never blocks.
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
+_self="${BASH_SOURCE[0]//\\//}"
+_dir="${_self%/*}"; [[ "$_dir" == "$_self" || -z "$_dir" ]] && _dir="."
+# shellcheck source=lib/selfdir.sh
+source "$_dir/lib/selfdir.sh"
+HERE="$(kleos_abs_dir "$_self")"; unset _self _dir
 source "$HERE/lib/common.sh"
 source "$HERE/lib/diff_gate.sh"
 source "$HERE/lib/verify_gate.sh"

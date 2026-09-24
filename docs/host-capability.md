@@ -124,6 +124,8 @@ This is not a Desktop compact-and-recheck. It records the prompt assembly of one
 | Extra turns cost a full context resend | `stop` follow-up | 49 `stop.sh` runs, 49 `stdout=2B` (`{}`): zero follow-ups. Gates already fire only on findings; no change. |
 | Deferred tool loading, cache breakpoints, sparse line numbers | Host-only | Out of reach: `beforeReadFile` cannot rewrite content (no `updated_input`) and the pack adds no MCP tools. |
 
+Same log, extended through 2026-09-23 15:33 (1,942 lines): 1,376 reads, 447 shells, 63 submits, 56 stops. Every stop was `{}`. Two `before_shell.sh` runs exited 1 with `stdout=0B` because `dirname` fork-died (`cygheap read copy failed`) and `cd` then saw an empty argument. The host fail-closed those calls. Script directories are now resolved in-process (`lib/selfdir.sh`). The Windows shim log records `verdict=` and `reason=` and does not record payloads. `bash scripts/context_cost.sh` prints the static prefix (7,279 bytes, no dates or `$()`). Provider cache hits and prices are still not visible.
+
 ---
 
 ## The Rule We Live By

@@ -37,11 +37,38 @@ try {
   try { Add-Type -TypeDefinition $pipeUtilSrc; $havePipePeek = $true } catch {}
 }
 
+function Get-VerdictTag([string]$json) {
+  # Class and reason only. user_message and followup text stay out of the log.
+  if ([string]::IsNullOrWhiteSpace($json)) { return 'verdict=empty' }
+  try { $o = $json | ConvertFrom-Json } catch { return 'verdict=unparsed' }
+  $names = @($o.PSObject.Properties.Name)
+  $tag = 'verdict=quiet'
+  if ($names -contains 'permission') {
+    $tag = 'verdict=' + [string]$o.permission
+  } elseif ($names -contains 'continue') {
+    $bit = 'false'
+    if ($o.continue) { $bit = 'true' }
+    $tag = 'verdict=continue:' + $bit
+  } elseif ($names -contains 'followup_message') {
+    $tag = 'verdict=followup'
+  }
+  if ($names -contains 'reason' -and $o.reason) {
+    $safe = ([string]$o.reason) -replace '[^A-Za-z0-9_-]', ''
+    if ($safe.Length -gt 40) { $safe = $safe.Substring(0, 40) }
+    if ($safe.Length -gt 0) { $tag += ' reason=' + $safe }
+  }
+  return $tag
+}
+
 function Write-HookLog([string]$msg) {
   try {
-    $log = Join-Path ([System.IO.Path]::GetTempPath()) 'kleos-hooks.log'
+    $log = $env:KLEOS_HOOK_LOG
+    if (-not $log) { $log = Join-Path ([System.IO.Path]::GetTempPath()) 'kleos-hooks.log' }
     $old = Get-Item -LiteralPath $log -ErrorAction SilentlyContinue
-    if ($old -and $old.Length -gt 200000) { Remove-Item -LiteralPath $log -Force -ErrorAction SilentlyContinue }
+    # Default log only. An explicit KLEOS_HOOK_LOG is the caller's capture.
+    if (-not $env:KLEOS_HOOK_LOG -and $old -and $old.Length -gt 1048576) {
+      Remove-Item -LiteralPath $log -Force -ErrorAction SilentlyContinue
+    }
     Add-Content -LiteralPath $log -Value ((Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ' [' + $HookScript + '] ' + $msg) -Encoding UTF8 -ErrorAction SilentlyContinue
   } catch {}
 }
@@ -185,7 +212,8 @@ try {
     } catch {}
     $json = if ($null -eq $out) { '' } elseif ($out -is [array]) { $out -join "`n" } else { [string]$out }
     $json = $json.Trim()
-    Write-HookLog ('stdin=' + $raw.Length + 'B exit=' + $code + ' stdout=' + $json.Length + 'B err=[' + $errTail + ']')
+    $verdict = Get-VerdictTag $json
+    Write-HookLog ('stdin=' + $raw.Length + 'B exit=' + $code + ' stdout=' + $json.Length + 'B ' + $verdict + ' err=[' + $errTail + ']')
     if ($json -eq '') {
       # Never emit empty stdout: Cursor treats that as "returned no output"
       # and failClosed blocks with no explanation. Emit an explicit verdict.

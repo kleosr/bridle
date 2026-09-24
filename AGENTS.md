@@ -38,4 +38,6 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 ```bash
 FORCE=1 bash scripts/install.sh
 ```
+Claude Code: `bash scripts/claude.sh install|uninstall` ports rules, skills, and agents into `~/.claude` (no hooks).
+opencode: `bash scripts/opencode.sh install|uninstall` ports rules (as `instructions`), skills, companions (as skills), agents, the `bridle` primary agent, and the four hooks (via `plugin/bridle.js`) into `~/.config/opencode`. Verify: `TESTS=opencode_port bash tests/run.sh`.
 Cloud: `CLOUD=1 TARGET_REPO=<other-repo> bash shared/hooks/fleet_sync.sh project-hooks`. Never into this pack.
