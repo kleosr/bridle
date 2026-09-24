@@ -91,8 +91,16 @@ elif [[ -f /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ]]; then
 fi
 if [[ -n "$PS_BIN" && -f "$PACK/shared/hooks/git-bash-shim.ps1" ]]; then
   SHIM_EC=0
-  SHIM_OUT="$(printf '%s' '{"file_path":"/repo/README.md"}' | "$PS_BIN" -NoProfile -ExecutionPolicy Bypass -File "$PACK/shared/hooks/git-bash-shim.ps1" before_read_file.sh)" || SHIM_EC=$?
+  SHIM_LOG="$(mktemp "${TMPDIR:-/tmp}/kleos-shim-log.XXXXXX")"
+  # PowerShell opens a Windows path. Git Bash mktemp returns an MSYS path.
+  SHIM_LOG_WIN="$(cygpath -w "$SHIM_LOG" 2>/dev/null || printf '%s' "$SHIM_LOG")"
+  SHIM_OUT="$(printf '%s' '{"file_path":"/repo/README.md"}' | KLEOS_HOOK_LOG="$SHIM_LOG_WIN" "$PS_BIN" -NoProfile -ExecutionPolicy Bypass -File "$PACK/shared/hooks/git-bash-shim.ps1" before_read_file.sh)" || SHIM_EC=$?
   SHIM_PERM="$(printf '%s' "$SHIM_OUT" | jq -r '.permission // "none"')"
   run_test "regression: git-bash-shim allow exits 0 (not failClosed crash)" "0" "$SHIM_EC"
   run_test "regression: git-bash-shim allow emits permission allow" "allow" "$SHIM_PERM"
+  SHIM_VERDICT="$(grep -c 'verdict=allow' "$SHIM_LOG" || true)"
+  run_test "regression: shim log records verdict=allow" "1" "$SHIM_VERDICT"
+  SHIM_LEAK="$(grep -c 'README' "$SHIM_LOG" || true)"
+  run_test "regression: shim log does not record the read path" "0" "$SHIM_LEAK"
+  rm -f "$SHIM_LOG"
 fi

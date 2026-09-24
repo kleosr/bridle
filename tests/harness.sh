@@ -258,6 +258,11 @@ ON_BYTES="$(cat "$PACK/shared/rules/charter.txt" "$PACK/shared/rules/core.mdc" "
 BYTE_CAP="$(jq -r '.invariants.alwaysOnMaxBytes' "$PACK/shared/config/harness.json")"
 if [[ "$ON_BYTES" -le "$BYTE_CAP" ]]; then ON_OK=ok; else ON_OK="bytes:$ON_BYTES>$BYTE_CAP"; fi
 run_test "always-on charter+core+testing stay under alwaysOnMaxBytes" "ok" "$ON_OK"
+COST="$(bash "$PACK/scripts/context_cost.sh")"
+RESULT="$(printf '%s\n' "$COST" | awk '/^always_on_bytes:/{print $2; exit}')"
+run_test "context_cost always-on bytes match charter+core+testing" "$ON_BYTES" "$RESULT"
+RESULT="$(printf '%s\n' "$COST" | awk '/^volatile:/{print $2; exit}')"
+run_test "always-on prefix has no dates or command substitutions" "none" "$RESULT"
 
 RESULT="$(jq -r '.verification.default' "$PACK/shared/config/harness.json")"
 run_test "verify default is scoped, not whole-suite" "scoped" "$RESULT"

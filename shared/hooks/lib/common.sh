@@ -2,7 +2,13 @@
 # Shared hook helpers: JSON codec, path canonicalization, verdict emitters.
 # stdout is JSON only. Deny/ask messages never echo the command or secrets.
 
-KLEOS_HOOK_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_src="${BASH_SOURCE[0]//\\//}"
+_lib="${_src%/*}"
+[[ "$_lib" == "$_src" || -z "$_lib" ]] && _lib="."
+# shellcheck source=selfdir.sh
+source "$_lib/selfdir.sh"
+KLEOS_HOOK_LIB="$(kleos_abs_dir "$_src")"
+unset _src _lib
 # shellcheck source=json.sh
 source "$KLEOS_HOOK_LIB/json.sh"
 
