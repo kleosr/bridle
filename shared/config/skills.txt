@@ -3,3 +3,7 @@ testing
 debugging
 handoff
 kleosr
+bridle-harness
+code-architecture
+cqrs-data-flow
+live-ui-sync

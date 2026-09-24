@@ -9,7 +9,7 @@ LC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-lc.XXXXXX")"
 HOOKS_DIR="$PACK/shared/hooks"
 # shellcheck source=shared/hooks/lib/fleet_install.sh
 source "$HOOKS_DIR/lib/fleet_install.sh"
-EXPECTED_HOOK_SH=$((4 + 8))
+EXPECTED_HOOK_SH=$((4 + 9))
 
 INSTALL1_EC=0
 HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
@@ -35,6 +35,14 @@ HANDOFF_SKILL="$(test -e "$LC_HOME/.cursor/skills/handoff/SKILL.md" && echo yes 
 run_test "install links handoff skill" "yes" "$HANDOFF_SKILL"
 KLEOSR_SKILL="$(test -e "$LC_HOME/.cursor/skills/kleosr/SKILL.md" && echo yes || echo no)"
 run_test "install links kleosr custom mode skill" "yes" "$KLEOSR_SKILL"
+ARCH_GATE="$(test -f "$LC_HOME/.cursor/skills/code-architecture/scripts/quality-gate.mjs" && echo yes || echo no)"
+run_test "install links code-architecture with its quality gate" "yes" "$ARCH_GATE"
+CQRS_REF="$(test -f "$LC_HOME/.cursor/skills/cqrs-data-flow/references/request-contract.md" && echo yes || echo no)"
+run_test "install links cqrs-data-flow references" "yes" "$CQRS_REF"
+UI_REF="$(test -f "$LC_HOME/.cursor/skills/live-ui-sync/references/sidebar-modules.md" && echo yes || echo no)"
+run_test "install links live-ui-sync references" "yes" "$UI_REF"
+ROUTER="$(test -f "$LC_HOME/.cursor/skills/bridle-harness/SKILL.md" && test ! -d "$LC_HOME/.cursor/skills/bridle-harness/references" && echo yes || echo no)"
+run_test "install links bridle-harness without a vendored law copy" "yes" "$ROUTER"
 ANIMATE_SKILL="$(test -e "$LC_HOME/.cursor/skills/animate/SKILL.md" && echo yes || echo no)"
 run_test "install does not link retired animate skill" "no" "$ANIMATE_SKILL"
 mkdir -p "$PACK/shared/skills/animate" "$LC_HOME/.cursor/skills"
@@ -49,7 +57,7 @@ HOST_SH="$(test -e "$LC_HOME/.cursor/hooks/lib/host.sh" && echo yes || echo no)"
 run_test "regression: install does not ship lib/host.sh" "no" "$HOST_SH"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
-run_test "double install hook script count matches (4 scripts + 8 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+run_test "double install hook script count matches (4 scripts + 9 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
 
 DUP_BASENAMES="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' -exec basename {} \; 2>/dev/null | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "double install has no duplicate hook script basenames" "0" "$DUP_BASENAMES"
@@ -180,5 +188,38 @@ DRY_HOOKS="$(test -e "$DRY_H/.cursor" && echo yes || echo no)"
 rm -rf "$DRY_H"
 run_test "dry-run install exits 0" "0" "$DRY_EC"
 run_test "dry-run install writes no .cursor" "no" "$DRY_HOOKS"
+
+CL_H="$(mktemp -d "${TMPDIR:-/tmp}/kleos-cl.XXXXXX")"
+CL_EC=0
+HOME="$CL_H" bash "$PACK/scripts/claude.sh" install >/dev/null 2>&1 || CL_EC=$?
+run_test "claude port install exits 0" "0" "$CL_EC"
+RESULT="$(grep -q 'You are kleosr'"'"'s engineering partner' "$CL_H/.claude/rules/kleosr.md" 2>/dev/null && echo yes || echo no)"
+run_test "claude port writes the charter as rules/kleosr.md" "yes" "$RESULT"
+RESULT="$(head -1 "$CL_H/.claude/rules/core.md" 2>/dev/null)"
+run_test "claude port: always-on core.md has no frontmatter (loads every session)" "# Core" "$RESULT"
+RESULT="$(grep -c '^  - "\*\*/app/\*\*"$' "$CL_H/.claude/rules/next.md" 2>/dev/null || true)"
+run_test "regression: claude port quotes companion paths (bare * is a YAML alias)" "1" "$RESULT"
+if grep -rq '\.mdc' "$CL_H/.claude/rules" "$CL_H/.claude/skills" "$CL_H/.claude/agents" 2>/dev/null; then RESULT=stale; else RESULT=ok; fi
+run_test "claude port rewrites .mdc references to .md" "ok" "$RESULT"
+RESULT="$(grep -c '^disallowedTools: Write, Edit, NotebookEdit$' "$CL_H/.claude/agents/hunter.md" 2>/dev/null || true)"
+run_test "claude port maps readonly agents to denied write tools" "1" "$RESULT"
+RESULT="$(grep -cE '^(mode|icon|color):' "$CL_H/.claude/skills/kleosr/SKILL.md" 2>/dev/null || true)"
+run_test "claude port drops Cursor-only skill keys" "0" "$RESULT"
+RESULT="$(test -f "$CL_H/.claude/skills/code-architecture/scripts/quality-gate.mjs" && test -f "$CL_H/.claude/skills/live-ui-sync/references/sidebar-modules.md" && echo yes || echo no)"
+run_test "claude port ships skill references and the quality gate" "yes" "$RESULT"
+printf '%s\n' '# user testing' > "$CL_H/.claude/rules/testing.md"
+rm -f "$CL_H/.claude/kleosrules-owned.txt"
+HOME="$CL_H" bash "$PACK/scripts/claude.sh" install >/dev/null 2>&1 || true
+RESULT="$(grep -q 'user testing' "$CL_H/.claude/rules/testing.md" && echo kept || echo replaced)"
+run_test "regression: claude port keeps an unowned rule without FORCE" "kept" "$RESULT"
+HOME="$CL_H" FORCE=1 bash "$PACK/scripts/claude.sh" install >/dev/null 2>&1 || true
+HOME="$CL_H" bash "$PACK/scripts/claude.sh" uninstall >/dev/null 2>&1 || true
+RESULT="$(grep -q 'user testing' "$CL_H/.claude/rules/testing.md" 2>/dev/null && echo restored || echo lost)"
+run_test "claude port uninstall restores the replaced user rule" "restored" "$RESULT"
+RESULT="$(test -e "$CL_H/.claude/rules/kleosr.md" && echo present || echo gone)"
+run_test "claude port uninstall removes owned files" "gone" "$RESULT"
+RESULT="$(test -e "$CL_H/.claude/skills/code-architecture/scripts/quality-gate.mjs" && echo present || echo gone)"
+run_test "claude port uninstall removes skill sidecars" "gone" "$RESULT"
+rm -rf "$CL_H"
 
 rm -rf "$LC_HOME"
