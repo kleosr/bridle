@@ -53,6 +53,19 @@ while IFS= read -r skill; do
 done < <(load_lines "$PACK/shared/config/skills.txt")
 run_test "every catalog skill has a description routing contract" "ok" "$SK_DESC"
 
+SIDE=ok
+for pair in \
+  code-architecture/references/placement.md \
+  code-architecture/scripts/quality-gate.mjs \
+  cqrs-data-flow/references/sql-repository.md \
+  live-ui-sync/references/sidebar-modules.md
+do
+  [[ -f "$PACK/shared/skills/$pair" ]] || SIDE="missing:$pair"
+done
+run_test "engineering skills keep their references and the quality gate" "ok" "$SIDE"
+RESULT="$(test -d "$PACK/shared/skills/bridle-harness/references" && echo present || echo absent)"
+run_test "bridle-harness does not vendor a second copy of the law" "absent" "$RESULT"
+
 KLEOSR_MODE="$PACK/shared/skills/kleosr/SKILL.md"
 run_test "kleosr custom mode name matches its skill folder" "kleosr" "$(awk -F ': ' '$1 == "name" { print $2; exit }' "$KLEOSR_MODE")"
 run_test "kleosr skill is marked as a custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$KLEOSR_MODE")"

@@ -86,6 +86,18 @@ if selected install_lifecycle; then
   source "$PACK/tests/install_lifecycle.sh"
 fi
 
+if selected opencode_port; then
+  echo ""
+  echo "=== opencode port (isolated HOME) ==="
+  source "$PACK/tests/opencode_port.sh"
+fi
+
+if selected quality_gate; then
+  echo ""
+  echo "=== code-architecture quality gate ==="
+  source "$PACK/tests/quality_gate.sh"
+fi
+
 if selected grounding; then
   echo ""
   echo "=== Grounding (shapes, not prose) ==="

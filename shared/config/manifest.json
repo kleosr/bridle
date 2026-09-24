@@ -8,6 +8,7 @@
     "stop": "stop.sh"
   },
   "runtimeLibs": [
+    "selfdir.sh",
     "common.sh",
     "json.sh",
     "shell_gate.sh",
