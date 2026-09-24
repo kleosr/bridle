@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/host-Cursor%20today-000000?style=flat-square" alt="Host: Cursor today">
-  <img src="https://img.shields.io/badge/hosts-others%20planned-111111?style=flat-square" alt="Other hosts planned">
+  <img src="https://img.shields.io/badge/host-Cursor-000000?style=flat-square" alt="Host: Cursor">
+  <img src="https://img.shields.io/badge/Now%20supports-Claude%20%26%20Opencode-111111?style=flat-square" alt="Now supports: Claude and Opencode">
   <img src="https://img.shields.io/github/actions/workflow/status/kleosr/bridle/gates.yml?branch=master&style=flat-square&label=gauntlet" alt="Gauntlet workflow status">
   <img src="https://img.shields.io/badge/hooks-3%20fail--closed%20%2B%20stop%20advisory-111111?style=flat-square" alt="Hooks: 3 fail-closed, stop advisory">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows%20(Git%20Bash)-111111?style=flat-square" alt="Platforms">
@@ -30,19 +30,23 @@ Maintained as private engineering work by kleosr (Mario Pulice), published under
 
 ---
 
-## Supported host
+## Supported hosts
 
-**Cursor is the only supported host today.** Other IDEs and agent hosts are planned, including a path that stays readable for Claude, Devin, and other coding agents. Adapters are not implemented.
+**Now supports: Claude and Opencode.** Cursor remains the host the four hooks were built for.
 
-The hooks bind to Cursor’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. The installer writes `~/.cursor`. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor.
+| Host | Install | What lands |
+|---|---|---|
+| Cursor | `bash scripts/install.sh` | Charter, rules, skills, agents, and four hooks in `~/.cursor` |
+| Claude Code | `bash scripts/claude.sh install` | Rules, skills, and agents in `~/.claude`. No hooks. |
+| opencode | `bash scripts/opencode.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the four hooks via `plugin/bridle.js` in `~/.config/opencode` |
 
-Porting means a new adapter: event names, IPC, install paths, and a proof log for that host. Until this README names that host with those three, leave the Cursor contract as it is. An experiment on another IDE is unsupported.
+The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`tests/install_lifecycle.sh`, `TESTS=opencode_port bash tests/run.sh`). Uninstall each port with the same script and `uninstall`.
 
 ---
 
 ## Install
 
-Requirements: Cursor, `jq`, and Python 3 or Node.js (the hooks’ JSON codec). On Windows, Git Bash. `jq`: `winget install jqlang.jq` (with `%LOCALAPPDATA%\Microsoft\WinGet\Links` on `PATH`), `brew install jq`, or `apt install jq` / `pacman -S jq`.
+Requirements: `jq`, and Python 3 or Node.js (the hooks’ JSON codec). On Windows, Git Bash. `jq`: `winget install jqlang.jq` (with `%LOCALAPPDATA%\Microsoft\WinGet\Links` on `PATH`), `brew install jq`, or `apt install jq` / `pacman -S jq`. Cursor, Claude Code, or opencode, matching the host you install.
 
 First install, from this repository:
 
