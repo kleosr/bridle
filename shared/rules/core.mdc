@@ -1,5 +1,5 @@
 ---
-description: "Engineering roof: change, craft, architecture, ladder, size, types, stack, tools."
+description: "Engineering roof: change, scope, craft, architecture, ladder, size, types, stack, tools."
 alwaysApply: true
 ---
 
@@ -10,11 +10,14 @@ Establish the change surface (the code you change plus its callers, registration
 ## Change
 Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
 
+## Scope
+Deliver the ask end to end, then stop. Finish one working path before generalizing: no stubs, TODOs, or placeholder branches. No unrequested options, flags, config, params, extension points, speculative infrastructure, or compatibility layers. Before reporting, reread the diff; delete what the ask doesn't need.
+
 ## Craft
 Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments carry only what the code cannot: the why, a non-obvious external constraint, a warning, or an API contract. Wider comment sweeps are a `cut` task.
 
 ## Architecture
-One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. No speculative infrastructure or compatibility layers. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted; cleanup stays in scope.
+One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted; cleanup stays in scope.
 
 ## Ladder
 Lowest sufficient rung, chosen for fit: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
@@ -32,4 +35,4 @@ Satisfy the repo's complexity checker for touched functions; never disable it to
 No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Host-attached companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
 
 ## Tools
-Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs. `hunter` (bugs, vulns), `cut` (over-engineering), and `prove` (runs the checks) are separate-context passes that run only when invoked.
+Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs. Invoked-only passes: `hunter` (bugs), `cut` (over-engineering), `prove` (checks).
