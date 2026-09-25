@@ -111,9 +111,6 @@ def cmd_emit(kind):
             return 0
         emit_obj({"continue": True, "user_message": msg} if msg else {"continue": True})
         return 0
-    if kind == "followup":
-        emit_obj({"followup_message": msg})
-        return 0
     return 1
 
 
@@ -141,17 +138,6 @@ def cmd_decode_read():
     return 0
 
 
-def cmd_decode_stop():
-    data = load_stdin()
-    status = data.get("status")
-    loop = data.get("loop_count", 0)
-    wr = first(data, ("workspace_roots.0", "cwd"))
-    sys.stdout.write("STATUS=%s\n" % posix_sq(status if isinstance(status, str) else as_text(status)))
-    sys.stdout.write("LOOP=%s\n" % posix_sq(loop if isinstance(loop, str) else as_text(loop)))
-    sys.stdout.write("WR=%s\n" % posix_sq(wr if isinstance(wr, str) else as_text(wr)))
-    return 0
-
-
 def cmd_file_valid(path):
     with open(path, "r") as handle:
         json.load(handle)
@@ -165,79 +151,6 @@ def cmd_has_scripts_test(path):
     if isinstance(scripts, dict) and scripts.get("test"):
         return 0
     return 1
-
-
-def cmd_features_advise(path, tree="", dirty=""):
-    # tree: the workspace tree now (see feature_gate.sh ledger_tree); dirty:
-    # "1" when the working tree has uncommitted changes outside the ledger.
-    with open(path, "r") as handle:
-        data = json.load(handle)
-    features = data.get("features") if isinstance(data, dict) else None
-    if not isinstance(features, list):
-        sys.stdout.write(
-            "FEATURE (advisory): feature list is not valid JSON (%s).\n"
-            "Fix the file or restore it before claiming done.\n" % path
-        )
-        return 0
-    active = [
-        item
-        for item in features
-        if isinstance(item, dict)
-        and (item.get("status") or item.get("state")) in ("in_progress", "active")
-    ]
-    if len(active) > 1:
-        sys.stdout.write(
-            "FEATURE (advisory): %s features are in_progress (limit 1). "
-            "Finish or block extras before claiming done.\n" % len(active)
-        )
-    ids = []
-    for item in features:
-        if not isinstance(item, dict):
-            continue
-        status = item.get("status") or item.get("state")
-        if status not in ("passing", "pass"):
-            continue
-        evidence = item.get("evidence")
-        empty_obj = (
-            isinstance(evidence, dict)
-            and not evidence.get("proves")
-            and not evidence.get("command")
-        )
-        if evidence is None or evidence == "" or empty_obj:
-            ids.append(item.get("id") or "unknown")
-    if ids:
-        sys.stdout.write(
-            "FEATURE (advisory): passing without evidence: %s.\n"
-            "Run `bash scripts/feature.sh pass <id>` (or the listed verification) "
-            "before claiming done. Editing JSON to passing is not done.\n" % " ".join(ids)
-        )
-    if tree:
-        stale = []
-        for item in features:
-            if not isinstance(item, dict):
-                continue
-            if (item.get("status") or item.get("state")) not in ("passing", "pass"):
-                continue
-            evidence = item.get("evidence")
-            if not isinstance(evidence, dict) or not (evidence.get("proves") or evidence.get("command")):
-                continue
-            # Missing tree predates the check. feature.sh check accepts those
-            # rows; only a recorded tree that no longer matches is stale.
-            if "tree" not in evidence or evidence.get("tree") == tree:
-                continue
-            stale.append(item.get("id") or "unknown")
-        if stale:
-            sys.stdout.write(
-                "FEATURE (advisory): passing with stale evidence (workspace changed since pass): %s.\n"
-                "Re-run `bash scripts/feature.sh pass <id>` before claiming done.\n" % " ".join(stale)
-            )
-    if dirty == "1" and active:
-        sys.stdout.write(
-            "FEATURE (advisory): %s is in_progress and the working tree has uncommitted changes.\n"
-            "Run `bash scripts/feature.sh pass <id>`, or commit and write the handoff, "
-            "before claiming done.\n" % " ".join(item.get("id") or "unknown" for item in active)
-        )
-    return 0
 
 
 def main(argv):
@@ -261,14 +174,10 @@ def main(argv):
             return cmd_decode_shell()
         if cmd == "decode-read":
             return cmd_decode_read()
-        if cmd == "decode-stop":
-            return cmd_decode_stop()
         if cmd == "file-valid":
             return cmd_file_valid(argv[2])
         if cmd == "has-scripts-test":
             return cmd_has_scripts_test(argv[2])
-        if cmd == "features-advise":
-            return cmd_features_advise(argv[2], argv[3] if len(argv) > 3 else "", argv[4] if len(argv) > 4 else "")
         return 1
     except (ValueError, TypeError, json.JSONDecodeError, OSError, IndexError):
         return 2
