@@ -6,7 +6,6 @@
     "verification",
     "false_completion",
     "instruction_conflict",
-    "unnecessary_edits",
     "recovery",
     "continuity",
     "execution_reliability",
@@ -14,12 +13,6 @@
     "regression"
   ],
   "tasks": [
-    {
-      "id": "false-completion-syntax",
-      "dimension": "false_completion",
-      "layer": "verification",
-      "proves": "tests/stop_edges.sh"
-    },
     {
       "id": "false-completion-feature",
       "dimension": "false_completion",
@@ -37,12 +30,6 @@
       "dimension": "instruction_conflict",
       "layer": "instructions",
       "proves": "tests/grounding.sh"
-    },
-    {
-      "id": "scope-churn",
-      "dimension": "unnecessary_edits",
-      "layer": "scope",
-      "proves": "tests/stop_edges.sh"
     },
     {
       "id": "execution-steel",

@@ -1,6 +1,6 @@
 # AGENTS.md — bridle (navigator)
 
-bridle is a Cursor **user harness**: charter, always-on law, skills, and four Bash hooks around the host loop. It is not a second agent runtime.
+bridle is a Cursor **user harness**: charter, always-on law, skills, and three Bash hooks around the host loop. It is not a second agent runtime.
 
 **Init:** `bash scripts/ready.sh`  
 **Inventory:** `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh`  
@@ -22,14 +22,13 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 - Scoped: `TESTS=<fixture> bash tests/run.sh`. Gauntlet: `bash tests/run.sh`. Init does not run the suite.
 - Feature pass-state: `bash scripts/feature.sh pass <id>` (records evidence for the current tree; a failure records `lastFailure.nextExperiment`). `bash scripts/feature.sh note <id> <hypothesis>` after diagnosis.
 - Handoff: `bash scripts/handoff.sh write|check`.
-- `stop.sh` is advisory (syntax, churn, size, conflict markers, stubs, false `passing`). It cannot refuse completion.
 - `tests/run.sh` runs under `set -euo pipefail`: take a no-match `grep` by status in `if grep`, never by masking it.
 - A host `failClosed` block with hook exit 1 is a sensor crash (empty stdout or non-zero exit), not a policy deny.
 
 ## Config
 - Extend via `skills.txt` and glob companions.
 - `evals/tasks.json` — structural coverage (`bash scripts/eval.sh check`). Live scoring is out of band.
-- Hooks: four events. No `sessionStart`, no `preToolUse`, no `updated_input`.
+- Hooks: three events (`beforeSubmitPrompt`, `beforeShellExecution`, `beforeReadFile`). No `stop`, no `sessionStart`, no `preToolUse`, no `updated_input`.
 
 ## Docs
 `docs/ARCHITECTURE.md`, `docs/TOOLCHAIN.md`, `docs/host-capability.md`.
@@ -39,5 +38,5 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 FORCE=1 bash scripts/install.sh
 ```
 Claude Code: `bash scripts/claude.sh install|uninstall` ports rules, skills, and agents into `~/.claude` (no hooks).
-opencode: `bash scripts/opencode.sh install|uninstall` ports rules (as `instructions`), skills, companions (as skills), agents, the `bridle` primary agent, and the four hooks (via `plugin/bridle.js`) into `~/.config/opencode`. Verify: `TESTS=opencode_port bash tests/run.sh`.
+opencode: `bash scripts/opencode.sh install|uninstall` ports rules (as `instructions`), skills, companions (as skills), agents, the `bridle` primary agent, and the three hooks (via `plugin/bridle.js`) into `~/.config/opencode`. Verify: `TESTS=opencode_port bash tests/run.sh`.
 Cloud: `CLOUD=1 TARGET_REPO=<other-repo> bash shared/hooks/fleet_sync.sh project-hooks`. Never into this pack.

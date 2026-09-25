@@ -89,88 +89,7 @@ function cmdEmit(kind) {
     emitObj(msg ? { continue: true, user_message: msg } : { continue: true });
     return 0;
   }
-  if (kind === "followup") {
-    emitObj({ followup_message: msg });
-    return 0;
-  }
   return 1;
-}
-
-// tree: the workspace tree now (see feature_gate.sh ledger_tree); dirty: "1"
-// when the working tree has uncommitted changes outside the ledger.
-function featuresAdvise(path, tree, dirty) {
-  const data = JSON.parse(fs.readFileSync(path, "utf8"));
-  const features = data && data.features;
-  if (!Array.isArray(features)) {
-    process.stdout.write(
-      "FEATURE (advisory): feature list is not valid JSON (" +
-        path +
-        ").\nFix the file or restore it before claiming done.\n"
-    );
-    return 0;
-  }
-  const active = features.filter(
-    (item) =>
-      item &&
-      typeof item === "object" &&
-      ["in_progress", "active"].indexOf(item.status || item.state) !== -1
-  );
-  if (active.length > 1) {
-    process.stdout.write(
-      "FEATURE (advisory): " +
-        active.length +
-        " features are in_progress (limit 1). Finish or block extras before claiming done.\n"
-    );
-  }
-  const ids = [];
-  for (const item of features) {
-    if (!item || typeof item !== "object") continue;
-    const status = item.status || item.state;
-    if (status !== "passing" && status !== "pass") continue;
-    const evidence = item.evidence;
-    const emptyObj =
-      evidence &&
-      typeof evidence === "object" &&
-      !evidence.proves &&
-      !evidence.command;
-    if (evidence == null || evidence === "" || emptyObj) ids.push(item.id || "unknown");
-  }
-  if (ids.length) {
-    process.stdout.write(
-      "FEATURE (advisory): passing without evidence: " +
-        ids.join(" ") +
-        ".\nRun `bash scripts/feature.sh pass <id>` (or the listed verification) before claiming done. Editing JSON to passing is not done.\n"
-    );
-  }
-  if (tree) {
-    const stale = [];
-    for (const item of features) {
-      if (!item || typeof item !== "object") continue;
-      const status = item.status || item.state;
-      if (status !== "passing" && status !== "pass") continue;
-      const evidence = item.evidence;
-      if (!evidence || typeof evidence !== "object" || (!evidence.proves && !evidence.command)) continue;
-      // Missing tree predates the check. feature.sh check accepts those rows;
-      // only a recorded tree that no longer matches is stale.
-      if (!Object.prototype.hasOwnProperty.call(evidence, "tree") || evidence.tree === tree) continue;
-      stale.push(item.id || "unknown");
-    }
-    if (stale.length) {
-      process.stdout.write(
-        "FEATURE (advisory): passing with stale evidence (workspace changed since pass): " +
-          stale.join(" ") +
-          ".\nRe-run `bash scripts/feature.sh pass <id>` before claiming done.\n"
-      );
-    }
-  }
-  if (dirty === "1" && active.length) {
-    process.stdout.write(
-      "FEATURE (advisory): " +
-        active.map((item) => item.id || "unknown").join(" ") +
-        " is in_progress and the working tree has uncommitted changes.\nRun `bash scripts/feature.sh pass <id>`, or commit and write the handoff, before claiming done.\n"
-    );
-  }
-  return 0;
 }
 
 function main(argv) {
@@ -208,15 +127,6 @@ function main(argv) {
     process.stdout.write("FILE_PATH=" + posixSq(typeof p === "string" ? p : asText(p)) + "\n");
     return 0;
   }
-  if (cmd === "decode-stop") {
-    const data = loadStdin();
-    const wr = first(data, ["workspace_roots.0", "cwd"]);
-    process.stdout.write("STATUS=" + posixSq(typeof data.status === "string" ? data.status : asText(data.status)) + "\n");
-    const loop = data.loop_count === undefined ? 0 : data.loop_count;
-    process.stdout.write("LOOP=" + posixSq(typeof loop === "string" ? loop : asText(loop)) + "\n");
-    process.stdout.write("WR=" + posixSq(typeof wr === "string" ? wr : asText(wr)) + "\n");
-    return 0;
-  }
   if (cmd === "file-valid") {
     JSON.parse(fs.readFileSync(argv[3], "utf8"));
     return 0;
@@ -225,7 +135,6 @@ function main(argv) {
     const data = JSON.parse(fs.readFileSync(argv[3], "utf8"));
     return data && data.scripts && data.scripts.test ? 0 : 1;
   }
-  if (cmd === "features-advise") return featuresAdvise(argv[3], argv[4] || "", argv[5] || "");
   return 1;
 }
 

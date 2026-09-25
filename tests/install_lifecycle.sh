@@ -9,7 +9,7 @@ LC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-lc.XXXXXX")"
 HOOKS_DIR="$PACK/shared/hooks"
 # shellcheck source=shared/hooks/lib/fleet_install.sh
 source "$HOOKS_DIR/lib/fleet_install.sh"
-EXPECTED_HOOK_SH=$((4 + 9))
+EXPECTED_HOOK_SH=$((3 + 6))
 
 INSTALL1_EC=0
 HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
@@ -18,8 +18,10 @@ HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/nu
 run_test "double install first pass exits 0" "0" "$INSTALL1_EC"
 run_test "double install second pass exits 0" "0" "$INSTALL2_EC"
 
-EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile"),has("stop")] | map(select(.)) | length' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
-run_test "double install registers the 4 required events" "4" "$EVT"
+EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile")] | map(select(.)) | length' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
+run_test "double install registers the 3 required events" "3" "$EVT"
+STOP_EVT="$(jq -r '.hooks | has("stop")' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
+run_test "regression: install does not register stop" "false" "$STOP_EVT"
 
 CORE_HOME="$(test -f "$LC_HOME/.cursor/rules/core.mdc" && echo yes || echo no)"
 run_test "install copies core.mdc into isolated HOME rules" "yes" "$CORE_HOME"
@@ -57,7 +59,16 @@ HOST_SH="$(test -e "$LC_HOME/.cursor/hooks/lib/host.sh" && echo yes || echo no)"
 run_test "regression: install does not ship lib/host.sh" "no" "$HOST_SH"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
-run_test "double install hook script count matches (4 scripts + 9 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+run_test "double install hook script count matches (3 scripts + 6 libs)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+printf '%s\n' '#!/bin/sh' 'echo pack-stop' > "$LC_HOME/.cursor/hooks/stop.sh"
+jq '.hooks.stop = [{command:"./hooks/stop.sh",timeout:30,failClosed:false,loop_limit:1}]' \
+  "$LC_HOME/.cursor/hooks.json" > "$LC_HOME/.cursor/hooks.json.tmp"
+mv "$LC_HOME/.cursor/hooks.json.tmp" "$LC_HOME/.cursor/hooks.json"
+HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1
+STOP_GONE="$(test -f "$LC_HOME/.cursor/hooks/stop.sh" && echo yes || echo no)"
+STOP_KEY="$(jq -r '.hooks | has("stop")' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
+run_test "regression: reinstall deletes a leftover pack stop.sh" "no" "$STOP_GONE"
+run_test "regression: reinstall drops a leftover pack stop registration" "false" "$STOP_KEY"
 
 DUP_BASENAMES="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' -exec basename {} \; 2>/dev/null | sort | uniq -d | wc -l | tr -d ' ')"
 run_test "double install has no duplicate hook script basenames" "0" "$DUP_BASENAMES"
@@ -141,11 +152,13 @@ printf '%s\n' '{"version":1,"hooks":{"beforeShellExecution":[{"command":"./hooks
 HOME="$MERGE_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1
 MERGE_USER="$(jq -r '.hooks.beforeShellExecution | map(.command) | map(select(test("user_audit"))) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 MERGE_PACK="$(jq -r '.hooks.beforeShellExecution | map(.command) | map(select(test("before_shell"))) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
-MERGE_EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile"),has("stop")] | map(select(.)) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
+MERGE_EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile")] | map(select(.)) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
+MERGE_STOP="$(jq -r '.hooks | has("stop")' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 rm -rf "$MERGE_HOME"
 run_test "install merge keeps pre-existing user hook entry" "1" "$MERGE_USER"
 run_test "install merge adds pack before_shell entry" "1" "$MERGE_PACK"
-run_test "install merge registers all 4 required events" "4" "$MERGE_EVT"
+run_test "install merge registers all 3 required events" "3" "$MERGE_EVT"
+run_test "install merge does not register stop" "false" "$MERGE_STOP"
 
 OWN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-own.XXXXXX")"
 mkdir -p "$OWN_HOME/.cursor/rules"

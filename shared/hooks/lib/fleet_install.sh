@@ -5,7 +5,7 @@
 # shellcheck source=shared/hooks/lib/hooks_json.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hooks_json.sh"
 
-HOOK_SCRIPTS=(before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh)
+HOOK_SCRIPTS=(before_submit_prompt.sh before_shell.sh before_read_file.sh)
 CLOUD_HOOK_SCRIPTS=(before_shell.sh before_read_file.sh before_submit_prompt.sh)
 
 manifest_list() { jq -r "$1" "$(manifest_json)" 2>/dev/null; }

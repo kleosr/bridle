@@ -21,8 +21,6 @@ verify_smoke() {
     | bash "$HOOKS_DIR/before_read_file.sh" | jq -e '.permission == "deny"' >/dev/null
   echo '{"command":"cat ~/.ssh/id_rsa"}' \
     | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
-  echo '{"status":"aborted","loop_count":0}' \
-    | bash "$HOOKS_DIR/stop.sh" | jq -e '. == {}' >/dev/null
   while IFS= read -r skill; do
     [[ -z "$skill" ]] && continue
     if [[ ! -e "$HOME_C/skills/$skill/SKILL.md" ]]; then
@@ -70,12 +68,10 @@ verify_smoke() {
     || { echo "[fail] beforeShellExecution must failClosed:true"; bad=1; }
   jq -e '.hooks.beforeReadFile[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null \
     || { echo "[fail] beforeReadFile must failClosed:true"; bad=1; }
-  jq -e '.hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile and .hooks.stop' "$HOOKS_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] hooks.json must register beforeSubmitPrompt, beforeShellExecution, beforeReadFile, stop"; bad=1; }
-  jq -e '.hooks|has("sessionStart")|not' "$HOOKS_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] hooks.json must not register sessionStart"; bad=1; }
-  jq -e '.hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] stop must be bounded: loop_limit 1"; bad=1; }
+  jq -e '.hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must register beforeSubmitPrompt, beforeShellExecution, beforeReadFile"; bad=1; }
+  jq -e '(.hooks | has("sessionStart") | not) and (.hooks | has("stop") | not)' "$HOOKS_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must not register sessionStart or stop"; bad=1; }
   [[ "$bad" -eq 0 ]] || return 1
   echo "[ok] verify smoke"
 }

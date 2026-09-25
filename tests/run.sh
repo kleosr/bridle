@@ -74,12 +74,6 @@ if selected sql_scope; then
   fi
 fi
 
-if selected stop_edges; then
-  echo ""
-  echo "=== Stop gate ==="
-  source "$PACK/tests/stop_edges.sh"
-fi
-
 if selected install_lifecycle; then
   echo ""
   echo "=== Install lifecycle (isolated HOME) ==="

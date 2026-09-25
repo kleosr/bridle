@@ -21,14 +21,6 @@
         "timeout": 30,
         "failClosed": true
       }
-    ],
-    "stop": [
-      {
-        "command": "./hooks/stop.sh",
-        "timeout": 30,
-        "failClosed": false,
-        "loop_limit": 1
-      }
     ]
   }
 }

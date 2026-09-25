@@ -35,7 +35,7 @@ Cursor executes hooks across two very different environments:
 | `beforeSubmitPrompt` | Yes | Registered (`failClosed:true`, timeout: 30s) | Yes | Registered (`failClosed:true`, timeout: 30s) |
 | `beforeShellExecution` | Yes | Registered (`failClosed:true`, timeout: 60s) | Yes | Registered (`failClosed:true`, timeout: 60s) |
 | `beforeReadFile` | Yes | Registered (`failClosed:true`, timeout: 30s) | Yes | Registered (`failClosed:true`, timeout: 30s) |
-| `stop` | Yes | Registered (`failClosed:false`, `loop_limit:1`, timeout: 30s) | Documented | **Omitted** (unverified on cloud VMs) |
+| `stop` | Yes | **Not registered** | Documented | Omitted |
 | `beforeMCPExecution` / `afterMCPExecution` | Yes | Omitted | Deferred in docs | Omitted |
 | `preToolUse` / `postToolUse` | Yes | Omitted | Yes | Omitted |
 | `subagentStart` / `subagentStop` | Yes | Omitted | Yes | Omitted |
@@ -73,7 +73,7 @@ Every entry here comes from real sessions on real machines.
   1. Rewrote pattern matching in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` to run **purely in-process** via native Bash regex (`[[ =~ ]]`).
   2. Cached the C# P/Invoke helper in `git-bash-shim.ps1` as `~/.cursor/hooks/KleosPipeUtil.dll`, eliminating repetitive compilation.
   3. Replaced external `cygpath` invocations with pure PowerShell drive-letter path normalization.
-  4. Raised hook timeouts to 30s (`read`/`submit`/`stop`) and 60s (`shell`).
+  4. Raised hook timeouts to 30s (`read`/`submit`) and 60s (`shell`).
 
 | Benchmark / Probe | Old Architecture | In-Process Architecture | Status |
 |---|---|---|---|

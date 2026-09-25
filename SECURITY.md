@@ -2,7 +2,7 @@
 
 Single source of truth for this pack's boundary. Do not put secret **values** in this file, hooks, policy, chat, or the charter. Report issues to the owner privately; never file a public issue with a PoC, payload, or exploit.
 
-Boundary: four hooks enforce documented restrictions on **supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Supported submit/shell/read scripts emit fail-closed deny/`continue:false` on match, malformed input, missing policy, or a missing Python/Node JSON codec (hooks never call `jq`; `jq` is for install/scripts only). Host `failClosed:true` requests blocking on hook failure. Host honor of `failClosed`, `ask` pause, and Read deny is recorded in `docs/host-capability.md` — not guaranteed here. Last observed (Cursor 3.20.15, 2026-09-14): Shell deny honored; `ask` pause and native-Read deny **not confirmed**; the Read hook is not invoked at all for a nonexistent path. Treat the Read row and every `ask` row below as script behavior, not host guarantees. Other tool channels, allowed-program behavior, and host bypasses are outside the boundary. Regex gates are substring heuristics and mistake prevention, not complete parsing, containment, or a sandbox.
+Boundary: three hooks enforce documented restrictions on **supported Cursor event paths**. Repository permissions, sandboxing, CI, and human authorization enforce the broader security boundary. Supported submit/shell/read scripts emit fail-closed deny/`continue:false` on match, malformed input, missing policy, or a missing Python/Node JSON codec (hooks never call `jq`; `jq` is for install/scripts only). Host `failClosed:true` requests blocking on hook failure. Host honor of `failClosed`, `ask` pause, and Read deny is recorded in `docs/host-capability.md` — not guaranteed here. Last observed (Cursor 3.20.15, 2026-09-14): Shell deny honored; `ask` pause and native-Read deny **not confirmed**; the Read hook is not invoked at all for a nonexistent path. Treat the Read row and every `ask` row below as script behavior, not host guarantees. Other tool channels, allowed-program behavior, and host bypasses are outside the boundary. Regex gates are substring heuristics and mistake prevention, not complete parsing, containment, or a sandbox.
 
 Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc` security keys, before adding a dependency, and before a security or `/hunter` pass.
 
@@ -19,7 +19,6 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Harness self-protection | `beforeShellExecution` | **yes (scripts)**, Shell only | deny writes/`rm`/`cp`/`mv` against `~/.cursor/hooks.json`, `~/.cursor/hooks/`, `~/.cursor/rules/`. Native `Write`/`StrReplace` to those paths is **not gated** (law only). Installer path still `ask` via pack markers. Reason `harness`. |
 | Cyclomatic lint disable | `beforeShellExecution` | **yes (scripts)** | deny, per segment. |
 | Harness activation | `beforeShellExecution` | scripts: deny without markers, `ask` with; host pause **unverified** | Installer path is checked against the **payload cwd**, never the hook process cwd. Only the two exact installer command shapes are recognized; editing `shared/hooks/*.sh` in a checkout is ungated. |
-| Ponytail diff + syntax + false passing | `stop` | no | Churn/format advisory. `verify_gate.sh` runs `bash -n` / JSON-parse (Python/Node codec) on changed shell/JSON only. `feature_gate.sh` flags `passing` without evidence. **Does not execute repo test suites**. Cannot block completion. |
 
 **Not gated (law only):** `Write` / `StrReplace` of secret paths and of `~/.cursor/*`, MCP tools, Tab, `preToolUse`, network egress, production deploys, external email, payments, and edits to this pack's hook sources in a checkout. Do not write `.env`, keys, or `credentials.json`. A denied Read may still be reachable via an allowed program; verdicts combine as deny > ask > allow.
 
@@ -31,7 +30,6 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Missing policy file | deny / `continue:false`, `reason=missing-policy` | same |
 | Missing Python/Node JSON codec | deny JSON `reason=missing-json` (fallback echo) | same |
 | Timeout / crash | — | host-defined; requested fail-closed on preventive events |
-| `stop` malformed / aborted / loop>0 | `{}` | cannot loop (`loop_limit:1`); cannot refuse completion |
 
 stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `secret-token`, `ask-infra`, `activation`, `harness`.
 
@@ -57,8 +55,7 @@ Scripts are unit-tested in `tests/`; the host's handling is not. In a live sessi
 3. Run `psql -c "select 1"` → expect an approval card that genuinely pauses execution.
 4. Read `.env` → expect deny; read `.env.example` → expect allow.
 5. `git commit -m "x" && cat .env` → expect deny (per-segment gating).
-6. Complete a turn with a large rewrite (≥50% churn on a ≥80 LOC file) → expect one advisory `followup_message`, not a refusal.
-7. Confirm `Write` of a secret path, MCP tools, and Tab are not blocked by hooks (law only).
+6. Confirm `Write` of a secret path, MCP tools, and Tab are not blocked by hooks (law only).
 
 Record host version + date + pass/fail per step in `docs/host-capability.md` (append a new dated section; do not silently overwrite). Do not claim host guarantees from script fixtures.
 
