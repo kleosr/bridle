@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Feature ledger: workspace paths, evidence tree, and the stop-time sensor.
-# Advisory at stop. Never executes feature verification commands — those
-# belong to scripts/feature.sh / the agent.
+# Feature ledger: workspace paths and the evidence tree.
+# Never executes feature verification commands — those belong to
+# scripts/feature.sh / the agent.
 
 # Workspace root for the ledger: the git toplevel of the cwd, else the cwd.
 ledger_root() {
@@ -16,7 +16,7 @@ ledger_root() {
 # leaves out so recording evidence or a handoff never stales the evidence.
 ledger_paths() {
   local root="$1"
-  if [[ -f "$root/shared/config/harness.json" && -f "$root/scripts/feature.sh" && -f "$root/shared/hooks/stop.sh" ]]; then
+  if [[ -f "$root/shared/config/harness.json" && -f "$root/scripts/feature.sh" && -f "$root/shared/hooks/hooks.json" ]]; then
     LEDGER_FILE="$root/shared/config/features.json"
     LEDGER_HANDOFF="$root/state/handoff.json"
     LEDGER_EXCLUDE="shared/config/features.json"
@@ -54,26 +54,4 @@ ledger_tree() {
       printf '%s\n' "$names" | git hash-object --stdin-paths 2>/dev/null
     fi
   ) | git hash-object --stdin 2>/dev/null || printf 'none'
-}
-
-# ledger_dirty ROOT EXCLUDE: true when the working tree has uncommitted
-# changes outside the ledger.
-ledger_dirty() {
-  local ex="${2:-}"
-  local -a spec=()
-  [[ -n "$ex" ]] && spec=(":(exclude)$ex")
-  [[ -n "$(git -C "$1" status --porcelain -- . ${spec[@]+"${spec[@]}"} 2>/dev/null)" ]]
-}
-
-gate_features() {
-  local root="$1" tree dirty=0
-  ledger_paths "$root"
-  [[ -f "$LEDGER_FILE" ]] || return 0
-  if ! json_run file-valid "$LEDGER_FILE"; then
-    printf 'FEATURE (advisory): feature list is not valid JSON (%s).\nFix the file or restore it before claiming done.\n' "$LEDGER_FILE"
-    return 0
-  fi
-  tree="$(ledger_tree "$root" "$LEDGER_EXCLUDE")"
-  ledger_dirty "$root" "$LEDGER_EXCLUDE" && dirty=1
-  json_run features-advise "$LEDGER_FILE" "$tree" "$dirty" || true
 }

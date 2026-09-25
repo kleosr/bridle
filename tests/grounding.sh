@@ -5,8 +5,7 @@
 # shellcheck source=shared/hooks/lib/fleet_scan.sh
 source "$PACK/shared/hooks/lib/fleet_scan.sh"
 
-run_test "hooks.json stop loop_limit is 1" "1" "$(jq -r '.hooks.stop[0].loop_limit' "$PACK/shared/hooks/hooks.json")"
-run_test "hooks.json stop failClosed is false" "false" "$(jq -r '.hooks.stop[0].failClosed' "$PACK/shared/hooks/hooks.json")"
+run_test "hooks.json does not register stop" "false" "$(jq -r '.hooks | has("stop")' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeSubmitPrompt failClosed is true" "true" "$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeShellExecution failClosed is true" "true" "$(jq -r '.hooks.beforeShellExecution[0].failClosed' "$PACK/shared/hooks/hooks.json")"
 run_test "beforeReadFile failClosed is true" "true" "$(jq -r '.hooks.beforeReadFile[0].failClosed' "$PACK/shared/hooks/hooks.json")"
@@ -14,7 +13,7 @@ run_test "beforeReadFile timeout is 30 (regression: 10s timed out under MSYS spa
 run_test "beforeShellExecution timeout is 60" "60" "$(jq -r '.hooks.beforeShellExecution[0].timeout' "$PACK/shared/hooks/hooks.json")"
 
 RESULT="$(jq -e '.hooks|has("stop")|not' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null && echo yes || echo no)"
-run_test "hooks.cloud.json does not register stop (unverified on cloud)" "yes" "$RESULT"
+run_test "hooks.cloud.json does not register stop" "yes" "$RESULT"
 
 RESULT="$(jq -e '.hooks.beforeShellExecution' "$PACK/shared/hooks/hooks.cloud.json" >/dev/null && echo ok || echo no)"
 run_test "hooks.cloud.json registers beforeShellExecution" "ok" "$RESULT"
@@ -96,7 +95,7 @@ RESULT="$(grep -qE '^[0-9]+\. ' "$KLEOSR_MODE" && grep -q 'SECURITY.md' "$KLEOSR
 run_test "regression: kleosr mode does not restate the instruction order" "ok" "$RESULT"
 
 LOC_OK=1
-for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh "$PACK"/shared/hooks/stop.sh; do
+for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do
   n="$(wc -l < "$f")"
   [[ "$n" -le 80 ]] || { LOC_OK=0; break; }
 done

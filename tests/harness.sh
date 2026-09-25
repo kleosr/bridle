@@ -5,7 +5,6 @@
 source "$PACK/shared/hooks/lib/fleet_scan.sh"
 
 HARNESS_TMP="$(mktemp -d "${TMPDIR:-/tmp}/kleos-harness.XXXXXX")"
-STOP="$PACK/shared/hooks/stop.sh"
 FEAT="$PACK/scripts/feature.sh"
 HAND="$PACK/scripts/handoff.sh"
 
@@ -13,10 +12,6 @@ hf_repo() {
   mkdir -p "$1"
   git -C "$1" init -q
   git -C "$1" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
-}
-
-hf_stop() {
-  jq -n --arg w "$1" '{status:"completed",loop_count:0,workspace_roots:[$w]}' | bash "$STOP"
 }
 
 RESULT="$(bash "$FEAT" check >/dev/null && echo ok || echo fail)"
@@ -94,16 +89,6 @@ printf '%s\n' '{"version":1,"task":"t","verified":{"command":"true","exit":0},"r
   && RESULT=ok || RESULT=fail
 run_test "handoff.sh write rejects non-string arrays" "fail" "$RESULT"
 
-hf_repo "$HARNESS_TMP/falsewin"
-printf 'echo ok\n' > "$HARNESS_TMP/falsewin/ok.sh"
-git -C "$HARNESS_TMP/falsewin" add ok.sh
-git -C "$HARNESS_TMP/falsewin" -c user.email=t@t -c user.name=t commit -q -m base
-mkdir -p "$HARNESS_TMP/falsewin/.cursor/bridle"
-printf '%s\n' '{"version":1,"features":[{"id":"F01","priority":1,"area":"x","title":"t","behavior":"b","verification":"true","status":"passing"}]}' \
-  > "$HARNESS_TMP/falsewin/.cursor/bridle/features.json"
-RESULT="$(hf_stop "$HARNESS_TMP/falsewin" | jq -r '.followup_message // "" | test("passing without evidence")')"
-run_test "regression: stop advisory when the workspace ledger is passing without evidence" "true" "$RESULT"
-
 # Ledger follows the workspace: pack cwd -> pack ledger; any other repo ->
 # <root>/.cursor/bridle. Passing means passing for the tree as it is now.
 RESULT="$(cd "$PACK" && bash "$FEAT" list | cut -f1 | head -1)"
@@ -126,11 +111,8 @@ RESULT="$(jq -r '.features[0].evidence.tree // "" | length > 20' "$EXT/.cursor/b
 run_test "external workspace: pass records evidence.tree" "true" "$RESULT"
 RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "external workspace: check passes right after pass" "ok" "$RESULT"
-RESULT="$(hf_stop "$EXT" | jq -c .)"
-run_test "stop is quiet when the workspace ledger is fresh and the tree is clean" "{}" "$RESULT"
 
 # Rows recorded before evidence.tree existed are accepted by feature.sh check.
-# Calling them "workspace changed since pass" is false and fires on every stop.
 NOTREE="$HARNESS_TMP/notree"
 hf_repo "$NOTREE"
 printf 'echo ok\n' > "$NOTREE/ok.sh"
@@ -141,30 +123,19 @@ jq -n '{version:1,features:[{id:"F01",priority:1,area:"x",title:"t",behavior:"b"
   > "$NOTREE/.cursor/bridle/features.json"
 RESULT="$(cd "$NOTREE" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "feature.sh check accepts passing evidence that predates evidence.tree" "ok" "$RESULT"
-RESULT="$(hf_stop "$NOTREE" | jq -r '.followup_message // "" | test("stale evidence")')"
-run_test "regression: stop does not call pre-tree evidence stale" "false" "$RESULT"
 
 printf 'echo changed\n' > "$EXT/ok.sh"
 RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "regression: an edit after pass makes check reject the stale passing row" "fail" "$RESULT"
-RESULT="$(hf_stop "$EXT" | jq -r '.followup_message // "" | test("stale evidence")')"
-run_test "regression: stop names passing rows with stale evidence" "true" "$RESULT"
 git -C "$EXT" add ok.sh
 git -C "$EXT" -c user.email=t@t -c user.name=t commit -q -m change
 RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "committing the edit does not refresh stale evidence" "fail" "$RESULT"
 RESULT="$(cd "$EXT" && bash "$FEAT" pass F01 >/dev/null && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "re-running pass after the edit makes check pass again" "ok" "$RESULT"
-RESULT="$(hf_stop "$EXT" | jq -c .)"
-run_test "stop is quiet again after re-pass on a clean tree" "{}" "$RESULT"
 
 RESULT="$(cd "$EXT" && bash "$FEAT" start F02 >/dev/null && echo ok || echo fail)"
 run_test "external workspace: feature.sh start sets in_progress" "ok" "$RESULT"
-RESULT="$(hf_stop "$EXT" | jq -c .)"
-run_test "stop is quiet with in_progress work on a clean tree" "{}" "$RESULT"
-printf 'echo wip\n' > "$EXT/ok.sh"
-RESULT="$(hf_stop "$EXT" | jq -r '.followup_message // "" | test("F02 is in_progress and the working tree has uncommitted changes")')"
-run_test "regression: stop names in_progress work left on a dirty tree" "true" "$RESULT"
 
 RESULT="$(cd "$EXT" && bash "$HAND" check)"
 run_test "handoff.sh in another repo treats absence as ok" "handoff absent (ok)" "$RESULT"
@@ -173,23 +144,23 @@ printf '%s\n' '{"version":1,"task":"t","verified":{"command":"true","exit":0},"r
 RESULT="$(test -f "$EXT/.cursor/bridle/handoff.json" && echo yes || echo no)"
 run_test "handoff.sh in another repo writes <root>/.cursor/bridle/handoff.json" "yes" "$RESULT"
 RESULT="$(cd "$EXT" && bash "$FEAT" pass F02 >/dev/null && bash "$FEAT" pass F01 >/dev/null && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
-run_test "external workspace: both rows fresh after re-pass on the dirty tree" "ok" "$RESULT"
+run_test "external workspace: both rows fresh after re-pass" "ok" "$RESULT"
 printf '%s\n' '{"version":1,"task":"t2","verified":{"command":"true","exit":0},"remaining":[],"nextAction":"done"}' \
   | (cd "$EXT" && bash "$HAND" write >/dev/null)
 RESULT="$(cd "$EXT" && bash "$FEAT" check >/dev/null 2>&1 && echo ok || echo fail)"
 run_test "handoff write does not stale the ledger (excluded from the tree)" "ok" "$RESULT"
 
-RESULT="$(jq -r '.hooks.stop[0].loop_limit' "$PACK/shared/hooks/hooks.json")"
-run_test "stop remains advisory (loop_limit 1; no new hook events)" "1" "$RESULT"
+RESULT="$(jq -e '.hooks|has("stop")|not' "$PACK/shared/hooks/hooks.json" >/dev/null && echo yes || echo no)"
+run_test "hooks.json does not register stop" "yes" "$RESULT"
 
 RESULT="$(jq -e '.hooks|has("sessionStart")|not' "$PACK/shared/hooks/hooks.json" >/dev/null && echo yes || echo no)"
 run_test "hooks.json still omits sessionStart" "yes" "$RESULT"
 
-RESULT="$(jq -e '.invariants.hookEventCount==4 and .invariants.hooksFrozen==true and .invariants.noSessionStart==true and .invariants.noPreToolUse==true and .invariants.noPackLoop==true' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
+RESULT="$(jq -e '.invariants.hookEventCount==3 and .invariants.hooksFrozen==true and .invariants.noSessionStart==true and .invariants.noPreToolUse==true and .invariants.noPackLoop==true' "$PACK/shared/config/harness.json" >/dev/null && echo ok || echo fail)"
 run_test "harness.json invariants freeze the small runtime" "ok" "$RESULT"
 
 HOOK_KEYS="$(jq -r '.hooks | keys | sort | join(",")' "$PACK/shared/hooks/hooks.json")"
-run_test "hooks.json registers exactly the four Cursor events" "beforeReadFile,beforeShellExecution,beforeSubmitPrompt,stop" "$HOOK_KEYS"
+run_test "hooks.json registers exactly the three Cursor events" "beforeReadFile,beforeShellExecution,beforeSubmitPrompt" "$HOOK_KEYS"
 
 RESULT="$(jq -e '.hooks | (has("preToolUse") | not) and (has("postToolUse") | not)' "$PACK/shared/hooks/hooks.json" >/dev/null && echo yes || echo no)"
 run_test "hooks.json omits preToolUse and postToolUse" "yes" "$RESULT"
@@ -267,6 +238,6 @@ run_test "always-on prefix has no dates or command substitutions" "none" "$RESUL
 RESULT="$(jq -r '.verification.default' "$PACK/shared/config/harness.json")"
 run_test "verify default is scoped, not whole-suite" "scoped" "$RESULT"
 RESULT="$(jq -r '.invariants.hooksFrozen' "$PACK/shared/config/harness.json")"
-run_test "hooksFrozen keeps the four-event freeze" "true" "$RESULT"
+run_test "hooksFrozen keeps the three-event freeze" "true" "$RESULT"
 
 rm -rf "$HARNESS_TMP"

@@ -32,13 +32,13 @@ Maintained as private engineering work by kleosr (Mario Pulice), published under
 
 ## Supported hosts
 
-**Now supports: Claude and Opencode.** Cursor remains the host the four hooks were built for.
+**Now supports: Claude and Opencode.** Cursor remains the host the three hooks were built for.
 
 | Host | Install | What lands |
 |---|---|---|
-| Cursor | `bash scripts/install.sh` | Charter, rules, skills, agents, and four hooks in `~/.cursor` |
+| Cursor | `bash scripts/install.sh` | Charter, rules, skills, agents, and three hooks in `~/.cursor` |
 | Claude Code | `bash scripts/claude.sh install` | Rules, skills, and agents in `~/.claude`. No hooks. |
-| opencode | `bash scripts/opencode.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the four hooks via `plugin/bridle.js` in `~/.config/opencode` |
+| opencode | `bash scripts/opencode.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the three hooks via `plugin/bridle.js` in `~/.config/opencode` |
 
 The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`tests/install_lifecycle.sh`, `TESTS=opencode_port bash tests/run.sh`). Uninstall each port with the same script and `uninstall`.
 
@@ -124,17 +124,14 @@ graph TD
 | `beforeSubmitPrompt` | `before_submit_prompt.sh` | Fail closed. `continue: false` on secret tokens. |
 | `beforeShellExecution` | `before_shell.sh` | Fail closed. `permission: deny` on destructive calls, secret reads, lint suppressions, and shell rewrites of source. `ask` on infra and database changes. |
 | `beforeReadFile` | `before_read_file.sh` | Fail closed. Canonical path, then deny `.env`, private keys, and certificates. |
-| `stop` | `stop.sh` | Advisory. One follow-up per turn (`loop_limit: 1`, `failClosed: false`). |
 
-`stop` runs after the turn. It reports churn, syntax errors, size violations, a `passing` row with no evidence, conflict markers, and not-implemented stubs. It leaves the decision to the person and to the verify command. A fail-closed `stop` would still not undo the edit, and it would block a finished turn on a shape warning. False completion of a feature is still a failed `feature.sh pass`, plus this advisory when a ledger claims `passing` without evidence.
-
-There is no `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+There is no `stop`, `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). False completion of a feature is a failed `feature.sh pass`.
 
 ### Shell-hook timing
 
 Matching in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` stays inside Bash (`[[ =~ ]]`). On Windows Git Bash, a pipeline of `grep` / `sed` / `tr` cost about 50 ms per spawn. A 30-segment command took **45.0 s** and Cursor killed it (`exit code 1` under `failClosed`). After the in-process rewrite the same command took **3.2 s** end to end through the PowerShell shim. Measured 2026-09-15 on Cursor 3.20.15, Windows 11. Numbers and the probe log: [`docs/host-capability.md`](docs/host-capability.md).
 
-`git-bash-shim.ps1` compiles `~/.cursor/hooks/KleosPipeUtil.dll` once, maps Windows paths in PowerShell, and uses timeouts of 30 s (read, submit, stop) and 60 s (shell).
+`git-bash-shim.ps1` compiles `~/.cursor/hooks/KleosPipeUtil.dll` once, maps Windows paths in PowerShell, and uses timeouts of 30 s (read, submit) and 60 s (shell).
 
 ---
 
@@ -144,7 +141,7 @@ Claude, Devin, Cursor agents, and any other coding agent:
 
 1. Read `AGENTS.md` before editing. Read `SECURITY.md` before security-sensitive work.
 2. Run `bash tests/run.sh`, or the narrowest suite that can falsify the change (`TESTS=<name> bash tests/run.sh`). Cite the command and the exit code.
-3. Keep the four hook events. Do not add a host adapter, a second installer, or a partial port in an ordinary task.
+3. Keep the three hook events. Do not add a host adapter, a second installer, or a partial port in an ordinary task.
 4. `features.json` and `state/handoff.json` do not authorize a new goal or a new host.
 5. On Windows, run these scripts from Git Bash.
 

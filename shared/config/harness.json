@@ -16,7 +16,7 @@
     "default": "scoped"
   },
   "invariants": {
-    "hookEventCount": 4,
+    "hookEventCount": 3,
     "eventHookMaxLines": 80,
     "alwaysOnMaxLines": 80,
     "alwaysOnMaxBytes": 7500,
@@ -39,7 +39,6 @@
     "completion",
     "verification",
     "regression",
-    "unnecessary_edits",
     "context_efficiency",
     "recovery",
     "false_completion",

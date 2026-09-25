@@ -66,7 +66,7 @@ GNU_HITS="$(grep -Rn --include='*.sh' -E 'flock|mapfile|readlink -f|stat -c' "$H
 if [[ -z "$GNU_HITS" ]]; then ok "no GNU-only utils in hooks (macOS safe)"
 else fail "GNU-only util found in hooks: $GNU_HITS"; fi
 
-for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh "$HOOKS_DIR"/stop.sh; do
+for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOOKS_DIR"/before_read_file.sh; do
   n="$(wc -l < "$f")"
   if [[ "$n" -le "$HOOK_CAP" ]]; then ok "LOC ≤ $HOOK_CAP: ${f#$PACK/} ($n)"
   else fail "LOC > $HOOK_CAP: ${f#$PACK/} ($n)"; fi
@@ -98,13 +98,18 @@ else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh stop.sh git-bash-shim.ps1 lib/selfdir.sh lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/diff_gate.sh lib/sql_scope.sh lib/verify_gate.sh lib/feature_gate.sh lib/complete_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh git-bash-shim.ps1 lib/selfdir.sh lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/sql_scope.sh lib/feature_gate.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
       fail "fixture install: hooks/$rel missing"
     fi
   done
+  if [[ -e "$DOCTOR_FIXTURE/.cursor/hooks/stop.sh" || -e "$DOCTOR_FIXTURE/.cursor/hooks/lib/diff_gate.sh" ]]; then
+    fail "fixture install: retired stop.sh or diff_gate.sh still present"
+  else
+    ok "fixture install: stop.sh absent"
+  fi
 fi
 if [[ -f "$DOCTOR_FIXTURE/.cursor/rules/core.mdc" ]]; then
   ok "fixture install: core.mdc in user rules"
@@ -152,13 +157,12 @@ fi
 if jq -e '.hooks.beforeSubmitPrompt[0].command == "./hooks/before_submit_prompt.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeShellExecution[0].command == "./hooks/before_shell.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeReadFile[0].command == "./hooks/before_read_file.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.stop[0].command == "./hooks/stop.sh" and .hooks.stop[0].loop_limit == 1' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks | (has("sessionStart") | not) and (has("preToolUse") | not) and (has("postToolUse") | not)' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks | keys | length == 4' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks | (has("stop") | not) and (has("sessionStart") | not) and (has("preToolUse") | not) and (has("postToolUse") | not)' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks | keys | length == 3' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true and .hooks.beforeReadFile[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
   && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.cloud.json" >/dev/null 2>&1; then
-  ok "hooks.json registers submit+shell+read+stop (no sessionStart/preToolUse; security failClosed)"
-else fail "hooks.json must register submit+shell+read+stop with ./hooks/ commands, stop.loop_limit 1, no sessionStart/preToolUse, and security failClosed"; fi
+  ok "hooks.json registers submit+shell+read (no stop/sessionStart/preToolUse; security failClosed)"
+else fail "hooks.json must register submit+shell+read with ./hooks/ commands, no stop/sessionStart/preToolUse, and security failClosed"; fi
 
 if jq empty "$PACK/shared/config/manifest.json" >/dev/null 2>&1 \
   && [[ -f "$HOOKS_DIR/lib/hooks_json.jq" && -f "$HOOKS_DIR/lib/hooks_json.sh" ]]; then
@@ -188,7 +192,7 @@ for f in "$PACK/shared/rules/core.mdc" \
     LAW_STALE="$LAW_STALE ${f#$PACK/}"
   fi
 done
-if [[ -z "$LAW_STALE" ]]; then ok "law matches four-hook harness (no stale gate names)"
+if [[ -z "$LAW_STALE" ]]; then ok "law matches three-hook harness (no stale gate names)"
 else fail "stale deleted-hook names in$LAW_STALE"; fi
 
 if grep -q 'hard 300' "$PACK/shared/rules/core.mdc" && grep -q 'never 500' "$PACK/shared/rules/core.mdc"; then ok "core.mdc has hard 300 roof and never-500 ceiling"

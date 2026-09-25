@@ -3,14 +3,13 @@
 //   beforeSubmitPrompt   -> chat.message        (fail closed)
 //   beforeShellExecution -> tool.execute.before bash (fail closed)
 //   beforeReadFile       -> tool.execute.before read (fail closed)
-//   stop                 -> event session.idle   (advisory, one follow-up)
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HOOKS = process.env.BRIDLE_HOOKS_DIR || join(dirname(fileURLToPath(import.meta.url)), "..", "bridle", "hooks");
-const TIMEOUT_MS = { "before_submit_prompt.sh": 30000, "before_shell.sh": 60000, "before_read_file.sh": 30000, "stop.sh": 30000 };
+const TIMEOUT_MS = { "before_submit_prompt.sh": 30000, "before_shell.sh": 60000, "before_read_file.sh": 30000 };
 
 // Windows `bash` on PATH is often WSL's System32 shim, which cannot see the
 // hooks' Windows paths. Git Bash is the supported runtime (README: Install).
@@ -89,9 +88,7 @@ function promptText(parts) {
   return (parts || []).filter((p) => p.type === "text" && !p.synthetic).map((p) => p.text).join("\n");
 }
 
-export const BridlePlugin = async ({ client, directory, worktree }) => {
-  const followedUp = new Set();
-
+export const BridlePlugin = async ({ client, directory }) => {
   return {
     "chat.message": async (_input, output) => {
       const text = promptText(output.parts);
@@ -110,23 +107,6 @@ export const BridlePlugin = async ({ client, directory, worktree }) => {
 
     "tool.execute.before": async (input, output) => {
       await gateTool(input.tool, output.args, directory);
-    },
-
-    event: async ({ event }) => {
-      if (event.type !== "session.idle") return;
-      const id = event.properties?.sessionID;
-      if (!id) return;
-      const loop = followedUp.delete(id) ? 1 : 0;
-      try {
-        const session = await client.session.get({ path: { id } });
-        if (session.data?.parentID) return;
-        const v = await runHook("stop.sh", { status: "completed", loop_count: loop, workspace_roots: [unixPath(worktree || directory)] });
-        if (!v?.followup_message) return;
-        followedUp.add(id);
-        await client.session.promptAsync({ path: { id }, body: { parts: [{ type: "text", text: v.followup_message }] } });
-      } catch {
-        // stop is advisory: a failed advisory never blocks the session.
-      }
     },
   };
 };
