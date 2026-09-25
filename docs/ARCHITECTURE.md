@@ -36,12 +36,11 @@ Prompt context is scarce, fragile, and prone to dilution. Advertising a massive 
 
 Prompting is an instruction channel, not a security boundary. If your security relies on telling an LLM *"Please don't read .env"*, you don't have security.
 
-Four deterministic hooks intercept execution before actions take physical effect:
+Three deterministic hooks intercept execution before actions take physical effect:
 
 - **`beforeSubmitPrompt`**: Scans outgoing prompts for secret tokens, API keys (`ghp_`, `sk-`, `AKIA`), and private keys. Blocks transmission (`continue:false`). Fail-closed.
 - **`beforeShellExecution`**: Splits commands on shell operators outside quotes. Denies destructive operations (`rm -rf /`, force push, `reset --hard`), secret-path reads, lint-suppression tampering, and shell source overwrites. Asks on infrastructure/database mutation. Fail-closed.
 - **`beforeReadFile`**: Canonicalizes paths and denies reads targeting credentials, environments, and certificates. Fail-closed.
-- **`stop`**: Evaluates turn conclusion. Emits a single non-blocking advisory if churn, syntax failures, unfinished-work markers (unresolved conflicts, not-implemented stubs), or unverified `passing` states are detected. Never blocks loop completion.
 
 Hook communication uses clean JSON across stdin and stdout. Missing input, malformed payloads, or absent policy files trigger an immediate environment failure (`failClosed`), forcing the agent to diagnose environment health (`scripts/doctor.sh`) rather than silently slipping past policy.
 
@@ -62,6 +61,5 @@ The operating loop is strictly: `understand -> change -> verify -> correct`.
 ## What is Covered vs What is Law
 
 - **Scripts emit deny / `continue: false` for:** shell-segment gating, sensitive-path reads, and known secret-token prefixes in the prompt. Host honor is confirmed for shell deny only. Read deny, `ask`, and prompt `continue: false` are script behavior; see `docs/host-capability.md`.
-- **Advisory at `stop`** (cannot refuse completion): churn, new-file size, changed-file syntax, false `passing`, conflict markers, and not-implemented stubs.
 - **CLI, not a hook:** feature state transitions (`scripts/feature.sh`). A missing `evidence.tree` is bootstrap evidence, not staleness.
 - **Uncovered by Host Hooks:** Direct native `Write`/`StrReplace` targeting secret paths, MCP tool invocations outside shell, inline autocomplete (Tab), and subagent host bypasses. These remain governed by Charter law and human oversight. We track host behavior transparently in `docs/host-capability.md`.

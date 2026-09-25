@@ -4,19 +4,15 @@
   "hookEvents": {
     "beforeSubmitPrompt": "before_submit_prompt.sh",
     "beforeShellExecution": "before_shell.sh",
-    "beforeReadFile": "before_read_file.sh",
-    "stop": "stop.sh"
+    "beforeReadFile": "before_read_file.sh"
   },
   "runtimeLibs": [
     "selfdir.sh",
     "common.sh",
     "json.sh",
     "shell_gate.sh",
-    "diff_gate.sh",
     "sql_scope.sh",
-    "verify_gate.sh",
     "feature_gate.sh",
-    "complete_gate.sh",
     "json_tool.py",
     "json_tool.js"
   ],
@@ -31,11 +27,15 @@
   ],
   "legacyCleanup": [
     "session_start.sh",
+    "stop.sh",
     "stop_gate.sh",
     "lean_gate.sh",
     "pre_tool_use.sh",
     "post_tool_use.sh",
-    "lib/host.sh"
+    "lib/host.sh",
+    "lib/diff_gate.sh",
+    "lib/verify_gate.sh",
+    "lib/complete_gate.sh"
   ],
   "legacyLibCleanup": [
     "shell_fleet.sh"

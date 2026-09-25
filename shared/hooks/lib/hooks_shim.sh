@@ -62,7 +62,7 @@ apply_pwsh_shim_hooks() {
     | .hooks.beforeReadFile = ((.hooks.beforeReadFile // []) | keep)
         + [{command: ($p + " before_read_file.sh"), timeout: 30, failClosed: true}]
     | .hooks.stop = ((.hooks.stop // []) | keep)
-        + [{command: ($p + " stop.sh"), timeout: 30, failClosed: false, loop_limit: 1}]
+    | if (.hooks.stop | length) == 0 then del(.hooks.stop) else . end
   ' "$dest" >"$tmp"; then
     rm -f "$tmp"
     echo "[fail] hooks.json pwsh shim rewrite failed" >&2
