@@ -151,8 +151,3 @@ emit_continue() {
   json_emit continue "$msg" && return 0
   echo '{"continue":true}'
 }
-
-emit_followup() {
-  json_emit followup "$1" && return 0
-  echo '{}'
-}

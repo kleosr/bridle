@@ -12,7 +12,6 @@ Test observable behavior at the narrowest stable boundary. Run the verify this c
 - A failed check is the next repair job: fix it, rerun it, then rerun the scoped suite.
 - Coverage or mutation only if the repo already runs them; do not add a runner or expose privates.
 - A signature or shared-contract edit cites its caller list next to the proof.
-- Stop-hook notes are shape checks, not proof.
 - Feature ledgers: a row reaches `passing` only through the ledger's pass command after a real run, and goes stale when the tree changes.
 - Independent recheck: run `prove` when the user asks, before a feature pass, or before a repo-wide claim, not after every change. Repo-wide claims need the full suite.
 

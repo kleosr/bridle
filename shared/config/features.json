@@ -51,38 +51,6 @@
       }
     },
     {
-      "id": "H04",
-      "priority": 4,
-      "area": "feedback",
-      "layer": "feedback",
-      "title": "Stop churn advisory",
-      "behavior": "stop.sh emits one advisory followup on large rewrites or mass reindent; it cannot refuse completion.",
-      "verification": "TESTS=stop_edges bash tests/run.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "TESTS=stop_edges bash tests/run.sh",
-        "exit": 0,
-        "proves": "tests/stop_edges.sh",
-        "recordedAt": "2026-09-14T16:32:06Z"
-      }
-    },
-    {
-      "id": "H05",
-      "priority": 5,
-      "area": "verification",
-      "layer": "verification",
-      "title": "Stop syntax sensor",
-      "behavior": "stop.sh syntax-checks changed shell/JSON. It does not execute repo test suites.",
-      "verification": "TESTS=stop_edges bash tests/run.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "TESTS=stop_edges bash tests/run.sh",
-        "exit": 0,
-        "proves": "tests/stop_edges.sh",
-        "recordedAt": "2026-09-14T16:32:31Z"
-      }
-    },
-    {
       "id": "H06",
       "priority": 6,
       "area": "lifecycle",
@@ -254,22 +222,6 @@
         "command": "TESTS=fixtures,gate_edges,harness bash tests/run.sh",
         "exit": 0,
         "recordedAt": "2026-09-15T18:42:56Z"
-      }
-    },
-    {
-      "id": "H17",
-      "priority": 17,
-      "area": "feedback",
-      "layer": "verification",
-      "title": "Completion stop advisory",
-      "behavior": "stop.sh emits one advisory when the working tree has unresolved VCS conflict markers or not-implemented stubs added in the change. It stays quiet on ordinary edits. It cannot refuse completion.",
-      "verification": "TESTS=stop_edges bash tests/run.sh",
-      "status": "passing",
-      "evidence": {
-        "command": "TESTS=stop_edges bash tests/run.sh",
-        "exit": 0,
-        "proves": "tests/stop_edges.sh",
-        "recordedAt": "2026-09-17T00:53:07Z"
       }
     }
   ]

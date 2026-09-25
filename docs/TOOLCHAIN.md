@@ -59,7 +59,6 @@ Every hook reads JSON on `stdin` and writes JSON on `stdout`. There are no hidde
 - **`beforeSubmitPrompt`**: Returns `{"continue": true}` or `{"continue": false, "reason": "...", "user_message": "..."}`.
 - **`beforeShellExecution`**: Returns `{"permission": "allow"}`, `{"permission": "deny", ...}`, or `{"permission": "ask", ...}`.
 - **`beforeReadFile`**: Returns `{"permission": "allow"}` or `{"permission": "deny", ...}`.
-- **`stop`**: Returns `{}` or `{"followup_message": "..."}` (advisory only; never blocks).
 
 ### Fast Smoke Check from the Terminal
 Want to test the hooks by hand right now? Run these directly:
