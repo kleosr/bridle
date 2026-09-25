@@ -21,7 +21,7 @@ source "$HOOKS_DIR/lib/fleet_verify.sh"
 
 dry_run() {
   echo "[dry-run] HOME_C=$HOME_C FORCE=$FORCE (no files written)"
-  echo "[dry-run] merge hooks.json; copy four hook scripts + runtime libs + policy"
+  echo "[dry-run] merge hooks.json; copy three hook scripts + runtime libs + policy"
   echo "[dry-run] global rules: ${GLOBAL[*]}"
   echo "[dry-run] charter → ~/.cursor/rules/kleosr.mdc alwaysApply"
   echo "[dry-run] skills from shared/config/skills.txt; agents hunter cut prove"

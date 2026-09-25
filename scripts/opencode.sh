@@ -2,7 +2,7 @@
 # Port the pack into opencode (~/.config/opencode): charter + core + testing as
 # global `instructions`, skills, stack companions as load-on-match skills, the
 # specialists as subagents, the `bridle` primary agent (the Cursor custom
-# mode), and the four hooks behind plugin/bridle.js.
+# mode), and the three hooks behind plugin/bridle.js.
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 OC="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
