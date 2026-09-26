@@ -2,7 +2,7 @@
 name: live-ui-sync
 description: >-
   UI que se actualiza sola después de cada acción, sin recargar la página ni
-  tener que presionar F5. Úsala SIEMPRE que se cree o modifique UI que cambia tras
+  tener que presionar F5. Úsala cuando se cree o modifique UI que cambia tras
   una mutación, navegación entre secciones, layouts, sidebars, menús, módulos,
   tabs, listas, tablas, formularios, modales o dashboards; y cuando el usuario diga
   "tengo que recargar", "no se actualiza", "se ve feo al refrescar", "parpadea",
@@ -16,6 +16,9 @@ Cuando la IA no sabe cómo avisarle a la UI que un dato cambió, recarga toda la
 página. Eso borra el estado, parpadea y oculta el bug real: **faltaba una
 invalidación**. Esta skill obliga a cerrar el ciclo mutación → datos frescos
 → UI, sin tocar el documento.
+
+**Alcance:** cierra el ciclo de la mutación o vista que el pedido toca. No
+reescribas otras pantallas ni cambies la librería de datos del repo.
 
 ## Prohibido (el gate lo marca como error)
 

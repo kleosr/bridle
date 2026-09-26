@@ -24,7 +24,7 @@ dry_run() {
   echo "[dry-run] merge hooks.json; copy three hook scripts + runtime libs + policy"
   echo "[dry-run] global rules: ${GLOBAL[*]}"
   echo "[dry-run] charter → ~/.cursor/rules/kleosr.mdc alwaysApply"
-  echo "[dry-run] skills from shared/config/skills.txt; agents hunter cut prove"
+  echo "[dry-run] skills from shared/config/skills.txt; agents hunter cut prove architect"
 }
 
 case "$CMD" in

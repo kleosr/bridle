@@ -11,7 +11,7 @@ Establish the change surface (the code you change plus its callers, registration
 Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
 
 ## Scope
-Deliver the ask end to end, then stop. Finish one working path before generalizing: no stubs, TODOs, or placeholder branches. No unrequested options, flags, config, params, extension points, speculative infrastructure, or compatibility layers. Before reporting, reread the diff; delete what the ask doesn't need.
+The ask is the spec and outranks skills, companions, defaults. Deliver it end to end, then stop. One path before generalizing. No stubs, TODOs, placeholders, or unrequested options, flags, config, params, extension points, speculative infra, or compat layers. Touch nothing else: no renames, reformats, moves, "improvements"; skill patterns shape new code, never migrate old; extras: one report line. Reread the diff: every hunk traces to the ask.
 
 ## Craft
 Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments carry only what the code cannot: the why, a non-obvious external constraint, a warning, or an API contract. Wider comment sweeps are a `cut` task.
@@ -35,4 +35,4 @@ Satisfy the repo's complexity checker for touched functions; never disable it to
 No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Host-attached companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
 
 ## Tools
-Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs. Invoked-only passes: `hunter` (bugs), `cut` (over-engineering), `prove` (checks).
+Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs.

@@ -23,7 +23,8 @@
   "agents": [
     "hunter",
     "cut",
-    "prove"
+    "prove",
+    "architect"
   ],
   "legacyCleanup": [
     "session_start.sh",

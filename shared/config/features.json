@@ -120,13 +120,15 @@
       "area": "graph",
       "layer": "lifecycle",
       "title": "Specialist files present and wired",
-      "behavior": "hunter, cut, and prove prompt files exist and are installed by fleet_install.sh. This proves presence and install-wiring only; it does not measure that a review ran, was independent, or caught anything.",
-      "verification": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md",
+      "behavior": "hunter, cut, prove, and architect prompt files exist and are installed by fleet_install.sh. This proves presence and install-wiring only; it does not measure that a review ran, was independent, or caught anything.",
+      "verification": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md && test -f shared/agents/architect.md",
       "status": "passing",
       "evidence": {
-        "command": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md",
+        "command": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md && test -f shared/agents/architect.md",
         "exit": 0,
-        "proves": "tests/install_lifecycle.sh"
+        "proves": "tests/install_lifecycle.sh",
+        "recordedAt": "2026-09-26T05:26:51Z",
+        "tree": "42763934e2ef20f56d776e0c58a5e80345c0fd08"
       }
     },
     {
