@@ -45,6 +45,8 @@ Esta skill no lo repite.
    - Bug con causa desconocida → `debugging`.
    - Escribir o ampliar tests → `testing`.
    - La tarea continúa en otra sesión → `handoff`.
+   - El usuario pide afinar el pedido antes de ejecutarlo → `prompt-brief`
+     (solo cuando la invoca).
 4. **Cambia** la superficie mínima: el código, sus callers, registros, config y tests.
 5. **Verifica** con un comando real y su exit code. "Compila" no es prueba. Corre
    además el gate de orden:
