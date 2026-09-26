@@ -197,7 +197,7 @@ install_skills() {
 install_agents() {
   local a src dst h
   mkdir -p "$HOME_C/agents"
-  for a in hunter cut prove; do
+  for a in hunter cut prove architect; do
     src="$PACK/shared/agents/${a}.md"
     dst="$HOME_C/agents/${a}.md"
     [[ -f "$src" ]] || { echo "[fail] missing shared/agents/${a}.md"; return 1; }

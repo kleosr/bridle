@@ -3,8 +3,8 @@ name: cqrs-data-flow
 description: >-
   Capa de datos consistente con CQRS: commands que escriben, queries que leen,
   un solo contrato de respuesta, SQL parametrizado por repositorio y Redis/Upstash
-  como cache con TTL e invalidación explícita. Úsala SIEMPRE que el código lea o
-  escriba datos: SQL, Postgres, Prisma, Drizzle, Supabase, Redis, Upstash, server
+  como cache con TTL e invalidación explícita. Úsala cuando la tarea cree o cambie
+  una lectura o escritura de datos: SQL, Postgres, Prisma, Drizzle, Supabase, Redis, Upstash, server
   actions, route handlers, API endpoints, fetch, formularios, mutaciones, caching,
   rate limit o colas, aunque el usuario no diga "CQRS". También cuando las
   respuestas o requests son inconsistentes entre pantallas.
@@ -15,6 +15,11 @@ description: >-
 La inconsistencia entre requests viene de que cada pantalla inventa su forma de
 pedir, escribir y cachear. Esta skill fija **un camino de escritura, un camino de
 lectura y un contrato**, para que cada feature se vea igual por dentro.
+
+**Alcance:** aplica al flujo que el pedido crea. Si el repo ya tiene otra capa de
+datos, síguela. Un cambio chico (un campo, un filtro, una columna) se hace donde
+ya vive; no migres código existente a commands/queries ni crees `platform/`
+para eso.
 
 ## El flujo (memorízalo)
 

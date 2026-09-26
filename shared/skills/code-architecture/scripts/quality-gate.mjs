@@ -2,7 +2,9 @@
 // Deterministic shape check for AI-written code. Not a substitute for the repo's
 // own tests: it catches generic naming, hard reloads, and data-layer slop.
 // Usage: node quality-gate.mjs [paths...]   (no paths = files changed in git)
-import { execSync } from 'node:child_process';
+// Git mode judges only the lines this diff added, so touching a legacy file never
+// obliges the agent to rewrite what the ask did not cover. Explicit paths judge whole files.
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
 
@@ -28,24 +30,48 @@ const LINE_RULES = [
   { id: 'generic-variable', severity: 'warn', pattern: /\b(const|let)\s+(data|result|res|item|obj|temp|tmp|val|stuff|info)\s*[=:]/, hint: 'Nombra por dominio: moduleRows, renameOutcome…' },
 ];
 
-function runGit(command) {
-  return execSync(command, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean);
+function runGit(args) {
+  return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n').filter(Boolean);
 }
 
-function changedFilesFromGit() {
+function gitDiff(options, paths = []) {
   try {
-    runGit('git rev-parse --is-inside-work-tree');
+    return runGit(['diff', ...options, 'HEAD', '--', ...paths]);
+  } catch {
+    return runGit(['diff', '--cached', ...options, '--', ...paths]); // repo sin commits
+  }
+}
+
+function addedLineNumbers(filePath) {
+  const addedLines = new Set();
+  for (const diffLine of gitDiff(['-U0', '--no-color'], [filePath])) {
+    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(diffLine);
+    if (!hunk) continue;
+    const firstLine = Number(hunk[1]);
+    const lineCount = hunk[2] === undefined ? 1 : Number(hunk[2]);
+    for (let lineNumber = firstLine; lineNumber < firstLine + lineCount; lineNumber += 1) addedLines.add(lineNumber);
+  }
+  return addedLines;
+}
+
+// Map of changed file → the part of it this diff owns: the whole file when new, else its added lines.
+function changedScopesFromGit() {
+  try {
+    runGit(['rev-parse', '--is-inside-work-tree']);
   } catch {
     console.error('quality-gate: no es un repo git; pasa rutas explícitas.');
     process.exit(2);
   }
-  let trackedChanges;
-  try {
-    trackedChanges = runGit('git diff --name-only --diff-filter=ACMR HEAD');
-  } catch {
-    trackedChanges = runGit('git diff --name-only --cached --diff-filter=ACMR'); // repo sin commits
+  const newFiles = new Set([
+    ...gitDiff(['--name-only', '--diff-filter=A']),
+    ...runGit(['ls-files', '--others', '--exclude-standard']),
+  ]);
+  const scopes = new Map();
+  for (const filePath of newFiles) scopes.set(filePath, { isNew: true });
+  for (const filePath of gitDiff(['--name-only', '--diff-filter=CMR'])) {
+    if (!scopes.has(filePath)) scopes.set(filePath, { isNew: false, addedLines: addedLineNumbers(filePath) });
   }
-  return [...new Set([...trackedChanges, ...runGit('git ls-files --others --exclude-standard')])];
+  return scopes;
 }
 
 function expandPath(targetPath) {
@@ -87,14 +113,25 @@ function inspectFile(filePath) {
   return findings;
 }
 
+// File-level findings (line 0) on an existing file are never the diff's: renaming or splitting legacy is out of the ask.
+function isOwnedByDiff(finding, scope) {
+  return !scope || scope.isNew || scope.addedLines.has(finding.line);
+}
+
 const requestedPaths = process.argv.slice(2);
-const candidateFiles = (requestedPaths.length ? requestedPaths.flatMap(expandPath) : changedFilesFromGit())
+const diffScopes = requestedPaths.length ? new Map() : changedScopesFromGit();
+const candidateFiles = (requestedPaths.length ? requestedPaths.flatMap(expandPath) : [...diffScopes.keys()])
   .filter((filePath) => existsSync(filePath) && isInspectable(filePath));
 
 let errorCount = 0;
 let warningCount = 0;
+let preexistingCount = 0;
 for (const filePath of candidateFiles) {
   for (const finding of inspectFile(filePath)) {
+    if (!isOwnedByDiff(finding, diffScopes.get(filePath))) {
+      preexistingCount += 1;
+      continue;
+    }
     if (finding.severity === 'error') errorCount += 1; else warningCount += 1;
     const location = finding.line ? `${filePath}:${finding.line}` : filePath;
     console.log(`${finding.severity.toUpperCase().padEnd(5)} ${finding.id.padEnd(18)} ${location}\n      → ${finding.hint}`);
@@ -102,4 +139,7 @@ for (const filePath of candidateFiles) {
 }
 
 console.log(`\nquality-gate: ${candidateFiles.length} archivos, ${errorCount} errores, ${warningCount} advertencias.`);
+if (preexistingCount > 0) {
+  console.log(`quality-gate: ${preexistingCount} hallazgos preexistentes fuera de este diff, ignorados. No los corrijas salvo que el pedido lo diga.`);
+}
 process.exit(errorCount > 0 ? 1 : 0);

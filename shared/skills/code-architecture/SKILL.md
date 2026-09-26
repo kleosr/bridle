@@ -2,8 +2,8 @@
 name: code-architecture
 description: >-
   Orden, estructura de carpetas y nombres NO genéricos para código generado por
-  IA. Úsala SIEMPRE antes de crear un archivo, carpeta, componente, hook, función,
-  tipo o variable nueva, y al terminar cualquier cambio de código. Evita App.tsx,
+  IA. Úsala antes de crear un archivo, carpeta, componente, hook, función,
+  tipo o variable nueva. Aplica solo a lo que el pedido crea. Evita App.tsx,
   utils.ts, helpers.ts, Component.tsx, handleClick, data, item y cualquier nombre
   que no diga qué dominio toca ni qué rol cumple. Aplica también cuando el usuario
   diga "ordena", "limpia", "está muy genérico", "estructura el proyecto",
@@ -15,6 +15,10 @@ description: >-
 El código genérico se ve igual en cualquier proyecto y por eso no dice nada del
 tuyo. La regla de fondo: **cada nombre debe responder "qué dominio" y "qué rol"**,
 y cada archivo debe vivir donde otro desarrollador lo buscaría primero.
+
+**Alcance:** esta skill da forma al código que el pedido crea. No renombra, no
+mueve ni reestructura código existente que el pedido no nombra; lo que veas
+mejorable va en una línea del reporte.
 
 ## 1. Antes de escribir (obligatorio)
 
@@ -109,7 +113,9 @@ node <ruta-de-esta-skill>/scripts/quality-gate.mjs            # archivos cambiad
 node <ruta-de-esta-skill>/scripts/quality-gate.mjs src/features  # rutas explícitas
 ```
 
-Detecta nombres de archivo genéricos, identificadores genéricos, recargas duras,
+Sin rutas, el gate juzga solo las líneas que agregó el diff y los archivos
+nuevos; lo preexistente se cuenta aparte y no se corrige. Detecta nombres de
+archivo genéricos, identificadores genéricos, recargas duras,
 `any`, SQL concatenado, `SELECT *`, `set` de Redis sin TTL, TODOs sin dueño,
 `console.log` y archivos de más de 300 líneas. Exit 1 = hay errores que corregir
 antes de reportar. Las advertencias se revisan, no se ignoran en silencio: si una

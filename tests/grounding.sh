@@ -57,7 +57,10 @@ for pair in \
   code-architecture/references/placement.md \
   code-architecture/scripts/quality-gate.mjs \
   cqrs-data-flow/references/sql-repository.md \
-  live-ui-sync/references/sidebar-modules.md
+  live-ui-sync/references/sidebar-modules.md \
+  system-design/references/capacity-and-scaling.md \
+  system-design/references/realtime-and-rate-limits.md \
+  auth-boundaries/references/tokens-and-sessions.md
 do
   [[ -f "$PACK/shared/skills/$pair" ]] || SIDE="missing:$pair"
 done
@@ -93,6 +96,24 @@ fi
 run_test "charter order is charter, SECURITY, then always-on" "ok" "$AUTH_ORDER"
 RESULT="$(grep -qE '^[0-9]+\. ' "$KLEOSR_MODE" && grep -q 'SECURITY.md' "$KLEOSR_MODE" && echo restated || echo ok)"
 run_test "regression: kleosr mode does not restate the instruction order" "ok" "$RESULT"
+ROUTER="$PACK/shared/skills/bridle-harness/SKILL.md"
+RESULT="$(grep -q 'SECURITY.md' "$ROUTER" && echo restated || echo ok)"
+run_test "regression: bridle-harness does not restate the instruction order" "ok" "$RESULT"
+RESULT="$(grep -qiw 'stop' "$ROUTER" && echo stale || echo ok)"
+run_test "regression: bridle-harness does not name a stop hook" "ok" "$RESULT"
+ROUTE_OK=ok
+while IFS= read -r skill; do
+  case "$skill" in ''|kleosr|bridle-harness) continue ;; esac
+  grep -q "\`$skill\`" "$ROUTER" || ROUTE_OK="unrouted:$skill"
+done < <(load_lines "$PACK/shared/config/skills.txt")
+run_test "bridle-harness routes every catalog skill" "ok" "$ROUTE_OK"
+# An always-trigger description loads the skill on unrelated asks and widens the diff.
+ALWAYS_OK=ok
+while IFS= read -r skill; do
+  case "$skill" in ''|bridle-harness) continue ;; esac
+  awk '/^---$/{c++; next} c==1' "$PACK/shared/skills/$skill/SKILL.md" | grep -q 'SIEMPRE' && ALWAYS_OK="always:$skill"
+done < <(load_lines "$PACK/shared/config/skills.txt")
+run_test "regression: engineering skills do not trigger SIEMPRE" "ok" "$ALWAYS_OK"
 
 LOC_OK=1
 for f in "$PACK"/shared/hooks/before_submit_prompt.sh "$PACK"/shared/hooks/before_shell.sh "$PACK"/shared/hooks/before_read_file.sh; do

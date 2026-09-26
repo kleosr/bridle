@@ -15,7 +15,7 @@
 
 <p align="center">
   <strong>A deterministic engineering harness for Cursor.</strong><br>
-  Charter, always-on rules, skills, and four Bash hooks around the host loop. It is not a second agent runtime.
+  Charter, always-on rules, skills, and three Bash hooks around the host loop. It is not a second agent runtime.
 </p>
 
 Verify it before you install it. From Git Bash on Windows, or Bash on macOS and Linux:
@@ -103,7 +103,7 @@ graph TD
   A["1. Charter: ~/.cursor/rules/kleosr.mdc"] --> B["2. Always-on law: core.mdc, testing.mdc"]
   B --> C["3. Glob companions: next, vite, astro, postgres"]
   C --> D["4. Skills: shared/skills, on match"]
-  D --> E["5. Specialists: hunter, cut, prove"]
+  D --> E["5. Specialists: hunter, cut, prove, architect"]
   E --> F["6. Hooks: shared/hooks"]
   F --> G["7. State: features.json, handoff.json"]
   H["SECURITY.md: on demand, outranks rules on boundaries"] -.-> A
@@ -113,7 +113,7 @@ graph TD
 2. **Always-on law.** `core.mdc` and `testing.mdc`, each capped at 80 lines. Craft, size, the dependency ladder, and the verify loop.
 3. **Glob companions.** Framework rules attach on file match and stay inert unless that package’s manifest names the dependency.
 4. **Skills.** Catalog `shared/config/skills.txt`. Procedures only. They cannot grant a permission.
-5. **Specialists.** `hunter`, `cut`, and `prove` run in a separate context. `prove` checks evidence so the implementing model does not grade its own change.
+5. **Specialists.** `hunter`, `cut`, `prove`, and `architect` run in a separate context. `prove` checks evidence so the implementing model does not grade its own change; `architect` reviews a design before code.
 6. **Hooks.** The table below. Registered in `~/.cursor/hooks.json`.
 7. **State.** `shared/config/features.json` is the capability ledger. `state/handoff.json` is gitignored continuity for the next session. Continuity is not a new assignment.
 
@@ -157,7 +157,7 @@ Claude, Devin, Cursor agents, and any other coding agent:
 | `SECURITY.md` | Security boundary |
 | `shared/rules/` | Charter source, always-on rules, glob companions |
 | `shared/skills/` | Skill bodies |
-| `shared/agents/` | `hunter`, `cut`, `prove` |
+| `shared/agents/` | `hunter`, `cut`, `prove`, `architect` |
 | `shared/hooks/` | Event scripts, `git-bash-shim.ps1`, `lib/`, `policy/` |
 | `shared/config/` | `harness.json`, `features.json`, `skills.txt` |
 | `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh`, `ready.sh`, `eval.sh`, `feature.sh`, `handoff.sh` |

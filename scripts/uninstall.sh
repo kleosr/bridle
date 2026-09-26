@@ -83,7 +83,7 @@ while IFS= read -r skill; do
 done < <({ load_lines "$PACK/shared/config/skills.txt"; load_lines "$PACK/shared/config/retired-skills.txt"; } | sort -u)
 prune_skill_catalog_backups "$HOME_C/skills"
 
-for a in hunter cut prove; do
+for a in hunter cut prove architect; do
   dst="$HOME_C/agents/${a}.md"
   if [[ -f "$dst" ]]; then
     if owned_ok "agents/${a}.md" "$dst"; then

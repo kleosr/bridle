@@ -7,3 +7,6 @@ bridle-harness
 code-architecture
 cqrs-data-flow
 live-ui-sync
+system-design
+auth-boundaries
+production-readiness
