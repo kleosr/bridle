@@ -10,3 +10,4 @@ live-ui-sync
 system-design
 auth-boundaries
 production-readiness
+prompt-brief
