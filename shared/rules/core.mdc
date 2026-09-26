@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Core
 
-Establish the change surface (the code you change plus its callers, registrations, config, and tests), change it, verify the behavior it can break, and fix what fails.
+Establish the change surface (the code you change plus its callers, registrations, config, and tests), change it, verify the behavior it can break, and fix what the change broke; report pre-existing failures.
 
 ## Change
 Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
