@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Testing
 
-Test observable behavior at the narrowest stable boundary. Run the verify this change can break, not the whole suite by default. "Done" is a validator's command + exit code (or a driven UI path) that you ran and cite; a claim that tests passed is not evidence. Fail closed on red; report pre-existing or environment blockers. When no check covers the changed path, report the gap and the smallest next check.
+Test observable behavior at the narrowest stable boundary. Run the verify this change can break, not the whole suite by default. "Done" is a validator's command + exit code (or a driven UI path) that you ran and cite; a claim that tests passed is not evidence. Fail closed on red. Fix a pre-existing failure only when it blocks verifying the ask, and say so; report the rest and environment blockers. When no check covers the changed path, report the gap and the smallest next check.
 
 - Which command: the repo's `AGENTS.md`, TOOLCHAIN, or package scripts. Docs-only changes need no suite.
 - Bug fix: a `regression: <symptom>` test with observed fail-before / pass-after when possible. Flaky is broken.
