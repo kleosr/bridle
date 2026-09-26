@@ -82,3 +82,25 @@ if (!parsedInput.success) {
 Un solo helper en `platform/api-client.ts` que siempre devuelve `Result<T>`,
 nunca lanza por status 4xx, y valida la respuesta con el schema del DTO. Ningún
 componente llama `fetch` directo.
+
+## API pública (clientes externos, móviles, terceros)
+
+Aplica solo a route handlers que consume alguien fuera de este repo. La UI
+propia sigue con server actions.
+
+- **Versionado en la ruta** (`/v1/...`). Dentro de una versión solo cambios
+  compatibles: agregar campos opcionales o endpoints. Quitar o renombrar un
+  campo, cambiar un tipo o un código de error → nueva versión y deprecación con fecha.
+- **Semántica HTTP**: `GET` sin efectos, `PUT`/`DELETE` idempotentes, `POST`
+  crea o ejecuta. `201` + `Location` al crear; `204` sin cuerpo.
+- **`Idempotency-Key`** en todo `POST` con efectos (pagos, envíos, creación):
+  guarda clave + hash del body + respuesta con TTL; misma clave → misma
+  respuesta; misma clave con otro body → `409`.
+- **Paginación por cursor**: `?limit=&cursor=`, respuesta con `nextCursor`
+  (o `null`). `limit` con tope en servidor.
+- **Rate limit**: `429` + `Retry-After` y headers `RateLimit-*` (ver
+  `system-design/references/realtime-and-rate-limits.md`).
+- **Errores**: el mismo `Result` de arriba; `code` estable y documentado, el
+  `message` puede cambiar. Nunca stack traces ni SQL en la respuesta.
+- **Contrato publicado**: si el repo tiene OpenAPI o schema compartido, el
+  cambio lo actualiza en el mismo PR.
