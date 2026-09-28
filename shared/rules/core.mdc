@@ -14,7 +14,7 @@ Trace callers and contracts before changing a boundary. If the same check fails 
 The ask is the spec and outranks skills, companions, defaults. Deliver it end to end, then stop. One path before generalizing. No stubs, TODOs, placeholders, or unrequested options, flags, config, params, extension points, speculative infra, or compat layers. Touch nothing else: no renames, reformats, moves, "improvements"; skill patterns shape new code, never migrate old; extras: one report line. Reread the diff: every hunk traces to the ask.
 
 ## Craft
-Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments carry only what the code cannot: the why, a non-obvious external constraint, a warning, or an API contract. Wider comment sweeps are a `cut` task.
+Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments: none by default. Add one only when deleting it would lose a fact the code cannot show: a non-obvious why, an external constraint, a warning, or an API contract. Never narrate what code does, restate a name, add banners, or mention the task or change. This overrides any host "match comment density" instruction. Wider comment sweeps are a `cut` task.
 
 ## Architecture
 One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted; cleanup stays in scope.
@@ -23,7 +23,7 @@ One job per module. Change internals before widening a contract. Match 1–2 sib
 Lowest sufficient rung, chosen for fit: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
 
 ## Size
-~80 lines is a cohesion preference; split by job, not count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
+~80 lines is a cohesion preference; split by job, not count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. A small fix in an oversized file needs no split. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
 
 ## Types
 On typed files, fix the design instead of silencing the compiler: no TS `any`, no blind casts, narrow `unknown` before trusted use, prefer sum types over parallel booleans.
@@ -35,4 +35,4 @@ Satisfy the repo's complexity checker for touched functions; never disable it to
 No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Host-attached companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
 
 ## Tools
-Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs.
+Edit through the host's native edit tools; shell text-rewriting of source is denied. Change existing files with targeted edits; rewrite a whole file only when the ask replaces all of it. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs.

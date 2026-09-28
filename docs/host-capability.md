@@ -126,6 +126,17 @@ This is not a Desktop compact-and-recheck. It records the prompt assembly of one
 
 Same log, extended through 2026-09-23 15:33 (1,942 lines): 1,376 reads, 447 shells, 63 submits, 56 stops. Every stop was `{}`. Two `before_shell.sh` runs exited 1 with `stdout=0B` because `dirname` fork-died (`cygheap read copy failed`) and `cd` then saw an empty argument. The host fail-closed those calls. Script directories are now resolved in-process (`lib/selfdir.sh`). The Windows shim log records `verdict=` and `reason=` and does not record payloads. `bash scripts/context_cost.sh` prints the static prefix (7,279 bytes, no dates or `$()`). Provider cache hits and prices are still not visible.
 
+### 2026-09-28 — Claude Code, Linux: `PreToolUse(Write)` hook
+The Claude port (`scripts/claude.sh`) registers one hook in `~/.claude/settings.json`: `shared/hooks/claude/before_write.sh`, installed as `~/.claude/hooks/bridle_before_write.sh`. Inside the session `cwd` it denies a Write over an existing file (`rewrite-existing`) and a new hand-written file over 300 lines (`new-file-over-300`). Writes outside the project are allowed. Claude Code fails open on hook exits other than 2, so every failure path in the script exits 2.
+
+| Observation | What was seen | Class |
+|---|---|---|
+| Deny on exit 2 | A live Write over `.gitignore` was blocked; the model received `bridle: rewrite-existing: … exists; change it with Edit`. The file was unchanged. | This run |
+| Hot reload | The hook took effect in the running session right after `claude.sh install`, with no restart. | This run |
+| Size cap, malformed payload | Covered by fixtures in `tests/install_lifecycle.sh` only. | Script law |
+
+The Cursor freeze (`hooksFrozen`, `noPreToolUse`) governs `hooks.json` and is unchanged.
+
 ---
 
 ## The Rule We Live By

@@ -2,7 +2,8 @@
 # Port the pack's law, skills, and agents into Claude Code (~/.claude).
 # Rules: charter + core + testing always load; stack companions carry `paths`
 # so Claude Code loads them only when a matching file is read. Skills load by
-# description until invoked. Cursor hooks are not ported (different contract).
+# description until invoked. Cursor hooks are not ported (different contract);
+# one Claude-native PreToolUse(Write) hook enforces core.md's edit and size law.
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_CL="${HOME}/.claude"
@@ -78,8 +79,43 @@ place() {
 
 stage() { mktemp "${TMPDIR:-/tmp}/kleos-claude.XXXXXX"; }
 
+SETTINGS="$HOME_CL/settings.json"
+HOOK_REL=hooks/bridle_before_write.sh
+
+# settings.json is the user's file: edit only the bridle hook entry, refuse
+# to touch a file that is not valid JSON.
+drop_hook_entry() {
+  jq --arg h "$HOOK_REL" '
+    if .hooks.PreToolUse then
+      .hooks.PreToolUse |= map(select(any(.hooks[]?; .command | contains($h)) | not))
+      | if .hooks.PreToolUse == [] then del(.hooks.PreToolUse) else . end
+      | if .hooks == {} then del(.hooks) else . end
+    else . end'
+}
+
+register_hook() {
+  local t cmd="bash \"$HOME_CL/$HOOK_REL\""
+  [[ -f "$SETTINGS" ]] || echo '{}' >"$SETTINGS"
+  jq empty "$SETTINGS" 2>/dev/null || { echo "[fail] ~/.claude/settings.json is not valid JSON; hook not registered" >&2; return 1; }
+  t="$(stage)"
+  drop_hook_entry <"$SETTINGS" | jq --arg c "$cmd" \
+    '.hooks.PreToolUse += [{matcher: "Write", hooks: [{type: "command", command: $c}]}]' >"$t"
+  mv -f "$t" "$SETTINGS"
+  echo "[ok] ~/.claude/settings.json PreToolUse(Write) hook"
+}
+
+unregister_hook() {
+  local t
+  [[ -f "$SETTINGS" ]] && jq empty "$SETTINGS" 2>/dev/null || return 0
+  t="$(stage)"
+  drop_hook_entry <"$SETTINGS" >"$t"
+  mv -f "$t" "$SETTINGS"
+  echo "[rm] ~/.claude/settings.json PreToolUse(Write) hook"
+}
+
 install() {
   local t name skill a
+  command -v jq >/dev/null 2>&1 || { echo "[fail] jq is required" >&2; return 1; }
   mkdir -p "$HOME_CL"
   : >"$OWNED.new"
   t="$(stage)"; port_refs <"$PACK/shared/rules/charter.txt" >"$t"; place rules/kleosr.md "$t"
@@ -96,6 +132,8 @@ install() {
   for a in "$PACK"/shared/agents/*.md; do
     t="$(stage)"; port_agent "$a" >"$t"; place "agents/$(basename "$a")" "$t"
   done
+  t="$(stage)"; cp -f "$PACK/shared/hooks/claude/before_write.sh" "$t"; chmod +x "$t"; place "$HOOK_REL" "$t"
+  register_hook
   prune_stale
   mv -f "$OWNED.new" "$OWNED"
 }
@@ -115,6 +153,7 @@ prune_stale() {
 
 uninstall() {
   local rel dst
+  unregister_hook
   [[ -f "$OWNED" ]] || { echo "[ok] nothing installed"; return 0; }
   while IFS= read -r rel; do
     [[ -n "$rel" ]] || continue
