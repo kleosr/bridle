@@ -221,6 +221,23 @@ RESULT="$(grep -cE '^(mode|icon|color):' "$CL_H/.claude/skills/kleosr/SKILL.md" 
 run_test "claude port drops Cursor-only skill keys" "0" "$RESULT"
 RESULT="$(test -f "$CL_H/.claude/skills/code-architecture/scripts/quality-gate.mjs" && test -f "$CL_H/.claude/skills/live-ui-sync/references/sidebar-modules.md" && echo yes || echo no)"
 run_test "claude port ships skill references and the quality gate" "yes" "$RESULT"
+CL_HOOK="$CL_H/.claude/hooks/bridle_before_write.sh"
+CL_PROJ="$CL_H/proj"; mkdir -p "$CL_PROJ"; echo x >"$CL_PROJ/old.sh"
+cl_write() {
+  jq -n --arg c "$CL_PROJ" --arg f "$1" --arg b "$2" '{cwd:$c,tool_input:{file_path:$f,content:$b}}' \
+    | bash "$CL_HOOK" 2>/dev/null && echo 0 || echo $?
+}
+run_test "claude hook denies Write over an existing project file" "2" "$(cl_write "$CL_PROJ/old.sh" y)"
+run_test "claude hook denies a new project file over 300 lines" "2" "$(cl_write "$CL_PROJ/new.sh" "$(seq 301)")"
+run_test "claude hook allows a new project file at 300 lines" "0" "$(cl_write "$CL_PROJ/new.sh" "$(seq 300)")"
+run_test "claude hook exempts declarative files from the size cap" "0" "$(cl_write "$CL_PROJ/big.json" "$(seq 400)")"
+run_test "claude hook ignores Writes outside the project" "0" "$(cl_write "$CL_H/elsewhere.sh" y)"
+RESULT="$(printf 'not json' | bash "$CL_HOOK" 2>/dev/null && echo 0 || echo $?)"
+run_test "claude hook fails closed (exit 2) on a malformed payload" "2" "$RESULT"
+jq '.theme="dark"' "$CL_H/.claude/settings.json" >"$CL_H/s.json" && mv "$CL_H/s.json" "$CL_H/.claude/settings.json"
+HOME="$CL_H" bash "$PACK/scripts/claude.sh" install >/dev/null 2>&1 || true
+RESULT="$(jq -r '[.theme, ([.hooks.PreToolUse[] | select(.matcher=="Write")] | length)] | join(",")' "$CL_H/.claude/settings.json")"
+run_test "claude port registers one Write hook and keeps user settings on reinstall" "dark,1" "$RESULT"
 printf '%s\n' '# user testing' > "$CL_H/.claude/rules/testing.md"
 rm -f "$CL_H/.claude/kleosrules-owned.txt"
 HOME="$CL_H" bash "$PACK/scripts/claude.sh" install >/dev/null 2>&1 || true
@@ -234,6 +251,8 @@ RESULT="$(test -e "$CL_H/.claude/rules/kleosr.md" && echo present || echo gone)"
 run_test "claude port uninstall removes owned files" "gone" "$RESULT"
 RESULT="$(test -e "$CL_H/.claude/skills/code-architecture/scripts/quality-gate.mjs" && echo present || echo gone)"
 run_test "claude port uninstall removes skill sidecars" "gone" "$RESULT"
+RESULT="$(jq -r '[.theme, (.hooks // "none" | tostring)] | join(",")' "$CL_H/.claude/settings.json")"
+run_test "claude port uninstall removes its hook entry and keeps user settings" "dark,none" "$RESULT"
 rm -rf "$CL_H"
 
 rm -rf "$LC_HOME"
