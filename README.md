@@ -5,17 +5,16 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/host-Cursor-000000?style=flat-square" alt="Host: Cursor">
-  <img src="https://img.shields.io/badge/Now%20supports-Claude%20%26%20Opencode-111111?style=flat-square" alt="Now supports: Claude and Opencode">
+  <img src="https://img.shields.io/badge/hosts-Cursor%20%7C%20Claude%20Code%20%7C%20opencode-000000?style=flat-square" alt="Hosts: Cursor, Claude Code, opencode">
   <img src="https://img.shields.io/github/actions/workflow/status/kleosr/bridle/gates.yml?branch=master&style=flat-square&label=gauntlet" alt="Gauntlet workflow status">
-  <img src="https://img.shields.io/badge/hooks-3%20fail--closed%20%2B%20stop%20advisory-111111?style=flat-square" alt="Hooks: 3 fail-closed, stop advisory">
+  <img src="https://img.shields.io/badge/gates-3%20fail--closed-111111?style=flat-square" alt="Gates: 3 fail-closed">
   <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows%20(Git%20Bash)-111111?style=flat-square" alt="Platforms">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="License: MIT">
 </p>
 
 <p align="center">
-  <strong>A deterministic engineering harness for Cursor.</strong><br>
-  Charter, always-on rules, skills, and three Bash hooks around the host loop. It is not a second agent runtime.
+  <strong>A deterministic engineering harness for coding agents.</strong><br>
+  Charter, always-on rules, skills, and three Bash gates around the host loop. It is not a second agent runtime.
 </p>
 
 Verify it before you install it. From Git Bash on Windows, or Bash on macOS and Linux:
@@ -24,56 +23,30 @@ Verify it before you install it. From Git Bash on Windows, or Bash on macOS and 
 bash tests/run.sh
 ```
 
-The gauntlet runs in sandboxed fixtures and does not change `~/.cursor`. On 2026-09-15 it recorded **134 passing, 0 failing** ([`docs/host-capability.md`](docs/host-capability.md)). The badge above is the latest `gates` workflow on `master`. A local claim still needs this command and its exit code.
+The gauntlet runs in sandboxed fixtures and does not touch your home directory. The badge is the latest `gates` workflow on `master`; a local claim still needs this command and its exit code.
 
 Maintained as private engineering work by kleosr (Mario Pulice), published under the MIT license.
 
 ---
 
-## Supported hosts
-
-**Now supports: Claude and Opencode.** Cursor remains the host the three hooks were built for.
-
-| Host | Install | What lands |
-|---|---|---|
-| Cursor | `bash shared/hosts/cursor/install.sh` | Charter, rules, skills, agents, and three hooks in `~/.cursor` |
-| Claude Code | `bash shared/hosts/claude/install.sh install` | Rules, skills, and agents in `~/.claude`, plus the three gates and the Write and Stop hooks |
-| opencode | `bash shared/hosts/opencode/install.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the three hooks via `plugin/bridle.js` in `~/.config/opencode` |
-
-The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`TESTS=install_lifecycle,claude_gates,claude_stop,opencode_port bash tests/run.sh`). Uninstall Cursor with `shared/hosts/cursor/uninstall.sh`, the other ports with their `install.sh uninstall`.
-
----
-
 ## Install
 
-Requirements: `jq`, and Python 3 or Node.js (the hooks’ JSON codec). On Windows, Git Bash. `jq`: `winget install jqlang.jq` (with `%LOCALAPPDATA%\Microsoft\WinGet\Links` on `PATH`), `brew install jq`, or `apt install jq` / `pacman -S jq`. Cursor, Claude Code, or opencode, matching the host you install.
+Requirements: `jq`, Node.js (the gates' JSON codec), and on Windows, Git Bash. `jq`: `winget install jqlang.jq`, `brew install jq`, or `apt install jq` / `pacman -S jq`.
 
-First install, from this repository:
+| Host | Command | What lands |
+|---|---|---|
+| Cursor | `bash hosts/cursor/install.sh` | Charter, rules, skills, agents, and the three gates in `~/.cursor` |
+| Claude Code | `bash hosts/claude/install.sh` | Rules, skills, agents, the three gates, and the Write and Stop hooks in `~/.claude` |
+| opencode | `bash hosts/opencode/install.sh` | Instructions, skills, agents, the `bridle` primary agent, and the gates via `plugin/bridle.js` in `~/.config/opencode` |
 
-```bash
-bash shared/hosts/cursor/install.sh
-```
+Each installer takes `install` (default) or `uninstall`; Cursor also takes `verify`, `all`, and `project-hooks`. Restart the host or start a new chat afterward.
 
-That writes the charter, rules, companions, skills, agents, and hooks into `~/.cursor`. Restart Cursor or start a new chat afterward. A running chat keeps the previous rules.
+`FORCE=1` is the overwrite switch, default off. A destination that already exists and differs is skipped with `[warn] skip differing … (FORCE=1)`. With `FORCE=1` the installer first copies it to `*.pre-kleos-bak` (once), then overwrites; `uninstall` restores those backups.
 
-`FORCE` is the overwrite switch, default off. If a destination already exists and differs, the installer skips it and prints `[warn] skip differing … (FORCE=1)`. A skipped file is not updated. To replace those files, the installer first copies the current file to `*.pre-kleos-bak` (once), then overwrites:
-
-```bash
-FORCE=1 bash shared/hosts/cursor/install.sh
-```
-
-`AGENTS.md` documents `FORCE=1` because an update that skips differing files leaves a partial install.
-
-Remove the install and restore those backups:
+Cursor Cloud Agents load project hooks, not `~/.cursor/hooks.json`. Opt in on another repository (never this one):
 
 ```bash
-bash shared/hosts/cursor/uninstall.sh
-```
-
-Cloud Agents load project hooks, not `~/.cursor/hooks.json`. Opt in on another repository. This pack refuses that install into itself.
-
-```bash
-CLOUD=1 TARGET_REPO=<other-repo> bash shared/hosts/cursor/fleet_sync.sh project-hooks
+TARGET_REPO=<other-repo> bash hosts/cursor/install.sh project-hooks
 ```
 
 ---
@@ -88,9 +61,8 @@ CLOUD=1 TARGET_REPO=<other-repo> bash shared/hosts/cursor/fleet_sync.sh project-
 | “Tests passed” with no command | Done is the verifying command and exit `0` |
 | `eslint-disable complexity`, `--ignore=C901` from the shell | `before_shell.sh` denies those suppressions |
 | The same check failing again with no new evidence | The charter stops the repeat: record the evidence, change the hypothesis, or name the missing input |
-| A feature row edited to `passing` | `passing` is only `bash scripts/feature.sh pass <id>` on that tree |
 
-Prompt, shell, and read are fail-closed. If the hook crashes, times out, or returns invalid JSON, Cursor blocks the action. `stop` is the exception, below.
+Prompt, shell, and read are fail-closed: if a gate crashes, times out, or returns invalid output, the host blocks the action.
 
 ---
 
@@ -102,30 +74,28 @@ Load order. Each layer is narrower than the one above it. [`SECURITY.md`](SECURI
 graph TD
   A["1. Charter: ~/.cursor/rules/kleosr.mdc"] --> B["2. Always-on law: core.mdc, testing.mdc"]
   B --> C["3. Glob companions: next, vite, astro, postgres"]
-  C --> D["4. Skills: shared/skills, on match"]
+  C --> D["4. Skills: skills/, on match"]
   D --> E["5. Specialists: hunter, cut, prove, architect"]
-  E --> F["6. Hooks: shared/gate + shared/hosts"]
-  F --> G["7. State: features.json, handoff.json"]
+  E --> F["6. Gates: hooks/ decides, hosts/ formats"]
   H["SECURITY.md: on demand, outranks rules on boundaries"] -.-> A
 ```
 
-1. **Charter.** `shared/rules/charter.txt`, installed as `~/.cursor/rules/kleosr.mdc` with `alwaysApply`. Identity, what may proceed without asking, and what needs approval. Install it only there. A second copy in Cursor Settings → User Rules drifts.
+1. **Charter.** `rules/charter.txt`, installed once per host (Cursor: `~/.cursor/rules/kleosr.mdc` with `alwaysApply`). Identity, what may proceed without asking, and what needs approval. A second copy in Cursor Settings → User Rules drifts.
 2. **Always-on law.** `core.mdc` and `testing.mdc`, each capped at 80 lines. Craft, size, the dependency ladder, and the verify loop.
 3. **Glob companions.** Framework rules attach on file match and stay inert unless that package’s manifest names the dependency.
-4. **Skills.** Catalog `shared/catalog/skills.txt`. Procedures only. They cannot grant a permission.
+4. **Skills.** Listed in `hosts/manifest.json`. Procedures only. They cannot grant a permission.
 5. **Specialists.** `hunter`, `cut`, `prove`, and `architect` run in a separate context. `prove` checks evidence so the implementing model does not grade its own change; `architect` reviews a design before code.
-6. **Hooks.** The table below. Registered in `~/.cursor/hooks.json`.
-7. **State.** `shared/config/features.json` is the capability ledger. `state/handoff.json` is gitignored continuity for the next session. Continuity is not a new assignment.
+6. **Gates.** The table below. `hooks/` decides; each host's `hosts/<host>/verdict.sh` turns the decision into that host's format.
 
-### Hooks
+### Gates
 
-| Event | Script | Verdict |
+| Cursor event (Claude Code) | Script | Verdict |
 |---|---|---|
-| `beforeSubmitPrompt` | `before_submit_prompt.sh` | Fail closed. `continue: false` on secret tokens. |
-| `beforeShellExecution` | `before_shell.sh` | Fail closed. `permission: deny` on destructive calls, secret reads, lint suppressions, and shell rewrites of source. `ask` on infra and database changes. |
-| `beforeReadFile` | `before_read_file.sh` | Fail closed. Canonical path, then deny `.env`, private keys, and certificates. |
+| `beforeSubmitPrompt` (`UserPromptSubmit`) | `before_submit_prompt.sh` | Fail closed. Blocks secret tokens. |
+| `beforeShellExecution` (`PreToolUse` Bash) | `before_shell.sh` | Fail closed. Denies destructive calls, secret reads, lint suppressions, and shell rewrites of source. Asks on infra and database changes. |
+| `beforeReadFile` (`PreToolUse` Read) | `before_read_file.sh` | Fail closed. Canonical path, then deny `.env`, private keys, and certificates. |
 
-There is no `stop`, `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/architecture.md`](docs/architecture.md). False completion of a feature is a failed `feature.sh pass`.
+Cursor registers no `stop`, `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/architecture.md`](docs/architecture.md).
 
 ### Shell-hook timing
 
@@ -141,11 +111,9 @@ Claude, Devin, Cursor agents, and any other coding agent:
 
 1. Read `AGENTS.md` before editing. Read `SECURITY.md` before security-sensitive work.
 2. Run `bash tests/run.sh`, or the narrowest suite that can falsify the change (`TESTS=<name> bash tests/run.sh`). Cite the command and the exit code.
-3. Keep the three hook events. Do not add a host adapter, a second installer, or a partial port in an ordinary task.
-4. `features.json` and `state/handoff.json` do not authorize a new goal or a new host.
+3. Keep the three gate events. Do not add a host adapter, a second installer, or a partial port in an ordinary task.
+4. A handoff file does not authorize a new goal or a new host.
 5. On Windows, run these scripts from Git Bash.
-
-`bash scripts/ready.sh` checks the bootstrap contract. `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` checks the repository. `bash scripts/doctor.sh` also checks the live `~/.cursor` install. `bash scripts/eval/check.sh check` and `bash scripts/feature.sh check` check coverage and ledger invariants.
 
 ---
 
@@ -155,15 +123,13 @@ Claude, Devin, Cursor agents, and any other coding agent:
 |---|---|
 | `AGENTS.md` | Map the agent reads first |
 | `SECURITY.md` | Security boundary |
-| `shared/rules/` | Charter source, always-on rules, glob companions |
-| `shared/skills/` | Skill bodies |
-| `shared/agents/` | `hunter`, `cut`, `prove`, `architect` |
-| `shared/gate/` | Host-neutral gate: event scripts, `lib/`, `policy/` |
-| `shared/hosts/` | Per-host adapters: `cursor/` (hooks.json, shim, fleet installer, `uninstall.sh`), `claude/`, `opencode/`, each with its `install.sh` and `verdict.sh` |
-| `shared/catalog/` | What ships: `manifest.json`, `skills.txt`, `rules.global.txt`, `retired*.txt` |
-| `shared/config/` | Contract and ledger: `harness.json`, `features.json` |
-| `scripts/` | Pack tooling: `doctor.sh`, `ready.sh`, `feature.sh`, `handoff.sh`, `context_cost.sh`, `eval/check.sh`, `eval/scope.sh` |
+| `rules/` | Charter, always-on rules, glob companions |
+| `skills/` | Skill bodies |
+| `agents/` | `hunter`, `cut`, `prove`, `architect` |
+| `hooks/` | The three gates: entry scripts, `lib/`, `policy/` |
+| `hosts/` | `manifest.json` (what ships), `lib.sh` (shared installer code), and `cursor/`, `claude/`, `opencode/`, each with `install.sh` and `verdict.sh` |
 | `tests/` | `run.sh` gauntlet; fixtures in `gate/`, `hosts/`, `pack/` |
-| `docs/` | Architecture, toolchain, host capability |
+| `scripts/`, `evals/` | `scope_eval.sh` and its fixtures: scores a live agent against the scope law |
+| `docs/` | Architecture, host capability log |
 
-Further reading: [`docs/architecture.md`](docs/architecture.md), [`docs/toolchain.md`](docs/toolchain.md), [`docs/host-capability.md`](docs/host-capability.md).
+Further reading: [`docs/architecture.md`](docs/architecture.md), [`docs/host-capability.md`](docs/host-capability.md).

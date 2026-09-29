@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sourced by run.sh: the scope-eval scorer, judged on golden overlays. No agent runs here.
 
-SE="$PACK/scripts/eval/scope.sh"
+SE="$PACK/scripts/scope_eval.sh"
 SE_TASKS="$PACK/evals/scope"
 
 # se_dir ID [OVERLAY]: a committed fixture repo, optionally with an overlay applied on top.

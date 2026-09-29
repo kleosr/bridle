@@ -2,16 +2,11 @@
   "name": "bridle",
   "version": "3.1.0",
   "private": true,
-  "description": "Cursor user harness: charter, features, hooks, skills. Prompting is not a boundary. The bridle is.",
+  "description": "Agent harness for Cursor, Claude Code, and opencode: charter, rules, skills, hooks. Prompting is not a boundary. The bridle is.",
   "license": "MIT",
   "scripts": {
-    "doctor": "bash scripts/doctor.sh",
     "test": "bash tests/run.sh",
-    "ready": "bash scripts/ready.sh",
-    "eval": "bash scripts/eval/check.sh check",
-    "feature": "bash scripts/feature.sh",
-    "handoff": "bash scripts/handoff.sh",
-    "install:rules": "bash shared/hosts/cursor/install.sh",
-    "uninstall": "bash shared/hosts/cursor/uninstall.sh"
+    "install:cursor": "bash hosts/cursor/install.sh install",
+    "uninstall:cursor": "bash hosts/cursor/install.sh uninstall"
   }
 }

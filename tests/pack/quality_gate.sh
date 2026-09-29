@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sourced by run.sh. code-architecture quality gate on a temp tree.
 
-QG="$PACK/shared/skills/code-architecture/scripts/quality-gate.mjs"
+QG="$PACK/skills/code-architecture/scripts/quality-gate.mjs"
 QG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/kleos-qg.XXXXXX")"
 if command -v node >/dev/null 2>&1; then
   printf '%s\n' 'export function archiveModule() { return 1; }' >"$QG_DIR/archive-module.ts"

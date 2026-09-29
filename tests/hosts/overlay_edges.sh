@@ -2,17 +2,17 @@
 # Sourced by run.sh. BOM/CRLF stdin, retired .mdc absence, Windows shim merge.
 
 BOM=$'\xEF\xBB\xBF'
-RESULT="$(printf '%s' "${BOM}{\"file_path\":\"/repo/README.md\"}" | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' "${BOM}{\"file_path\":\"/repo/README.md\"}" | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_read_file UTF-8 BOM JSON allows normal source" "allow" "$RESULT"
-RESULT="$(printf '%s' "${BOM}{\"file_path\":\"/repo/.env\"}" | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' "${BOM}{\"file_path\":\"/repo/.env\"}" | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_read_file UTF-8 BOM JSON still denies .env" "deny" "$RESULT"
-RESULT="$(printf '%s' "${BOM}not json" | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' "${BOM}not json" | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_read_file BOM plus non-JSON still denies" "deny" "$RESULT"
-RESULT="$(printf '%s' $'{"file_path":"/repo/README.md"}\r' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' $'{"file_path":"/repo/README.md"}\r' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_read_file CRLF JSON allows normal source" "allow" "$RESULT"
-RESULT="$(printf '%s' "${BOM}{\"command\":\"git status\",\"cwd\":\"/tmp\"}" | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' "${BOM}{\"command\":\"git status\",\"cwd\":\"/tmp\"}" | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_shell UTF-8 BOM JSON allows git status" "allow" "$RESULT"
-RESULT="$(printf '%s' "${BOM}{\"prompt\":\"hello\"}" | bash "$PACK/shared/gate/before_submit_prompt.sh" | jq -r '.continue')"
+RESULT="$(printf '%s' "${BOM}{\"prompt\":\"hello\"}" | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.continue')"
 run_test "regression: before_submit UTF-8 BOM JSON continues" "true" "$RESULT"
 
 SHIM_DEST="$(mktemp "${TMPDIR:-/tmp}/kleos-shim.XXXXXX")"
@@ -21,7 +21,7 @@ SS_CMD='powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\u\.cursor\
 jq -n --arg r "$SHIM_CMD" --arg s "$SS_CMD" \
   '{version:1,hooks:{beforeReadFile:[{command:$r,timeout:10,failClosed:false}],sessionStart:[{command:$s,timeout:10,failClosed:false}]}}' \
   >"$SHIM_DEST"
-SHIM_MERGE="$(jq --arg mode merge --slurpfile dest "$SHIM_DEST" -f "$PACK/shared/hosts/cursor/lib/hooks_json.jq" "$PACK/shared/hosts/cursor/hooks.json")"
+SHIM_MERGE="$(jq --arg mode merge --slurpfile dest "$SHIM_DEST" -f "$PACK/hosts/cursor/lib/hooks_json.jq" "$PACK/hosts/cursor/hooks.json")"
 SHIM_KEEP="$(printf '%s' "$SHIM_MERGE" | jq -r '.hooks.beforeReadFile[0].command' | grep -c 'git-bash-shim' || true)"
 SHIM_FC="$(printf '%s' "$SHIM_MERGE" | jq -r '.hooks.beforeReadFile[0].failClosed')"
 SHIM_N="$(printf '%s' "$SHIM_MERGE" | jq -r '.hooks.beforeReadFile | length')"
@@ -40,7 +40,7 @@ for n in agent vibe ponytail types complexity; do
   printf '%s\n' '---' 'alwaysApply: true' '---' "# leftover $n" > "$ABS_HOME/.cursor/rules/${n}.mdc"
 done
 printf '%s\n' '---' 'alwaysApply: true' '---' '# keep me' > "$ABS_HOME/.cursor/rules/my-custom.mdc"
-HOME="$ABS_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || true
+HOME="$ABS_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1 || true
 ABS_CORE="$(test -f "$ABS_HOME/.cursor/rules/core.mdc" && echo yes || echo no)"
 ABS_AGENT="$(test -f "$ABS_HOME/.cursor/rules/agent.mdc" && echo yes || echo no)"
 ABS_VIBE="$(test -f "$ABS_HOME/.cursor/rules/vibe.mdc" && echo yes || echo no)"
@@ -53,18 +53,18 @@ run_test "regression: install removes retired vibe.mdc" "no" "$ABS_VIBE"
 run_test "regression: install keeps unrelated my-custom.mdc" "yes" "$ABS_CUSTOM"
 run_test "regression: fresh install does not register sessionStart" "false" "$ABS_SS"
 
-HOOKS_DIR="$PACK/shared/gate"
-CURSOR_DIR="$PACK/shared/hosts/cursor"
-# shellcheck source=shared/hosts/cursor/lib/hooks_json.sh
+HOOKS_DIR="$PACK/hooks"
+CURSOR_DIR="$PACK/hosts/cursor"
+# shellcheck source=hosts/cursor/lib/hooks_json.sh
 source "$CURSOR_DIR/lib/hooks_json.sh"
 UNBLOCK_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-unblock.XXXXXX")"
 mkdir -p "$UNBLOCK_HOME/.cursor/hooks"
-cp -f "$PACK/shared/hosts/cursor/git-bash-shim.ps1" "$UNBLOCK_HOME/.cursor/hooks/git-bash-shim.ps1"
+cp -f "$PACK/hosts/cursor/git-bash-shim.ps1" "$UNBLOCK_HOME/.cursor/hooks/git-bash-shim.ps1"
 PS51='powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\u\.cursor\hooks\git-bash-shim.ps1"'
 jq -n --arg r "$PS51 before_read_file.sh" --arg s "$PS51 before_shell.sh" --arg t "$PS51 stop.sh" \
   '{version:1,hooks:{beforeReadFile:[{command:$r,timeout:10,failClosed:true}],beforeShellExecution:[{command:$s,timeout:30,failClosed:true}],stop:[{command:$t,timeout:30,failClosed:false,loop_limit:1}]}}' \
   >"$UNBLOCK_HOME/.cursor/hooks.json"
-merge_hooks_json "$UNBLOCK_HOME/.cursor/hooks.json" "$PACK/shared/hosts/cursor/hooks.json"
+merge_hooks_json "$UNBLOCK_HOME/.cursor/hooks.json" "$PACK/hosts/cursor/hooks.json"
 apply_pwsh_shim_hooks "$UNBLOCK_HOME/.cursor/hooks.json"
 UB_HAS="$(jq -r '.hooks | has("beforeSubmitPrompt")' "$UNBLOCK_HOME/.cursor/hooks.json")"
 UB_LAUNCH="$(jq -r '.hooks.beforeSubmitPrompt[0].command' "$UNBLOCK_HOME/.cursor/hooks.json")"
@@ -92,12 +92,12 @@ if command -v powershell.exe >/dev/null 2>&1; then
 elif [[ -f /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ]]; then
   PS_BIN="/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
 fi
-if [[ -n "$PS_BIN" && -f "$PACK/shared/hosts/cursor/git-bash-shim.ps1" ]]; then
+if [[ -n "$PS_BIN" && -f "$PACK/hosts/cursor/git-bash-shim.ps1" ]]; then
   SHIM_EC=0
   SHIM_LOG="$(mktemp "${TMPDIR:-/tmp}/kleos-shim-log.XXXXXX")"
   # PowerShell opens a Windows path. Git Bash mktemp returns an MSYS path.
   SHIM_LOG_WIN="$(cygpath -w "$SHIM_LOG" 2>/dev/null || printf '%s' "$SHIM_LOG")"
-  SHIM_OUT="$(printf '%s' '{"file_path":"/repo/README.md"}' | KLEOS_HOOK_LOG="$SHIM_LOG_WIN" "$PS_BIN" -NoProfile -ExecutionPolicy Bypass -File "$PACK/shared/hosts/cursor/git-bash-shim.ps1" before_read_file.sh)" || SHIM_EC=$?
+  SHIM_OUT="$(printf '%s' '{"file_path":"/repo/README.md"}' | KLEOS_HOOK_LOG="$SHIM_LOG_WIN" "$PS_BIN" -NoProfile -ExecutionPolicy Bypass -File "$PACK/hosts/cursor/git-bash-shim.ps1" before_read_file.sh)" || SHIM_EC=$?
   SHIM_PERM="$(printf '%s' "$SHIM_OUT" | jq -r '.permission // "none"')"
   run_test "regression: git-bash-shim allow exits 0 (not failClosed crash)" "0" "$SHIM_EC"
   run_test "regression: git-bash-shim allow emits permission allow" "allow" "$SHIM_PERM"

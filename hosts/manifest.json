@@ -1,0 +1,43 @@
+{
+  "owner": "kleosrules",
+  "version": 6,
+  "hookEvents": {
+    "beforeSubmitPrompt": "before_submit_prompt.sh",
+    "beforeShellExecution": "before_shell.sh",
+    "beforeReadFile": "before_read_file.sh"
+  },
+  "runtimeLibs": [
+    "selfdir.sh",
+    "common.sh",
+    "json.sh",
+    "shell_gate.sh",
+    "sql_scope.sh",
+    "json_tool.js"
+  ],
+  "policy": [
+    "secret_paths.ere",
+    "secret_tokens.ere"
+  ],
+  "rules": ["core", "testing", "pnpm", "next", "vite", "astro", "postgres", "supabase"],
+  "skills": ["testing", "debugging", "handoff", "kleosr", "bridle-harness", "code-architecture", "cqrs-data-flow", "live-ui-sync", "system-design", "auth-boundaries", "production-readiness", "prompt-brief"],
+  "agents": ["hunter", "cut", "prove", "architect"],
+  "retiredRules": ["agent", "ponytail", "types", "complexity", "vibe", "debugging", "native-lean-autoload", "now", "handoff", "vernacular", "mario-engineering-team", "product-designer-skills", "memory", "naming", "compile", "prompt", "context-curator"],
+  "retiredSkills": ["ponytail", "memory", "monorepo", "package-scope", "spec-kit", "vernacular", "session-handoff", "now", "complexity", "writing-pr", "design-stack", "premium-ui-craft", "landing-page-design", "redesign-existing-projects", "better-accessibility", "better-colors", "better-interface", "better-layout", "better-typography", "better-ui", "better-writing", "break", "explain-interface", "interface-review", "variant", "animate", "animate-expo", "animation-vocabulary", "apple-design", "ask-sonner", "emil-design-eng", "find-animation-opportunities", "improve-animations", "pick-ui-library", "prototype", "review-animations", "write-swift"],
+  "legacyCleanup": [
+    "session_start.sh",
+    "stop.sh",
+    "stop_gate.sh",
+    "lean_gate.sh",
+    "pre_tool_use.sh",
+    "post_tool_use.sh",
+    "lib/host.sh",
+    "lib/diff_gate.sh",
+    "lib/verify_gate.sh",
+    "lib/complete_gate.sh",
+    "lib/feature_gate.sh",
+    "lib/json_tool.py"
+  ],
+  "legacyLibCleanup": [
+    "shell_fleet.sh"
+  ]
+}

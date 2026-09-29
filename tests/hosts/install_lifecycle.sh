@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # Sourced by run.sh. Isolated HOME: double-install idempotency, uninstall
-# ownership, merge preservation, doctor fixture path.
+# ownership, merge preservation.
 
 LC_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-lc.XXXXXX")"
 # No EXIT trap here: this file is sourced by run.sh and must not replace its
 # cleanup trap. LC_HOME is removed at the end of this file.
 
-HOOKS_DIR="$PACK/shared/gate"
-CURSOR_DIR="$PACK/shared/hosts/cursor"
-# shellcheck source=shared/hosts/cursor/lib/fleet_install.sh
+HOOKS_DIR="$PACK/hooks"
+CURSOR_DIR="$PACK/hosts/cursor"
+# shellcheck source=hosts/cursor/lib/fleet_install.sh
 source "$CURSOR_DIR/lib/fleet_install.sh"
-EXPECTED_HOOK_SH=$((3 + 7))
+EXPECTED_HOOK_SH=$((3 + 6))
 
 INSTALL1_EC=0
-HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
+HOME="$LC_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1 || INSTALL1_EC=$?
 INSTALL2_EC=0
-HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || INSTALL2_EC=$?
+HOME="$LC_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1 || INSTALL2_EC=$?
 run_test "double install first pass exits 0" "0" "$INSTALL1_EC"
 run_test "double install second pass exits 0" "0" "$INSTALL2_EC"
 
@@ -49,10 +49,10 @@ ROUTER="$(test -f "$LC_HOME/.cursor/skills/bridle-harness/SKILL.md" && test ! -d
 run_test "install links bridle-harness without a vendored law copy" "yes" "$ROUTER"
 ANIMATE_SKILL="$(test -e "$LC_HOME/.cursor/skills/animate/SKILL.md" && echo yes || echo no)"
 run_test "install does not link retired animate skill" "no" "$ANIMATE_SKILL"
-mkdir -p "$PACK/shared/skills/animate" "$LC_HOME/.cursor/skills"
-ln -s "$(cd "$PACK" && pwd)/shared/skills/animate" "$LC_HOME/.cursor/skills/animate"
-rm -rf "$PACK/shared/skills/animate"
-HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1
+mkdir -p "$PACK/skills/animate" "$LC_HOME/.cursor/skills"
+ln -s "$(cd "$PACK" && pwd)/skills/animate" "$LC_HOME/.cursor/skills/animate"
+rm -rf "$PACK/skills/animate"
+HOME="$LC_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1
 ANIMATE_GONE="$(test -L "$LC_HOME/.cursor/skills/animate" && echo yes || echo no)"
 run_test "regression: reinstall removes a retired animate symlink" "no" "$ANIMATE_GONE"
 SHELL_FLEET="$(test -e "$LC_HOME/.cursor/hooks/lib/shell_fleet.sh" && echo yes || echo no)"
@@ -61,12 +61,12 @@ HOST_SH="$(test -e "$LC_HOME/.cursor/hooks/lib/host.sh" && echo yes || echo no)"
 run_test "regression: install does not ship lib/host.sh" "no" "$HOST_SH"
 
 HOOK_SH_COUNT="$(find "$LC_HOME/.cursor/hooks" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')"
-run_test "double install hook script count matches (3 scripts + 6 libs + cursor verdict)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
+run_test "double install hook script count matches (3 scripts + 5 libs + cursor verdict)" "$EXPECTED_HOOK_SH" "$HOOK_SH_COUNT"
 printf '%s\n' '#!/bin/sh' 'echo pack-stop' > "$LC_HOME/.cursor/hooks/stop.sh"
 jq '.hooks.stop = [{command:"./hooks/stop.sh",timeout:30,failClosed:false,loop_limit:1}]' \
   "$LC_HOME/.cursor/hooks.json" > "$LC_HOME/.cursor/hooks.json.tmp"
 mv "$LC_HOME/.cursor/hooks.json.tmp" "$LC_HOME/.cursor/hooks.json"
-HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1
+HOME="$LC_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1
 STOP_GONE="$(test -f "$LC_HOME/.cursor/hooks/stop.sh" && echo yes || echo no)"
 STOP_KEY="$(jq -r '.hooks | has("stop")' "$LC_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 run_test "regression: reinstall deletes a leftover pack stop.sh" "no" "$STOP_GONE"
@@ -78,7 +78,7 @@ run_test "double install has no duplicate hook script basenames" "0" "$DUP_BASEN
 mkdir -p "$LC_HOME/.cursor/rules"
 printf '%s\n' '---' 'alwaysApply: true' '---' '# user custom' > "$LC_HOME/.cursor/rules/my-custom.mdc"
 UNINSTALL_EC=0
-HOME="$LC_HOME" bash "$PACK/shared/hosts/cursor/uninstall.sh" >/dev/null 2>&1 || UNINSTALL_EC=$?
+HOME="$LC_HOME" bash "$PACK/hosts/cursor/install.sh" uninstall >/dev/null 2>&1 || UNINSTALL_EC=$?
 CUSTOM_OK="$(test -f "$LC_HOME/.cursor/rules/my-custom.mdc" && echo yes || echo no)"
 HOOKS_GONE="$(test -f "$LC_HOME/.cursor/hooks.json" && echo no || echo yes)"
 AGENT_GONE="$(test -f "$LC_HOME/.cursor/agents/hunter.md" && echo no || echo yes)"
@@ -94,18 +94,18 @@ run_test "uninstall removes hunter agent" "yes" "$AGENT_GONE"
 run_test "uninstall preserves unrelated my-custom.mdc" "yes" "$CUSTOM_OK"
 
 REINSTALL_EC=0
-HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || REINSTALL_EC=$?
+HOME="$LC_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1 || REINSTALL_EC=$?
 REINSTALL_OK="$(grep -q 'before_submit_prompt' "$LC_HOME/.cursor/hooks.json" 2>/dev/null && echo yes || echo no)"
 run_test "re-install after uninstall exits 0" "0" "$REINSTALL_EC"
 run_test "re-install after uninstall registers hooks" "yes" "$REINSTALL_OK"
 
 rm -rf "$LC_HOME/.cursor/skills/debugging"
-cp -r "$PACK/shared/skills/debugging" "$LC_HOME/.cursor/skills/debugging"
+cp -r "$PACK/skills/debugging" "$LC_HOME/.cursor/skills/debugging"
 UNINSTALL_DIR_EC=0
-HOME="$LC_HOME" bash "$PACK/shared/hosts/cursor/uninstall.sh" >/dev/null 2>&1 || UNINSTALL_DIR_EC=$?
+HOME="$LC_HOME" bash "$PACK/hosts/cursor/install.sh" uninstall >/dev/null 2>&1 || UNINSTALL_DIR_EC=$?
 DEBUGGING_REMAIN="$(test -d "$LC_HOME/.cursor/skills/debugging" && echo yes || echo no)"
 UNINSTALL2_EC=0
-HOME="$LC_HOME" bash "$PACK/shared/hosts/cursor/uninstall.sh" >/dev/null 2>&1 || UNINSTALL2_EC=$?
+HOME="$LC_HOME" bash "$PACK/hosts/cursor/install.sh" uninstall >/dev/null 2>&1 || UNINSTALL2_EC=$?
 run_test "uninstall with directory skill and FORCE unset completes" "0" "$UNINSTALL_DIR_EC"
 run_test "uninstall skips directory skill without FORCE=1" "yes" "$DEBUGGING_REMAIN"
 run_test "second uninstall with FORCE unset is idempotent (skip)" "0" "$UNINSTALL2_EC"
@@ -117,7 +117,7 @@ printf '%s\n' '{"version":1,"hooks":{"stop":[{"command":"/home/u/hooks/my_stop.s
 printf '%s\n' '#!/bin/sh' 'echo pack' > "$COLL_HOME/.cursor/hooks/stop.sh"
 printf '%s\n' '#!/bin/sh' 'echo user' > "$COLL_HOME/.cursor/hooks/my_stop.sh"
 COLL_EC=0
-HOME="$COLL_HOME" bash "$PACK/shared/hosts/cursor/uninstall.sh" >/dev/null 2>&1 || COLL_EC=$?
+HOME="$COLL_HOME" bash "$PACK/hosts/cursor/install.sh" uninstall >/dev/null 2>&1 || COLL_EC=$?
 COLL_KEEP="$(jq -r '[.hooks.stop[]?.command] | map(select(test("my_stop"))) | length' "$COLL_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 COLL_USER="$(test -f "$COLL_HOME/.cursor/hooks/my_stop.sh" && echo yes || echo no)"
 COLL_PACK="$(test -f "$COLL_HOME/.cursor/hooks/stop.sh" && echo yes || echo no)"
@@ -134,7 +134,7 @@ printf '%s\n' '#!/bin/sh' 'echo ok' > "$MIX_HOME/.cursor/hooks/user_audit.sh"
 printf '%s\n' '#!/bin/sh' 'echo pack' > "$MIX_HOME/.cursor/hooks/before_submit_prompt.sh"
 printf '%s\n' '#!/bin/sh' 'echo pack' > "$MIX_HOME/.cursor/hooks/stop.sh"
 MIX_EC=0
-HOME="$MIX_HOME" bash "$PACK/shared/hosts/cursor/uninstall.sh" >/dev/null 2>&1 || MIX_EC=$?
+HOME="$MIX_HOME" bash "$PACK/hosts/cursor/install.sh" uninstall >/dev/null 2>&1 || MIX_EC=$?
 MIX_KEEP="$(jq -r '.hooks.beforeSubmitPrompt[0].command' "$MIX_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 MIX_EXTRA="$(jq -r '.extra' "$MIX_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
 MIX_STOP="$(jq -r '.hooks|has("stop")' "$MIX_HOME/.cursor/hooks.json" 2>/dev/null || echo missing)"
@@ -151,7 +151,7 @@ run_test "uninstall removes owned before_submit_prompt.sh" "no" "$MIX_PACK"
 MERGE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-merge.XXXXXX")"
 mkdir -p "$MERGE_HOME/.cursor"
 printf '%s\n' '{"version":1,"hooks":{"beforeShellExecution":[{"command":"./hooks/user_audit.sh"}]}}' > "$MERGE_HOME/.cursor/hooks.json"
-HOME="$MERGE_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1
+HOME="$MERGE_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1
 MERGE_USER="$(jq -r '.hooks.beforeShellExecution | map(.command) | map(select(test("user_audit"))) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 MERGE_PACK="$(jq -r '.hooks.beforeShellExecution | map(.command) | map(select(test("before_shell"))) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
 MERGE_EVT="$(jq -r '.hooks | [has("beforeSubmitPrompt"),has("beforeShellExecution"),has("beforeReadFile")] | map(select(.)) | length' "$MERGE_HOME/.cursor/hooks.json" 2>/dev/null || echo 0)"
@@ -165,48 +165,20 @@ run_test "install merge does not register stop" "false" "$MERGE_STOP"
 OWN_HOME="$(mktemp -d "${TMPDIR:-/tmp}/kleos-own.XXXXXX")"
 mkdir -p "$OWN_HOME/.cursor/rules"
 printf '%s\n' '# user core' > "$OWN_HOME/.cursor/rules/core.mdc"
-HOME="$OWN_HOME" FORCE=0 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || true
+HOME="$OWN_HOME" FORCE=0 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1 || true
 OWN_SKIP="$(grep -q 'user core' "$OWN_HOME/.cursor/rules/core.mdc" 2>/dev/null && echo kept || echo replaced)"
-HOME="$OWN_HOME" FORCE=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || true
+HOME="$OWN_HOME" FORCE=1 bash "$PACK/hosts/cursor/install.sh" install >/dev/null 2>&1 || true
 OWN_BAK="$(test -f "$OWN_HOME/.cursor/rules/core.mdc.pre-kleos-bak" && echo yes || echo no)"
-HOME="$OWN_HOME" bash "$PACK/shared/hosts/cursor/uninstall.sh" >/dev/null 2>&1 || true
+HOME="$OWN_HOME" bash "$PACK/hosts/cursor/install.sh" uninstall >/dev/null 2>&1 || true
 OWN_RESTORE="$(grep -q 'user core' "$OWN_HOME/.cursor/rules/core.mdc" 2>/dev/null && echo yes || echo no)"
 rm -rf "$OWN_HOME"
 run_test "install without FORCE keeps differing user rule" "kept" "$OWN_SKIP"
 run_test "install with FORCE backs up differing user rule" "yes" "$OWN_BAK"
 run_test "uninstall restores user rule backup" "yes" "$OWN_RESTORE"
 
-DOC_ISO="$(mktemp -d "${TMPDIR:-/tmp}/kleos-dociso.XXXXXX")"
-if HOME="$DOC_ISO" bash "$PACK/scripts/doctor.sh" >"$DOC_ISO/out.txt" 2>&1; then DOC_EC=0; else DOC_EC=$?; fi
-DOC_OUT="$(cat "$DOC_ISO/out.txt")"
-rm -rf "$DOC_ISO"
-DOC_FIX="$(printf '%s' "$DOC_OUT" | grep -c 'fixture install: hooks.json registers beforeSubmitPrompt' || true)"
-run_test "doctor reports fixture install check" "1" "$DOC_FIX"
-run_test "doctor exits 0 with isolated HOME" "0" "$DOC_EC"
-
-DOC_SKIP="$(mktemp -d "${TMPDIR:-/tmp}/kleos-docskip.XXXXXX")"
-if HOME="$DOC_SKIP" DOCTOR_SKIP_LIVE=1 bash "$PACK/scripts/doctor.sh" >"$DOC_SKIP/out.txt" 2>&1; then DOC_SKIP_EC=0; else DOC_SKIP_EC=$?; fi
-DOC_SKIP_OUT="$(cat "$DOC_SKIP/out.txt")"
-rm -rf "$DOC_SKIP"
-if printf '%s' "$DOC_SKIP_OUT" | grep -q 'live ~/.cursor was not verified'; then DOC_SKIP_MSG=yes; else DOC_SKIP_MSG=no; fi
-if printf '%s' "$DOC_SKIP_OUT" | grep -q 'CHECKOUT CHECKS PASSED'; then DOC_SKIP_CO=yes; else DOC_SKIP_CO=no; fi
-if printf '%s' "$DOC_SKIP_OUT" | grep -q 'ALL CHECKS PASSED'; then DOC_SKIP_ALL=yes; else DOC_SKIP_ALL=no; fi
-run_test "DOCTOR_SKIP_LIVE=1 exits 0" "0" "$DOC_SKIP_EC"
-run_test "DOCTOR_SKIP_LIVE=1 states live was not verified" "yes" "$DOC_SKIP_MSG"
-run_test "DOCTOR_SKIP_LIVE=1 uses checkout banner" "yes" "$DOC_SKIP_CO"
-run_test "DOCTOR_SKIP_LIVE=1 does not claim ALL CHECKS PASSED" "no" "$DOC_SKIP_ALL"
-
-DRY_H="$(mktemp -d "${TMPDIR:-/tmp}/kleos-dry.XXXXXX")"
-DRY_EC=0
-HOME="$DRY_H" DRY_RUN=1 bash "$PACK/shared/hosts/cursor/fleet_sync.sh" install >/dev/null 2>&1 || DRY_EC=$?
-DRY_HOOKS="$(test -e "$DRY_H/.cursor" && echo yes || echo no)"
-rm -rf "$DRY_H"
-run_test "dry-run install exits 0" "0" "$DRY_EC"
-run_test "dry-run install writes no .cursor" "no" "$DRY_HOOKS"
-
 CL_H="$(mktemp -d "${TMPDIR:-/tmp}/kleos-cl.XXXXXX")"
 CL_EC=0
-HOME="$CL_H" bash "$PACK/shared/hosts/claude/install.sh" install >/dev/null 2>&1 || CL_EC=$?
+HOME="$CL_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || CL_EC=$?
 run_test "claude port install exits 0" "0" "$CL_EC"
 RESULT="$(grep -q 'You are kleosr'"'"'s engineering partner' "$CL_H/.claude/rules/kleosr.md" 2>/dev/null && echo yes || echo no)"
 run_test "claude port writes the charter as rules/kleosr.md" "yes" "$RESULT"
@@ -242,16 +214,16 @@ run_test "regression: cursor Write of an existing project file is not malformed"
 RESULT="$(printf 'not json' | bash "$CL_HOOK" 2>/dev/null && echo 0 || echo $?)"
 run_test "claude hook fails closed (exit 2) on a malformed payload" "2" "$RESULT"
 jq '.theme="dark"' "$CL_H/.claude/settings.json" >"$CL_H/s.json" && mv "$CL_H/s.json" "$CL_H/.claude/settings.json"
-HOME="$CL_H" bash "$PACK/shared/hosts/claude/install.sh" install >/dev/null 2>&1 || true
+HOME="$CL_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
 RESULT="$(jq -r '[.theme, ([.hooks.PreToolUse[] | select(.matcher=="Write")] | length)] | join(",")' "$CL_H/.claude/settings.json")"
 run_test "claude port registers one Write hook and keeps user settings on reinstall" "dark,1" "$RESULT"
 printf '%s\n' '# user testing' > "$CL_H/.claude/rules/testing.md"
 rm -f "$CL_H/.claude/kleosrules-owned.txt"
-HOME="$CL_H" bash "$PACK/shared/hosts/claude/install.sh" install >/dev/null 2>&1 || true
+HOME="$CL_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
 RESULT="$(grep -q 'user testing' "$CL_H/.claude/rules/testing.md" && echo kept || echo replaced)"
 run_test "regression: claude port keeps an unowned rule without FORCE" "kept" "$RESULT"
-HOME="$CL_H" FORCE=1 bash "$PACK/shared/hosts/claude/install.sh" install >/dev/null 2>&1 || true
-HOME="$CL_H" bash "$PACK/shared/hosts/claude/install.sh" uninstall >/dev/null 2>&1 || true
+HOME="$CL_H" FORCE=1 bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
+HOME="$CL_H" bash "$PACK/hosts/claude/install.sh" uninstall >/dev/null 2>&1 || true
 RESULT="$(grep -q 'user testing' "$CL_H/.claude/rules/testing.md" 2>/dev/null && echo restored || echo lost)"
 run_test "claude port uninstall restores the replaced user rule" "restored" "$RESULT"
 RESULT="$(test -e "$CL_H/.claude/rules/kleosr.md" && echo present || echo gone)"

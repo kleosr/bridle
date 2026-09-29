@@ -13,24 +13,21 @@ I spent months watching people build nested agent loops that burn 50,000 tokens 
 | Concern | Layer / Mechanism | Repository Artifact |
 |---|---|---|
 | Repository orientation | Instructions (progressive disclosure) | `AGENTS.md` |
-| Machine-readable invariants | Runtime contract | `shared/config/harness.json` |
-| Persistent engineering law | Always-on rules (≤80 LOC) | `shared/rules/core.mdc`, `shared/rules/testing.mdc` |
-| Framework & language guidance | Glob companions (inert unless matched) | `shared/rules/*.mdc` |
-| Task-specific procedures | On-demand skills | `shared/skills/` via `shared/catalog/skills.txt` |
-| Physical boundary enforcement | Fail-closed Bash hooks | `shared/gate/` (decides), `shared/hosts/<host>/` (formats and registers) |
-| State, capability ledger & continuity | Machine-readable schemas | `shared/config/features.json`, `state/handoff.json` |
-| Independent review | Specialists (isolated context) | `shared/agents/` (`hunter`, `cut`, `prove`) |
-
-`shared/config/harness.json` stores strictly the machine-readable values: commands, timeouts, ceilings, and evaluation dimensions. Philosophy, personal rationale, and behavioral rules live in documentation and rule files where humans and models can read them.
+| Persistent engineering law | Always-on rules (≤80 LOC) | `rules/core.mdc`, `rules/testing.mdc` |
+| Framework & language guidance | Glob companions (inert unless matched) | `rules/*.mdc` |
+| Task-specific procedures | On-demand skills | `skills/`, listed in `hosts/manifest.json` |
+| Physical boundary enforcement | Fail-closed Bash gates | `hooks/` (decides), `hosts/<host>/` (formats, installs, registers) |
+| Continuity | Handoff file | `<root>/.cursor/bridle/handoff.json` |
+| Independent review | Specialists (isolated context) | `agents/` (`hunter`, `cut`, `prove`, `architect`) |
 
 ## Context Management: Progressive Disclosure Over Token Stuffing
 
 Prompt context is scarce, fragile, and prone to dilution. Advertising a massive context window does not make prompt stuffing safe. When you dump your entire repo's documentation and 50 rules into the model at turn 1, you don't get a smarter agent—you get an agent that ignores your rules by turn 10.
 
 1. **Progressive Disclosure:** Every session begins exclusively with `AGENTS.md` and our two always-on rules (`core.mdc` and `testing.mdc`). That's your map.
-2. **On-Demand Skills:** Specialized workflows (`debugging`, `testing`, `handoff`) are loaded solely when the task matches the catalog in `shared/catalog/skills.txt`. If you aren't writing tests right now, you don't need the test-writing procedure in context.
+2. **On-Demand Skills:** Specialized workflows (`debugging`, `testing`, `handoff`) are loaded solely when the task matches their description. If you aren't writing tests right now, you don't need the test-writing procedure in context.
 3. **Inert Companions:** Glob companions (`next.mdc`, `vite.mdc`, etc.) attach on file pattern match. But our law dictates that they remain completely inert unless the owning package manifest explicitly defines that dependency. A `.tsx` file in an Astro or Vite app should never get poisoned with Next.js advice.
-4. **Continuity Evidence:** Read `shared/config/features.json` when a feature is `in_progress` or the change touches the ledger, and `state/handoff.json` when that file is present. They are factual continuity from prior sessions. They never grant authority to expand scope or bypass permissions.
+4. **Continuity Evidence:** Read the handoff file when it is present. It is factual continuity from a prior session. It never grants authority to expand scope or bypass permissions.
 
 ## Boundary Enforcement: Hooks Are the Steel Door
 
@@ -42,9 +39,9 @@ Three deterministic hooks intercept execution before actions take physical effec
 - **`beforeShellExecution`**: Splits commands on shell operators outside quotes. Denies destructive operations (`rm -rf /`, force push, `reset --hard`), secret-path reads, lint-suppression tampering, and shell source overwrites. Asks on infrastructure/database mutation. Fail-closed.
 - **`beforeReadFile`**: Canonicalizes paths and denies reads targeting credentials, environments, and certificates. Fail-closed.
 
-The gate is host-neutral: `shared/gate/` decides, and each host's `shared/hosts/<host>/verdict.sh` formats the decision. Cursor gets `{"permission"}` / `{"continue"}`. Claude Code gets `hookSpecificOutput.permissionDecision` / `{"decision":"block"}`. opencode gets `{"decision"}` for `bridle.js`. `BRIDLE_HOST` selects the host explicitly and is never inferred from the environment. Unset means Cursor.
+The gate is host-neutral: `hooks/` decides, and each host's `hosts/<host>/verdict.sh` formats the decision. Cursor gets `{"permission"}` / `{"continue"}`. Claude Code gets `hookSpecificOutput.permissionDecision` / `{"decision":"block"}`. opencode gets `{"decision"}` for `bridle.js`. `BRIDLE_HOST` selects the host explicitly and is never inferred from the environment. Unset means Cursor.
 
-Hook communication uses clean JSON across stdin and stdout. Missing input, malformed payloads, or absent policy files trigger an immediate environment failure (`failClosed`), forcing the agent to diagnose environment health (`scripts/doctor.sh`) rather than silently slipping past policy.
+Hook communication uses clean JSON across stdin and stdout. Missing input, malformed payloads, or absent policy files trigger an immediate environment failure (`failClosed`) rather than silently slipping past policy.
 
 ### Performance: Why In-Process Matching Saved the System
 Here is a lesson from real production: in Windows Git Bash (MSYS), spawning an external process (`grep`, `sed`, `tr`) takes ~50 ms per fork. When `before_shell.sh` used external pipelines for every check on every segment of a compound command, a 30-segment command took 45 seconds to evaluate. Cursor's internal hook timeout killed the process and blocked execution with `exit code 1`.
@@ -63,5 +60,4 @@ The operating loop is strictly: `understand -> change -> verify -> correct`.
 ## What is Covered vs What is Law
 
 - **Scripts emit deny / `continue: false` for:** shell-segment gating, sensitive-path reads, and known secret-token prefixes in the prompt. Host honor is confirmed for shell deny only. Read deny, `ask`, and prompt `continue: false` are script behavior; see `docs/host-capability.md`.
-- **CLI, not a hook:** feature state transitions (`scripts/feature.sh`). A missing `evidence.tree` is bootstrap evidence, not staleness.
 - **Uncovered by Host Hooks:** Direct native `Write`/`StrReplace` targeting secret paths, MCP tool invocations outside shell, inline autocomplete (Tab), and subagent host bypasses. These remain governed by Charter law and human oversight. We track host behavior transparently in `docs/host-capability.md`.

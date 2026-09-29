@@ -3,7 +3,7 @@
 # transcripts, and its registration in an isolated HOME.
 
 STOP_H="$(mktemp -d "${TMPDIR:-/tmp}/kleos-stop.XXXXXX")"
-STOP_HOOK="$PACK/shared/hosts/claude/before_stop.sh"
+STOP_HOOK="$PACK/hosts/claude/before_stop.sh"
 STOP_PROJ="$STOP_H/proj"; mkdir -p "$STOP_PROJ"; git -C "$STOP_PROJ" init -q 2>/dev/null
 
 tr_user() { jq -cn --arg t "$1" '{type:"user",message:{role:"user",content:$t}}'; }
@@ -55,16 +55,16 @@ run_test "stop hook fails open on a malformed payload" "0" "$RESULT"
 RESULT="$(jq -cn --arg c "$STOP_PROJ" '{stop_hook_active:false,cwd:$c,transcript_path:"/nonexistent"}' | HOME="$STOP_H" bash "$STOP_HOOK" >/dev/null 2>&1 && echo 0 || echo $?)"
 run_test "stop hook fails open when the transcript is missing" "0" "$RESULT"
 
-HOME="$STOP_H" bash "$PACK/shared/hosts/claude/install.sh" install >/dev/null 2>&1 || true
+HOME="$STOP_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
 RESULT="$(jq -r '[.hooks.Stop[].hooks[].command | contains("bridle_before_stop.sh")] | join(",")' "$STOP_H/.claude/settings.json" 2>/dev/null)"
 run_test "claude port registers the Stop hook without a matcher" "true" "$RESULT"
 RESULT="$(test -x "$STOP_H/.claude/hooks/bridle_before_stop.sh" && echo yes || echo no)"
 run_test "claude port installs the Stop hook script executable" "yes" "$RESULT"
 jq '.hooks.Stop += [{hooks: [{type: "command", command: "echo mine"}]}]' "$STOP_H/.claude/settings.json" >"$STOP_H/s.json" && mv "$STOP_H/s.json" "$STOP_H/.claude/settings.json"
-HOME="$STOP_H" bash "$PACK/shared/hosts/claude/install.sh" install >/dev/null 2>&1 || true
+HOME="$STOP_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
 RESULT="$(jq -r '.hooks.Stop | length' "$STOP_H/.claude/settings.json" 2>/dev/null)"
 run_test "regression: reinstall keeps one bridle Stop entry beside the user's" "2" "$RESULT"
-HOME="$STOP_H" bash "$PACK/shared/hosts/claude/install.sh" uninstall >/dev/null 2>&1 || true
+HOME="$STOP_H" bash "$PACK/hosts/claude/install.sh" uninstall >/dev/null 2>&1 || true
 RESULT="$(jq -r '[.hooks.Stop[].hooks[].command] | join(",")' "$STOP_H/.claude/settings.json" 2>/dev/null)"
 run_test "claude port uninstall removes only its own Stop hook" "echo mine" "$RESULT"
 RESULT="$(test -e "$STOP_H/.claude/hooks/bridle_before_stop.sh" && echo present || echo gone)"
