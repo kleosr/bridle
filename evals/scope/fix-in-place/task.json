@@ -1,0 +1,16 @@
+{
+  "id": "fix-in-place",
+  "ask": "The pagination footer shows the wrong number of pages: pageCount(45, 10) returns 4 but the last 5 items still need a page, so it should return 5. Fix it.",
+  "verify": "node --test",
+  "maxProdLines": 2,
+  "maxProdFiles": 1,
+  "contains": [
+    { "file": "src/paginate.js", "text": "Math.ceil(total / size)" },
+    { "file": "src/paginate.js", "text": "var start = (page - 1) * size" },
+    { "file": "src/paginate.js", "text": "var first = total == 0 ? 0 : (page - 1) * size + 1" }
+  ],
+  "absent": [
+    { "file": "src/paginate.js", "text": "throw " },
+    { "file": "src/paginate.js", "text": "Number.isInteger" }
+  ]
+}

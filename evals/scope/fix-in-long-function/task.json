@@ -1,0 +1,19 @@
+{
+  "id": "fix-in-long-function",
+  "ask": "Policy is free shipping when the items subtotal is $100 or more, but an order of exactly $100 in items is still charged $7.50 shipping. Fix it.",
+  "verify": "node --test",
+  "maxProdLines": 2,
+  "maxProdFiles": 1,
+  "contains": [
+    { "file": "src/invoice.js", "text": "if (subtotal >= 100) shipping = 0" },
+    { "file": "src/invoice.js", "text": "for (var i = 0; i < order.items.length; i++) {" },
+    { "file": "src/invoice.js", "text": "if (order.coupon == \"SAVE10\") discount = subtotal * 0.10" },
+    { "file": "src/invoice.js", "text": "var tax = taxable * (order.country == \"US\" ? 0.08 : 0)" },
+    { "file": "src/invoice.js", "text": "return Math.round(total * 100) / 100" }
+  ],
+  "absent": [
+    { "file": "src/invoice.js", "text": "throw " },
+    { "file": "src/invoice.js", "text": "const " },
+    { "file": "src/invoice.js", "text": "Number.isFinite" }
+  ]
+}
