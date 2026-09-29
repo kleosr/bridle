@@ -8,6 +8,7 @@ description: >-
   production-readiness, code-architecture, cqrs-data-flow y live-ui-sync según
   la tarea. La ley sigue siendo el charter, core, testing, companions y hooks
   instalados.
+disable-model-invocation: true
 ---
 
 # Bridle harness (router del agente de ingeniería)

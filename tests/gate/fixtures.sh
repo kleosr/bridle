@@ -53,7 +53,7 @@ RESULT="$(echo '{"command":"cat ~/.ssh/id_rsa","cwd":"/tmp"}' | bash "$PACK/hook
 run_test "beforeShellExecution denies cat ssh key" "deny" "$RESULT"
 
 RESULT="$(echo '{"command":"cat README.md","cwd":"/tmp"}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
-run_test "beforeShellExecution allows cat README.md" "allow" "$RESULT"
+run_test "beforeShellExecution denies cat README.md (use Read)" "deny" "$RESULT"
 
 RESULT="$(echo '{"command":"cat .env","cwd":"/tmp"}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "beforeShellExecution denies cat .env" "deny" "$RESULT"

@@ -31,7 +31,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Missing Node JSON codec | deny JSON `reason=missing-json` (fallback echo) | same |
 | Timeout / crash | — | host-defined; requested fail-closed on preventive events |
 
-stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `secret-token`, `ask-infra`, `activation`, `harness`.
+stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `secret-token`, `ask-infra`, `activation`, `harness`, `use-read`.
 
 Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval. Enforcement is partial: the shell gate recognizes only `[FORCE=1] bash hosts/cursor/install.sh [install|uninstall|verify|all|project-hooks]` (→ `ask`, host pause unverified) and denies shell writes into `~/.cursor/`. Everything else on this line is law.
 

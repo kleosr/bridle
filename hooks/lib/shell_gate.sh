@@ -150,7 +150,7 @@ shell_writes_source() {
     rx "$seg" "$pat" && return 0
   done
   flat="${seg//$'\n'/ }"
-  rxi "$flat" "${WORD}(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+|-[[:space:]]|-<<).{0,250}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)" \
+  rxi "$flat" "${WORD}(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+|-[[:space:]]|-<<).{0,250}(open\(.{0,120}${Q}([wax][bt+]*|r[bt]*\\+[bt]*)${Q}|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)" \
     && rx "$flat" "\\.${SRC_EXT}${Q}"
 }
 
@@ -179,6 +179,20 @@ gate_secrets() {
   if rxi "$scan" "$key_mat"; then return 0; fi
   if rxi "$scan" "$git_leak"; then return 0; fi
   return 1
+}
+
+shell_is_plain_read() {
+  local c="$1"
+  case "$c" in
+    *$'\n'*|*$'\r'*|*';'*|*'|'*|*'<'*|*'>'*|*'$'*|*'`'*|*'('*|*')'*|*'*'*|*'?'*) return 1 ;;
+  esac
+  if rx "$c" '^[[:space:]]*cd[[:space:]]+[^[:space:]&]+[[:space:]]*&&[[:space:]]*(.*)$'; then
+    c="${BASH_REMATCH[1]}"
+  fi
+  case "$c" in *'&'*) return 1 ;; esac
+  rx "$c" '^[[:space:]]*(cat|head|tail|sed[[:space:]]+-n)[[:space:]]+[^[:space:]]' || return 1
+  rx "$c" '^[[:space:]]*tail[[:space:]]+(-[[:alnum:]]*[fF]|--follow)' && return 1
+  return 0
 }
 
 gate_infra() {
@@ -232,6 +246,10 @@ gate_shell_command() {
     fi
     if gate_infra "$scan"; then ask=1; fi
   done
+  if shell_is_plain_read "$cmd"; then
+    emit_deny "Use the Read tool to read file contents (one call per file, offset/limit for ranges). Shell is for builds, tests, and git." "" use-read
+    return 0
+  fi
   # Backstop: heredocs/pipes span segments; check once whole. Newlines fold to
   # ';' so [^;&|] classes and WORD/TERM keep their line-local meaning.
   folded="${cmd//$'\r'/;}"

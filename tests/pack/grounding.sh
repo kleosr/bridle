@@ -73,6 +73,7 @@ run_test "kleosr custom mode name matches its skill folder" "kleosr" "$(awk -F '
 run_test "kleosr skill is marked as a custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$KLEOSR_MODE")"
 run_test "kleosr mode requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$KLEOSR_MODE")"
 # prompt-brief stops before editing; auto-loading it would add a round trip to every ask.
+run_test "regression: bridle-harness router loads only when invoked" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/bridle-harness/SKILL.md")"
 run_test "prompt-brief requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/prompt-brief/SKILL.md")"
 
 # The instruction order is written once, in the charter's Session list.
