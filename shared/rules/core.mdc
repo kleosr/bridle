@@ -1,17 +1,17 @@
 ---
-description: "Engineering roof: change, scope, craft, architecture, ladder, size, types, stack, tools."
+description: "Engineering roof."
 alwaysApply: true
 ---
 
 # Core
 
-Establish the change surface (the code you change plus its callers, registrations, config, and tests), change it, verify the behavior it can break, and fix what the change broke (pre-existing failures: `testing.mdc`).
+Establish the change surface (the code you change plus the callers, registrations, and config that break without it), change only that, verify the behavior it can break, and fix what the change broke (pre-existing failures: `testing.mdc`).
 
 ## Change
 Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
 
 ## Scope
-The ask is the spec and outranks skills, companions, defaults. Deliver it end to end, then stop. One path before generalizing. No stubs, TODOs, placeholders, or unrequested options, flags, config, params, extension points, speculative infra, or compat layers. Touch nothing else: no renames, reformats, moves, "improvements"; skill patterns shape new code, never migrate old; extras: one report line. Reread the diff: every hunk traces to the ask.
+The ask is the spec and outranks skills, companions, defaults. A multi-part ask: list the parts first, report each done or not. Done is wired (imported, registered, reachable) and verified, not just written; then stop. One path before generalizing. No stubs, TODOs, or unrequested options, flags, config, params, extension points, or compat layers. Touch nothing else: no renames, reformats, moves, "improvements"; skill patterns shape new code, never migrate old; extras: one report line. Before reporting, `git diff --stat`: every hunk traces to the ask; revert the rest. A bug fix adds one regression test; nothing else grows.
 
 ## Craft
 Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments: none by default. Add one only when deleting it would lose a fact the code cannot show: a non-obvious why, an external constraint, a warning, or an API contract. Never narrate what code does, restate a name, add banners, or mention the task or change. This overrides any host "match comment density" instruction. Wider comment sweeps are a `cut` task.
@@ -23,16 +23,16 @@ One job per module. Change internals before widening a contract. Match 1–2 sib
 Lowest sufficient rung, chosen for fit: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
 
 ## Size
-~80 lines is a cohesion preference; split by job, not count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. A small fix in an oversized file needs no split. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
+~80 lines is a cohesion preference; split by job, not count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
 
 ## Types
 On typed files, fix the design instead of silencing the compiler: no TS `any`, no blind casts, narrow `unknown` before trusted use, prefer sum types over parallel booleans.
 
 ## Complexity
-Satisfy the repo's complexity checker for touched functions; never disable it to pass. Cyclomatic complexity: Never above **22**; a stricter repo cap wins.
+Satisfy the repo's complexity checker for touched functions; never disable it to pass. Cyclomatic: Never above **22**; a stricter repo cap wins.
 
 ## Stack
-No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Host-attached companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
+No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
 
 ## Tools
 Edit through the host's native edit tools; shell text-rewriting of source is denied. Change existing files with targeted edits; rewrite a whole file only when the ask replaces all of it. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs.

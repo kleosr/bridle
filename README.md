@@ -40,7 +40,7 @@ Maintained as private engineering work by kleosr (Mario Pulice), published under
 | Claude Code | `bash scripts/claude.sh install` | Rules, skills, and agents in `~/.claude`. No hooks. |
 | opencode | `bash scripts/opencode.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the three hooks via `plugin/bridle.js` in `~/.config/opencode` |
 
-The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`tests/install_lifecycle.sh`, `TESTS=opencode_port bash tests/run.sh`). Uninstall each port with the same script and `uninstall`.
+The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`tests/install_lifecycle.sh`, `TESTS=claude_stop bash tests/run.sh`, `TESTS=opencode_port bash tests/run.sh`). Uninstall each port with the same script and `uninstall`.
 
 ---
 

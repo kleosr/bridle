@@ -44,7 +44,8 @@
     "false_completion",
     "instruction_conflict",
     "execution_reliability",
-    "continuity"
+    "continuity",
+    "scope"
   ],
   "extend": {
     "rules": "shared/config/rules.global.txt",

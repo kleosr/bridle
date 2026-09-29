@@ -3,7 +3,8 @@
 # Rules: charter + core + testing always load; stack companions carry `paths`
 # so Claude Code loads them only when a matching file is read. Skills load by
 # description until invoked. Cursor hooks are not ported (different contract);
-# one Claude-native PreToolUse(Write) hook enforces core.md's edit and size law.
+# a Claude-native PreToolUse(Write) hook enforces core.md's edit and size law and
+# a Stop hook checks the turn's verification, footprint, and wiring.
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
 HOME_CL="${HOME}/.claude"
@@ -81,16 +82,18 @@ stage() { mktemp "${TMPDIR:-/tmp}/kleos-claude.XXXXXX"; }
 
 SETTINGS="$HOME_CL/settings.json"
 HOOK_REL=hooks/bridle_before_write.sh
+STOP_REL=hooks/bridle_before_stop.sh
 
-# settings.json is the user's file: edit only the bridle hook entry, refuse
+# settings.json is the user's file: edit only the bridle hook entries, refuse
 # to touch a file that is not valid JSON.
 drop_hook_entry() {
-  jq --arg h "$HOOK_REL" '
-    if .hooks.PreToolUse then
-      .hooks.PreToolUse |= map(select(any(.hooks[]?; .command | contains($h)) | not))
-      | if .hooks.PreToolUse == [] then del(.hooks.PreToolUse) else . end
-      | if .hooks == {} then del(.hooks) else . end
-    else . end'
+  jq --arg w "$HOOK_REL" --arg s "$STOP_REL" '
+    reduce ([["PreToolUse", $w], ["Stop", $s]][]) as [$e, $h] (.;
+      if .hooks[$e] then
+        .hooks[$e] |= map(select(any(.hooks[]?; .command | contains($h)) | not))
+        | if .hooks[$e] == [] then del(.hooks[$e]) else . end
+        | if .hooks == {} then del(.hooks) else . end
+      else . end)'
 }
 
 register_hook() {
@@ -98,10 +101,11 @@ register_hook() {
   [[ -f "$SETTINGS" ]] || echo '{}' >"$SETTINGS"
   jq empty "$SETTINGS" 2>/dev/null || { echo "[fail] ~/.claude/settings.json is not valid JSON; hook not registered" >&2; return 1; }
   t="$(stage)"
-  drop_hook_entry <"$SETTINGS" | jq --arg c "$cmd" \
-    '.hooks.PreToolUse += [{matcher: "Write", hooks: [{type: "command", command: $c}]}]' >"$t"
+  drop_hook_entry <"$SETTINGS" | jq --arg c "$cmd" --arg s "bash \"$HOME_CL/$STOP_REL\"" \
+    '.hooks.PreToolUse += [{matcher: "Write", hooks: [{type: "command", command: $c}]}]
+     | .hooks.Stop += [{hooks: [{type: "command", command: $s}]}]' >"$t"
   mv -f "$t" "$SETTINGS"
-  echo "[ok] ~/.claude/settings.json PreToolUse(Write) hook"
+  echo "[ok] ~/.claude/settings.json PreToolUse(Write) and Stop hooks"
 }
 
 unregister_hook() {
@@ -110,7 +114,7 @@ unregister_hook() {
   t="$(stage)"
   drop_hook_entry <"$SETTINGS" >"$t"
   mv -f "$t" "$SETTINGS"
-  echo "[rm] ~/.claude/settings.json PreToolUse(Write) hook"
+  echo "[rm] ~/.claude/settings.json PreToolUse(Write) and Stop hooks"
 }
 
 install() {
@@ -133,6 +137,7 @@ install() {
     t="$(stage)"; port_agent "$a" >"$t"; place "agents/$(basename "$a")" "$t"
   done
   t="$(stage)"; cp -f "$PACK/shared/hooks/claude/before_write.sh" "$t"; chmod +x "$t"; place "$HOOK_REL" "$t"
+  t="$(stage)"; cp -f "$PACK/shared/hooks/claude/before_stop.sh" "$t"; chmod +x "$t"; place "$STOP_REL" "$t"
   register_hook
   prune_stale
   mv -f "$OWNED.new" "$OWNED"

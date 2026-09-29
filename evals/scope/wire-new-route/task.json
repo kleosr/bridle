@@ -1,0 +1,10 @@
+{
+  "id": "wire-new-route",
+  "ask": "Add a /health route that answers 200 with { ok: true }, next to the existing routes.",
+  "verify": "node --test",
+  "maxProdLines": 8,
+  "maxProdFiles": 2,
+  "contains": [
+    { "file": "src/router.js", "text": "/health" }
+  ]
+}

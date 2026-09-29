@@ -27,7 +27,7 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 
 ## Config
 - Extend via `skills.txt` and glob companions.
-- `evals/tasks.json` — structural coverage (`bash scripts/eval.sh check`). Live scoring is out of band.
+- `evals/tasks.json` — structural coverage (`bash scripts/eval.sh check`). Live scoring is out of band: `bash scripts/scope_eval.sh run <id>` runs `$AGENT` on a fixture ask and scores production lines, verify, and wiring (spends tokens; the scorer itself: `TESTS=scope_eval bash tests/run.sh`).
 - Hooks: three events (`beforeSubmitPrompt`, `beforeShellExecution`, `beforeReadFile`). No `stop`, no `sessionStart`, no `preToolUse`, no `updated_input`.
 
 ## Docs
@@ -37,6 +37,6 @@ Source files: charter `shared/rules/charter.txt` (installed as `~/.cursor/rules/
 ```bash
 FORCE=1 bash scripts/install.sh
 ```
-Claude Code: `bash scripts/claude.sh install|uninstall` ports rules, skills, and agents into `~/.claude`, plus one `PreToolUse(Write)` hook (`shared/hooks/claude/before_write.sh`) that denies whole-file rewrites and new files over 300 lines inside the project. The Cursor three-event freeze is unaffected.
+Claude Code: `bash scripts/claude.sh install|uninstall` ports rules, skills, and agents into `~/.claude`, plus two hooks. `PreToolUse(Write)` (`shared/hooks/claude/before_write.sh`) denies whole-file rewrites and new files over 300 lines inside the project. `Stop` (`shared/hooks/claude/before_stop.sh`) blocks a turn once when its edits ran no verification, ended on a red verify, passed the footprint budget (6 files, 2 new, 200 production lines), or added a source file nothing references; every edited turn is logged to `~/.claude/state/bridle-turns.jsonl`, the data for retuning the budget. Verify: `TESTS=claude_stop bash tests/run.sh`. The Cursor three-event freeze is unaffected.
 opencode: `bash scripts/opencode.sh install|uninstall` ports rules (as `instructions`), skills, companions (as skills), agents, the `bridle` primary agent, and the three hooks (via `plugin/bridle.js`) into `~/.config/opencode`. Verify: `TESTS=opencode_port bash tests/run.sh`.
 Cloud: `CLOUD=1 TARGET_REPO=<other-repo> bash shared/hooks/fleet_sync.sh project-hooks`. Never into this pack.

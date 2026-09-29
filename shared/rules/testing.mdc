@@ -1,5 +1,5 @@
 ---
-description: "Verification invariant: proportional proof, fail closed on red, no self-grade."
+description: "Verification invariant."
 alwaysApply: true
 ---
 

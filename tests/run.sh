@@ -80,10 +80,22 @@ if selected install_lifecycle; then
   source "$PACK/tests/install_lifecycle.sh"
 fi
 
+if selected claude_stop; then
+  echo ""
+  echo "=== Claude Stop hook (synthetic transcripts, isolated HOME) ==="
+  source "$PACK/tests/claude_stop.sh"
+fi
+
 if selected opencode_port; then
   echo ""
   echo "=== opencode port (isolated HOME) ==="
   source "$PACK/tests/opencode_port.sh"
+fi
+
+if selected scope_eval; then
+  echo ""
+  echo "=== Scope eval scorer (golden overlays, no agent) ==="
+  source "$PACK/tests/scope_eval.sh"
 fi
 
 if selected quality_gate; then
