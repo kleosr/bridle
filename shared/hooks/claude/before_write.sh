@@ -11,17 +11,22 @@ deny() { printf 'bridle: %s: %s\n' "$1" "$2" >&2; exit 2; }
 command -v jq >/dev/null 2>&1 || deny missing-json "jq is unavailable; Write denied. Install jq."
 INPUT="$(cat)"
 FIELDS="$(printf '%s' "$INPUT" | jq -r '
-  .cwd // "", .tool_input.file_path // "",
-  (.tool_input.content // "" | rtrimstr("\n") | split("\n") | length)' 2>/dev/null)" \
+  (.cwd // .workspace_roots[0] // ""),
+  (.tool_input.file_path // .tool_input.path // ""),
+  (.tool_input.content // "" | rtrimstr("\n") | split("\n") | length),
+  (.cursor_version // "")' 2>/dev/null)" \
   || deny malformed "PreToolUse payload is not JSON; Write denied."
-{ read -r CWD; read -r FILE; read -r LINES; } <<<"$FIELDS"
-[[ -n "$CWD" && -n "$FILE" ]] || deny malformed "payload lacks cwd or tool_input.file_path; Write denied."
+{ read -r CWD; read -r FILE; read -r LINES; read -r HOST; } <<<"$FIELDS"
+[[ -n "$CWD" && -n "$FILE" ]] || deny malformed "payload lacks a project root or tool_input.file_path; Write denied."
 [[ "$FILE" == /* ]] || FILE="$CWD/$FILE"
 
 # Scratchpads, memory, and plans live outside the project and are not code.
 [[ "$FILE" == "$CWD"/* ]] || exit 0
 
 if [[ -e "$FILE" ]]; then
+  # Cursor 3.21 runs this Claude hook. Its Write carries the whole file and
+  # workspace_roots, and that call is the edit.
+  [[ -n "$HOST" ]] && exit 0
   deny rewrite-existing "$FILE exists; change it with Edit, not a whole-file Write."
 fi
 

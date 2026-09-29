@@ -232,6 +232,12 @@ run_test "claude hook denies a new project file over 300 lines" "2" "$(cl_write 
 run_test "claude hook allows a new project file at 300 lines" "0" "$(cl_write "$CL_PROJ/new.sh" "$(seq 300)")"
 run_test "claude hook exempts declarative files from the size cap" "0" "$(cl_write "$CL_PROJ/big.json" "$(seq 400)")"
 run_test "claude hook ignores Writes outside the project" "0" "$(cl_write "$CL_H/elsewhere.sh" y)"
+cl_cursor_write() {
+  jq -n --arg r "$CL_PROJ" --arg f "$1" --arg b "$2" \
+    '{cursor_version:"3.21.16",workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:$b}}' \
+    | bash "$CL_HOOK" 2>/dev/null && echo 0 || echo $?
+}
+run_test "regression: cursor Write of an existing project file is not malformed" "0" "$(cl_cursor_write "$CL_PROJ/old.sh" y)"
 RESULT="$(printf 'not json' | bash "$CL_HOOK" 2>/dev/null && echo 0 || echo $?)"
 run_test "claude hook fails closed (exit 2) on a malformed payload" "2" "$RESULT"
 jq '.theme="dark"' "$CL_H/.claude/settings.json" >"$CL_H/s.json" && mv "$CL_H/s.json" "$CL_H/.claude/settings.json"

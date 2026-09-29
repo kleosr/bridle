@@ -137,6 +137,9 @@ The Claude port (`scripts/claude.sh`) registers one hook in `~/.claude/settings.
 
 The Cursor freeze (`hooksFrozen`, `noPreToolUse`) governs `hooks.json` and is unchanged.
 
+### 2026-09-28 — Cursor 3.21.16, Linux: Claude `PreToolUse(Write)` runs on Cursor edits
+Cursor executes `~/.claude/settings.json` `PreToolUse` as its own `preToolUse` step (`claude-user config`). The payload has `tool_input.file_path`, `workspace_roots`, and `cursor_version`. It has no `cwd`. `tool_name` is `Write` for an edit of an existing file, with the whole file in `content`. The hook treated a missing `cwd` as `malformed` and then a present file as `rewrite-existing`, so Cursor could not write or edit inside the project. A `cursor_version` payload now resolves the root from `workspace_roots` and allows that Write. Claude's `cwd` payload still denies a whole-file rewrite.
+
 ### 2026-09-28 — Claude Code 2.1.284, Linux: `Stop` hook
 The Claude port also registers `shared/hooks/claude/before_stop.sh` (installed as `~/.claude/hooks/bridle_before_stop.sh`). It reads the session transcript for the current turn (since the last human message) and exits 2 once when the turn edited project files and either ran no verification after the last edit, ended on a failed verify, passed the footprint budget, or added a source file nothing references. Any sensor failure exits 0 so a crashed check cannot trap the session. Every turn with edits appends a line to `~/.claude/state/bridle-turns.jsonl`.
 
