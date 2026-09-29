@@ -49,7 +49,7 @@ run_test "install links bridle-harness without a vendored law copy" "yes" "$ROUT
 ANIMATE_SKILL="$(test -e "$LC_HOME/.cursor/skills/animate/SKILL.md" && echo yes || echo no)"
 run_test "install does not link retired animate skill" "no" "$ANIMATE_SKILL"
 mkdir -p "$PACK/shared/skills/animate" "$LC_HOME/.cursor/skills"
-ln -s "$PACK/shared/skills/animate" "$LC_HOME/.cursor/skills/animate"
+ln -s "$(cd "$PACK" && pwd)/shared/skills/animate" "$LC_HOME/.cursor/skills/animate"
 rm -rf "$PACK/shared/skills/animate"
 HOME="$LC_HOME" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1
 ANIMATE_GONE="$(test -L "$LC_HOME/.cursor/skills/animate" && echo yes || echo no)"
