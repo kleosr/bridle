@@ -12,7 +12,7 @@ FAIL=0
 PASS=0
 
 # Portability: this also fails before the copied pack's first assertion.
-source "$REAL_PACK/shared/gate/lib/common.sh"
+source "$REAL_PACK/hooks/lib/common.sh"
 require_jq
 
 cleanup_pack() {
@@ -34,7 +34,7 @@ run_test() {
   fi
 }
 
-rm -rf "$PACK/state" "$PACK/.cursor/hooks.json" "$PACK/.cursor/hooks"
+rm -rf "$PACK/.cursor/hooks.json" "$PACK/.cursor/hooks"
 
 # TESTS=fixtures,harness runs only those fixtures (scoped evidence for one
 # feature). Unset runs the whole gauntlet. static_checks always runs: syntax
@@ -114,12 +114,6 @@ if selected grounding; then
   echo ""
   echo "=== Grounding (shapes, not prose) ==="
   source "$PACK/tests/pack/grounding.sh"
-fi
-
-if selected harness; then
-  echo ""
-  echo "=== Harness contracts (features, handoff, evals) ==="
-  source "$PACK/tests/pack/harness.sh"
 fi
 
 echo ""

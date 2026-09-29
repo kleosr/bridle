@@ -5,7 +5,7 @@
 OC_H="$(mktemp -d "${TMPDIR:-/tmp}/kleos-oc.XXXXXX")"
 OC="$OC_H/.config/opencode"
 OC_EC=0
-HOME="$OC_H" XDG_CONFIG_HOME="" bash "$PACK/shared/hosts/opencode/install.sh" install >/dev/null 2>&1 || OC_EC=$?
+HOME="$OC_H" XDG_CONFIG_HOME="" bash "$PACK/hosts/opencode/install.sh" install >/dev/null 2>&1 || OC_EC=$?
 run_test "opencode port install exits 0" "0" "$OC_EC"
 RESULT="$(grep -q 'You are kleosr'"'"'s engineering partner' "$OC/bridle/rules/kleosr.md" 2>/dev/null && echo yes || echo no)"
 run_test "opencode port writes the charter" "yes" "$RESULT"
@@ -29,7 +29,7 @@ if grep -rq '\.mdc' "$OC/bridle/rules" "$OC/skills" "$OC/agent" 2>/dev/null; the
 run_test "opencode port rewrites .mdc references" "ok" "$RESULT"
 RESULT="$(test -f "$OC/plugin/bridle.js" -a -f "$OC/bridle/hooks/lib/shell_gate.sh" -a -f "$OC/bridle/hooks/policy/secret_paths.ere" -a -f "$OC/bridle/hooks/lib/verdict_opencode.sh" && echo yes || echo no)"
 run_test "opencode port installs the plugin and its hooks" "yes" "$RESULT"
-HOME="$OC_H" XDG_CONFIG_HOME="" bash "$PACK/shared/hosts/opencode/install.sh" install >/dev/null 2>&1 || true
+HOME="$OC_H" XDG_CONFIG_HOME="" bash "$PACK/hosts/opencode/install.sh" install >/dev/null 2>&1 || true
 RESULT="$(jq -r '.instructions | length' "$OC/opencode.json" 2>/dev/null)"
 run_test "regression: opencode port reinstall does not duplicate instructions" "3" "$RESULT"
 
@@ -65,7 +65,7 @@ else
   echo "[skip] opencode plugin probes: node not on PATH"
 fi
 
-HOME="$OC_H" XDG_CONFIG_HOME="" bash "$PACK/shared/hosts/opencode/install.sh" uninstall >/dev/null 2>&1 || true
+HOME="$OC_H" XDG_CONFIG_HOME="" bash "$PACK/hosts/opencode/install.sh" uninstall >/dev/null 2>&1 || true
 RESULT="$(test -e "$OC/agent/bridle.md" -o -e "$OC/plugin/bridle.js" && echo present || echo gone)"
 run_test "opencode port uninstall removes owned files" "gone" "$RESULT"
 RESULT="$(test -e "$OC/skills/code-architecture/scripts/quality-gate.mjs" && echo present || echo gone)"

@@ -1,7 +1,7 @@
 # Isolated unit tests for lib/sql_scope.sh. No live install, no fixtures dir needed.
 set -u
 cd "$(dirname "$0")/../.." || exit 1
-. shared/gate/lib/sql_scope.sh
+. hooks/lib/sql_scope.sh
 
 pass=0; fail=0
 check() { # check DESCRIPTION SEGMENT EXPECTED(0=match 1=no-match)

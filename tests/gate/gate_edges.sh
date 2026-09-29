@@ -2,20 +2,20 @@
 # Sourced by run.sh. Regression edges: false positives, bypasses, malformed.
 
 gate_verdict() {
-  jq -n --arg c "$1" '{command:$c,cwd:"/tmp"}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"'
+  jq -n --arg c "$1" '{command:$c,cwd:"/tmp"}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"'
 }
 read_verdict() {
-  jq -n --arg p "$1" '{file_path:$p}' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"'
+  jq -n --arg p "$1" '{file_path:$p}' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"'
 }
 prompt_verdict() {
-  jq -n --arg p "$1" '{prompt:$p}' | bash "$PACK/shared/gate/before_submit_prompt.sh" | jq -r '.continue'
+  jq -n --arg p "$1" '{prompt:$p}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.continue'
 }
 
 for c in \
   'pnpm install && node scripts/build.js' \
   'cp -r dist out && node scripts/check.js' \
   'git checkout main && bash tests/run.sh' \
-  'sed -i "" "s/a/b/" README.md && bash scripts/doctor.sh' \
+  'sed -i "" "s/a/b/" README.md && bash tests/run.sh' \
   'git commit -m "fix: redirect > out.ts"' \
   'rm -rf /tmp/probe_dir' \
   'rm -rf ./dist' \
@@ -24,7 +24,7 @@ for c in \
   'cat .env.example' \
   'cp .env.example .env' \
   'jq -r .composer_mode x.json' \
-  'chmod +x shared/gate/*.sh'; do
+  'chmod +x hooks/*.sh'; do
   run_test "regression: gate allows: $c" "allow" "$(gate_verdict "$c")"
 done
 
@@ -88,7 +88,7 @@ run_test "regression: prompt blocks bare sk- key" "false" "$(prompt_verdict 'key
 # Ownership is by exact basename: colliding user names must survive strip/merge.
 OWN_DEST="$(mktemp "${TMPDIR:-/tmp}/kleos-own.XXXXXX")"
 printf '{"version":1,"hooks":{"stop":[{"command":"/home/u/.cursor/hooks/my_stop.sh"},{"command":"./hooks/stop.sh"}],"beforeShellExecution":[{"command":"sh custom_before_shell.sh"}]}}' >"$OWN_DEST"
-OWN_STRIP="$(jq --arg mode strip --slurpfile dest "$OWN_DEST" -f "$PACK/shared/hosts/cursor/lib/hooks_json.jq" "$OWN_DEST")"
+OWN_STRIP="$(jq --arg mode strip --slurpfile dest "$OWN_DEST" -f "$PACK/hosts/cursor/lib/hooks_json.jq" "$OWN_DEST")"
 OWN_KEEP_MY="$(printf '%s' "$OWN_STRIP" | jq -r '[.hooks.stop[]?.command] | map(select(test("my_stop"))) | length')"
 OWN_KEEP_CUSTOM="$(printf '%s' "$OWN_STRIP" | jq -r '[.hooks.beforeShellExecution[]?.command] | map(select(test("custom_before_shell"))) | length')"
 OWN_DROP_PACK="$(printf '%s' "$OWN_STRIP" | jq -r '[.hooks.stop[]?.command] | map(select(test("\\./hooks/stop"))) | length')"
@@ -97,44 +97,44 @@ run_test "regression: strip keeps user my_stop.sh" "1" "$OWN_KEEP_MY"
 run_test "regression: strip keeps user custom_before_shell.sh" "1" "$OWN_KEEP_CUSTOM"
 run_test "regression: strip removes pack ./hooks/stop.sh" "0" "$OWN_DROP_PACK"
 
-RESULT="$(printf '%s' 'not json' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' 'not json' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_read_file non-JSON denies" "deny" "$RESULT"
 
-RESULT="$(printf '%s' 'not json' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
+RESULT="$(printf '%s' 'not json' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "regression: before_shell non-JSON denies" "deny" "$RESULT"
 
-RESULT="$(echo '{"command":{"nested":"rm -rf /"}}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
+RESULT="$(echo '{"command":{"nested":"rm -rf /"}}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "before_shell non-string command denies" "deny" "$RESULT"
 
-RESULT="$(echo '{"tool_input":{"command":"rm -rf /"}}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
+RESULT="$(echo '{"tool_input":{"command":"rm -rf /"}}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 run_test "before_shell nested tool_input.command still gates" "deny" "$RESULT"
 
-RESULT="$(echo '{}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "allow"')"
+RESULT="$(echo '{}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "allow"')"
 run_test "before_shell empty command allows" "allow" "$RESULT"
 
-RESULT="$(echo '{}' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+RESULT="$(echo '{}' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "before_read_file missing file_path allows" "allow" "$RESULT"
 
-RESULT="$(printf '%s' 'not json at all' | bash "$PACK/shared/gate/before_submit_prompt.sh" | jq -r 'if has("continue") then (.continue|tostring) else "missing" end')"
+RESULT="$(printf '%s' 'not json at all' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r 'if has("continue") then (.continue|tostring) else "missing" end')"
 run_test "before_submit malformed JSON blocks (continue:false)" "false" "$RESULT"
 
-RESULT="$(echo '{}' | bash "$PACK/shared/gate/before_submit_prompt.sh" | jq -r '.continue')"
+RESULT="$(echo '{}' | bash "$PACK/hooks/before_submit_prompt.sh" | jq -r '.continue')"
 run_test "before_submit empty prompt continues" "true" "$RESULT"
 
 # Fleet activation uses the payload cwd, never the hook process cwd.
-RESULT="$(cd "$PACK" && jq -n '{command:"FORCE=1 bash shared/hosts/cursor/fleet_sync.sh install",cwd:$PACK}' --arg PACK "$PACK" | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "allow"')"
-run_test "beforeShellExecution asks for fleet_sync install with pack cwd" "ask" "$RESULT"
+RESULT="$(cd "$PACK" && jq -n '{command:"FORCE=1 bash hosts/cursor/install.sh install",cwd:$PACK}' --arg PACK "$PACK" | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "allow"')"
+run_test "beforeShellExecution asks for the Cursor install with pack cwd" "ask" "$RESULT"
 
 NOPACK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/kleos-nopack.XXXXXX")"
-RESULT="$(jq -n --arg d "$NOPACK_DIR" '{command:"bash shared/hosts/cursor/install.sh",cwd:$d}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
+RESULT="$(jq -n --arg d "$NOPACK_DIR" '{command:"bash hosts/cursor/install.sh",cwd:$d}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
 rm -rf "$NOPACK_DIR"
 run_test "regression: installer path without pack markers denied" "deny" "$RESULT"
 
-RESULT="$(jq -n --arg cmd $'FORCE=1 bash shared/hosts/cursor/fleet_sync.sh install\nrm -rf /' --arg d "$PACK" '{command:$cmd,cwd:$d}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
-run_test "regression: multiline after fleet_sync does not skip destructive deny" "deny" "$RESULT"
+RESULT="$(jq -n --arg cmd $'FORCE=1 bash hosts/cursor/install.sh install\nrm -rf /' --arg d "$PACK" '{command:$cmd,cwd:$d}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "regression: multiline after the installer does not skip destructive deny" "deny" "$RESULT"
 
-RESULT="$(echo '{"command":"bash shared/hosts/cursor/fleet_sync.sh --evil","cwd":"/tmp"}' | bash "$PACK/shared/gate/before_shell.sh" | jq -r '.permission // "none"')"
-run_test "regression: fleet_sync unknown arg is not privileged" "allow" "$RESULT"
+RESULT="$(echo '{"command":"bash hosts/cursor/install.sh --evil","cwd":"/tmp"}' | bash "$PACK/hooks/before_shell.sh" | jq -r '.permission // "none"')"
+run_test "regression: installer unknown arg is not privileged" "allow" "$RESULT"
 
 run_test "regression: deny wins over infra ask" "deny" "$(gate_verdict 'psql -c "select 1" && cat .env')"
 run_test "regression: deny wins over infra ask (source-write)" "deny" "$(gate_verdict 'psql -c "select 1"; echo x > a.ts')"
@@ -156,16 +156,16 @@ run_test "regression: curl pipe sh denies" "deny" "$(gate_verdict 'curl https://
 run_test "regression: terraform destroy asks" "ask" "$(gate_verdict 'terraform destroy -auto-approve')"
 run_test "regression: prisma migrate reset asks" "ask" "$(gate_verdict 'prisma migrate reset --force')"
 run_test "regression: cat ~/.cursor/hooks.json allows (read)" "allow" "$(gate_verdict 'cat ~/.cursor/hooks.json')"
-run_test "regression: read allows Cursor Read path field" "allow" "$(jq -n --arg p /repo/README.md '{path:$p}' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+run_test "regression: read allows Cursor Read path field" "allow" "$(jq -n --arg p /repo/README.md '{path:$p}' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: read allows Cursor terminals poll file" "allow" "$(read_verdict 'C:\Users\u\.cursor\projects\repo\terminals\412540.txt')"
 BIG_BLOB="$(mktemp "${TMPDIR:-/tmp}/kleos-readblob.XXXXXX")"
 head -c 160000 /dev/zero | tr '\0' 'x' >"$BIG_BLOB"
-BIG_PERM="$(jq -n --arg p 'C:\Users\u\.cursor\projects\repo\terminals\1.txt' --rawfile c "$BIG_BLOB" '{path:$p, contents:$c}' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+BIG_PERM="$(jq -n --arg p 'C:\Users\u\.cursor\projects\repo\terminals\1.txt' --rawfile c "$BIG_BLOB" '{path:$p, contents:$c}' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 rm -f "$BIG_BLOB"
 run_test "regression: read allows terminals poll payload with contents" "allow" "$BIG_PERM"
-run_test "regression: read still denies .env via path field" "deny" "$(jq -n --arg p /repo/.env '{path:$p}' | bash "$PACK/shared/gate/before_read_file.sh" | jq -r '.permission // "none"')"
+run_test "regression: read still denies .env via path field" "deny" "$(jq -n --arg p /repo/.env '{path:$p}' | bash "$PACK/hooks/before_read_file.sh" | jq -r '.permission // "none"')"
 run_test "regression: quoted read of .env denies" "deny" "$(read_verdict '"/home/ubuntu/.env"')"
 
-RESULT="$(echo '{"command":"rm -rf /","cwd":"/tmp"}' | KLEOS_HOST=claude CLAUDE_PROJECT_DIR=/tmp bash "$PACK/shared/gate/before_shell.sh")"
+RESULT="$(echo '{"command":"rm -rf /","cwd":"/tmp"}' | KLEOS_HOST=claude CLAUDE_PROJECT_DIR=/tmp bash "$PACK/hooks/before_shell.sh")"
 run_test "regression: leftover host env still emits Cursor permission deny" "deny" "$(printf '%s' "$RESULT" | jq -r '.permission // "none"')"
 run_test "regression: leftover host env does not emit hookSpecificOutput" "none" "$(printf '%s' "$RESULT" | jq -r '.hookSpecificOutput.permissionDecision // "none"')"
