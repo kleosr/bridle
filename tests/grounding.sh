@@ -112,7 +112,7 @@ run_test "bridle-harness routes every catalog skill" "ok" "$ROUTE_OK"
 # An always-trigger description loads the skill on unrelated asks and widens the diff.
 ALWAYS_OK=ok
 while IFS= read -r skill; do
-  case "$skill" in ''|bridle-harness) continue ;; esac
+  [[ -n "$skill" ]] || continue
   awk '/^---$/{c++; next} c==1' "$PACK/shared/skills/$skill/SKILL.md" | grep -q 'SIEMPRE' && ALWAYS_OK="always:$skill"
 done < <(load_lines "$PACK/shared/config/skills.txt")
 run_test "regression: engineering skills do not trigger SIEMPRE" "ok" "$ALWAYS_OK"
