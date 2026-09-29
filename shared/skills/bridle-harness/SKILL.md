@@ -69,5 +69,5 @@ explícita, sin editar código durante la revisión.
 
 ## Hooks
 
-Cada port instala los suyos (`scripts/install.sh`, `scripts/opencode.sh`,
-`scripts/claude.sh`). Esta skill no los reimplementa ni los enumera.
+Cada port instala los suyos (`shared/hosts/<cursor|claude|opencode>/install.sh`).
+Esta skill no los reimplementa ni los enumera.

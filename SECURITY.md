@@ -18,7 +18,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 | Infra/DB mutation | `beforeShellExecution` | scripts emit `ask`; host pause **unverified** | Includes `terraform destroy`, `aws s3 rm --recursive`, `prisma migrate reset`. Destructive SQL is a hard deny (`sql_scope.sh`); the rest is `ask`, which v18 saw **not** pause. Charter approval-first is the working control. |
 | Harness self-protection | `beforeShellExecution` | **yes (scripts)**, Shell only | deny writes/`rm`/`cp`/`mv` against `~/.cursor/hooks.json`, `~/.cursor/hooks/`, `~/.cursor/rules/`. Native `Write`/`StrReplace` to those paths is **not gated** (law only). Installer path still `ask` via pack markers. Reason `harness`. |
 | Cyclomatic lint disable | `beforeShellExecution` | **yes (scripts)** | deny, per segment. |
-| Harness activation | `beforeShellExecution` | scripts: deny without markers, `ask` with; host pause **unverified** | Installer path is checked against the **payload cwd**, never the hook process cwd. Only the two exact installer command shapes are recognized; editing `shared/hooks/*.sh` in a checkout is ungated. |
+| Harness activation | `beforeShellExecution` | scripts: deny without markers, `ask` with; host pause **unverified** | Installer path is checked against the **payload cwd**, never the hook process cwd. Only the two exact installer command shapes are recognized; editing `shared/gate/*.sh` or `shared/hosts/**` in a checkout is ungated. |
 
 **Not gated (law only):** `Write` / `StrReplace` of secret paths and of `~/.cursor/*`, MCP tools, Tab, `preToolUse`, network egress, production deploys, external email, payments, and edits to this pack's hook sources in a checkout. Do not write `.env`, keys, or `credentials.json`. A denied Read may still be reachable via an allowed program; verdicts combine as deny > ask > allow.
 
@@ -33,7 +33,7 @@ Read this file before changing `package.json` / `pnpm-workspace.yaml` / `.npmrc`
 
 stdout is JSON only. `user_message` must not echo secrets or raw commands. Stable `reason` codes: `destructive`, `secret-path`, `source-write`, `lint-disable`, `malformed`, `missing-policy`, `missing-json`, `secret-token`, `ask-infra`, `activation`, `harness`.
 
-Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval. Enforcement is partial: the shell gate recognizes only `FORCE=1 bash scripts/install.sh` and `bash shared/hooks/fleet_sync.sh …` (→ `ask`, host pause unverified) and denies shell writes into `~/.cursor/`. Everything else on this line is law.
+Active hook, policy, and global-rule changes require user-approved activation. Approval names the concrete action, target, scope, and irreversible effect; material changes need renewed approval. Enforcement is partial: the shell gate recognizes only `FORCE=1 bash shared/hosts/cursor/install.sh` and `bash shared/hosts/cursor/fleet_sync.sh …` (→ `ask`, host pause unverified) and denies shell writes into `~/.cursor/`. Everything else on this line is law.
 
 Trust: routine auto-verify only in a trusted workspace. For a new or untrusted checkout, inspect execution entry points first or run restricted; "test" is not a privilege word.
 
@@ -104,4 +104,4 @@ Lifecycle: do not run `curl | sh`, `wget | sh`, or a package `postinstall` from 
 
 ## Reporting
 
-Message the owner. Include: path, trigger, impact. No exploit chain. For this pack, `SECURITY.md` + `shared/hooks/policy/*.ere` are the policy; hooks are the enforcement that exists.
+Message the owner. Include: path, trigger, impact. No exploit chain. For this pack, `SECURITY.md` + `shared/gate/policy/*.ere` are the policy; hooks are the enforcement that exists.

@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+# Shell gate. Verdict order: deny > ask > allow.
+# The command is split into segments on shell operators OUTSIDE quotes, and
+# every segment is gated independently. A git/gh message only suppresses
+# matches inside its own message argument — never the rest of the command.
+#
+# Matching runs in-process (bash [[ =~ ]], POSIX ERE). On MSYS each spawned
+# grep/sed/tr costs ~50 ms; the old pipeline design cost ~1.5 s per segment
+# and a 30-segment command timed out Cursor's hook (45 s). Only split_segments
+# (one awk) and the git-message masker (one sed, git/gh segments only) fork.
+#
+# gate_shell_command: emits a verdict and returns 0, or returns 1 (clean).
+
+SEG_SEP=$'\034'
+
+SEG='[^;&|]*'
+Q='["'\'']'
+TERM="(['\"]|[[:space:];|&)]|$)"
+WORD='(^|[[:space:];|&])'
+SRC_EXT='(ts|tsx|js|jsx|mjs|cjs|py|go|rs|sh|bash|zsh|rb|java|kt|swift|c|cc|cpp|h|hpp|php|lua|ex|exs|sql|vue|svelte|astro|cs|tf|mdc|ere)'
+SRC_PATH="(['\"][^'\"]*\\.${SRC_EXT}['\"]|(\\\\ |[^|&;[:space:]'\"])+\\.${SRC_EXT}${TERM})"
+
+split_segments() {
+  printf '%s' "$1" | tr '\n\r' ';;' | awk '
+    {
+      sq = sprintf("%c", 39); dq = "\""; bt = sprintf("%c", 96)
+      sep = sprintf("%c", 28)
+      s = $0; n = length(s); out = ""; state = 0; i = 1
+      while (i <= n) {
+        c = substr(s, i, 1)
+        if (state == 0) {
+          if (c == "\\") { out = out c substr(s, i + 1, 1); i += 2; continue }
+          if (c == sq) { state = 1; out = out c; i++; continue }
+          if (c == dq) { state = 2; out = out c; i++; continue }
+          if (c == bt) { state = 3; out = out c; i++; continue }
+          if (c == ";" || c == "|") {
+            if (substr(s, i + 1, 1) == c) { out = out sep; i += 2; continue }
+            out = out sep; i++; continue
+          }
+          if (c == "&") {
+            if (substr(s, i + 1, 1) == "&") { out = out sep; i += 2; continue }
+            out = out sep; i++; continue
+          }
+          out = out c; i++; continue
+        }
+        if (state == 1) { out = out c; if (c == sq) state = 0; i++; continue }
+        out = out c
+        if (c == "\\") { out = out substr(s, i + 1, 1); i += 2; continue }
+        if (state == 2 && c == dq) state = 0
+        if (state == 3 && c == bt) state = 0
+        i++
+      }
+      print out
+    }'
+}
+
+shell_is_git_gh_body() {
+  rxi "$1" '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]+[[:space:]]+)*(git[[:space:]]+commit|gh[[:space:]]+(pr|issue)[[:space:]])'
+}
+
+shell_has_message_flag() {
+  rx "$1" '(-m|--message|--title|--body|--notes)'
+}
+
+# Blank the message argument of a git-commit / gh-pr-issue segment so that
+# prose mentioning a gate pattern is not treated as an action. File-taking
+# flags (-F, --body-file, ...) are intentionally left visible.
+mask_git_message() {
+  if ! shell_has_message_flag "$1"; then
+    printf '%s' "$1"
+    return 0
+  fi
+  printf '%s' "$1" | sed -E \
+    -e 's/(-m|--message|--title|--body|--notes)(=|[[:space:]]+)"[^"]*"/\1 /g' \
+    -e "s/(-m|--message|--title|--body|--notes)(=|[[:space:]]+)'[^']*'/\1 /g" \
+    -e 's/(-m|--message|--title|--body|--notes)=[^[:space:]]+/\1 /g' \
+    -e 's/(-m|--message|--title|--body|--notes)[[:space:]]+[^[:space:]]+/\1 /g'
+}
+
+# Path matching must not depend on whether the agent quoted the path.
+shell_strip_quotes() {
+  local s="$1"
+  s="${s//\'/}"
+  s="${s//\"/}"
+  printf '%s' "$s"
+}
+
+# git -C DIR / --git-dir / --work-tree / -c key=val sit between `git` and the
+# subcommand; strip them so force-push and reset --hard still match.
+normalize_git_globals() {
+  local s="$1" re n=0
+  s="${s//$'\n'/}"
+  re='(^|[[:space:];|&])git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+|--git-dir=[^[:space:]]+[[:space:]]+|--work-tree=[^[:space:]]+[[:space:]]+|-c[[:space:]]+[^[:space:]]+[[:space:]]+)'
+  while [[ "$n" -lt 8 ]] && rx "$s" "$re"; do
+    s="${s/"${BASH_REMATCH[0]}"/${BASH_REMATCH[1]}git }"
+    n=$((n + 1))
+  done
+  printf '%s' "$s"
+}
+
+shell_is_fleet_sync() {
+  case "$1" in
+    *$'\n'*|*$'\r'*|*';'*|*'|'*|*'&'*|*'$'*|*'`'*|*'#'*|*'('*|*')'*) return 1 ;;
+  esac
+  rx "$1" '^[[:space:]]*(FORCE=1[[:space:]]+)?bash[[:space:]]+shared/hosts/cursor/install\.sh[[:space:]]*$' && return 0
+  rx "$1" '^[[:space:]]*(FORCE=1[[:space:]]+)?bash[[:space:]]+shared/hosts/cursor/fleet_sync\.sh([[:space:]]+(install|verify|all|project-hooks))?[[:space:]]*$'
+}
+
+gate_destructive() {
+  local seg="$1"
+  if rxi "$seg" 'git'; then seg="$(normalize_git_globals "$seg")"; fi
+  local wipe_tgt="${Q}?(/(/*|\./*|\.\./*)*|/[^/]+/\.\.(/*|\./*|\.\./*)*|~|\\\$HOME|\\\$\{HOME\}|\.\.?|\*)${Q}?/?${Q}?(\.|\*)?${Q}?"
+  local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&]|$)"
+  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
+  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|>[[:space:]]*/dev/sd|shred[[:space:]]"
+  # curl|sh is checked whole-command in gate_shell_command: split_segments
+  # breaks the pipe, so it can never match inside a single segment.
+  rxi "$seg" "${rm_root}|${force_push}|${wipe}"
+}
+
+# Writes to the installed harness (hooks.json, ~/.cursor/hooks, ~/.cursor/rules).
+# Installer path is asked earlier in before_shell.sh and never reaches here.
+gate_harness() {
+  local seg="$1"
+  seg="${seg//\'/}"
+  seg="${seg//\"/}"
+  rxi "$seg" '\.cursor/' || return 1
+  local tgt='(\$HOME|\$\{HOME\}|~|[^[:space:]]*)/\.cursor/(hooks\.json|hooks(/|$)|rules/)'
+  rxi "$seg" "(>>|>)[[:space:]]*${tgt}" && return 0
+  rxi "$seg" "${WORD}(rm|cp|mv|install|tee|touch|dd)[[:space:]]+.*\\.cursor/(hooks\\.json|hooks/|rules/)" && return 0
+  rxi "$seg" "${WORD}(sed|perl)[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*\\.cursor/(hooks|rules)" && return 0
+  return 1
+}
+
+gate_complexity_bypass() {
+  rxi "$1" 'eslint-disable[^[:space:]]*[[:space:]]+([^[:space:],]+,)*complexity|complexity[[:space:]]*:[[:space:]]*['\''"]?off|complexity[[:space:]]*:[[:space:]]*0([^0-9]|$)|(--ignore|--extend-ignore)[=[:space:]][^;&]*C901|noqa:[[:space:]]*C901|clippy::(cyclo|cognitive)[[:alnum:]_]*complexity'
+}
+
+shell_writes_source() {
+  local seg="$1" pat flat
+  local -a pats=(
+    "(>|>{2})[[:space:]]*${SRC_PATH}"
+    "${WORD}tee([[:space:]]+-a)?[[:space:]]+${SRC_PATH}"
+    "${WORD}dd[[:space:]]+${SEG}of=${SRC_PATH}"
+    "${WORD}(cp|mv|install)[[:space:]]+([^[:space:];&|]+[[:space:]]+)+${SRC_PATH}"
+    "${WORD}(sed|perl)[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]]${SEG}\\.${SRC_EXT}${TERM}"
+    "${WORD}(curl|wget)[[:space:]]${SEG}-[oO][[:space:]]+${SRC_PATH}"
+    "${WORD}git[[:space:]]+(checkout|restore)[[:space:]]${SEG}\\.${SRC_EXT}${TERM}"
+  )
+  for pat in "${pats[@]}"; do
+    rx "$seg" "$pat" && return 0
+  done
+  flat="${seg//$'\n'/ }"
+  rxi "$flat" "${WORD}(python([0-9.]+)?|node|nodejs|ruby)[[:space:]]+(-[ce]|--[[:alnum:]-]+|-[[:space:]]|-<<).{0,250}(open\(|write_text\(|write_bytes\(|Path\([^)]*\)\.write|writeFile(Sync)?\(|createWriteStream\(|File\.(write|open)|FileUtils\.|FS\.write)" \
+    && rx "$flat" "\\.${SRC_EXT}${Q}"
+}
+
+gate_secrets() {
+  local seg="$1" pol="${HERE}/policy/secret_paths.ere"
+  local secret_name='(\.env|id_rsa|id_ed25519|id_ecdsa|\.pem|\.key|credentials\.json)'
+  local scan="$seg"
+  scan="${scan//\'/}"
+  scan="${scan//\"/}"
+  if shell_is_git_gh_body "$seg"; then
+    # A commit/PR message is prose: a literal secret reference denies; prose
+    # that merely mentions deny-list words does not. A value produced by
+    # command substitution is not visible to any regex and is law-only.
+    if rxi "$seg" "$secret_name" || { [[ -f "$pol" ]] && policy_match_i "$scan" "$pol"; }; then
+      return 0
+    fi
+    return 1
+  fi
+  local env_seed='^[[:space:]]*cp[[:space:]]+\.env\.(example|sample|template)[[:space:]]+\.env[[:space:]]*$'
+  local env_tok="(^|[[:space:]=(<@]|${Q})(\./)?\.env(rc|\.(local|development|dev|production|prod|staging|stage|test|ci|secret|secrets)(\.[^[:space:]\"';|&)]*)?)?${TERM}"
+  local readers='(cat|head|tail|less|more|bat|source|\.|grep|rg|awk|sed|cut|xxd|od|base64|openssl|strings|scp|cp)'
+  local key_mat="${WORD}${readers}[[:space:]]+${SEG}([^[:space:]\"']+\.(pem|key|p12|pfx)|[^[:space:]\"']*id_(rsa|ed25519|ecdsa))(${Q}|[[:space:];|&]|$)"
+  local git_leak="${WORD}git[[:space:]]+(show|cat-file|checkout|restore|archive)[[:space:]]${SEG}(\.env|\.pem|\.key|id_rsa|id_ed25519|credentials)"
+  if [[ -f "$pol" ]] && policy_match_i "$scan" "$pol"; then return 0; fi
+  if rxi "$scan" "$env_tok" && ! rx "$seg" "$env_seed"; then return 0; fi
+  if rxi "$scan" "$key_mat"; then return 0; fi
+  if rxi "$scan" "$git_leak"; then return 0; fi
+  return 1
+}
+
+gate_infra() {
+  local db="(^|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(sudo[[:space:]]+|env[[:space:]]+)?(psql|mysql|mongosh)([[:space:]]|$)"
+  rxi "$1" "${db}|supabase[[:space:]]+db|terraform[[:space:]]+(apply|destroy)|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)|aws[[:space:]]+s3[[:space:]]+rm[[:space:]].*--recursive|prisma[[:space:]]+migrate[[:space:]]+reset"
+}
+
+gate_shell_command() {
+  local cmd="$1" rest seg scan ask=0 whole folded line
+  [[ -z "$cmd" ]] && return 1
+  # grep matched per line: keep that for the curl|sh check.
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if rxi "$line" '(curl|wget)[[:space:]].*\|[[:space:]]*(sudo[[:space:]]+)?(ba)?sh([[:space:];|&]|$)'; then
+      emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+      return 0
+    fi
+  done <<<"$cmd"
+  rest="$(split_segments "$cmd")${SEG_SEP}"
+  while [[ -n "$rest" ]]; do
+    seg="${rest%%"$SEG_SEP"*}"
+    rest="${rest#*"$SEG_SEP"}"
+    seg="${seg#"${seg%%[![:space:]]*}"}"
+    seg="${seg%"${seg##*[![:space:]]}"}"
+    [[ -z "$seg" ]] && continue
+    scan="$seg"
+    if shell_is_git_gh_body "$seg"; then scan="$(mask_git_message "$seg")"; fi
+    if gate_destructive "$scan"; then
+      emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+      return 0
+    fi
+    if gate_harness "$seg"; then
+      emit_deny "AUTONOMY BLOCK: modifying the installed harness requires activation. Use FORCE=1 bash shared/hosts/cursor/install.sh from the pack root." "" harness
+      return 0
+    fi
+    if sql_destructive_segment "$scan"; then
+      emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+      return 0
+    fi
+    if gate_complexity_bypass "$scan"; then
+      emit_deny "Do not disable cyclomatic lint from the shell. Extract until the project lint is green." "" lint-disable
+      return 0
+    fi
+    if shell_writes_source "$scan"; then
+      emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code." "" source-write
+      return 0
+    fi
+    # Secrets see the raw segment: substitution/file flags must stay visible.
+    if gate_secrets "$seg"; then
+      emit_deny "AUTONOMY BLOCK: shell must not read secret paths." "" secret-path
+      return 0
+    fi
+    if gate_infra "$scan"; then ask=1; fi
+  done
+  # Backstop: heredocs/pipes span segments; check once whole. Newlines fold to
+  # ';' so [^;&|] classes and WORD/TERM keep their line-local meaning.
+  folded="${cmd//$'\r'/;}"
+  whole="${folded//$'\n'/;}"
+  if shell_has_message_flag "$whole"; then whole="$(mask_git_message "$whole")"; fi
+  if sql_destructive_segment "$whole"; then
+    emit_deny "AUTONOMY BLOCK: destructive command denied. Command not echoed to avoid secret leakage; see host UI." "" destructive
+    return 0
+  fi
+  if shell_writes_source "$whole"; then
+    emit_deny "LEAN BYPASS BLOCK: Shell must not create/overwrite source (.ts/.tsx/.js/.jsx/.py/.go/.rs/.sh …). Use Write or StrReplace. Never Shell to write code." "" source-write
+    return 0
+  fi
+  if [[ "$ask" -eq 1 ]]; then
+    emit_ask "Command mutates infra/DB. Approve the concrete action, target, and scope in the approval card. Command not echoed to avoid secret leakage." "" ask-infra
+    return 0
+  fi
+  return 1
+}

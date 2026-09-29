@@ -31,7 +31,7 @@ Do not edit app code, tests, snapshots, or fixtures. Allowed: build/cache/covera
 
 Stop at the first that can touch this change:
 
-1. `docs/TOOLCHAIN.md` or a verify skill
+1. `docs/toolchain.md` or a verify skill
 2. Package `test` / `check` (repo manager if `package.json`)
 3. Makefile / Justfile / `scripts/doctor.sh` / `tests/run.sh`
 4. Language default scoped to the changed package
