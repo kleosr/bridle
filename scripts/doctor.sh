@@ -9,11 +9,12 @@
 set -euo pipefail
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
-HOOKS_DIR="$PACK/shared/hooks"
+HOOKS_DIR="$PACK/shared/gate"
+CURSOR_DIR="$PACK/shared/hosts/cursor"
 FAIL=0
 
-# shellcheck source=shared/hooks/lib/fleet_scan.sh
-source "$PACK/shared/hooks/lib/fleet_scan.sh"
+# shellcheck source=shared/hosts/cursor/lib/fleet_scan.sh
+source "$CURSOR_DIR/lib/fleet_scan.sh"
 
 ok() { echo "[ok] $1"; }
 fail() { echo "[fail] $1"; FAIL=1; }
@@ -39,15 +40,15 @@ HOOK_CAP="$(jq -r '.invariants.eventHookMaxLines // 80' "$PACK/shared/config/har
 if command -v shellcheck >/dev/null 2>&1; then ok "shellcheck available"
 else echo "[warn] shellcheck not found (optional, recommended for CI)"; fi
 
-for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/scripts/*.sh; do
+for f in "$HOOKS_DIR"/*.sh "$HOOKS_DIR"/lib/*.sh "$PACK"/shared/hosts/*/*.sh "$CURSOR_DIR"/lib/*.sh "$PACK"/scripts/*.sh "$PACK"/scripts/eval/*.sh; do
   [[ -f "$f" ]] || continue
   if [[ -x "$f" ]]; then ok "executable: ${f#$PACK/}"
   elif git -C "$PACK" ls-files -s -- "${f#$PACK/}" 2>/dev/null | grep -q '^100755'; then ok "executable bit in git index: ${f#$PACK/} (working tree cannot represent it on this mount)"
   else fail "not executable: ${f#$PACK/} (set +x; on noacl Windows use: git update-index --chmod=+x <file>)"; fi
 done
 
-for j in "$HOOKS_DIR/hooks.json" "$HOOKS_DIR/hooks.cloud.json" \
-  "$PACK/shared/config/manifest.json" "$PACK/shared/config/harness.json" \
+for j in "$CURSOR_DIR/hooks.json" "$CURSOR_DIR/hooks.cloud.json" \
+  "$PACK/shared/catalog/manifest.json" "$PACK/shared/config/harness.json" \
   "$PACK/shared/config/features.json" "$PACK/package.json" \
   "$PACK/evals/tasks.json"; do
   if jq empty "$j" 2>/dev/null; then ok "valid JSON: ${j#$PACK/}"
@@ -58,10 +59,10 @@ if [[ -f "$HOOKS_DIR/policy/secret_paths.ere" && -f "$HOOKS_DIR/policy/secret_to
   ok "secret policy files present"
 else fail "secret policy files missing"; fi
 
-if ! grep -Rq --include='*.sh' 'updated_input' "$HOOKS_DIR/" 2>/dev/null; then ok "no updated_input in hooks"
+if ! grep -Rq --include='*.sh' 'updated_input' "$HOOKS_DIR/" "$PACK/shared/hosts/" 2>/dev/null; then ok "no updated_input in hooks"
 else fail "updated_input found in hooks (banned)"; fi
 
-GNU_HITS="$(grep -Rn --include='*.sh' -E 'flock|mapfile|readlink -f|stat -c' "$HOOKS_DIR/" 2>/dev/null \
+GNU_HITS="$(grep -Rn --include='*.sh' -E 'flock|mapfile|readlink -f|stat -c' "$HOOKS_DIR/" "$PACK/shared/hosts/" 2>/dev/null \
   | grep -vE ':[0-9]+:[[:space:]]*#' || true)"
 if [[ -z "$GNU_HITS" ]]; then ok "no GNU-only utils in hooks (macOS safe)"
 else fail "GNU-only util found in hooks: $GNU_HITS"; fi
@@ -72,7 +73,7 @@ for f in "$HOOKS_DIR"/before_submit_prompt.sh "$HOOKS_DIR"/before_shell.sh "$HOO
   else fail "LOC > $HOOK_CAP: ${f#$PACK/} ($n)"; fi
 done
 
-for d in shared/hooks shared/hooks/lib shared/hooks/policy shared/rules shared/skills shared/agents shared/config docs scripts tests evals; do
+for d in shared/gate shared/gate/lib shared/gate/policy shared/hosts/cursor shared/hosts/claude shared/hosts/opencode shared/rules shared/skills shared/agents shared/catalog shared/config docs scripts tests evals; do
   if [[ -d "$PACK/$d" ]]; then ok "dir exists: $d/"
   else fail "missing dir: $d/"; fi
 done
@@ -84,21 +85,21 @@ while IFS= read -r cmd; do
   script="${script%% *}"
   if [[ -f "$HOOKS_DIR/$script" ]]; then ok "hook ref exists: $script"
   else fail "hook ref missing: $script (from hooks.json)"; fi
-done < <(jq -r '.hooks | to_entries[] | .value[]? | .command // empty' "$HOOKS_DIR/hooks.json" 2>/dev/null || true)
+done < <(jq -r '.hooks | to_entries[] | .value[]? | .command // empty' "$CURSOR_DIR/hooks.json" 2>/dev/null || true)
 
 if grep -q '^state/' "$PACK/.gitignore" && grep -q '\.cursor/' "$PACK/.gitignore"; then ok ".gitignore covers state/ and .cursor/"
 else fail ".gitignore missing state/ or .cursor/ coverage"; fi
 
 if [[ "${DOCTOR_SKIP_FIXTURE:-0}" != "1" ]]; then
 DOCTOR_FIXTURE="$(mktemp -d "${TMPDIR:-/tmp}/kleos-doctor.XXXXXX")"
-if HOME="$DOCTOR_FIXTURE" FORCE=1 bash "$PACK/shared/hooks/fleet_sync.sh" install >/dev/null 2>&1 \
+if HOME="$DOCTOR_FIXTURE" FORCE=1 bash "$CURSOR_DIR/fleet_sync.sh" install >/dev/null 2>&1 \
   && jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh")' "$DOCTOR_FIXTURE/.cursor/hooks.json" >/dev/null 2>&1; then
   ok "fixture install: hooks.json registers beforeSubmitPrompt (isolated HOME)"
 else
   fail "fixture install failed or hooks.json missing beforeSubmitPrompt"
 fi
 if [[ -d "$DOCTOR_FIXTURE/.cursor/hooks" ]]; then
-  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh git-bash-shim.ps1 lib/selfdir.sh lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/sql_scope.sh lib/feature_gate.sh; do
+  for rel in before_submit_prompt.sh before_shell.sh before_read_file.sh git-bash-shim.ps1 lib/selfdir.sh lib/common.sh lib/json.sh lib/json_tool.py lib/json_tool.js lib/shell_gate.sh lib/sql_scope.sh lib/feature_gate.sh lib/verdict_cursor.sh; do
     if [[ -f "$DOCTOR_FIXTURE/.cursor/hooks/$rel" ]]; then
       ok "fixture install: hooks/$rel present"
     else
@@ -122,8 +123,8 @@ if grep -q 'You are kleosr'"'"'s engineering partner' "$DOCTOR_FIXTURE/.cursor/r
 else
   fail "fixture install: kleosr.mdc missing or not the charter"
 fi
-# shellcheck source=shared/hooks/lib/fleet_install.sh
-source "$PACK/shared/hooks/lib/fleet_install.sh"
+# shellcheck source=shared/hosts/cursor/lib/fleet_install.sh
+source "$CURSOR_DIR/lib/fleet_install.sh"
 CHARTER_EXPECT="$(mktemp -d "${TMPDIR:-/tmp}/kleos-charter.XXXXXX")"
 if write_charter_mdc "$CHARTER_EXPECT" \
   && cmp -s "$CHARTER_EXPECT/kleosr.mdc" "$DOCTOR_FIXTURE/.cursor/rules/kleosr.mdc"; then
@@ -138,34 +139,34 @@ if [[ "${DOCTOR_SKIP_LIVE:-0}" != "1" ]]; then
 if jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh")' "${HOME}/.cursor/hooks.json" >/dev/null 2>&1; then
   ok "live: ~/.cursor has kleosrules beforeSubmitPrompt (optional — not required in CI/agent env)"
 else
-  echo "[info] live: ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash scripts/install.sh)"
+  echo "[info] live: ~/.cursor not a kleosrules install (expected in agent/CI env; run FORCE=1 bash shared/hosts/cursor/install.sh)"
 fi
 if [[ -f "${HOME}/.cursor/rules/kleosr.mdc" ]]; then
-  # shellcheck source=shared/hooks/lib/fleet_install.sh
-  source "$PACK/shared/hooks/lib/fleet_install.sh"
+  # shellcheck source=shared/hosts/cursor/lib/fleet_install.sh
+  source "$CURSOR_DIR/lib/fleet_install.sh"
   LIVE_CHARTER="$(mktemp -d "${TMPDIR:-/tmp}/kleos-charter-live.XXXXXX")"
   if write_charter_mdc "$LIVE_CHARTER" \
     && cmp -s "$LIVE_CHARTER/kleosr.mdc" "${HOME}/.cursor/rules/kleosr.mdc"; then
     ok "live: kleosr.mdc matches charter.txt"
   else
-    fail "live: kleosr.mdc drifted from charter.txt (FORCE=1 bash scripts/install.sh; remove any Settings user-rule copy)"
+    fail "live: kleosr.mdc drifted from charter.txt (FORCE=1 bash shared/hosts/cursor/install.sh; remove any Settings user-rule copy)"
   fi
   rm -rf "$LIVE_CHARTER"
 fi
 fi
 
-if jq -e '.hooks.beforeSubmitPrompt[0].command == "./hooks/before_submit_prompt.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.beforeShellExecution[0].command == "./hooks/before_shell.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.beforeReadFile[0].command == "./hooks/before_read_file.sh"' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks | (has("stop") | not) and (has("sessionStart") | not) and (has("preToolUse") | not) and (has("postToolUse") | not)' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks | keys | length == 3' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true and .hooks.beforeReadFile[0].failClosed == true' "$HOOKS_DIR/hooks.json" >/dev/null 2>&1 \
-  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$HOOKS_DIR/hooks.cloud.json" >/dev/null 2>&1; then
+if jq -e '.hooks.beforeSubmitPrompt[0].command == "./hooks/before_submit_prompt.sh"' "$CURSOR_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeShellExecution[0].command == "./hooks/before_shell.sh"' "$CURSOR_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeReadFile[0].command == "./hooks/before_read_file.sh"' "$CURSOR_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks | (has("stop") | not) and (has("sessionStart") | not) and (has("preToolUse") | not) and (has("postToolUse") | not)' "$CURSOR_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks | keys | length == 3' "$CURSOR_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true and .hooks.beforeReadFile[0].failClosed == true' "$CURSOR_DIR/hooks.json" >/dev/null 2>&1 \
+  && jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true and .hooks.beforeShellExecution[0].failClosed == true' "$CURSOR_DIR/hooks.cloud.json" >/dev/null 2>&1; then
   ok "hooks.json registers submit+shell+read (no stop/sessionStart/preToolUse; security failClosed)"
 else fail "hooks.json must register submit+shell+read with ./hooks/ commands, no stop/sessionStart/preToolUse, and security failClosed"; fi
 
-if jq empty "$PACK/shared/config/manifest.json" >/dev/null 2>&1 \
-  && [[ -f "$HOOKS_DIR/lib/hooks_json.jq" && -f "$HOOKS_DIR/lib/hooks_json.sh" ]]; then
+if jq empty "$PACK/shared/catalog/manifest.json" >/dev/null 2>&1 \
+  && [[ -f "$CURSOR_DIR/lib/hooks_json.jq" && -f "$CURSOR_DIR/lib/hooks_json.sh" ]]; then
   ok "manifest.json + hooks_json merge/strip present"
 else fail "manifest.json or hooks_json merge helpers missing"; fi
 
@@ -173,7 +174,7 @@ if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
   fail "pack has repo-level hooks (never install into this pack)"
 else ok "no repo-level hooks in pack (local global-only mode)"; fi
 
-if ! grep -RqiE 'CallMcpTool' "$HOOKS_DIR/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
+if ! grep -RqiE 'CallMcpTool' "$HOOKS_DIR/" "$PACK/shared/hosts/" --include='*.sh' 2>/dev/null; then ok "no MCP core dependency in hooks"
 else fail "MCP core dependency found in hooks (should be optional, not core)"; fi
 
 if [[ -f "$PACK/SECURITY.md" ]]; then ok "SECURITY.md present"
@@ -213,8 +214,8 @@ done
 if [[ "$PASTE_HEADS" == ok ]]; then ok "charter.txt keeps charter headings"
 else fail "charter.txt missing charter heading ($PASTE_HEADS)"; fi
 
-if grep -qE 'rm -rf "\$HOME_C/hooks"' "$PACK/scripts/uninstall.sh" \
-  || grep -qE 'rm -f "\$HOME_C/hooks.json"' "$PACK/scripts/uninstall.sh"; then
+if grep -qE 'rm -rf "\$HOME_C/hooks"' "$CURSOR_DIR/uninstall.sh" \
+  || grep -qE 'rm -f "\$HOME_C/hooks.json"' "$CURSOR_DIR/uninstall.sh"; then
   fail "uninstall.sh must not wipe ~/.cursor/hooks.json or hooks/ wholesale"
 else ok "uninstall.sh does not wholesale-delete hooks.json or hooks/"
 fi
@@ -223,15 +224,15 @@ REF_BAD=""
 while IFS= read -r name; do
   [[ -z "$name" ]] && continue
   [[ -f "$PACK/shared/rules/${name}.mdc" ]] || REF_BAD="$REF_BAD missing-rule:$name"
-done < <(load_lines "$PACK/shared/config/rules.global.txt")
+done < <(load_lines "$PACK/shared/catalog/rules.global.txt")
 while IFS= read -r skill; do
   [[ -z "$skill" ]] && continue
   [[ -f "$PACK/shared/skills/$skill/SKILL.md" ]] || REF_BAD="$REF_BAD missing-skill:$skill"
-done < <(load_lines "$PACK/shared/config/skills.txt")
+done < <(load_lines "$PACK/shared/catalog/skills.txt")
 while IFS= read -r skill; do
   [[ -z "$skill" ]] && continue
   [[ -d "$PACK/shared/skills/$skill" ]] && REF_BAD="$REF_BAD retired-present:$skill"
-done < <(load_lines "$PACK/shared/config/retired-skills.txt")
+done < <(load_lines "$PACK/shared/catalog/retired-skills.txt")
 if [[ -z "$REF_BAD" ]]; then ok "rule/skill references resolve"
 else fail "unresolved references:$REF_BAD"; fi
 
@@ -241,8 +242,8 @@ else fail "features.json failed scripts/feature.sh check"; fi
 if bash "$PACK/scripts/handoff.sh" check >/dev/null; then ok "handoff absent or schema-valid"
 else fail "state/handoff.json failed scripts/handoff.sh check"; fi
 
-if bash "$PACK/scripts/eval.sh" check >/dev/null; then ok "eval coverage (scripts/eval.sh check)"
-else fail "evals/tasks.json failed scripts/eval.sh check"; fi
+if bash "$PACK/scripts/eval/check.sh" check >/dev/null; then ok "eval coverage (scripts/eval/check.sh check)"
+else fail "evals/tasks.json failed scripts/eval/check.sh check"; fi
 
 if bash "$PACK/scripts/ready.sh" >/dev/null; then ok "L06 bootstrap contract (scripts/ready.sh)"
 else fail "scripts/ready.sh failed"; fi
@@ -254,10 +255,10 @@ done
 if [[ "$ANTI_OK" == ok ]]; then ok "no NOW.md/PROGRESS.md/LEARNING.md/claude-progress.md at pack root"
 else fail "banned session SoR file at pack root ($ANTI_OK)"; fi
 
-if jq -e '.runtimeLibs | index("feature_gate.sh")' "$PACK/shared/config/manifest.json" >/dev/null; then
+if jq -e '.runtimeLibs | index("feature_gate.sh")' "$PACK/shared/catalog/manifest.json" >/dev/null; then
   ok "manifest runtimeLibs includes feature_gate.sh"
 else fail "manifest.json missing feature_gate.sh in runtimeLibs"; fi
-if jq -e '.runtimeLibs | index("json.sh") and index("json_tool.py") and index("json_tool.js")' "$PACK/shared/config/manifest.json" >/dev/null; then
+if jq -e '.runtimeLibs | index("json.sh") and index("json_tool.py") and index("json_tool.js")' "$PACK/shared/catalog/manifest.json" >/dev/null; then
   ok "manifest runtimeLibs includes hook JSON codec"
 else fail "manifest.json missing json.sh/json_tool.py/json_tool.js in runtimeLibs"; fi
 if json_available; then ok "hook JSON codec (python3 or node)"

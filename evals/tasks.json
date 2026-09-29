@@ -18,67 +18,67 @@
       "id": "false-completion-feature",
       "dimension": "false_completion",
       "layer": "state",
-      "proves": "tests/harness.sh"
+      "proves": "tests/pack/harness.sh"
     },
     {
       "id": "instruction-conflict-charter",
       "dimension": "instruction_conflict",
       "layer": "instructions",
-      "proves": "tests/grounding.sh"
+      "proves": "tests/pack/grounding.sh"
     },
     {
       "id": "instruction-conflict-authority",
       "dimension": "instruction_conflict",
       "layer": "instructions",
-      "proves": "tests/grounding.sh"
+      "proves": "tests/pack/grounding.sh"
     },
     {
       "id": "execution-steel",
       "dimension": "execution_reliability",
       "layer": "permissions",
-      "proves": "tests/gate_edges.sh"
+      "proves": "tests/gate/gate_edges.sh"
     },
     {
       "id": "lifecycle-install",
       "dimension": "recovery",
       "layer": "lifecycle",
-      "proves": "tests/install_lifecycle.sh"
+      "proves": "tests/hosts/install_lifecycle.sh"
     },
     {
       "id": "continuity-handoff",
       "dimension": "continuity",
       "layer": "continuity",
-      "proves": "tests/harness.sh"
+      "proves": "tests/pack/harness.sh"
     },
     {
       "id": "context-map-size",
       "dimension": "context_efficiency",
       "layer": "context",
-      "proves": "tests/harness.sh"
+      "proves": "tests/pack/harness.sh"
     },
     {
       "id": "verification-citation",
       "dimension": "verification",
       "layer": "verification",
-      "proves": "tests/grounding.sh"
+      "proves": "tests/pack/grounding.sh"
     },
     {
       "id": "completion-feature-check",
       "dimension": "completion",
       "layer": "state",
-      "proves": "tests/harness.sh"
+      "proves": "tests/pack/harness.sh"
     },
     {
       "id": "regression-false-win",
       "dimension": "regression",
       "layer": "verification",
-      "proves": "tests/harness.sh"
+      "proves": "tests/pack/harness.sh"
     },
     {
       "id": "scope-surgical-and-complete",
       "dimension": "scope",
       "layer": "scope",
-      "proves": "tests/scope_eval.sh"
+      "proves": "tests/pack/scope_eval.sh"
     }
   ]
 }

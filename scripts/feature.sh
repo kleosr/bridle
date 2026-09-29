@@ -4,10 +4,10 @@
 set -euo pipefail
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
-# shellcheck source=shared/hooks/lib/common.sh
-source "$PACK/shared/hooks/lib/common.sh"
-# shellcheck source=shared/hooks/lib/feature_gate.sh
-source "$PACK/shared/hooks/lib/feature_gate.sh"
+# shellcheck source=shared/gate/lib/common.sh
+source "$PACK/shared/gate/lib/common.sh"
+# shellcheck source=shared/gate/lib/feature_gate.sh
+source "$PACK/shared/gate/lib/feature_gate.sh"
 require_jq
 # The ledger describes the workspace this command runs in: this pack when the
 # cwd is inside it, otherwise <repo>/.cursor/bridle/features.json.

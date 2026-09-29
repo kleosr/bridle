@@ -11,7 +11,7 @@ Does Cursor actually halt when `permission: deny` is emitted? Does it genuinely 
 
 Those questions can only be answered by real production sessions, real telemetry logs, and honest notes. That is what this document tracks. We never claim host guarantees that haven't been measured live.
 
-The single source of truth for script policies is `SECURITY.md`. The hook surface is `docs/ARCHITECTURE.md`.
+The single source of truth for script policies is `SECURITY.md`. The hook surface is `docs/architecture.md`.
 
 ---
 
@@ -21,7 +21,7 @@ Cursor executes hooks across two very different environments:
 
 | Execution Lane | Hook Configuration Loaded | What bridle Does |
 |---|---|---|
-| **Local Agent / Chat** | User hooks: `~/.cursor/hooks.json` | Default install (`FORCE=1 bash scripts/install.sh`). Protects your local machine. |
+| **Local Agent / Chat** | User hooks: `~/.cursor/hooks.json` | Default install (`FORCE=1 bash shared/hosts/cursor/install.sh`). Protects your local machine. |
 | **Cloud Agent** | Project hooks only: `<repo>/.cursor/hooks.json` | **Opt-in.** `CLOUD=1 TARGET_REPO=<other-repo> project-hooks` writes `hooks.cloud.json` to the target repo. Never installed into this pack. |
 | **Cloud Agent + User Hooks** | `~/.cursor/hooks.json` is **not mounted** on the cloud VM | Your local user hooks do not follow into Cloud Agent instances. |
 | **This Pack Repository** | No repo-level `.cursor/hooks.json` | Prevents recursive hook execution during local development. |
@@ -96,7 +96,7 @@ Every entry here comes from real sessions on real machines.
 | `before_shell.sh` allow (`git status`) | 595 ms | 399 ms |
 | `before_submit_prompt.sh` clean prompt | 527 ms | 383 ms |
 
-Verified: `TESTS=fixtures,gate_edges,harness,overlay_edges bash tests/run.sh` → 248 pass, 0 fail (this entry's regression cases are in `tests/fixtures.sh` under the H16 comment). The shim's own PowerShell startup is unchanged and still dominates the wall clock the host sees.
+Verified: `TESTS=fixtures,gate_edges,harness,overlay_edges bash tests/run.sh` → 248 pass, 0 fail (this entry's regression cases are in `tests/gate/fixtures.sh` under the H16 comment). The shim's own PowerShell startup is unchanged and still dominates the wall clock the host sees.
 
 ---
 
@@ -127,13 +127,13 @@ This is not a Desktop compact-and-recheck. It records the prompt assembly of one
 Same log, extended through 2026-09-23 15:33 (1,942 lines): 1,376 reads, 447 shells, 63 submits, 56 stops. Every stop was `{}`. Two `before_shell.sh` runs exited 1 with `stdout=0B` because `dirname` fork-died (`cygheap read copy failed`) and `cd` then saw an empty argument. The host fail-closed those calls. Script directories are now resolved in-process (`lib/selfdir.sh`). The Windows shim log records `verdict=` and `reason=` and does not record payloads. `bash scripts/context_cost.sh` prints the static prefix (7,279 bytes, no dates or `$()`). Provider cache hits and prices are still not visible.
 
 ### 2026-09-28 — Claude Code, Linux: `PreToolUse(Write)` hook
-The Claude port (`scripts/claude.sh`) registers one hook in `~/.claude/settings.json`: `shared/hooks/claude/before_write.sh`, installed as `~/.claude/hooks/bridle_before_write.sh`. Inside the session `cwd` it denies a Write over an existing file (`rewrite-existing`) and a new hand-written file over 300 lines (`new-file-over-300`). Writes outside the project are allowed. Claude Code fails open on hook exits other than 2, so every failure path in the script exits 2.
+The Claude port (`shared/hosts/claude/install.sh`) registers one hook in `~/.claude/settings.json`: `shared/hosts/claude/before_write.sh`, installed as `~/.claude/hooks/bridle_before_write.sh`. Inside the session `cwd` it denies a Write over an existing file (`rewrite-existing`) and a new hand-written file over 300 lines (`new-file-over-300`). Writes outside the project are allowed. Claude Code fails open on hook exits other than 2, so every failure path in the script exits 2.
 
 | Observation | What was seen | Class |
 |---|---|---|
 | Deny on exit 2 | A live Write over `.gitignore` was blocked; the model received `bridle: rewrite-existing: … exists; change it with Edit`. The file was unchanged. | This run |
 | Hot reload | The hook took effect in the running session right after `claude.sh install`, with no restart. | This run |
-| Size cap, malformed payload | Covered by fixtures in `tests/install_lifecycle.sh` only. | Script law |
+| Size cap, malformed payload | Covered by fixtures in `tests/hosts/install_lifecycle.sh` only. | Script law |
 
 The Cursor freeze (`hooksFrozen`, `noPreToolUse`) governs `hooks.json` and is unchanged.
 
@@ -141,7 +141,7 @@ The Cursor freeze (`hooksFrozen`, `noPreToolUse`) governs `hooks.json` and is un
 Cursor executes `~/.claude/settings.json` `PreToolUse` as its own `preToolUse` step (`claude-user config`). The payload has `tool_input.file_path`, `workspace_roots`, and `cursor_version`. It has no `cwd`. `tool_name` is `Write` for an edit of an existing file, with the whole file in `content`. The hook treated a missing `cwd` as `malformed` and then a present file as `rewrite-existing`, so Cursor could not write or edit inside the project. A `cursor_version` payload now resolves the root from `workspace_roots` and allows that Write. Claude's `cwd` payload still denies a whole-file rewrite.
 
 ### 2026-09-28 — Claude Code 2.1.284, Linux: `Stop` hook
-The Claude port also registers `shared/hooks/claude/before_stop.sh` (installed as `~/.claude/hooks/bridle_before_stop.sh`). It reads the session transcript for the current turn (since the last human message) and exits 2 once when the turn edited project files and either ran no verification after the last edit, ended on a failed verify, passed the footprint budget, or added a source file nothing references. Any sensor failure exits 0 so a crashed check cannot trap the session. Every turn with edits appends a line to `~/.claude/state/bridle-turns.jsonl`.
+The Claude port also registers `shared/hosts/claude/before_stop.sh` (installed as `~/.claude/hooks/bridle_before_stop.sh`). It reads the session transcript for the current turn (since the last human message) and exits 2 once when the turn edited project files and either ran no verification after the last edit, ended on a failed verify, passed the footprint budget, or added a source file nothing references. Any sensor failure exits 0 so a crashed check cannot trap the session. Every turn with edits appends a line to `~/.claude/state/bridle-turns.jsonl`.
 
 | Observation | What was seen | Class |
 |---|---|---|
@@ -150,9 +150,18 @@ The Claude port also registers `shared/hooks/claude/before_stop.sh` (installed a
 | Model response | Told both "run no commands" and "verify", the agent finished with "The edit is unverified" instead of claiming done. | This run |
 | `--no-session-persistence` | A first attempt with that flag produced no block. The hook was not probed in that run; the missing transcript file is the inferred cause. | Inferred |
 | Replay | The 24 recorded sessions parse; a 39 MB transcript takes 0.5 s. Of the 5 whose last turn edited files, 3 would have blocked. | This run |
-| Fixtures | Verify, red verify, docs-only, failed edit, turn leak, budget, wiring, registration: `tests/claude_stop.sh`. | Script law |
+| Fixtures | Verify, red verify, docs-only, failed edit, turn leak, budget, wiring, registration: `tests/hosts/claude_stop.sh`. | Script law |
 
 The footprint budget (6 files, 2 new production files, 200 production lines) is an initial guess from the recorded transcripts. Retune it from `bridle-turns.jsonl`.
+
+### 2026-09-29 — Claude Code: the three gates, native format
+`shared/hosts/claude/install.sh` also registers `UserPromptSubmit`, `PreToolUse(Bash)`, and `PreToolUse(Read)`, each running the matching `shared/gate/` script as `BRIDLE_HOST=claude bash ~/.claude/hooks/bridle/<script>`. The verdict comes from `shared/hosts/claude/verdict.sh`. Allow prints nothing, because an explicit `allow` would skip Claude's own permission prompt. Deny and ask go in `hookSpecificOutput.permissionDecision`, and a prompt block is `{"decision":"block"}`. Any exit other than 0 or 2 is rewritten to 2, because Claude fails open on the rest. A payload carrying `cursor_version` exits 0 silently: Cursor runs these entries too and already gates natively.
+
+| Observation | What was seen | Class |
+|---|---|---|
+| Output shape, skip, missing verdict, registration | `tests/hosts/claude_gates.sh` | Script law |
+| Claude honoring `deny` / `ask` / prompt `block` live | Not probed | Unverified |
+| `Grep`, `Glob`, MCP reads of secret paths | Not gated; only `Read` and `Bash` are matched | Uncovered |
 
 ---
 

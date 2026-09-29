@@ -12,7 +12,7 @@ FAIL=0
 PASS=0
 
 # Portability: this also fails before the copied pack's first assertion.
-source "$REAL_PACK/shared/hooks/lib/common.sh"
+source "$REAL_PACK/shared/gate/lib/common.sh"
 require_jq
 
 cleanup_pack() {
@@ -44,30 +44,30 @@ selected() {
   case ",${TESTS}," in *",$1,"*) return 0 ;; *) return 1 ;; esac
 }
 
-source "$PACK/tests/static_checks.sh"
+source "$PACK/tests/pack/static_checks.sh"
 
 if selected fixtures; then
   echo ""
   echo "=== Hook fixtures ==="
-  source "$PACK/tests/fixtures.sh"
+  source "$PACK/tests/gate/fixtures.sh"
 fi
 
 if selected gate_edges; then
   echo ""
   echo "=== Gate edges (false positives / bypasses) ==="
-  source "$PACK/tests/gate_edges.sh"
+  source "$PACK/tests/gate/gate_edges.sh"
 fi
 
 if selected overlay_edges; then
   echo ""
   echo "=== Overlay edges (BOM stdin, retired mdc, shim merge) ==="
-  source "$PACK/tests/overlay_edges.sh"
+  source "$PACK/tests/hosts/overlay_edges.sh"
 fi
 
 if selected sql_scope; then
   echo ""
   echo "=== SQL scope (program-scoped destructive SQL) ==="
-  if bash "$PACK/tests/sql_scope_test.sh"; then
+  if bash "$PACK/tests/gate/sql_scope.sh"; then
     run_test "sql_scope: all program-scope checks pass" "pass" "pass"
   else
     run_test "sql_scope: all program-scope checks pass" "pass" "fail"
@@ -77,43 +77,49 @@ fi
 if selected install_lifecycle; then
   echo ""
   echo "=== Install lifecycle (isolated HOME) ==="
-  source "$PACK/tests/install_lifecycle.sh"
+  source "$PACK/tests/hosts/install_lifecycle.sh"
 fi
 
 if selected claude_stop; then
   echo ""
   echo "=== Claude Stop hook (synthetic transcripts, isolated HOME) ==="
-  source "$PACK/tests/claude_stop.sh"
+  source "$PACK/tests/hosts/claude_stop.sh"
+fi
+
+if selected claude_gates; then
+  echo ""
+  echo "=== Claude gates (BRIDLE_HOST=claude, isolated HOME) ==="
+  source "$PACK/tests/hosts/claude_gates.sh"
 fi
 
 if selected opencode_port; then
   echo ""
   echo "=== opencode port (isolated HOME) ==="
-  source "$PACK/tests/opencode_port.sh"
+  source "$PACK/tests/hosts/opencode_port.sh"
 fi
 
 if selected scope_eval; then
   echo ""
   echo "=== Scope eval scorer (golden overlays, no agent) ==="
-  source "$PACK/tests/scope_eval.sh"
+  source "$PACK/tests/pack/scope_eval.sh"
 fi
 
 if selected quality_gate; then
   echo ""
   echo "=== code-architecture quality gate ==="
-  source "$PACK/tests/quality_gate.sh"
+  source "$PACK/tests/pack/quality_gate.sh"
 fi
 
 if selected grounding; then
   echo ""
   echo "=== Grounding (shapes, not prose) ==="
-  source "$PACK/tests/grounding.sh"
+  source "$PACK/tests/pack/grounding.sh"
 fi
 
 if selected harness; then
   echo ""
   echo "=== Harness contracts (features, handoff, evals) ==="
-  source "$PACK/tests/harness.sh"
+  source "$PACK/tests/pack/harness.sh"
 fi
 
 echo ""

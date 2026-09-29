@@ -36,11 +36,11 @@ Maintained as private engineering work by kleosr (Mario Pulice), published under
 
 | Host | Install | What lands |
 |---|---|---|
-| Cursor | `bash scripts/install.sh` | Charter, rules, skills, agents, and three hooks in `~/.cursor` |
-| Claude Code | `bash scripts/claude.sh install` | Rules, skills, and agents in `~/.claude`. No hooks. |
-| opencode | `bash scripts/opencode.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the three hooks via `plugin/bridle.js` in `~/.config/opencode` |
+| Cursor | `bash shared/hosts/cursor/install.sh` | Charter, rules, skills, agents, and three hooks in `~/.cursor` |
+| Claude Code | `bash shared/hosts/claude/install.sh install` | Rules, skills, and agents in `~/.claude`, plus the three gates and the Write and Stop hooks |
+| opencode | `bash shared/hosts/opencode/install.sh install` | Instructions, skills, agents, the `bridle` primary agent, and the three hooks via `plugin/bridle.js` in `~/.config/opencode` |
 
-The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`tests/install_lifecycle.sh`, `TESTS=claude_stop bash tests/run.sh`, `TESTS=opencode_port bash tests/run.sh`). Uninstall each port with the same script and `uninstall`.
+The Cursor hooks bind to that host’s four lifecycle events and its JSON IPC / `failClosed` contract. Rules use Cursor’s instruction hierarchy. Tests and live probes in [`docs/host-capability.md`](docs/host-capability.md) were run on Cursor. Claude and opencode are covered by the port checks (`TESTS=install_lifecycle,claude_gates,claude_stop,opencode_port bash tests/run.sh`). Uninstall Cursor with `shared/hosts/cursor/uninstall.sh`, the other ports with their `install.sh uninstall`.
 
 ---
 
@@ -51,7 +51,7 @@ Requirements: `jq`, and Python 3 or Node.js (the hooks’ JSON codec). On Window
 First install, from this repository:
 
 ```bash
-bash scripts/install.sh
+bash shared/hosts/cursor/install.sh
 ```
 
 That writes the charter, rules, companions, skills, agents, and hooks into `~/.cursor`. Restart Cursor or start a new chat afterward. A running chat keeps the previous rules.
@@ -59,7 +59,7 @@ That writes the charter, rules, companions, skills, agents, and hooks into `~/.c
 `FORCE` is the overwrite switch, default off. If a destination already exists and differs, the installer skips it and prints `[warn] skip differing … (FORCE=1)`. A skipped file is not updated. To replace those files, the installer first copies the current file to `*.pre-kleos-bak` (once), then overwrites:
 
 ```bash
-FORCE=1 bash scripts/install.sh
+FORCE=1 bash shared/hosts/cursor/install.sh
 ```
 
 `AGENTS.md` documents `FORCE=1` because an update that skips differing files leaves a partial install.
@@ -67,13 +67,13 @@ FORCE=1 bash scripts/install.sh
 Remove the install and restore those backups:
 
 ```bash
-bash scripts/uninstall.sh
+bash shared/hosts/cursor/uninstall.sh
 ```
 
 Cloud Agents load project hooks, not `~/.cursor/hooks.json`. Opt in on another repository. This pack refuses that install into itself.
 
 ```bash
-CLOUD=1 TARGET_REPO=<other-repo> bash shared/hooks/fleet_sync.sh project-hooks
+CLOUD=1 TARGET_REPO=<other-repo> bash shared/hosts/cursor/fleet_sync.sh project-hooks
 ```
 
 ---
@@ -104,7 +104,7 @@ graph TD
   B --> C["3. Glob companions: next, vite, astro, postgres"]
   C --> D["4. Skills: shared/skills, on match"]
   D --> E["5. Specialists: hunter, cut, prove, architect"]
-  E --> F["6. Hooks: shared/hooks"]
+  E --> F["6. Hooks: shared/gate + shared/hosts"]
   F --> G["7. State: features.json, handoff.json"]
   H["SECURITY.md: on demand, outranks rules on boundaries"] -.-> A
 ```
@@ -112,7 +112,7 @@ graph TD
 1. **Charter.** `shared/rules/charter.txt`, installed as `~/.cursor/rules/kleosr.mdc` with `alwaysApply`. Identity, what may proceed without asking, and what needs approval. Install it only there. A second copy in Cursor Settings → User Rules drifts.
 2. **Always-on law.** `core.mdc` and `testing.mdc`, each capped at 80 lines. Craft, size, the dependency ladder, and the verify loop.
 3. **Glob companions.** Framework rules attach on file match and stay inert unless that package’s manifest names the dependency.
-4. **Skills.** Catalog `shared/config/skills.txt`. Procedures only. They cannot grant a permission.
+4. **Skills.** Catalog `shared/catalog/skills.txt`. Procedures only. They cannot grant a permission.
 5. **Specialists.** `hunter`, `cut`, `prove`, and `architect` run in a separate context. `prove` checks evidence so the implementing model does not grade its own change; `architect` reviews a design before code.
 6. **Hooks.** The table below. Registered in `~/.cursor/hooks.json`.
 7. **State.** `shared/config/features.json` is the capability ledger. `state/handoff.json` is gitignored continuity for the next session. Continuity is not a new assignment.
@@ -125,7 +125,7 @@ graph TD
 | `beforeShellExecution` | `before_shell.sh` | Fail closed. `permission: deny` on destructive calls, secret reads, lint suppressions, and shell rewrites of source. `ask` on infra and database changes. |
 | `beforeReadFile` | `before_read_file.sh` | Fail closed. Canonical path, then deny `.env`, private keys, and certificates. |
 
-There is no `stop`, `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). False completion of a feature is a failed `feature.sh pass`.
+There is no `stop`, `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/architecture.md`](docs/architecture.md). False completion of a feature is a failed `feature.sh pass`.
 
 ### Shell-hook timing
 
@@ -145,7 +145,7 @@ Claude, Devin, Cursor agents, and any other coding agent:
 4. `features.json` and `state/handoff.json` do not authorize a new goal or a new host.
 5. On Windows, run these scripts from Git Bash.
 
-`bash scripts/ready.sh` checks the bootstrap contract. `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` checks the repository. `bash scripts/doctor.sh` also checks the live `~/.cursor` install. `bash scripts/eval.sh check` and `bash scripts/feature.sh check` check coverage and ledger invariants.
+`bash scripts/ready.sh` checks the bootstrap contract. `DOCTOR_SKIP_LIVE=1 bash scripts/doctor.sh` checks the repository. `bash scripts/doctor.sh` also checks the live `~/.cursor` install. `bash scripts/eval/check.sh check` and `bash scripts/feature.sh check` check coverage and ledger invariants.
 
 ---
 
@@ -158,10 +158,12 @@ Claude, Devin, Cursor agents, and any other coding agent:
 | `shared/rules/` | Charter source, always-on rules, glob companions |
 | `shared/skills/` | Skill bodies |
 | `shared/agents/` | `hunter`, `cut`, `prove`, `architect` |
-| `shared/hooks/` | Event scripts, `git-bash-shim.ps1`, `lib/`, `policy/` |
-| `shared/config/` | `harness.json`, `features.json`, `skills.txt` |
-| `scripts/` | `install.sh`, `uninstall.sh`, `doctor.sh`, `ready.sh`, `eval.sh`, `feature.sh`, `handoff.sh` |
-| `tests/` | Gauntlet |
+| `shared/gate/` | Host-neutral gate: event scripts, `lib/`, `policy/` |
+| `shared/hosts/` | Per-host adapters: `cursor/` (hooks.json, shim, fleet installer, `uninstall.sh`), `claude/`, `opencode/`, each with its `install.sh` and `verdict.sh` |
+| `shared/catalog/` | What ships: `manifest.json`, `skills.txt`, `rules.global.txt`, `retired*.txt` |
+| `shared/config/` | Contract and ledger: `harness.json`, `features.json` |
+| `scripts/` | Pack tooling: `doctor.sh`, `ready.sh`, `feature.sh`, `handoff.sh`, `context_cost.sh`, `eval/check.sh`, `eval/scope.sh` |
+| `tests/` | `run.sh` gauntlet; fixtures in `gate/`, `hosts/`, `pack/` |
 | `docs/` | Architecture, toolchain, host capability |
 
-Further reading: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md), [`docs/host-capability.md`](docs/host-capability.md).
+Further reading: [`docs/architecture.md`](docs/architecture.md), [`docs/toolchain.md`](docs/toolchain.md), [`docs/host-capability.md`](docs/host-capability.md).

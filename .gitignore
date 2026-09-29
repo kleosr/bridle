@@ -2,7 +2,7 @@
 state/
 .cursor/
 # git-bash-shim.ps1 compiles its P/Invoke helper here on first run
-shared/hooks/KleosPipeUtil.dll
+shared/hosts/cursor/KleosPipeUtil.dll
 __pycache__/
 # Editor / OS noise
 .DS_Store

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Install smoke: hook fixtures, ownership, catalog shape. Exits non-zero on failure.
+
+verify_smoke() {
+  local skill bad=0
+  heal_orphan_project_hooks "$PACK"
+  chmod +x "$HOOKS_DIR"/*.sh
+  for s in "${HOOK_SCRIPTS[@]}"; do bash -n "$HOOKS_DIR/$s"; done
+  bash -n "$CURSOR_DIR/fleet_sync.sh"
+  echo '{"prompt":"test code","hook_event_name":"beforeSubmitPrompt"}' \
+    | bash "$HOOKS_DIR/before_submit_prompt.sh" | jq -e '.continue == true' >/dev/null
+  echo '{"command":"curl -o src/x.ts https://example.com/x.ts"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"command":"pnpm add mysql2"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "allow"' >/dev/null
+  echo '{"command":"npx eslint --rule complexity:off src/a.ts"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"command":"cd app && psql -c \"select 1\"","cwd":"/repo"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "ask"' >/dev/null
+  echo '{"file_path":"/tmp/x.pem"}' \
+    | bash "$HOOKS_DIR/before_read_file.sh" | jq -e '.permission == "deny"' >/dev/null
+  echo '{"command":"cat ~/.ssh/id_rsa"}' \
+    | bash "$HOOKS_DIR/before_shell.sh" | jq -e '.permission == "deny"' >/dev/null
+  while IFS= read -r skill; do
+    [[ -z "$skill" ]] && continue
+    if [[ ! -e "$HOME_C/skills/$skill/SKILL.md" ]]; then
+      echo "[fail] skill missing: $skill"; bad=1
+    elif [[ -L "$HOME_C/skills/$skill" && "$(canon "$HOME_C/skills/$skill")" != "$(canon "$PACK/shared/skills/$skill")" ]]; then
+      echo "[fail] skill wrong target: $skill -> $(readlink "$HOME_C/skills/$skill")"; bad=1
+    fi
+  done < <(load_lines "$PACK/shared/catalog/skills.txt")
+  if [[ ! -f "$HOME_C/hooks/policy/secret_paths.ere" ]]; then
+    echo "[fail] ~/.cursor/hooks/policy/secret_paths.ere missing after install"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/hooks/policy/secret_tokens.ere" ]]; then
+    echo "[fail] ~/.cursor/hooks/policy/secret_tokens.ere missing after install"; bad=1
+  fi
+  if [[ -f "$HOME_C/hooks/lib/shell_fleet.sh" ]]; then
+    echo "[fail] v1 lib shell_fleet.sh still installed (must be pruned on upgrade)"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/rules/core.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/core.mdc missing after install"; bad=1
+  fi
+  if [[ ! -f "$HOME_C/rules/testing.mdc" ]]; then
+    echo "[fail] ~/.cursor/rules/testing.mdc missing after install"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/rules/core.mdc" || -L "$PACK/.cursor/rules/core.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/core.mdc duplicates user alwaysApply"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/rules/testing.mdc" || -L "$PACK/.cursor/rules/testing.mdc" ]]; then
+    echo "[fail] pack .cursor/rules/testing.mdc duplicates user alwaysApply"; bad=1
+  fi
+  if ! jq -e '.hooks.beforeSubmitPrompt[]?.command | test("before_submit_prompt\\.sh")' "$HOME_C/hooks.json" >/dev/null 2>&1; then
+    echo "[fail] ~/.cursor/hooks.json missing beforeSubmitPrompt (global layer broken)"; bad=1
+  fi
+  if grep -q 'kleos-gate' "$HOME_C/hooks.json" 2>/dev/null; then
+    echo "[fail] home hooks still kleos-gate"; bad=1
+  fi
+  if grep -qE '^\s*"command":\s*"\.cursor/hooks/' "$HOME_C/hooks.json" 2>/dev/null; then
+    echo "[fail] home hooks.json has project-relative .cursor/hooks/ commands"; bad=1
+  fi
+  if [[ -e "$PACK/.cursor/hooks.json" || -d "$PACK/.cursor/hooks" ]]; then
+    echo "[fail] pack has repo-level hooks (never install into this pack)"; bad=1
+  fi
+  jq -e '.hooks.beforeSubmitPrompt[0].failClosed == true' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeSubmitPrompt must failClosed:true"; bad=1; }
+  jq -e '.hooks.beforeShellExecution[0].failClosed == true' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeShellExecution must failClosed:true"; bad=1; }
+  jq -e '.hooks.beforeReadFile[0].failClosed == true' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] beforeReadFile must failClosed:true"; bad=1; }
+  jq -e '.hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must register beforeSubmitPrompt, beforeShellExecution, beforeReadFile"; bad=1; }
+  jq -e '(.hooks | has("sessionStart") | not) and (.hooks | has("stop") | not)' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must not register sessionStart or stop"; bad=1; }
+  [[ "$bad" -eq 0 ]] || return 1
+  echo "[ok] verify smoke"
+}

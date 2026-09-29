@@ -8,10 +8,10 @@
     "doctor": "bash scripts/doctor.sh",
     "test": "bash tests/run.sh",
     "ready": "bash scripts/ready.sh",
-    "eval": "bash scripts/eval.sh check",
+    "eval": "bash scripts/eval/check.sh check",
     "feature": "bash scripts/feature.sh",
     "handoff": "bash scripts/handoff.sh",
-    "install:rules": "bash scripts/install.sh",
-    "uninstall": "bash scripts/uninstall.sh"
+    "install:rules": "bash shared/hosts/cursor/install.sh",
+    "uninstall": "bash shared/hosts/cursor/uninstall.sh"
   }
 }

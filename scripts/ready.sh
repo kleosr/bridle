@@ -4,8 +4,8 @@
 set -euo pipefail
 
 PACK="$(cd "$(dirname "$0")/.." && pwd)"
-# shellcheck source=shared/hooks/lib/common.sh
-source "$PACK/shared/hooks/lib/common.sh"
+# shellcheck source=shared/gate/lib/common.sh
+source "$PACK/shared/gate/lib/common.sh"
 
 if ! jq_available; then
   # tests/run.sh, feature.sh, and handoff.sh all require jq: nothing is testable.
