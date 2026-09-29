@@ -137,6 +137,20 @@ The Claude port (`scripts/claude.sh`) registers one hook in `~/.claude/settings.
 
 The Cursor freeze (`hooksFrozen`, `noPreToolUse`) governs `hooks.json` and is unchanged.
 
+### 2026-09-28 — Claude Code 2.1.284, Linux: `Stop` hook
+The Claude port also registers `shared/hooks/claude/before_stop.sh` (installed as `~/.claude/hooks/bridle_before_stop.sh`). It reads the session transcript for the current turn (since the last human message) and exits 2 once when the turn edited project files and either ran no verification after the last edit, ended on a failed verify, passed the footprint budget, or added a source file nothing references. Any sensor failure exits 0 so a crashed check cannot trap the session. Every turn with edits appends a line to `~/.claude/state/bridle-turns.jsonl`.
+
+| Observation | What was seen | Class |
+|---|---|---|
+| Payload | The host sent `hook_event_name`, `stop_hook_active`, `cwd`, and a `transcript_path` that was a real file. | This run |
+| Block, then release | A headless run edited `src/price.js` and never verified. The first Stop exited 2 and its stderr reached the model. The second arrived with `stop_hook_active: true`, exited 0, and the run ended. | This run |
+| Model response | Told both "run no commands" and "verify", the agent finished with "The edit is unverified" instead of claiming done. | This run |
+| `--no-session-persistence` | A first attempt with that flag produced no block. The hook was not probed in that run; the missing transcript file is the inferred cause. | Inferred |
+| Replay | The 24 recorded sessions parse; a 39 MB transcript takes 0.5 s. Of the 5 whose last turn edited files, 3 would have blocked. | This run |
+| Fixtures | Verify, red verify, docs-only, failed edit, turn leak, budget, wiring, registration: `tests/claude_stop.sh`. | Script law |
+
+The footprint budget (6 files, 2 new production files, 200 production lines) is an initial guess from the recorded transcripts. Retune it from `bridle-turns.jsonl`.
+
 ---
 
 ## The Rule We Live By
