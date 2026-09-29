@@ -38,7 +38,19 @@ run_test "claude gate: a missing verdict file exits 2 (Claude denies on 2)" "2" 
 HOME="$CG_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
 HOME="$CG_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
 RESULT="$(jq -r '[(.hooks.PreToolUse[].matcher), (.hooks.UserPromptSubmit | length), (.hooks.Stop | length)] | join(",")' "$CG_H/.claude/settings.json" 2>/dev/null)"
-run_test "claude port registers each hook once across reinstalls" "Write,Bash,Read,1,1" "$RESULT"
+run_test "claude port registers each hook once across reinstalls" "Write|Edit|MultiEdit,Bash,Read,1,1" "$RESULT"
+CG_W="$CG_H/.claude/hooks/bridle_before_write.sh"
+cg_edit() {
+  jq -n --arg c "$CG_H/proj" --arg t "$1" --arg f "$2" '{cwd:$c,tool_name:$t,tool_input:{file_path:$f,old_string:"a",new_string:"b"}}' \
+    | HOME="$CG_H" XDG_CONFIG_HOME="" bash "$CG_W" 2>/dev/null && echo 0 || echo $?
+}
+mkdir -p "$CG_H/proj"; echo a >"$CG_H/proj/a.ts"
+run_test "regression: claude Edit of the installed settings is denied" "2" "$(cg_edit Edit "$CG_H/.claude/settings.json")"
+run_test "regression: claude Write into the installed hooks is denied" "2" "$(cg_edit Write "$CG_H/.claude/hooks/x.sh")"
+run_test "regression: claude Edit of the opencode plugin is denied" "2" "$(cg_edit Edit "$CG_H/.config/opencode/plugin/bridle.js")"
+run_test "claude Edit of an existing project file is allowed" "0" "$(cg_edit Edit "$CG_H/proj/a.ts")"
+RESULT="$(jq -n --arg r "$CG_H/proj" --arg f "$CG_H/.cursor/rules/core.mdc" '{cursor_version:"3.21",workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:"x"}}' | HOME="$CG_H" bash "$CG_W" 2>/dev/null && echo 0 || echo $?)"
+run_test "regression: Cursor Write into ~/.cursor/rules is denied through the Claude hook" "2" "$RESULT"
 CMD="$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[0].command' "$CG_H/.claude/settings.json" 2>/dev/null)"
 RESULT="$(printf '%s' '{"tool_input":{"command":"git push --force origin main"},"cwd":"/tmp"}' | HOME="$CG_H" sh -c "$CMD" 2>/dev/null | jq -r '.hookSpecificOutput.permissionDecision' 2>/dev/null)"
 run_test "claude port: the installed Bash gate denies through its registered command" "deny" "$RESULT"

@@ -18,8 +18,8 @@ of acting as if this skill contained it.
 
 ## Work
 
-1. Classify: answer, diagnose, change, or monitor. Stop at that mode's terminal.
+1. Classify: answer, diagnose, change, or monitor. Stop at that mode's terminal; monitor ends at reporting observed state, with no change.
 2. Start with the repo's `AGENTS.md`. Read handoff files only when they answer the task.
 3. Load only matching skills and companions.
 4. Ask only for irreversible effects or a product choice evidence cannot settle.
-5. Finish with outcome, files, proof (`testing.mdc`), and unverified risk.
+5. Report per the charter.

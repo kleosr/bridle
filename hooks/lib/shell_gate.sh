@@ -102,7 +102,7 @@ shell_is_installer() {
   case "$1" in
     *$'\n'*|*$'\r'*|*';'*|*'|'*|*'&'*|*'$'*|*'`'*|*'#'*|*'('*|*')'*) return 1 ;;
   esac
-  rx "$1" '^[[:space:]]*(FORCE=1[[:space:]]+)?bash[[:space:]]+hosts/cursor/install\.sh([[:space:]]+(install|uninstall|verify|all|project-hooks))?[[:space:]]*$'
+  rx "$1" '^[[:space:]]*(FORCE=1[[:space:]]+)?bash[[:space:]]+hosts/(cursor/install\.sh([[:space:]]+(install|uninstall|verify|all|project-hooks))?|(claude|opencode)/install\.sh([[:space:]]+(install|uninstall))?)[[:space:]]*$'
 }
 
 gate_destructive() {
@@ -110,24 +110,28 @@ gate_destructive() {
   if rxi "$seg" 'git'; then seg="$(normalize_git_globals "$seg")"; fi
   local wipe_tgt="${Q}?(/(/*|\./*|\.\./*)*|/[^/]+/\.\.(/*|\./*|\.\./*)*|~|\\\$HOME|\\\$\{HOME\}|\.\.?|\*)${Q}?/?${Q}?(\.|\*)?${Q}?"
   local rm_root="rm[[:space:]]+(-[[:alpha:]-]+[[:space:]]+)+${wipe_tgt}([[:space:];&]|$)"
-  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force)([[:space:]]|$)"
-  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|>[[:space:]]*/dev/sd|shred[[:space:]]"
+  local force_push="git[[:space:]]+push([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+(-f[[:alpha:]]*|--force(-with-lease|-if-includes)?(=[^[:space:]]*)?|--mirror|--delete|-d|\+[^[:space:]]+|:[^[:space:]]+)([[:space:]]|$)"
+  local discard="git[[:space:]]+(checkout|restore)[[:space:]]+(--[[:space:]]+)?\.([[:space:]]|$)|git[[:space:]]+stash[[:space:]]+(drop|clear)"
+  local wipe="mkfs|dd[[:space:]]+if=|git[[:space:]]+reset[[:space:]]${SEG}--hard|git[[:space:]]+clean[[:space:]]${SEG}(-[[:alpha:]]*f|--force)|>[[:space:]]*/dev/sd|shred[[:space:]]|${discard}"
   # curl|sh is checked whole-command in gate_shell_command: split_segments
   # breaks the pipe, so it can never match inside a single segment.
-  rxi "$seg" "${rm_root}|${force_push}|${wipe}"
+  rxi "$seg" "${rm_root}|${force_push}|${wipe}" && return 0
+  # Case-sensitive: `branch -d` refuses unmerged work, `-D` discards it.
+  rx "$seg" "git[[:space:]]+branch[[:space:]]${SEG}-D([[:space:]]|$)"
 }
 
-# Writes to the installed harness (hooks.json, ~/.cursor/hooks, ~/.cursor/rules).
+# Writes to the installed harness of any host (Cursor, Claude Code, opencode).
 # Installer path is asked earlier in before_shell.sh and never reaches here.
+HARNESS_PATH='(\.cursor/(hooks\.json|hooks(/|$)|rules/)|\.claude/(settings(\.local)?\.json|hooks(/|$)|rules/|agents/)|\.config/opencode/(opencode\.jsonc?|plugin/|bridle/|agent/))'
 gate_harness() {
   local seg="$1"
   seg="${seg//\'/}"
   seg="${seg//\"/}"
-  rxi "$seg" '\.cursor/' || return 1
-  local tgt='(\$HOME|\$\{HOME\}|~|[^[:space:]]*)/\.cursor/(hooks\.json|hooks(/|$)|rules/)'
+  rxi "$seg" '\.(cursor|claude|config/opencode)/' || return 1
+  local tgt='(\$HOME|\$\{HOME\}|~|[^[:space:]]*)/'"$HARNESS_PATH"
   rxi "$seg" "(>>|>)[[:space:]]*${tgt}" && return 0
-  rxi "$seg" "${WORD}(rm|cp|mv|install|tee|touch|dd)[[:space:]]+.*\\.cursor/(hooks\\.json|hooks/|rules/)" && return 0
-  rxi "$seg" "${WORD}(sed|perl)[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*\\.cursor/(hooks|rules)" && return 0
+  rxi "$seg" "${WORD}(rm|cp|mv|install|tee|touch|dd|ln)[[:space:]]+.*${HARNESS_PATH}" && return 0
+  rxi "$seg" "${WORD}(sed|perl)[[:space:]]+(-[a-zA-Z]*i[a-zA-Z]*|[[:space:]]-i)[[:space:]].*${HARNESS_PATH}" && return 0
   return 1
 }
 
@@ -197,7 +201,7 @@ shell_is_plain_read() {
 
 gate_infra() {
   local db="(^|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*(sudo[[:space:]]+|env[[:space:]]+)?(psql|mysql|mongosh)([[:space:]]|$)"
-  rxi "$1" "${db}|supabase[[:space:]]+db|terraform[[:space:]]+(apply|destroy)|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)|aws[[:space:]]+s3[[:space:]]+rm[[:space:]].*--recursive|prisma[[:space:]]+migrate[[:space:]]+reset"
+  rxi "$1" "${db}|supabase[[:space:]]+db|terraform[[:space:]]+(apply|destroy)|kubectl[[:space:]]+delete|docker[[:space:]]+rm[[:space:]]+-f|systemctl[[:space:]]+(stop|disable)|aws[[:space:]]+s3[[:space:]]+rm[[:space:]].*--recursive|prisma[[:space:]]+migrate[[:space:]]+reset|(npm|pnpm|yarn|bun)[[:space:]]+publish|gh[[:space:]]+(pr[[:space:]]+merge|release[[:space:]]+create|repo[[:space:]]+(delete|edit))|vercel[[:space:]]${SEG}--prod|netlify[[:space:]]+deploy[[:space:]]${SEG}--prod"
 }
 
 gate_shell_command() {
@@ -264,7 +268,7 @@ gate_shell_command() {
     return 0
   fi
   if [[ "$ask" -eq 1 ]]; then
-    emit_ask "Command mutates infra/DB. Approve the concrete action, target, and scope in the approval card. Command not echoed to avoid secret leakage." "" ask-infra
+    emit_ask "Command mutates infra/DB or publishes/deploys. Approve the concrete action, target, and scope in the approval card. Command not echoed to avoid secret leakage." "" ask-infra
     return 0
   fi
   return 1

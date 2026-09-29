@@ -215,7 +215,7 @@ RESULT="$(printf 'not json' | bash "$CL_HOOK" 2>/dev/null && echo 0 || echo $?)"
 run_test "claude hook fails closed (exit 2) on a malformed payload" "2" "$RESULT"
 jq '.theme="dark"' "$CL_H/.claude/settings.json" >"$CL_H/s.json" && mv "$CL_H/s.json" "$CL_H/.claude/settings.json"
 HOME="$CL_H" bash "$PACK/hosts/claude/install.sh" install >/dev/null 2>&1 || true
-RESULT="$(jq -r '[.theme, ([.hooks.PreToolUse[] | select(.matcher=="Write")] | length)] | join(",")' "$CL_H/.claude/settings.json")"
+RESULT="$(jq -r '[.theme, ([.hooks.PreToolUse[] | select(.matcher=="Write|Edit|MultiEdit")] | length)] | join(",")' "$CL_H/.claude/settings.json")"
 run_test "claude port registers one Write hook and keeps user settings on reinstall" "dark,1" "$RESULT"
 printf '%s\n' '# user testing' > "$CL_H/.claude/rules/testing.md"
 rm -f "$CL_H/.claude/kleosrules-owned.txt"

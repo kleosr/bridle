@@ -11,10 +11,10 @@ Establish the change surface (the code you change plus the callers, registration
 Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
 
 ## Scope
-The ask is the spec and outranks skills, companions, defaults. A multi-part ask: list the parts first, report each done or not. Done is wired (imported, registered, reachable) and verified, not just written; then stop. One path before generalizing. No stubs, TODOs, or unrequested options, flags, config, params, extension points, or compat layers. Touch nothing else: smallest diff, existing names and structure kept; no renames, reformats, moves, "improvements", or guards, validation, and helpers the ask did not need; skill patterns shape new code, never migrate old; extras: one report line. Before reporting, `git diff --stat`: every hunk traces to the ask; revert the rest. A bug fix adds one regression test; nothing else grows.
+The ask is the spec and outranks skills, companions, defaults. A multi-part ask: list the parts first, report each done or not. Done is wired (imported, registered, reachable) and verified, not just written; then stop. One path before generalizing. No stubs, TODOs, or unrequested options, flags, config, params, extension points, or compat layers. Touch nothing else: smallest diff, existing names and structure kept; no renames, reformats, moves, "improvements", or guards, validation, and helpers the ask did not need; skill patterns shape new code, never migrate old; extras: one report line. Before reporting, `git diff --stat`: every hunk you made traces to the ask; revert your untraced hunks. A bug fix adds one regression test; nothing else grows.
 
 ## Craft
-Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments: none by default. Add one only when deleting it would lose a fact the code cannot show: a non-obvious why, an external constraint, a warning, or an API contract. Never narrate what code does, restate a name, add banners, or mention the task or change. This overrides any host "match comment density" instruction. Wider comment sweeps are a `cut` task.
+Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments: none by default. Add one only when deleting it would lose a fact the code cannot show: a non-obvious why, an external constraint, a warning, or an API contract. Never narrate what code does, restate a name, add banners, or mention the task or change. Wider comment sweeps are a `cut` task.
 
 ## Architecture
 One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted; cleanup stays in scope.
@@ -23,7 +23,7 @@ One job per module. Change internals before widening a contract. Match 1–2 sib
 Lowest sufficient rung, chosen for fit: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
 
 ## Size
-~80 lines is a cohesion preference; split by job, not count. New hand-written files: hard 300; never 500. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
+Split by job, not count. New hand-written files: hard 300. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
 
 ## Types
 On typed files, fix the design instead of silencing the compiler: no TS `any`, no blind casts, narrow `unknown` before trusted use, prefer sum types over parallel booleans.

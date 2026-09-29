@@ -31,7 +31,8 @@ esac
 # process cwd is the hook dir, not the workspace, so never assume ".".
 if shell_is_installer "$CMD"; then
   norm_cwd="$(posix_slashes "${CWD:-}")"
-  if [[ -n "$norm_cwd" && -d "$norm_cwd" && -f "$norm_cwd/hosts/manifest.json" && -f "$norm_cwd/hosts/cursor/install.sh" ]]; then
+  [[ "$CMD" =~ hosts/[a-z]+/install\.sh ]] && installer="${BASH_REMATCH[0]}"
+  if [[ -n "$norm_cwd" && -d "$norm_cwd" && -f "$norm_cwd/hosts/manifest.json" && -f "$norm_cwd/$installer" ]]; then
     emit_ask "Harness activation request: a relative installer path is not proof of trust. Approve only if this checkout is the trusted kleosrules pack." "" activation
   else
     emit_deny "kleosrules: installer path without pack markers denied. Run from the pack root." "" activation

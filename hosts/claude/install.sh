@@ -61,13 +61,13 @@ register_hook() {
   drop_hook_entry <"$SETTINGS" | jq --arg c "$cmd" --arg s "bash \"$HOME_CL/$STOP_REL\"" \
     --arg g "BRIDLE_HOST=claude bash \"$HOME_CL/$GATE_REL" '
     def gate($f; $t): [{type: "command", command: ($g + "/" + $f + "\""), timeout: $t}];
-    .hooks.PreToolUse += [{matcher: "Write", hooks: [{type: "command", command: $c}]},
+    .hooks.PreToolUse += [{matcher: "Write|Edit|MultiEdit", hooks: [{type: "command", command: $c}]},
                           {matcher: "Bash", hooks: gate("before_shell.sh"; 60)},
                           {matcher: "Read", hooks: gate("before_read_file.sh"; 30)}]
      | .hooks.UserPromptSubmit += [{hooks: gate("before_submit_prompt.sh"; 30)}]
      | .hooks.Stop += [{hooks: [{type: "command", command: $s}]}]' >"$t"
   mv -f "$t" "$SETTINGS"
-  echo "[ok] ~/.claude/settings.json UserPromptSubmit, PreToolUse(Bash, Read, Write), and Stop hooks"
+  echo "[ok] ~/.claude/settings.json UserPromptSubmit, PreToolUse(Bash, Read, Write|Edit|MultiEdit), and Stop hooks"
 }
 
 unregister_hook() {

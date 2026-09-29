@@ -20,7 +20,7 @@ Diagnose → findings only. Fix requested → investigate, then the smallest pro
 6. One falsifiable hypothesis. Evidence for or against.
 7. Callers / contracts / history when evidence points there.
 8. Prove root before production edit. Three misses → STUCK + evidence.
-9. If asked: one cause, regression test, rerun repro + TOOLCHAIN.
+9. If asked: one cause, regression test, rerun repro + the repo's `AGENTS.md` Verify line.
 
 No speculative catch/sleep/retry as a fix; they may be correct app behavior or temp instrumentation. No mock/assert weakening. No two competing fixes at once. Cross-boundary: stop and report the boundary. Never expose secrets.
 

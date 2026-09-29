@@ -28,6 +28,7 @@ RESULT="$(jq -sr 'map(select(.blocked and .verified == "none" and (.files | leng
 run_test "stop hook logs the blocked turn for retuning" "1" "$RESULT"
 run_test "stop hook passes an edit followed by a green verify" "0" "$(stop_turn "$EDITED"$'\n'"$(tr_verify v1)")"
 run_test "stop hook blocks when the last verify was red" "2" "$(stop_turn "$EDITED"$'\n'"$(tr_verify v1 true)")"
+run_test "regression: curl after an edit is not verification" "2" "$(stop_turn "$EDITED"$'\n'"$(tr_use c1 Bash '{"command":"curl -s localhost:3000"}')"$'\n'"$(tr_res c1)")"
 run_test "stop hook requires verify after the last edit, not before it" "2" "$(stop_turn "$ASK"$'\n'"$(tr_verify v1)"$'\n'"$(tr_edit e1 "$STOP_PROJ/parse.ts")")"
 run_test "stop hook exempts docs-only edits from verification" "0" "$(stop_turn "$ASK"$'\n'"$(tr_edit e1 "$STOP_PROJ/README.md")")"
 run_test "stop hook ignores edits outside the project" "0" "$(stop_turn "$ASK"$'\n'"$(tr_edit e1 /tmp/elsewhere.ts)")"

@@ -51,6 +51,8 @@ if command -v node >/dev/null 2>&1; then
   run_test "opencode plugin: force push is denied" "block:destructive" "$(oc_probe bash '{"command":"echo a && git push --force origin main"}')"
   run_test "opencode plugin: infra change needs approval" "block:ask-infra" "$(oc_probe bash '{"command":"terraform apply"}')"
   run_test "opencode plugin: untouched tools pass" "allow" "$(oc_probe edit '{"filePath":"a.ts"}')"
+  run_test "regression: opencode plugin denies editing its own plugin" "block:harness" "$(oc_probe edit '{"filePath":"/home/u/.config/opencode/plugin/bridle.js"}')"
+  run_test "regression: opencode plugin denies writing Claude settings" "block:harness" "$(oc_probe write '{"filePath":"C:\\Users\\u\\.claude\\settings.json"}')"
   RESULT="$(BRIDLE_HOOKS_DIR="$OC_H/missing" oc_probe read '{"filePath":"a.ts"}')"
   run_test "opencode plugin: a missing hook fails closed" "block:hook-failed" "$RESULT"
   RESULT="$(node --input-type=module -e '

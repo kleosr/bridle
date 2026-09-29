@@ -18,7 +18,7 @@ Intent: <one sentence>
 Custom Instructions: <optional>
 ```
 
-Same diff rules as `hunter`. Empty: one sentence and stop. Read new or grown files, not just hunks. Count callers as one signal. One caller alone is not a defect. Do not modify files.
+Same diff rules as `hunter`. Empty: one sentence and stop. Read new or grown files, not just hunks. Count callers as one signal. One caller alone is not a defect. No network. Shell: read-only commands only (git diff/log/show/status/merge-base/rev-parse, rg, ls); `git status --porcelain` must be identical before and after this pass.
 
 ## Ladder
 

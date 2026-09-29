@@ -69,7 +69,15 @@ function blocked(event, v) {
   return new Error(`[bridle ${reason}] ${msg}`);
 }
 
+// Mirrors HARNESS_PATH in hooks/lib/shell_gate.sh: the edit tools never pass
+// through a Bash hook, so the installed harness is guarded here.
+const HARNESS = /[\\/]\.(cursor[\\/](hooks\.json$|hooks[\\/]|rules[\\/])|claude[\\/](settings(\.local)?\.json$|hooks[\\/]|rules[\\/]|agents[\\/])|config[\\/]opencode[\\/](opencode\.jsonc?$|plugin[\\/]|bridle[\\/]|agent[\\/]))/i;
+const EDIT_TOOLS = new Set(["edit", "write", "multiedit"]);
+
 async function gateTool(tool, args, directory) {
+  if (EDIT_TOOLS.has(tool) && HARNESS.test(args?.filePath ?? "")) {
+    throw new Error("[bridle harness] editing the installed harness requires the pack installer.");
+  }
   if (tool === "bash") {
     const v = await runHook("before_shell.sh", { command: args?.command ?? "", cwd: unixPath(args?.workdir || directory) });
     if (v?.decision !== "allow") throw blocked("beforeShellExecution", v);

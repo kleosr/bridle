@@ -8,7 +8,7 @@ set -uo pipefail
 MAX_FILES=6
 MAX_NEW_FILES=2
 MAX_PROD_LINES=200
-VERIFY='(^|[ ;&|(])(bash tests/run\.sh|(npm|pnpm|yarn|bun)( run)? (test|build|lint|check|typecheck)|npx? (vitest|jest|tsc|eslint|playwright)|(next|vite|astro) build|vitest|jest|pytest|unittest|tsc|eslint|biome|ruff|mypy|go (test|vet|build)|cargo (test|check|build|clippy)|deno (test|check|lint)|make (test|check)|just (test|check)|node --(test|check)|bash -n|shellcheck|curl)([ :]|$)'
+VERIFY='(^|[ ;&|(])(bash tests/run\.sh|(npm|pnpm|yarn|bun)( run)? (test|build|lint|check|typecheck)|npx? (vitest|jest|tsc|eslint|playwright)|(next|vite|astro) build|vitest|jest|pytest|unittest|tsc|eslint|biome|ruff|mypy|go (test|vet|build)|cargo (test|check|build|clippy)|deno (test|check|lint)|make (test|check)|just (test|check)|node --(test|check)|bash -n|shellcheck)([ :]|$)'
 UNWIRED_SKIP='(^|/)(tests?|__tests__|scripts|bin|migrations)/|\.(test|spec|config)\.|(^|/)(index|main|page|layout|route|loading|error|not-found|template|middleware|app|server|cli|setup|conftest|__init__|__main__)\.[a-z]+$'
 
 command -v jq >/dev/null 2>&1 || exit 0

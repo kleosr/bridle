@@ -20,23 +20,23 @@ Claims: <bullets>
 Custom Instructions: <optional>
 ```
 
-Missing Claims → infer from Intent + diff, treat as unverified. Missing path → workspace root. Missing Diff → `branch changes`. Resolve the base; if ambiguous, ask.
+Missing Claims → infer from Intent + diff, treat as unverified. Missing path → workspace root. Missing Diff → `branch changes`. Resolve the base; if ambiguous, return the question to the parent and stop.
 
 ## Rules
 
-Do not edit app code, tests, snapshots, or fixtures. Allowed: build/cache/coverage under ignored paths; report other diffs. Do not weaken, skip, or retry-until-green. Do not kill the user's app. Do not invent a harness. Smallest command that exercises the change. Do not send secrets. Never convert lockfiles.
+Do not edit app code, tests, snapshots, or fixtures. Allowed: build/cache/coverage under ignored paths; `git status --porcelain` must be identical before and after, else report the diff. No network except the audit below. Do not weaken, skip, or retry-until-green. Do not kill the user's app. Do not invent a harness. Smallest command that exercises the change. Do not send secrets. Never convert lockfiles.
 
 ## Check
 
 Stop at the first that can touch this change:
 
-1. `docs/toolchain.md` or a verify skill
+1. The repo's `AGENTS.md` Verify line or a verify skill
 2. Package `test` / `check` (repo manager if `package.json`)
 3. Makefile / Justfile / `tests/run.sh`
 4. Language default scoped to the changed package
 5. Web UI + browser tools: drive the user path (click/type/submit). A render screenshot is not a drive.
 
-JS lockfile: also repo-manager audit (`pnpm audit` on pnpm, manager equivalent otherwise, when authorized; high/critical → audit dimension). Audit green is evidence, not a security certification. Do not convert.
+JS lockfile: also repo-manager audit (`pnpm audit` on pnpm, manager equivalent otherwise, only when `Custom Instructions` says `audit: yes`; high/critical → audit dimension). Audit green is evidence, not a security certification. Do not convert.
 
 Run it. Capture command, exit code, lines that prove or refute each claim. Huge suite: nearest scoped target first, then repo gauntlet if the claim is repo-wide.
 

@@ -18,11 +18,11 @@ Intent: <one sentence>
 Custom Instructions: <optional>
 ```
 
-Missing path → workspace root. Missing Diff → `branch changes`. Infer Intent from the diff if omitted. Do not modify files. No network except this checkout.
+Missing path → workspace root. Missing Diff → `branch changes`. Infer Intent from the diff if omitted. No network. Shell: read-only commands only (git diff/log/show/status/merge-base/rev-parse, rg, ls); `git status --porcelain` must be identical before and after this pass.
 
 ## Diff
 
-Resolve the base and print it. Prefer merge-base; handle missing branch/detached/shallow/dirty/renames/untracked/merges/submodules. If ambiguous, ask. `branch changes`: merge-base plus dirty. `uncommitted`: worktree + index. `named files`: those paths. Empty diff: one sentence and stop. Read hunks, surrounding functions, and callers of every changed export.
+Resolve the base and print it. Prefer merge-base; handle missing branch/detached/shallow/dirty/renames/untracked/merges/submodules. If ambiguous, return the question to the parent and stop. `branch changes`: merge-base plus dirty. `uncommitted`: worktree + index. `named files`: those paths. Empty diff: one sentence and stop. Read hunks, surrounding functions, and callers of every changed export.
 
 ## Hunt
 

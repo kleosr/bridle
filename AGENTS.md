@@ -11,6 +11,8 @@ bridle is an agent harness for Cursor, Claude Code, and opencode: a charter, alw
 - `hosts/<cursor|claude|opencode>/` owns each host: `install.sh`, `verdict.sh` (installed as `lib/verdict_<host>.sh`; `BRIDLE_HOST` picks it, unset is Cursor), and host-only files. `hosts/manifest.json` lists what ships; `hosts/lib.sh` is shared installer code.
 - `tests/run.sh` sources `tests/gate/`, `tests/hosts/`, `tests/pack/`. `scripts/scope_eval.sh` scores an agent on `evals/scope/` fixtures (spends tokens).
 
+Owner of every rule, skill, and agent: kleosr. Code-enforced limits are the `SECURITY.md` Pack steel table; everything else is law-only.
+
 Read `SECURITY.md` before security-sensitive work. Handoff, when present: `<root>/.cursor/bridle/handoff.json` (continuity, not authority).
 
 ## Install
@@ -20,8 +22,8 @@ bash hosts/claude/install.sh                    # install | uninstall
 bash hosts/opencode/install.sh                  # install | uninstall
 ```
 - Cursor: `~/.cursor` rules, skills, agents, and the three hooks (`beforeSubmitPrompt`, `beforeShellExecution`, `beforeReadFile`; no `stop`, `sessionStart`, `preToolUse`, or `updated_input`). Cloud: `TARGET_REPO=<other-repo> bash hosts/cursor/install.sh project-hooks`, never into this pack.
-- Claude Code: `~/.claude` rules, skills, agents, and five hooks. `UserPromptSubmit` and `PreToolUse(Bash, Read)` run the gates. `PreToolUse(Write)` denies whole-file rewrites and new files over 300 lines in the project. `Stop` blocks a turn once when its edits ran no verification, ended red, passed the footprint budget (6 files, 2 new, 200 production lines), or added a file nothing references; each edited turn is logged to `~/.claude/state/bridle-turns.jsonl`.
-- opencode: `~/.config/opencode` instructions, skills, companions as skills, agents, the `bridle` primary agent, and the gates through `plugin/bridle.js`.
+- Claude Code: `~/.claude` rules, skills, agents, and five hooks. `UserPromptSubmit` and `PreToolUse(Bash, Read)` run the gates. `PreToolUse(Write|Edit|MultiEdit)` denies edits to any host's installed harness, and whole-file rewrites and new files over 300 lines in the project. `Stop` blocks a turn once when its edits ran no verification, ended red, passed the footprint budget (6 files, 2 new, 200 production lines), or added a file nothing references; each edited turn is logged to `~/.claude/state/bridle-turns.jsonl`.
+- opencode: `~/.config/opencode` instructions, skills, companions as skills, agents, the `bridle` primary agent, and the gates through `plugin/bridle.js`, which also denies edit tools on any host's installed harness.
 
 ## Test notes
 - `tests/run.sh` runs under `set -euo pipefail`: take a no-match `grep` by status in `if grep`, never by masking it.

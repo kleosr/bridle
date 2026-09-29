@@ -23,7 +23,8 @@ Esta skill no lo repite.
 ## Flujo de trabajo
 
 1. **Clasifica** la tarea: responder, diagnosticar, cambiar o monitorear. Para en
-   el terminal de ese modo (diagnosticar no autoriza cambiar código).
+   el terminal de ese modo (diagnosticar no autoriza cambiar código; monitorear
+   termina al reportar el estado observado, sin cambiar nada).
 2. **Lee antes de escribir**: `AGENTS.md`, el árbol de carpetas y 1–2 archivos
    hermanos del lugar donde vas a trabajar.
 3. **Carga solo la skill que el pedido necesita.** Un cambio de 1–5 líneas
@@ -51,10 +52,9 @@ Esta skill no lo repite.
    diff crea archivos o nombres, corre además el gate de orden:
    `node <esta-skill>/../code-architecture/scripts/quality-gate.mjs` (sin
    argumentos juzga solo las líneas que agregó el diff; lo preexistente no se toca).
-6. **Reporta**: resultado, archivos, prueba (comando + exit), riesgo no verificado.
-   Sin preámbulo ni ofertas al final.
+6. **Reporta** según el charter.
 
-## Revisores (contexto separado, solo cuando se piden o antes de cerrar algo grande)
+## Revisores (contexto separado, cuando los invoca el usuario o un disparador que nombra el charter)
 
 Los agentes instalados del pack:
 

@@ -19,7 +19,7 @@ Intent: <one sentence>
 Custom Instructions: <optional>
 ```
 
-Missing path → workspace root. Missing Design → `branch changes` and reconstruct the implied design from the diff. Read the repo's existing architecture (entry points, data layer, auth, deploy config) before judging. Do not modify files. No network except this checkout.
+Missing path → workspace root. Missing Design → `branch changes` and reconstruct the implied design from the diff. Read the repo's existing architecture (entry points, data layer, auth, deploy config) before judging. No network. Shell: read-only commands only (git diff/log/show/status/merge-base/rev-parse, rg, ls); `git status --porcelain` must be identical before and after this pass.
 
 ## Check
 
