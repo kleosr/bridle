@@ -2,10 +2,9 @@
 name: bridle-harness
 description: >-
   Router del agente de ingeniería sobre el harness bridle ya instalado. Úsala
-  SIEMPRE que se vaya a escribir, modificar, revisar, depurar o terminar código
-  en un repo (features, refactors, bugs, "crea un sidebar", "agrega un módulo",
-  "conecta Redis", "revisa mi PR", "por qué falla"), aunque el usuario no la
-  nombre. Carga las skills hermanas system-design, auth-boundaries,
+  cuando el pedido sea de varios pasos (feature, refactor, revisión de PR, cierre
+  de una entrega) y no esté claro qué skill hermana aplica; un cambio de 1–5
+  líneas no la necesita. Carga las skills hermanas system-design, auth-boundaries,
   production-readiness, code-architecture, cqrs-data-flow y live-ui-sync según
   la tarea. La ley sigue siendo el charter, core, testing, companions y hooks
   instalados.
@@ -25,8 +24,7 @@ Esta skill no lo repite.
 1. **Clasifica** la tarea: responder, diagnosticar, cambiar o monitorear. Para en
    el terminal de ese modo (diagnosticar no autoriza cambiar código).
 2. **Lee antes de escribir**: `AGENTS.md`, el árbol de carpetas y 1–2 archivos
-   hermanos del lugar donde vas a trabajar. Lee `core` y `testing` completos
-   la primera vez en la sesión.
+   hermanos del lugar donde vas a trabajar.
 3. **Carga solo la skill que el pedido necesita.** Un cambio de 1–5 líneas
    normalmente no necesita ninguna. Ninguna skill agranda el pedido: si una
    skill pide más de lo que el usuario pidió, manda el pedido.
@@ -48,8 +46,8 @@ Esta skill no lo repite.
    - El usuario pide afinar el pedido antes de ejecutarlo → `prompt-brief`
      (solo cuando la invoca).
 4. **Cambia** la superficie mínima: el código, sus callers, registros, config y tests.
-5. **Verifica** con un comando real y su exit code. "Compila" no es prueba. Corre
-   además el gate de orden:
+5. **Verifica** con un comando real y su exit code. "Compila" no es prueba. Si el
+   diff crea archivos o nombres, corre además el gate de orden:
    `node <esta-skill>/../code-architecture/scripts/quality-gate.mjs` (sin
    argumentos juzga solo las líneas que agregó el diff; lo preexistente no se toca).
 6. **Reporta**: resultado, archivos, prueba (comando + exit), riesgo no verificado.
@@ -71,6 +69,5 @@ explícita, sin editar código durante la revisión.
 
 ## Hooks
 
-Los tres hooks (prompt, shell, lectura) los instala el pack en Cursor
-(`bash scripts/install.sh`) y opencode; el port de Claude Code no instala hooks.
-Esta skill no los reimplementa.
+Cada port instala los suyos (`scripts/install.sh`, `scripts/opencode.sh`,
+`scripts/claude.sh`). Esta skill no los reimplementa ni los enumera.

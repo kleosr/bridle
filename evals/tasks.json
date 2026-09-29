@@ -10,7 +10,8 @@
     "continuity",
     "execution_reliability",
     "context_efficiency",
-    "regression"
+    "regression",
+    "scope"
   ],
   "tasks": [
     {
@@ -72,6 +73,12 @@
       "dimension": "regression",
       "layer": "verification",
       "proves": "tests/harness.sh"
+    },
+    {
+      "id": "scope-surgical-and-complete",
+      "dimension": "scope",
+      "layer": "scope",
+      "proves": "tests/scope_eval.sh"
     }
   ]
 }

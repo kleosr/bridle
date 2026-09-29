@@ -1,0 +1,17 @@
+{
+  "id": "multi-part-ask",
+  "ask": "Three things: (1) rename the --verbose flag to --debug, (2) add a --quiet flag that sets opts.quiet, (3) update the README flag table to match.",
+  "verify": "node --test",
+  "maxProdLines": 20,
+  "maxProdFiles": 1,
+  "contains": [
+    { "file": "src/cli.js", "text": "--debug" },
+    { "file": "src/cli.js", "text": "--quiet" },
+    { "file": "README.md", "text": "--debug" },
+    { "file": "README.md", "text": "--quiet" }
+  ],
+  "absent": [
+    { "file": "src/cli.js", "text": "--verbose" },
+    { "file": "README.md", "text": "--verbose" }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "fix-one-line",
+  "ask": "discount(200, 10) returns -1800 but should return 180 (percent is 0-100). Fix it.",
+  "verify": "node --test",
+  "maxProdLines": 2,
+  "maxProdFiles": 1,
+  "contains": [
+    { "file": "src/price.js", "text": "percent / 100" },
+    { "file": "src/price.js", "text": "var out = currency" }
+  ]
+}

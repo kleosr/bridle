@@ -127,8 +127,8 @@
         "command": "test -f shared/agents/hunter.md && test -f shared/agents/cut.md && test -f shared/agents/prove.md && test -f shared/agents/architect.md",
         "exit": 0,
         "proves": "tests/install_lifecycle.sh",
-        "recordedAt": "2026-09-28T18:16:28Z",
-        "tree": "f4fa7d8c1c607cc6d1e604900e6869efc103be82"
+        "recordedAt": "2026-09-29T00:32:07Z",
+        "tree": "2041c0e74e8848256693279603afeef483df528f"
       }
     },
     {
