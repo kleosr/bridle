@@ -19,7 +19,7 @@
     "secret_tokens.ere"
   ],
   "rules": ["core", "testing", "pnpm", "next", "vite", "astro", "postgres", "supabase"],
-  "skills": ["testing", "debugging", "handoff", "bridle-harness", "code-architecture", "cqrs-data-flow", "live-ui-sync", "system-design", "auth-boundaries", "production-readiness", "prompt-brief", "asd-ste100"],
+  "skills": ["testing", "debugging", "handoff", "bridle-harness", "code-architecture", "cqrs-data-flow", "live-ui-sync", "system-design", "auth-boundaries", "production-readiness", "prompt-brief", "asd-ste100", "slop-guard"],
   "agents": ["hunter", "cut", "prove", "architect"],
   "retiredRules": ["agent", "ponytail", "types", "complexity", "vibe", "debugging", "native-lean-autoload", "now", "handoff", "vernacular", "mario-engineering-team", "product-designer-skills", "memory", "naming", "compile", "prompt", "context-curator"],
   "retiredSkills": ["kleosr", "ponytail", "memory", "monorepo", "package-scope", "spec-kit", "vernacular", "session-handoff", "now", "complexity", "writing-pr", "design-stack", "premium-ui-craft", "landing-page-design", "redesign-existing-projects", "better-accessibility", "better-colors", "better-interface", "better-layout", "better-typography", "better-ui", "better-writing", "break", "explain-interface", "interface-review", "variant", "animate", "animate-expo", "animation-vocabulary", "apple-design", "ask-sonner", "emil-design-eng", "find-animation-opportunities", "improve-animations", "pick-ui-library", "prototype", "review-animations", "write-swift"],

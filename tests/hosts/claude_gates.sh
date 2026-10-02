@@ -101,8 +101,12 @@ cg_use() {
   jq -cn --arg n "$1" '{type:"user",message:{role:"user",content:[{type:"tool_result",tool_use_id:"u\($n)",content:"x"}]}}'
 }
 CG_ASK="$(cg_user 'add the parser')"
+CG_SG="$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"slop-guard"}')"
 run_test "regression: claude Edit that adds a comment line is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" a $'// parse it\nb')"
-run_test "claude Edit that keeps an existing comment is allowed" "0" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" $'// k\na' $'// k\nb')"
+run_test "claude Edit that keeps an existing comment is allowed" "0" "$(cg_turn "$CG_SG" Edit "$CG_H/proj/a.ts" $'// k\na' $'// k\nb')"
+run_test "regression: claude TypeScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" a b)"
+run_test "claude JavaScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.mjs" a b)"
+run_test "claude Python Edit does not need slop-guard" "0" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.py" a b)"
 run_test "regression: claude Edit adding a shell comment is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.sh" a $'# why\nb')"
 CG_LANGS=""
 for cg_spec in "ex:# why" "clj:;; why" "erl:% why" "ml:(* why *)" "zig:// why"; do
@@ -113,7 +117,7 @@ run_test "regression: a new Elixir file without code-architecture is denied" "2"
   "$(cg_turn "$CG_ASK" Write "$CG_H/proj/inbox_filters.ex" "" "defmodule Inbox.Filters do end")"
 CG_OLD="$(jq -rn '[range(95) | "a\(.)"] | join("\n")')"
 CG_NEW="$(jq -rn '[range(95) | "b\(.)"] | join("\n")')"
-CG_FULL="$CG_ASK"$'\n'"$(cg_use Edit "$(jq -cn --arg f "$CG_H/proj/a.ts" --arg o "$CG_OLD"$'\na95\na96\na97\na98\na99' --arg n "$CG_NEW"$'\nb95\nb96\nb97\nb98\nb99' '{file_path:$f,old_string:$o,new_string:$n}')")"
+CG_FULL="$CG_SG"$'\n'"$(cg_use Edit "$(jq -cn --arg f "$CG_H/proj/a.ts" --arg o "$CG_OLD"$'\na95\na96\na97\na98\na99' --arg n "$CG_NEW"$'\nb95\nb96\nb97\nb98\nb99' '{file_path:$f,old_string:$o,new_string:$n}')")"
 run_test "regression: claude keeps editing other files past 200 production lines in a turn" "0" \
   "$(cg_turn "$CG_FULL" Edit "$CG_H/proj/b.ts" $'x1\nx2\nx3\nx4\nx5\nx6' $'y1\ny2\ny3\ny4\ny5\ny6\ny7')"
 RESULT="$(jq -n --arg c "$CG_H/proj" --arg f "$GROW" --arg o "$LAST" --arg n "$LAST"$'\nconst y = 2;\nconst z = 3;' \
@@ -122,11 +126,13 @@ run_test "edit-growth deny tells the model to split the file and continue" "1" "
 run_test "regression: claude Write of a new code file without code-architecture is denied" "2" \
   "$(cg_turn "$CG_ASK" Write "$CG_H/proj/parser.ts" "" "export const p = 1")"
 run_test "claude Write of a new code file after code-architecture is allowed" "0" \
+  "$(cg_turn "$CG_SG"$'\n'"$(cg_use Skill '{"skill":"code-architecture"}')" Write "$CG_H/proj/parser.ts" "" "export const p = 1")"
+run_test "claude new TypeScript file with code-architecture but not slop-guard is denied" "2" \
   "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"code-architecture"}')" Write "$CG_H/proj/parser.ts" "" "export const p = 1")"
 run_test "regression: claude Edit of a test file without the testing skill is denied" "2" \
   "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/tests/a.test.ts" a b)"
 run_test "claude Edit of a test file after the testing skill is allowed" "0" \
-  "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"testing"}')" Edit "$CG_H/proj/tests/a.test.ts" a b)"
+  "$(cg_turn "$CG_SG"$'\n'"$(cg_use Skill '{"skill":"testing"}')" Edit "$CG_H/proj/tests/a.test.ts" a b)"
 : >"$CG_H/cursor-transcript.jsonl"
 cg_cursor_hook() {
   printf '%s' "$2" | env -u BRIDLE_HOST HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$PACK/hooks/$1" >/dev/null 2>&1 || true
@@ -140,12 +146,15 @@ CG_SUBMIT='{"hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-1","p
 cg_cursor_hook before_submit_prompt.sh "$CG_SUBMIT"
 run_test "Cursor Write of a new code file before reading code-architecture is denied" "2" "$(cg_cursor_new n1.ts)"
 cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
+run_test "regression: Cursor TypeScript Write before reading slop-guard is denied" "2" "$(cg_cursor_new n1.ts)"
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/slop-guard/SKILL.md","content":"x"}'
 run_test "regression: Cursor Write of a new code file after reading its SKILL.md is allowed" "0" "$(cg_cursor_new n1.ts)"
 run_test "Cursor second new file in the turn is allowed" "0" "$(cg_cursor_new n2.ts)"
 run_test "regression: Cursor third new file in a turn is allowed (split, do not stop)" "0" "$(cg_cursor_new n3.ts)"
 cg_cursor_hook before_submit_prompt.sh "$CG_SUBMIT"
 run_test "Cursor turn ledger resets its skills on the user's next prompt" "2" "$(cg_cursor_new n3.ts)"
 cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/slop-guard/SKILL.md","content":"x"}'
 run_test "regression: Cursor Write of a 248-line new file in a fresh turn is allowed" "0" \
   "$(cg_cursor_new studio.ts "$(jq -rn '[range(248) | "export const s\(.) = \(.);"] | join("\n")')")"
 run_test "Cursor keeps writing new files after 200 production lines in a turn" "0" "$(cg_cursor_new n4.ts)"

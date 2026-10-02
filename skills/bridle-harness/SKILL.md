@@ -41,6 +41,9 @@ Esta skill no lo repite.
    - Llamadas de red, workers, jobs, webhooks, health checks, deploy o logs →
      `production-readiness`.
    - Vas a crear archivos, carpetas, componentes o nombrar cosas → `code-architecture`.
+   - Escribes o editas TypeScript o JavaScript (`.ts`, `.tsx`, `.js`, `.jsx`,
+     `.mjs`, `.cjs`) → `slop-guard`, siempre, aunque el cambio sea chico
+     (el hook `skill-not-loaded` niega la edición sin ella).
    - Hay escrituras o lecturas de datos, SQL, Redis/Upstash, endpoints, server
      actions, fetch o formularios → `cqrs-data-flow`.
    - Hay UI que cambia después de una acción, navegación, layouts, sidebars,
