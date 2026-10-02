@@ -6,9 +6,7 @@
 set -uo pipefail
 MAX_NEW_LINES=300
 LEGACY_LINES=700
-MAX_FILES=6
-MAX_NEW_FILES=2
-MAX_PROD_LINES=200
+SPLIT="Do not stop: move one job into a new module, import it from this file, and continue the task."
 
 deny() { printf 'bridle: %s: %s\n' "$1" "$2" >&2; exit 2; }
 
@@ -25,7 +23,7 @@ edit_growth_deny() {
   (( projected > MAX_NEW_LINES )) || return 0
   [[ -f "$file" ]] && cur=$(wc -l <"$file" | tr -d ' ')
   (( cur > LEGACY_LINES )) && return 0
-  deny edit-growth "$file would be $projected lines after this edit (cap $MAX_NEW_LINES). Split by job or extract a module."
+  deny edit-growth "$file would be $projected lines after this edit (cap $MAX_NEW_LINES). $SPLIT"
 }
 
 command -v jq >/dev/null 2>&1 || deny missing-json "jq is unavailable; Write denied. Install jq."
@@ -69,7 +67,7 @@ fi
 size_cap_exempt "$FILE" && exit 0
 
 if (( NEW_FILE && LINES > MAX_NEW_LINES )); then
-  deny new-file-over-300 "$FILE would be $LINES lines; new hand-written files cap at $MAX_NEW_LINES. Split by job."
+  deny new-file-over-300 "$FILE would be $LINES lines; new hand-written files cap at $MAX_NEW_LINES. $SPLIT"
 fi
 
 if [[ "$TOOL" == Edit || "$TOOL" == MultiEdit ]]; then
@@ -84,10 +82,13 @@ if [[ "$TOOL" == Edit || "$TOOL" == MultiEdit ]]; then
 fi
 
 case "$FILE" in
-  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.go|*.rs|*.java|*.kt|*.swift|*.c|*.h|*.cc|*.cpp|*.hpp|*.cs|*.php|*.dart|*.scala|*.css|*.scss|*.less)
+  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.go|*.rs|*.java|*.kt|*.kts|*.swift|*.c|*.h|*.cc|*.cpp|*.hpp|*.cs|*.php|*.dart|*.scala|*.css|*.scss|*.less|*.zig|*.fs|*.fsx|*.groovy|*.sol|*.m|*.mm|*.v)
     CMT='^\s*(//|/\*|\*(\s|/|$))' ;;
-  *.py|*.sh|*.bash|*.zsh|*.rb|*.pl|*.r) CMT='^\s*#([^!]|$)' ;;
-  *.sql|*.lua|*.hs) CMT='^\s*--' ;;
+  *.py|*.sh|*.bash|*.zsh|*.rb|*.pl|*.r|*.ex|*.exs|*.nim|*.cr|*.jl|*.ps1|*.gd|*.tcl) CMT='^\s*#([^!]|$)' ;;
+  *.sql|*.lua|*.hs|*.elm|*.adb|*.ads) CMT='^\s*--' ;;
+  *.clj|*.cljs|*.cljc|*.el|*.lisp|*.scm|*.rkt) CMT='^\s*;' ;;
+  *.erl|*.hrl) CMT='^\s*%' ;;
+  *.ml|*.mli) CMT='^\s*\(\*' ;;
   *.html|*.vue|*.svelte|*.astro|*.xml) CMT='^\s*(<!--|//|/\*)' ;;
   *) exit 0 ;;
 esac
@@ -99,26 +100,22 @@ if (( ADDED > 0 )); then
   deny comment-added "this $TOOL adds $ADDED comment line(s) to $FILE. Code files get no new comments: remove them and retry. If one is truly needed (a why the code cannot show), name it in your report for the user to decide."
 fi
 
+TURN_JQ="${BASH_SOURCE%/*}/bridle_turn.jq"
+MERGE='reduce .[] as $x ({files: [], writes: [], prod: 0, skills: []};
+    .files += ($x.files // []) | .writes += ($x.writes // []) | .prod += ($x.prod // 0) | .skills += ($x.skills // []))
+  | .files |= unique | .writes |= unique | .skills |= unique'
 PENDING="$(printf '%s' "$INPUT" | jq -c --arg f "$FILE" '{id: .tool_use_id, name: .tool_name, input: (.tool_input + {file_path: $f})}')"
-CALL=""
+CALL="$(jq -cn --arg v '$^' --arg cwd "$CWD" -f "$TURN_JQ" --argjson pending "$PENDING" /dev/null 2>/dev/null)" || exit 0
 if [[ -n "$HOST" ]]; then
   CONV="$(printf '%s' "$INPUT" | jq -r '.conversation_id // ""' | tr -cd 'A-Za-z0-9_-')"
   [[ -n "$CONV" ]] || exit 0
   LEDGER="${XDG_STATE_HOME:-$HOME/.local/state}/bridle/cursor/$CONV.jsonl"
-  CALL="$(jq -cn --arg v '$^' --arg cwd "$CWD" -f "${BASH_SOURCE%/*}/bridle_turn.jq" --argjson pending "$PENDING" /dev/null 2>/dev/null)" || exit 0
-  TURN="$({ cat "$LEDGER" 2>/dev/null; printf '%s\n' "$CALL"; } | jq -cs '
-    reduce .[] as $x ({files: [], writes: [], prod: 0, skills: []};
-      .files += ($x.files // []) | .writes += ($x.writes // []) | .prod += ($x.prod // 0) | .skills += ($x.skills // []))
-    | .files |= unique | .writes |= unique | .skills |= unique' 2>/dev/null)" || exit 0
+  PRIOR="$(cat "$LEDGER" 2>/dev/null)"
 else
   [[ -f "$TRANSCRIPT" ]] || exit 0
-  TURN="$(jq -cn --arg v '$^' --arg cwd "$CWD" -f "${BASH_SOURCE%/*}/bridle_turn.jq" \
-    --argjson pending "$PENDING" "$TRANSCRIPT" 2>/dev/null)" || exit 0
+  PRIOR="$(jq -cn --arg v '$^' --arg cwd "$CWD" -f "$TURN_JQ" --argjson pending null "$TRANSCRIPT" 2>/dev/null)" || exit 0
 fi
-read -r NFILES NNEW PROD < <(jq -r '"\(.files | length) \(.writes | length) \(.prod)"' <<<"$TURN")
-if (( NFILES > MAX_FILES || NNEW > MAX_NEW_FILES || PROD > MAX_PROD_LINES )); then
-  deny over-budget "with this $TOOL the turn reaches $PROD production lines, $NFILES files, $NNEW new (budget $MAX_PROD_LINES/$MAX_FILES/$MAX_NEW_FILES). Stop editing: run the verify, then report what is done and what remains. The user continues it in the next turn."
-fi
+TURN="$(printf '%s\n%s\n' "$PRIOR" "$CALL" | jq -cs "$MERGE" 2>/dev/null)" || exit 0
 REL="${FILE#"$CWD"/}"
 NEED=""
 if [[ "$REL" =~ (^|/)(tests?|__tests__|spec)/|\.(test|spec)\.[a-z]+$|(^|/)test_[^/]*\.py$|_test\.(go|py)$ ]]; then
@@ -129,7 +126,7 @@ fi
 if [[ -n "$NEED" ]] && ! jq -e --arg s "$NEED" '.skills | index($s)' <<<"$TURN" >/dev/null; then
   deny skill-not-loaded "$REL needs the $NEED skill first: invoke Skill $NEED (Cursor: Read skills/$NEED/SKILL.md), apply it, then retry this $TOOL."
 fi
-if [[ -n "$CALL" ]]; then
+if [[ -n "$HOST" ]]; then
   { mkdir -p "${LEDGER%/*}" && printf '%s\n' "$CALL" >>"$LEDGER"; } 2>/dev/null || true
 fi
 exit 0

@@ -5,7 +5,7 @@
 # description until invoked. The three gates run from hooks/ with the Claude
 # verdict (UserPromptSubmit, PreToolUse Bash and Read); a PreToolUse(Write)
 # hook enforces core.md's edit and size law and a Stop hook checks the turn's
-# verification, footprint, and wiring.
+# verification, quality gate, and wiring.
 set -euo pipefail
 PACK="$(cd "$(dirname "$0")/../.." && pwd)"
 HOME_CL="${HOME}/.claude"

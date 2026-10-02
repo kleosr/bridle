@@ -15,7 +15,7 @@ The ask is the spec; it outranks skills, companions, defaults. Multi-part ask: l
 
 ## Hard limits
 Claude Code hooks deny these before the edit; elsewhere they are law.
-- Turn: ≤200 production lines, ≤6 files, ≤2 new production files per user message. At the limit stop, verify, report done and remaining; the user says continue. `over-budget`
+- Turn: no line or file stop. When a file would pass 300 lines, move one job into a new module, import it, and continue the task.
 - Comments: add no comment line to code. Need one? Ask in the report. `comment-added`; done-time `quality-gate.mjs`.
 - New file ≤300 lines (exclusions in hook); split by job. Legacy >700: localized fixes. `new-file-over-300`; net-growing edits past 300: `edit-growth`.
 - Existing file: Edit, never a whole-file Write. `rewrite-existing`
