@@ -192,6 +192,8 @@ RESULT="$(grep -c '^disallowedTools: Write, Edit, NotebookEdit$' "$CL_H/.claude/
 run_test "claude port maps readonly agents to denied write tools" "1" "$RESULT"
 RESULT="$(test -e "$CL_H/.claude/skills/kleosr" && echo present || echo absent)"
 run_test "claude port installs no retired kleosr mode skill" "absent" "$RESULT"
+RESULT="$(grep -cE '^(mode|icon|color):' "$CL_H/.claude/skills/bridle-harness/SKILL.md" 2>/dev/null || true)"
+run_test "claude port drops Cursor-only mode keys from bridle-harness" "0" "$RESULT"
 RESULT="$(test -f "$CL_H/.claude/skills/code-architecture/scripts/quality-gate.mjs" && test -f "$CL_H/.claude/skills/live-ui-sync/references/sidebar-modules.md" && echo yes || echo no)"
 run_test "claude port ships skill references and the quality gate" "yes" "$RESULT"
 CL_HOOK="$CL_H/.claude/hooks/bridle_before_write.sh"

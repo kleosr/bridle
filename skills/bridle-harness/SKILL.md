@@ -9,6 +9,9 @@ description: >-
   la tarea. La ley sigue siendo el charter, core, testing, companions y hooks
   instalados.
 disable-model-invocation: true
+mode: true
+icon: shield
+color: brand
 ---
 
 # Bridle harness (router del agente de ingeniería)

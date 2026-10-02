@@ -73,6 +73,7 @@ run_test "bridle-harness does not vendor a second copy of the law" "absent" "$RE
 
 RESULT="$(test -e "$PACK/skills/kleosr" && echo present || echo absent)|$(manifest_list '.retiredSkills[]' | grep -cx kleosr || true)"
 run_test "regression: one router, the kleosr mode is retired into bridle-harness" "absent|1" "$RESULT"
+run_test "bridle-harness is the Cursor custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$PACK/skills/bridle-harness/SKILL.md")"
 # prompt-brief stops before editing; auto-loading it would add a round trip to every ask.
 run_test "regression: bridle-harness router loads only when invoked" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/bridle-harness/SKILL.md")"
 run_test "prompt-brief requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/prompt-brief/SKILL.md")"
