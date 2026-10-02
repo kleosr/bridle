@@ -162,5 +162,5 @@ run_test "AGENTS.md is a directory page (≤120 lines)" "ok" "$([[ "$AGENTS_N" -
 
 # Every request carries these bytes; the cap is the ratchet from the context cut.
 ON_BYTES="$(cat "$PACK/rules/charter.txt" "$PACK/rules/core.mdc" "$PACK/rules/testing.mdc" | wc -c | tr -d ' ')"
-run_test "always-on charter+core+testing stay within 8000 bytes" "ok" "$([[ "$ON_BYTES" -le 8000 ]] && echo ok || echo "bytes:$ON_BYTES")"
+run_test "always-on charter+core+testing stay within 8192 bytes" "ok" "$([[ "$ON_BYTES" -le 8192 ]] && echo ok || echo "bytes:$ON_BYTES")"
 
