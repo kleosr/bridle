@@ -45,6 +45,9 @@ Esta skill no lo repite.
    - Bug con causa desconocida → `debugging`.
    - Escribir o ampliar tests → `testing`.
    - La tarea continúa en otra sesión → `handoff`.
+   - Texto que otro agente, sistema o persona debe leer sin ambigüedad
+     (tool descriptions, errores, prompts, reportes, explicaciones), o el
+     usuario pide STE100 o lenguaje simple → `asd-ste100`.
    - El usuario pide afinar el pedido antes de ejecutarlo → `prompt-brief`
      (solo cuando la invoca).
 4. **Cambia** la superficie mínima: el código, sus callers, registros, config y tests.
