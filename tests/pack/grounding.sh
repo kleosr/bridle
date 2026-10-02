@@ -71,10 +71,8 @@ run_test "engineering skills keep their references and the quality gate" "ok" "$
 RESULT="$(test -d "$PACK/skills/bridle-harness/references" && echo present || echo absent)"
 run_test "bridle-harness does not vendor a second copy of the law" "absent" "$RESULT"
 
-KLEOSR_MODE="$PACK/skills/kleosr/SKILL.md"
-run_test "kleosr custom mode name matches its skill folder" "kleosr" "$(awk -F ': ' '$1 == "name" { print $2; exit }' "$KLEOSR_MODE")"
-run_test "kleosr skill is marked as a custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$KLEOSR_MODE")"
-run_test "kleosr mode requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$KLEOSR_MODE")"
+RESULT="$(test -e "$PACK/skills/kleosr" && echo present || echo absent)|$(manifest_list '.retiredSkills[]' | grep -cx kleosr || true)"
+run_test "regression: one router, the kleosr mode is retired into bridle-harness" "absent|1" "$RESULT"
 # prompt-brief stops before editing; auto-loading it would add a round trip to every ask.
 run_test "regression: bridle-harness router loads only when invoked" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/bridle-harness/SKILL.md")"
 run_test "prompt-brief requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/prompt-brief/SKILL.md")"
@@ -100,8 +98,6 @@ else
   AUTH_ORDER="charter:${CHARTER_N:-missing} security:${SEC_N:-missing} core:${CORE_N:-missing}"
 fi
 run_test "charter order is charter, SECURITY, then always-on" "ok" "$AUTH_ORDER"
-RESULT="$(grep -qE '^[0-9]+\. ' "$KLEOSR_MODE" && grep -q 'SECURITY.md' "$KLEOSR_MODE" && echo restated || echo ok)"
-run_test "regression: kleosr mode does not restate the instruction order" "ok" "$RESULT"
 ROUTER="$PACK/skills/bridle-harness/SKILL.md"
 RESULT="$(grep -q 'SECURITY.md' "$ROUTER" && echo restated || echo ok)"
 run_test "regression: bridle-harness does not restate the instruction order" "ok" "$RESULT"
@@ -109,7 +105,7 @@ RESULT="$(grep -q 'turn-check' "$ROUTER" && echo stale || echo ok)"
 run_test "regression: bridle-harness does not name the Cursor stop turn-check" "ok" "$RESULT"
 ROUTE_OK=ok
 while IFS= read -r skill; do
-  case "$skill" in ''|kleosr|bridle-harness) continue ;; esac
+  case "$skill" in ''|bridle-harness) continue ;; esac
   grep -q "\`$skill\`" "$ROUTER" || ROUTE_OK="unrouted:$skill"
 done < <(manifest_list '.skills[]')
 run_test "bridle-harness routes every catalog skill" "ok" "$ROUTE_OK"

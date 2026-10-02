@@ -44,10 +44,10 @@ port_agent() {
        {print}' "$1" | tr -d '\r' | port_refs
 }
 
-# The Cursor custom mode (skill `kleosr`) is the opencode primary agent `bridle`.
+# The `bridle-harness` router is the opencode primary agent `bridle`.
 mode_agent() {
   printf -- '---\ndescription: >-\n  bridle session router. Coordinates the installed charter, always-on rules,\n  skills, and hooks. Does not copy the law.\nmode: primary\n---\n\n'
-  strip_frontmatter "$PACK/skills/kleosr/SKILL.md" | sed -E 's/^# Kleosr$/# Bridle/' | port_refs
+  strip_frontmatter "$PACK/skills/bridle-harness/SKILL.md" | sed -E 's/^# Bridle harness .*$/# Bridle/' | port_refs
 }
 
 config_file() {
@@ -100,7 +100,6 @@ install() {
     esac
   done < <(manifest_list '.rules[]')
   while IFS= read -r skill; do
-    [[ "$skill" == kleosr ]] && continue
     install_skill_files "$skill" "skills/$skill"
   done < <(manifest_list '.skills[]')
   while IFS= read -r a; do
