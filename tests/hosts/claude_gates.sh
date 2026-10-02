@@ -49,6 +49,95 @@ run_test "regression: claude Edit of the installed settings is denied" "2" "$(cg
 run_test "regression: claude Write into the installed hooks is denied" "2" "$(cg_edit Write "$CG_H/.claude/hooks/x.sh")"
 run_test "regression: claude Edit of the opencode plugin is denied" "2" "$(cg_edit Edit "$CG_H/.config/opencode/plugin/bridle.js")"
 run_test "claude Edit of an existing project file is allowed" "0" "$(cg_edit Edit "$CG_H/proj/a.ts")"
+GROW="$CG_H/proj/grow.ts"
+{ for _ in $(seq 1 299); do echo 'const x = 1;'; done; } >"$GROW"
+cg_edit_payload() {
+  jq -n --arg c "$CG_H/proj" --arg t "$1" --arg f "$2" --arg o "$3" --arg n "$4" \
+    '{cwd:$c,tool_name:$t,tool_input:{file_path:$f,old_string:$o,new_string:$n}}' \
+    | HOME="$CG_H" XDG_CONFIG_HOME="" bash "$CG_W" 2>/dev/null && echo 0 || echo $?
+}
+LAST="$(tail -n 1 "$GROW")"
+run_test "regression: Edit that grows a file past 300 lines is denied" "2" \
+  "$(cg_edit_payload Edit "$GROW" "$LAST" "$LAST"$'\n'"const y = 2;"$'\n'"const z = 3;")"
+LEGACY="$CG_H/proj/legacy.ts"
+{ for _ in $(seq 1 710); do echo 'const x = 1;'; done; } >"$LEGACY"
+LEG_LAST="$(tail -n 1 "$LEGACY")"
+run_test "Edit growth past 300 is allowed on a legacy file over 700 lines" "0" \
+  "$(cg_edit_payload Edit "$LEGACY" "$LEG_LAST" "$LEG_LAST"$'\n'"const y = 2;")"
+SHRINK="$CG_H/proj/shrink.ts"
+{ for _ in $(seq 1 320); do echo 'const x = 1;'; done; } >"$SHRINK"
+run_test "Edit that shrinks a file over 300 lines is allowed" "0" \
+  "$(cg_edit_payload Edit "$SHRINK" "const x = 1;" "")"
+CURSOR_BIG="$CG_H/proj/cursor-big.ts"
+{ for _ in $(seq 1 299); do echo 'const x = 1;'; done; } >"$CURSOR_BIG"
+CUR_BODY="$(cat "$CURSOR_BIG")"$'\n'"const y = 2;"$'\n'"const z = 3;"
+RESULT="$(jq -n --arg r "$CG_H/proj" --arg f "$CURSOR_BIG" --arg b "$CUR_BODY" \
+  '{cursor_version:"3.21",workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:$b}}' \
+  | HOME="$CG_H" bash "$CG_W" 2>/dev/null && echo 0 || echo $?)"
+run_test "regression: Cursor Write that grows a file past 300 lines is denied" "2" "$RESULT"
+cg_cursor_write() {
+  jq -n --arg r "$CG_H/proj" --arg f "$1" --arg b "$2" \
+    '{cursor_version:"3.21",workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:$b}}' \
+    | HOME="$CG_H" bash "$CG_W" 2>/dev/null && echo 0 || echo $?
+}
+printf '%s\n' '// keep' 'const a = 1;' >"$CG_H/proj/cw.ts"
+run_test "regression: Cursor Write that adds a comment to an existing file is denied" "2" \
+  "$(cg_cursor_write "$CG_H/proj/cw.ts" $'// keep\n// why\nconst a = 2;')"
+run_test "Cursor Write that keeps an existing comment is allowed" "0" \
+  "$(cg_cursor_write "$CG_H/proj/cw.ts" $'// keep\nconst a = 2;')"
+jq -rn '[range(4000) | "const v\(.) = \(.);"] | join("\n")' >"$CG_H/proj/huge.ts"
+run_test "regression: Cursor Write of a large legacy file is compared on disk, not via argv" "0" \
+  "$(cg_cursor_write "$CG_H/proj/huge.ts" "$(cat "$CG_H/proj/huge.ts")")"
+
+cg_turn() {
+  printf '%s\n' "$1" >"$CG_H/t.jsonl"
+  jq -n --arg c "$CG_H/proj" --arg t "$CG_H/t.jsonl" --arg n "$2" --arg f "$3" --arg o "$4" --arg s "$5" \
+    '{cwd:$c,transcript_path:$t,tool_use_id:"p1",tool_name:$n,tool_input:{file_path:$f,old_string:$o,new_string:$s,content:$s}}' \
+    | HOME="$CG_H" XDG_CONFIG_HOME="" bash "$CG_W" 2>/dev/null && echo 0 || echo $?
+}
+cg_user() { jq -cn --arg t "$1" '{type:"user",message:{role:"user",content:$t}}'; }
+cg_use() {
+  jq -cn --arg n "$1" --argjson i "$2" '{type:"assistant",message:{role:"assistant",content:[{type:"tool_use",id:"u\($n)",name:$n,input:$i}]}}'
+  jq -cn --arg n "$1" '{type:"user",message:{role:"user",content:[{type:"tool_result",tool_use_id:"u\($n)",content:"x"}]}}'
+}
+CG_ASK="$(cg_user 'add the parser')"
+run_test "regression: claude Edit that adds a comment line is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" a $'// parse it\nb')"
+run_test "claude Edit that keeps an existing comment is allowed" "0" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" $'// k\na' $'// k\nb')"
+run_test "regression: claude Edit adding a shell comment is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.sh" a $'# why\nb')"
+CG_OLD="$(jq -rn '[range(95) | "a\(.)"] | join("\n")')"
+CG_NEW="$(jq -rn '[range(95) | "b\(.)"] | join("\n")')"
+CG_BIG="$CG_ASK"$'\n'"$(cg_use Edit "$(jq -cn --arg f "$CG_H/proj/a.ts" --arg o "$CG_OLD" --arg n "$CG_NEW" '{file_path:$f,old_string:$o,new_string:$n}')")"
+run_test "regression: claude Edit past 200 production lines in a turn is denied" "2" \
+  "$(cg_turn "$CG_BIG" Edit "$CG_H/proj/b.ts" $'x1\nx2\nx3\nx4\nx5\nx6' $'y1\ny2\ny3\ny4\ny5\ny6')"
+run_test "claude Edit under the turn budget is allowed" "0" "$(cg_turn "$CG_BIG" Edit "$CG_H/proj/b.ts" x1 y1)"
+run_test "claude turn budget resets on the user's next message" "0" \
+  "$(cg_turn "$CG_BIG"$'\n'"$(cg_user continue)" Edit "$CG_H/proj/b.ts" $'x1\nx2\nx3\nx4\nx5\nx6' $'y1\ny2\ny3\ny4\ny5\ny6')"
+run_test "regression: claude Write of a new code file without code-architecture is denied" "2" \
+  "$(cg_turn "$CG_ASK" Write "$CG_H/proj/parser.ts" "" "export const p = 1")"
+run_test "claude Write of a new code file after code-architecture is allowed" "0" \
+  "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"code-architecture"}')" Write "$CG_H/proj/parser.ts" "" "export const p = 1")"
+run_test "regression: claude Edit of a test file without the testing skill is denied" "2" \
+  "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/tests/a.test.ts" a b)"
+run_test "claude Edit of a test file after the testing skill is allowed" "0" \
+  "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"testing"}')" Edit "$CG_H/proj/tests/a.test.ts" a b)"
+: >"$CG_H/cursor-transcript.jsonl"
+cg_cursor_hook() {
+  printf '%s' "$2" | env -u BRIDLE_HOST HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$PACK/hooks/$1" >/dev/null 2>&1 || true
+}
+cg_cursor_new() {
+  jq -n --arg r "$CG_H/proj" --arg t "$CG_H/cursor-transcript.jsonl" --arg f "$CG_H/proj/$1" \
+    '{cursor_version:"3.21",conversation_id:"conv-1",transcript_path:$t,workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:"export const p = 1"}}' \
+    | HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$CG_W" 2>/dev/null && echo 0 || echo $?
+}
+CG_SUBMIT='{"hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-1","prompt":"add the parser"}'
+cg_cursor_hook before_submit_prompt.sh "$CG_SUBMIT"
+run_test "Cursor Write of a new code file before reading code-architecture is denied" "2" "$(cg_cursor_new n1.ts)"
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
+run_test "regression: Cursor Write of a new code file after reading its SKILL.md is allowed" "0" "$(cg_cursor_new n1.ts)"
+run_test "Cursor second new file in the turn is allowed" "0" "$(cg_cursor_new n2.ts)"
+run_test "regression: Cursor third new file in a turn is denied over-budget" "2" "$(cg_cursor_new n3.ts)"
+cg_cursor_hook before_submit_prompt.sh "$CG_SUBMIT"
+run_test "Cursor turn ledger resets on the user's next prompt" "2" "$(cg_cursor_new n3.ts)"
 RESULT="$(jq -n --arg r "$CG_H/proj" --arg f "$CG_H/.cursor/rules/core.mdc" '{cursor_version:"3.21",workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:"x"}}' | HOME="$CG_H" bash "$CG_W" 2>/dev/null && echo 0 || echo $?)"
 run_test "regression: Cursor Write into ~/.cursor/rules is denied through the Claude hook" "2" "$RESULT"
 CMD="$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[0].command' "$CG_H/.claude/settings.json" 2>/dev/null)"

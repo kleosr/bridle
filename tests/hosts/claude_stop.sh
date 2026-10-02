@@ -71,4 +71,41 @@ run_test "claude port uninstall removes only its own Stop hook" "echo mine" "$RE
 RESULT="$(test -e "$STOP_H/.claude/hooks/bridle_before_stop.sh" && echo present || echo gone)"
 run_test "claude port uninstall removes the Stop hook script" "gone" "$RESULT"
 
+CS_HOOK="$PACK/hosts/cursor/verdict.sh"
+CS_PROJ="$STOP_H/cursor-proj"
+mkdir -p "$CS_PROJ"
+git -C "$CS_PROJ" init -q
+printf '%s\n' 'export function ok() { return 1; }' >"$CS_PROJ/clean.ts"
+git -C "$CS_PROJ" add clean.ts
+git -C "$CS_PROJ" -c user.name=t -c user.email=t@t commit -qm base
+cs_run() {
+  jq -cn --arg r "$CS_PROJ" --argjson st "${2:-null}" \
+    '{workspace_roots:[$r], status:(if $st == null then "completed" else $st end)}' \
+    | bash "$CS_HOOK" turn-check 2>/dev/null
+}
+run_test "cursor stop turn-check passes a clean diff" "{}" "$(cs_run)"
+printf '%s\n' '// ==========' >>"$CS_PROJ/clean.ts"
+run_test "cursor stop turn-check emits followup on gate errors" "followup" \
+  "$(cs_run | jq -r 'if .followup_message then "followup" else "none" end' 2>/dev/null)"
+CS_ABORT="$STOP_H/cursor-abort"
+mkdir -p "$CS_ABORT"
+git -C "$CS_ABORT" init -q
+printf '%s\n' 'export function ok() { return 1; }' >"$CS_ABORT/clean.ts"
+git -C "$CS_ABORT" add clean.ts
+git -C "$CS_ABORT" -c user.name=t -c user.email=t@t commit -qm base
+run_test "cursor stop turn-check ignores aborted status" "{}" \
+  "$(jq -cn --arg r "$CS_ABORT" '{workspace_roots:[$r],status:"aborted"}' | bash "$CS_HOOK" turn-check 2>/dev/null)"
+
+if command -v node >/dev/null 2>&1; then
+  mkdir -p "$STOP_H/.claude/skills/code-architecture/scripts"
+  cp "$PACK/skills/code-architecture/scripts/quality-gate.mjs" "$STOP_H/.claude/skills/code-architecture/scripts/quality-gate.mjs"
+  printf '%s\n' 'export function base() { return 1; }' >"$STOP_PROJ/seed.ts"
+  git -C "$STOP_PROJ" add seed.ts
+  git -C "$STOP_PROJ" -c user.name=t -c user.email=t@t commit -qm seed 2>/dev/null || true
+  printf '%s\n' 'export function ok() { return 1; }' >"$STOP_PROJ/gate.ts"
+  printf '%s\n' '// TODO fix' >>"$STOP_PROJ/gate.ts"
+  QG_TRAN="$ASK"$'\n'"$(tr_write w1 "$STOP_PROJ/gate.ts")"$'\n'"$(tr_verify v1)"
+  run_test "stop hook blocks when quality-gate fails on diff-added lines" "2" "$(stop_turn "$QG_TRAN")"
+fi
+
 rm -rf "$STOP_H"

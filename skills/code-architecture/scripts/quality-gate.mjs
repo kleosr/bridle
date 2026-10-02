@@ -11,6 +11,8 @@ import { basename, extname, join } from 'node:path';
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.sql', '.vue', '.svelte']);
 const IGNORED_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'build', 'coverage', '.turbo', 'migrations', 'generated']);
 const MAX_HANDWRITTEN_LINES = 300;
+const COMMENT_DENSITY_MAX = 0.1;
+const LICENSE_HEADER = /^\s*(\/\/|\/\*|\*)\s*(SPDX|Copyright)/i;
 
 const GENERIC_FILE_NAMES = /^(utils?|helpers?|common|misc|lib|stuff|functions|service|manager|handler|component|main|new[-_]?\w*|temp|test\d*|my[-_]?\w+|\w+(2|final|new|copy|old))\.(t|j)sx?$/i;
 const FRAMEWORK_ENTRY_FILES = /^(page|layout|route|loading|error|not-found|template|middleware|index|main)\.(t|j)sx?$/i;
@@ -24,7 +26,9 @@ const LINE_RULES = [
   { id: 'select-star', severity: 'warn', pattern: /SELECT\s+\*\s+FROM/i, hint: 'Selecciona columnas explícitas: el DTO no debe cambiar si cambia la tabla.' },
   { id: 'redis-set-no-ttl', severity: 'warn', pattern: /\.set\(\s*[^)]*\)(?![^;]*\b(ex|px|EX|PX|exat|pxat|keepTtl)\b)/, requires: /redis|upstash/i, hint: 'Toda clave de cache necesita TTL (ex) salvo que sea fuente de verdad declarada.' },
   { id: 'force-dynamic', severity: 'warn', pattern: /export\s+const\s+dynamic\s*=\s*['"]force-dynamic['"]/, hint: 'force-dynamic como parche esconde una invalidación faltante; justifícalo.' },
-  { id: 'ownerless-todo', severity: 'warn', pattern: /\/\/\s*(TODO|FIXME|HACK)(?!\s*\()/, hint: 'TODO(dueño): qué y por qué, o resuélvelo ahora.' },
+  { id: 'comment-banner', severity: 'error', pattern: /^\s*(\/\/|\/\*|\*)\s*[-=*_#]{4,}\s*(\*\/)?\s*$|^\s*#\s*[-=*_#]{4,}\s*$/, hint: 'Quita el banner; el código debe explicarse solo.' },
+  { id: 'comment-history', severity: 'error', pattern: /^\s*(\/\/|\/\*|\*)\s*(added for|now uses|previously|changed to|updated to|removed the|this (adds|fixes|handles))\b/i, hint: 'No narres el cambio en un comentario; borra la línea.' },
+  { id: 'ownerless-todo', severity: 'error', pattern: /\/\/\s*(TODO|FIXME|HACK)(?!\s*\()/, hint: 'TODO(dueño): qué y por qué, o resuélvelo ahora.' },
   { id: 'console-log', severity: 'warn', pattern: /\bconsole\.log\(/, hint: 'Quita la instrumentación temporal o usa el logger de platform/.' },
   { id: 'generic-handler', severity: 'warn', pattern: /\b(const|function)\s+(handleClick|handleSubmit|handleChange|onClick|doSomething|processData|getData|fetchData|updateData)\b/, hint: 'El nombre debe decir el objeto: archiveModule, submitModuleRename…' },
   { id: 'generic-variable', severity: 'warn', pattern: /\b(const|let)\s+(data|result|res|item|obj|temp|tmp|val|stuff|info)\s*[=:]/, hint: 'Nombra por dominio: moduleRows, renameOutcome…' },
@@ -82,6 +86,41 @@ function expandPath(targetPath) {
   );
 }
 
+function isCommentLine(lineText) {
+  const t = lineText.trim();
+  if (!t) return false;
+  if (t.startsWith('//')) return true;
+  if (t.startsWith('/*') || t.startsWith('*') || t.startsWith('*/')) return true;
+  if (/^#(?!!)/.test(t)) return true;
+  return false;
+}
+
+function isDensityExcludedLine(lineText, lineNumber) {
+  if (lineNumber === 1 && lineText.startsWith('#!')) return true;
+  return LICENSE_HEADER.test(lineText);
+}
+
+function commentDensityFinding(filePath, lines, scope) {
+  const judged = [];
+  lines.forEach((lineText, index) => {
+    const lineNumber = index + 1;
+    if (scope && !scope.isNew && !scope.addedLines.has(lineNumber)) return;
+    if (/quality-gate:\s*allow/.test(lineText)) return;
+    if (isDensityExcludedLine(lineText, lineNumber)) return;
+    if (!lineText.trim()) return;
+    judged.push(isCommentLine(lineText));
+  });
+  if (judged.length < 10) return null;
+  const commentCount = judged.filter(Boolean).length;
+  if (commentCount / judged.length <= COMMENT_DENSITY_MAX) return null;
+  return {
+    line: 0,
+    id: 'comment-density',
+    severity: 'error',
+    hint: `${Math.round((commentCount / judged.length) * 100)}% comentarios en líneas añadidas; máx ${COMMENT_DENSITY_MAX * 100}%.`,
+  };
+}
+
 function isInspectable(filePath) {
   const segments = filePath.split(/[\\/]/);
   if (segments.some((segment) => IGNORED_DIRS.has(segment))) return false;
@@ -110,7 +149,7 @@ function inspectFile(filePath) {
       if (rule.pattern.test(lineText)) findings.push({ line: index + 1, id: rule.id, severity: rule.severity, hint: rule.hint });
     }
   });
-  return findings;
+  return { findings, lines };
 }
 
 // File-level findings (line 0) on an existing file are never the diff's: renaming or splitting legacy is out of the ask.
@@ -127,8 +166,12 @@ let errorCount = 0;
 let warningCount = 0;
 let preexistingCount = 0;
 for (const filePath of candidateFiles) {
-  for (const finding of inspectFile(filePath)) {
-    if (!isOwnedByDiff(finding, diffScopes.get(filePath))) {
+  const scope = diffScopes.get(filePath);
+  const { findings, lines } = inspectFile(filePath);
+  const density = commentDensityFinding(filePath, lines, scope);
+  if (density) findings.push(density);
+  for (const finding of findings) {
+    if (!isOwnedByDiff(finding, scope)) {
       preexistingCount += 1;
       continue;
     }

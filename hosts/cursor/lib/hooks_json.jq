@@ -6,12 +6,16 @@ def owned_names:
    "before_read_file.sh", "stop.sh"];
 
 def shim_owned:
-  (.command // "")
-  | test("bash-shim\\.ps1[\"']?[[:space:]]+[^[:space:]]*(session_start|before_submit_prompt|before_shell|before_read_file|stop)\\.sh([[:space:]]|$)");
+  (.command // "") as $c
+  | ($c | test("bash-shim\\.ps1[\"']?[[:space:]]+[^[:space:]]*(session_start|before_submit_prompt|before_shell|before_read_file|stop)\\.sh([[:space:]]|$)"))
+    or ($c | test("bash-shim\\.ps1[\"']?[[:space:]]+[^[:space:]]*lib/verdict_cursor\\.sh turn-check"));
+
+def pack_turn_check:
+  (.command // "") | test("(^|[[:space:]])\\./hooks/lib/verdict_cursor\\.sh turn-check([[:space:]]|$)");
 
 def owned:
   ((.command // "") | type) == "string"
-  and ((hook_basename | IN(owned_names[])) or shim_owned);
+  and ((hook_basename | IN(owned_names[])) or shim_owned or pack_turn_check);
 
 def event_has_shim($entries):
   ($entries // []) | any(shim_owned);

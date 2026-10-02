@@ -21,6 +21,13 @@
         "timeout": 30,
         "failClosed": true
       }
+    ],
+    "stop": [
+      {
+        "command": "./hooks/lib/verdict_cursor.sh turn-check",
+        "timeout": 30,
+        "loop_limit": 1
+      }
     ]
   }
 }

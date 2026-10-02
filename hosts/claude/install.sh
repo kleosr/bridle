@@ -99,6 +99,7 @@ install() {
   done < <(manifest_list '.agents[]')
   copy_into "$PACK/hosts/claude/before_write.sh" "$HOOK_REL" x
   copy_into "$PACK/hosts/claude/before_stop.sh" "$STOP_REL" x
+  copy_into "$PACK/hosts/claude/bridle_turn.jq" hooks/bridle_turn.jq
   install_gate "$GATE_REL" claude
   register_hook
   finish_install

@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 # Cursor verdicts: {"permission": allow|deny|ask} for shell and read,
-# {"continue": bool} for beforeSubmitPrompt.
+# {"continue": bool} for beforeSubmitPrompt. `turn-check` runs the stop sensor.
+
+if [[ "${1:-}" == "turn-check" ]]; then
+  emit_quiet() { printf '{}\n'; exit 0; }
+  command -v jq >/dev/null 2>&1 || emit_quiet
+  INPUT="$(cat)"
+  ROOT="$(printf '%s' "$INPUT" | jq -r '.workspace_roots[0] // .cwd // ""' 2>/dev/null)" || emit_quiet
+  STATUS="$(printf '%s' "$INPUT" | jq -r '.status // "completed"' 2>/dev/null)"
+  [[ "$STATUS" == "completed" ]] || emit_quiet
+  [[ -n "$ROOT" && -d "$ROOT" ]] || emit_quiet
+  QG="$HOME/.cursor/skills/code-architecture/scripts/quality-gate.mjs"
+  command -v node >/dev/null 2>&1 || emit_quiet
+  [[ -f "$QG" ]] || emit_quiet
+  git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1 || emit_quiet
+  OUT=""; EC=0
+  OUT="$(cd "$ROOT" && node "$QG" 2>&1)" || EC=$?
+  (( EC == 0 )) && emit_quiet
+  MSG=$'bridle: turn-check: quality-gate failed on this diff.\n\nFix every finding and re-run the gate.\n\n'
+  MSG+="$OUT"
+  jq -cn --arg m "$MSG" '{followup_message: $m}'
+  exit 0
+fi
 
 json_emit() {
   local kind="$1"
@@ -45,4 +66,15 @@ emit_continue() {
   echo '{"continue":true}'
 }
 
-host_skip() { return 1; }
+host_skip() {
+  local ledger conv_re='"conversation_id"[[:space:]]*:[[:space:]]*"([A-Za-z0-9_-]+)"'
+  local skill_re='"file_path"[[:space:]]*:[[:space:]]*"[^"]*/skills/([A-Za-z0-9_-]+)/SKILL\.md"'
+  [[ "$1" =~ $conv_re ]] || return 1
+  ledger="${XDG_STATE_HOME:-$HOME/.local/state}/bridle/cursor/${BASH_REMATCH[1]}.jsonl"
+  if [[ "$1" == *'"hook_event_name"'*'"beforeSubmitPrompt"'* ]]; then
+    { mkdir -p "${ledger%/*}" && : >"$ledger"; } 2>/dev/null || true
+  elif [[ "$1" =~ $skill_re ]]; then
+    { mkdir -p "${ledger%/*}" && printf '{"skills":["%s"]}\n' "${BASH_REMATCH[1]}" >>"$ledger"; } 2>/dev/null || true
+  fi
+  return 1
+}

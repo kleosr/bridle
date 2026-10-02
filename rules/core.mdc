@@ -5,25 +5,33 @@ alwaysApply: true
 
 # Core
 
-Establish the change surface (the code you change plus the callers, registrations, and config that break without it), change only that, verify the behavior it can break, and fix what the change broke (pre-existing failures: `testing.mdc`).
+Change only the change surface (the code plus the callers, registrations, and config that break without it), verify what it can break, fix what it broke.
 
 ## Change
 Trace callers and contracts before changing a boundary. If the same check fails twice, change the hypothesis or name the missing input instead of repeating it. Remove temporary instrumentation when the investigation ends.
 
 ## Scope
-The ask is the spec and outranks skills, companions, defaults. A multi-part ask: list the parts first, report each done or not. Done is wired (imported, registered, reachable) and verified, not just written; then stop. One path before generalizing. No stubs, TODOs, or unrequested options, flags, config, params, extension points, or compat layers. Touch nothing else: smallest diff, existing names and structure kept; no renames, reformats, moves, "improvements", or guards, validation, and helpers the ask did not need; skill patterns shape new code, never migrate old; extras: one report line. Before reporting, `git diff --stat`: every hunk you made traces to the ask; revert your untraced hunks. A bug fix adds one regression test; nothing else grows.
+The ask is the spec; it outranks skills, companions, defaults. Multi-part ask: list the parts first, report each done or not. Done = wired (imported, registered, reachable) and verified; then stop. No stubs, TODOs, or unrequested options, flags, config, params, compat layers, renames, reformats, moves, guards, or helpers. Skill patterns shape new code, never migrate old. A bug fix adds one regression test. Before reporting, run `git diff --stat` and revert every hunk the ask did not need.
+
+## Hard limits
+Claude Code hooks deny these before the edit; elsewhere they are law.
+- Turn: ≤200 production lines, ≤6 files, ≤2 new production files per user message. At the limit stop, verify, report done and remaining; the user says continue. `over-budget`
+- Comments: add no comment line to code. Need one? Ask in the report. `comment-added`; done-time `quality-gate.mjs`.
+- New file ≤300 lines (exclusions in hook); split by job. Legacy >700: localized fixes. `new-file-over-300`; net-growing edits past 300: `edit-growth`.
+- Existing file: Edit, never a whole-file Write. `rewrite-existing`
+- Invoke Skill `code-architecture` before a new code file, `testing` before editing a test file. `skill-not-loaded`
+
+## Skills
+Load before that edit: network call, worker, cron, deploy → `production-readiness`; login, session, token, role → `auth-boundaries`; data read/write, SQL, cache, endpoint → `cqrs-data-flow`; UI that changes after a mutation → `live-ui-sync`; unknown cause → `debugging`; new service, schema, queue, provider → `system-design`.
 
 ## Craft
-Readable, explicit, and simple before clever, magical, or abstract. Handle errors on purpose. No decorative abstractions or wrappers. Comments: none by default. Add one only when deleting it would lose a fact the code cannot show: a non-obvious why, an external constraint, a warning, or an API contract. Never narrate what code does, restate a name, add banners, or mention the task or change. Wider comment sweeps are a `cut` task.
+Readable and explicit before clever or abstract. Handle errors on purpose. No wrapper whose only job is to forward a call.
 
 ## Architecture
-One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted; cleanup stays in scope.
+One job per module. Change internals before widening a contract. Match 1–2 siblings before Write. A local fix must not change ownership, layering, or call direction elsewhere. Named exports unless the framework requires a default. Remove dead code this task introduced or obsoleted.
 
 ## Ladder
-Lowest sufficient rung, chosen for fit: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
-
-## Size
-Split by job, not count. New hand-written files: hard 300. Legacy >700: localized fixes; extracted modules ≤300. Generated, vendor, lockfiles, migrations, and declarative config are excluded.
+Lowest sufficient rung: no change (config, delete, existing API) → existing repo code → stdlib/platform → installed deps (a new dependency needs a one-line why) → small local implementation.
 
 ## Types
 On typed files, fix the design instead of silencing the compiler: no TS `any`, no blind casts, narrow `unknown` before trusted use, prefer sum types over parallel booleans.
@@ -35,4 +43,4 @@ Satisfy the repo's complexity checker for touched functions; never disable it to
 No `package.json` → no stack pick. Else resolve per touched file: owning package → manifest → framework and manager. Companions are inert unless the owning package matches: `"next"` → `next.mdc`; `"astro"` → `astro.mdc`; `"vite"` without `next` → `vite.mdc`; JS installs → `pnpm.mdc`; SQL → `postgres.mdc`.
 
 ## Tools
-Edit through the host's native edit tools; shell text-rewriting of source is denied. Change existing files with targeted edits; rewrite a whole file only when the ask replaces all of it. Shell is for builds, tests, git, and validation. Semantic search for concepts; Grep/Glob for exact symbols and paths. Read a file before citing or editing it, and read only the paths the question needs.
+Edit through the host's native edit tools; shell text-rewriting of source is denied. Shell is for builds, tests, git, and validation. Read a file before citing or editing it, and read only the paths the question needs.

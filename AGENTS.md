@@ -1,6 +1,6 @@
 # AGENTS.md — bridle (navigator)
 
-bridle is an agent harness for Cursor, Claude Code, and opencode: a charter, always-on rules, skills, specialist agents, and three Bash gates around the host loop. It is not a second agent runtime.
+bridle is an agent harness for Cursor, Claude Code, and opencode: a charter, always-on rules, skills, specialist agents, and Bash gates around the host loop. It is not a second agent runtime.
 
 **Verify:** the behavior this change can break (`TESTS=<fixture> bash tests/run.sh`); gauntlet `bash tests/run.sh`. Windows: Git Bash.
 
@@ -21,8 +21,8 @@ FORCE=1 bash hosts/cursor/install.sh            # install | uninstall | verify |
 bash hosts/claude/install.sh                    # install | uninstall
 bash hosts/opencode/install.sh                  # install | uninstall
 ```
-- Cursor: `~/.cursor` rules, skills, agents, and the three hooks (`beforeSubmitPrompt`, `beforeShellExecution`, `beforeReadFile`; no `stop`, `sessionStart`, `preToolUse`, or `updated_input`). Cloud: `TARGET_REPO=<other-repo> bash hosts/cursor/install.sh project-hooks`, never into this pack.
-- Claude Code: `~/.claude` rules, skills, agents, and five hooks. `UserPromptSubmit` and `PreToolUse(Bash, Read)` run the gates. `PreToolUse(Write|Edit|MultiEdit)` denies edits to any host's installed harness, and whole-file rewrites and new files over 300 lines in the project. `Stop` blocks a turn once when its edits ran no verification, ended red, passed the footprint budget (6 files, 2 new, 200 production lines), or added a file nothing references; each edited turn is logged to `~/.claude/state/bridle-turns.jsonl`.
+- Cursor: `~/.cursor` rules, skills, agents, and four hooks (`beforeSubmitPrompt`, `beforeShellExecution`, `beforeReadFile`, `stop`). `stop` runs `lib/verdict_cursor.sh turn-check`: `quality-gate.mjs` on the diff with at most one follow-up (`loop_limit: 1`). Write-time limits (`edit-growth`, `new-file-over-300`, `comment-added`, …) apply when the Claude port is installed (Cursor runs its `PreToolUse`). No `sessionStart`, `preToolUse`, or `updated_input`. Cloud: `TARGET_REPO=<other-repo> bash hosts/cursor/install.sh project-hooks`, never into this pack.
+- Claude Code: `~/.claude` rules, skills, agents, and five hooks. `UserPromptSubmit` and `PreToolUse(Bash, Read)` run the gates. `PreToolUse(Write|Edit|MultiEdit)` denies edits to any host's installed harness, and in the project the `core.mdc` Hard limits before the edit lands: `rewrite-existing`, `new-file-over-300`, `edit-growth`, `comment-added`, `over-budget` (transcript via `hosts/claude/bridle_turn.jq`), `skill-not-loaded`. `Stop` blocks a turn once when its edits ran no verification, ended red, failed `quality-gate.mjs`, passed the footprint budget (6 files, 2 new, 200 production lines), or added a file nothing references; each edited turn is logged to `~/.claude/state/bridle-turns.jsonl`.
 - opencode: `~/.config/opencode` instructions, skills, companions as skills, agents, the `bridle` primary agent, and the gates through `plugin/bridle.js`, which also denies edit tools on any host's installed harness.
 
 ## Test notes

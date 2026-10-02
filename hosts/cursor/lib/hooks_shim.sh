@@ -52,7 +52,8 @@ apply_pwsh_shim_hooks() {
       (.command // "") as $c
       | ($c | test("bash-shim\\.ps1"))
         or ($c | test("./hooks/(before_submit_prompt|before_shell|before_read_file|stop)\\.sh"))
-        or ($c | test("[[:space:]](before_submit_prompt|before_shell|before_read_file|stop)\\.sh([[:space:]]|$)"));
+        or ($c | test("[[:space:]](before_submit_prompt|before_shell|before_read_file|stop)\\.sh([[:space:]]|$)"))
+        or ($c | test("lib/verdict_cursor\\.sh turn-check"));
     def keep: map(select(pack_cmd | not));
     del(.hooks.sessionStart)
     | .hooks.beforeSubmitPrompt = ((.hooks.beforeSubmitPrompt // []) | keep)
@@ -62,6 +63,7 @@ apply_pwsh_shim_hooks() {
     | .hooks.beforeReadFile = ((.hooks.beforeReadFile // []) | keep)
         + [{command: ($p + " before_read_file.sh"), timeout: 30, failClosed: true}]
     | .hooks.stop = ((.hooks.stop // []) | keep)
+        + [{command: ($p + " lib/verdict_cursor.sh turn-check"), timeout: 30, loop_limit: 1}]
     | if (.hooks.stop | length) == 0 then del(.hooks.stop) else . end
   ' "$dest" >"$tmp"; then
     rm -f "$tmp"

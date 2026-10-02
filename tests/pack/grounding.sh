@@ -5,7 +5,10 @@
 # shellcheck source=hosts/lib.sh
 source "$PACK/hosts/lib.sh"
 
-run_test "hooks.json does not register stop" "false" "$(jq -r '.hooks | has("stop")' "$PACK/hosts/cursor/hooks.json")"
+STOP_CMD="$(jq -r '.hooks.stop[0].command // ""' "$PACK/hosts/cursor/hooks.json")"
+STOP_LIM="$(jq -r '.hooks.stop[0].loop_limit // ""' "$PACK/hosts/cursor/hooks.json")"
+run_test "hooks.json stop command runs verdict turn-check" "yes" "$([[ "$STOP_CMD" == *turn-check* ]] && echo yes || echo no)"
+run_test "hooks.json stop loop_limit is 1" "1" "$STOP_LIM"
 run_test "beforeSubmitPrompt failClosed is true" "true" "$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$PACK/hosts/cursor/hooks.json")"
 run_test "beforeShellExecution failClosed is true" "true" "$(jq -r '.hooks.beforeShellExecution[0].failClosed' "$PACK/hosts/cursor/hooks.json")"
 run_test "beforeReadFile failClosed is true" "true" "$(jq -r '.hooks.beforeReadFile[0].failClosed' "$PACK/hosts/cursor/hooks.json")"
@@ -102,8 +105,8 @@ run_test "regression: kleosr mode does not restate the instruction order" "ok" "
 ROUTER="$PACK/skills/bridle-harness/SKILL.md"
 RESULT="$(grep -q 'SECURITY.md' "$ROUTER" && echo restated || echo ok)"
 run_test "regression: bridle-harness does not restate the instruction order" "ok" "$RESULT"
-RESULT="$(grep -qiw 'stop' "$ROUTER" && echo stale || echo ok)"
-run_test "regression: bridle-harness does not name a stop hook" "ok" "$RESULT"
+RESULT="$(grep -q 'turn-check' "$ROUTER" && echo stale || echo ok)"
+run_test "regression: bridle-harness does not name the Cursor stop turn-check" "ok" "$RESULT"
 ROUTE_OK=ok
 while IFS= read -r skill; do
   case "$skill" in ''|kleosr|bridle-harness) continue ;; esac

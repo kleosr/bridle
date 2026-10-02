@@ -70,8 +70,12 @@ verify_smoke() {
     || { echo "[fail] beforeReadFile must failClosed:true"; bad=1; }
   jq -e '.hooks.beforeSubmitPrompt and .hooks.beforeShellExecution and .hooks.beforeReadFile' "$CURSOR_DIR/hooks.json" >/dev/null \
     || { echo "[fail] hooks.json must register beforeSubmitPrompt, beforeShellExecution, beforeReadFile"; bad=1; }
-  jq -e '(.hooks | has("sessionStart") | not) and (.hooks | has("stop") | not)' "$CURSOR_DIR/hooks.json" >/dev/null \
-    || { echo "[fail] hooks.json must not register sessionStart or stop"; bad=1; }
+  jq -e '(.hooks | has("sessionStart") | not)' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json must not register sessionStart"; bad=1; }
+  jq -e '.hooks.stop[0].command | test("verdict_cursor\\.sh turn-check")' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json stop must run lib/verdict_cursor.sh turn-check"; bad=1; }
+  jq -e '.hooks.stop[0].loop_limit == 1' "$CURSOR_DIR/hooks.json" >/dev/null \
+    || { echo "[fail] hooks.json stop loop_limit must be 1"; bad=1; }
   [[ "$bad" -eq 0 ]] || return 1
   echo "[ok] verify smoke"
 }

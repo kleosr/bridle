@@ -163,6 +163,42 @@ The footprint budget (6 files, 2 new production files, 200 production lines) is 
 | Claude honoring `deny` / `ask` / prompt `block` live | Not probed | Unverified |
 | `Grep`, `Glob`, MCP reads of secret paths | Not gated; only `Read` and `Bash` are matched | Uncovered |
 
+### 2026-10-01 — Comment + size law at write-time and done-time (script law)
+
+| Check | Where | Class |
+|---|---|---|
+| `edit-growth`, `new-file-over-300`, `comment-added`, `over-budget`, `skill-not-loaded` | Claude `PreToolUse(Write|Edit|MultiEdit)`; Cursor inherits via Claude port | Script law (`tests/hosts/claude_gates.sh`, `install_lifecycle.sh`) |
+| `quality-gate.mjs` on diff-added lines | Claude `Stop`; Cursor `stop` → `verdict_cursor.sh turn-check` | Script law (`tests/hosts/claude_stop.sh`, `tests/pack/quality_gate.sh`) |
+| Cursor `followup_message` with `loop_limit: 1` honored live | Not probed | Unverified |
+
+### 2026-10-01 — Live probes: Cursor (Linux) and Claude Code 2.1.286 headless
+Hooks installed with `FORCE=1 bash hosts/cursor/install.sh install` and `FORCE=1 bash hosts/claude/install.sh install`. Claude probes ran `claude -p --permission-mode acceptEdits` in a temporary git copy of `evals/scope/fix-one-line/repo`.
+
+| Probe | What was seen | Class |
+|---|---|---|
+| Cursor edit that adds a comment to an existing file | Denied `comment-added` ("this Edit adds 1 comment line"); file unchanged. Cursor's whole-file Write is normalized against the file on disk. | This run |
+| Cursor edit growing `hooks/lib/shell_gate.sh` 275 → 305 lines | Denied `edit-growth` ("would be 305 lines"); file still 275 lines. | This run |
+| Cursor new code file, no skill loaded | Denied `skill-not-loaded`. The Cursor transcript has no `Skill` tool call, so this fires on every new Cursor code file. | This run (defect) |
+| Cursor shell command whose text contains `git push --force` | Denied `destructive` by `beforeShellExecution`. | This run |
+| Claude Edit adding a comment | Denied `comment-added`; the model reported the edit did not land; file unchanged. | This run |
+| Claude edit, no verification | `Stop` blocked once (`verified: none`); the model reported the edit as unverified instead of done. | This run |
+| Claude edit adding `location.reload()` | `Stop` blocked once with the `quality-gate` `hard-reload` finding; the model reported the gate as failing. | This run |
+| `over-budget` on Cursor | Not enforceable: Cursor transcript records use `role`, not `type`, and carry no `tool_result`, so `bridle_turn.jq` counts nothing. | This run (gap) |
+| Claude `PreToolUse(Bash, Read)` live | Not probed: the Cursor shell gate denied the probe command itself. | Unverified |
+| Cursor `stop` → `followup_message` | A `location.reload()` line was left in `quality-gate.mjs` at turn end. Cursor sent the `bridle: turn-check` findings back as the next user message with no human input. | This run |
+
+### 2026-10-01 — Cursor turn ledger; Claude Bash and Read live
+Cursor writes its transcript only when a turn ends, so the write hook cannot see the current turn there. Cursor turns are now counted in `${XDG_STATE_HOME:-~/.local/state}/bridle/cursor/<conversation_id>.jsonl`. `beforeSubmitPrompt` clears it. `beforeReadFile` adds a skill when a `skills/<name>/SKILL.md` is read (in the Cursor `host_skip`, with no process spawned). `before_write.sh` adds up the turn from the ledger and the pending call, and appends the call once every check has passed.
+
+| Probe | What was seen | Class |
+|---|---|---|
+| Cursor test-file edit after reading `testing/SKILL.md`, old hook | Denied `skill-not-loaded` twice. | This run (fail-before) |
+| The same edit after install, `testing/SKILL.md` re-read | The ledger recorded `{"skills":["testing"]}` under the live `conversation_id`; the edit landed. Both hook payloads carry the same `conversation_id`. | This run |
+| `claude -p`: Bash `cat README.md` | Denied `[bridle use-read]`. | This run |
+| `claude -p`: Read `AGENTS.md` | Allowed; first line returned. | This run |
+| Claude Bash `destructive`, Read of a secret path | Not probed live: Cursor's shell gate denies any command whose text names them. Covered by `tests/hosts/claude_gates.sh`. | Unverified live |
+| Claude Grep/Glob/MCP reads of secret paths | No gate: the Claude Read gate matches `Read` only. | Gap |
+
 ---
 
 ## The Rule We Live By

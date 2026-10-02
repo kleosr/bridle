@@ -27,6 +27,32 @@ if command -v node >/dev/null 2>&1; then
   QG_ADDED=0
   (cd "$QG_REPO" && node "$QG" >/dev/null 2>&1) || QG_ADDED=$?
   run_test "quality gate still rejects an error on a line the diff added" "1" "$QG_ADDED"
+
+  printf '%s\n' 'export function ok() { return 1; }' '// ==========' 'export function bad() { return 2; }' >"$QG_DIR/banner.ts"
+  QG_BAN=0
+  node "$QG" "$QG_DIR/banner.ts" >/dev/null 2>&1 || QG_BAN=$?
+  run_test "quality gate rejects a comment banner" "1" "$QG_BAN"
+
+  printf '%s\n' 'export function ok() { return 1; }' '// added for the sidebar' 'export function bad() { return 2; }' >"$QG_DIR/history.ts"
+  QG_HIST=0
+  node "$QG" "$QG_DIR/history.ts" >/dev/null 2>&1 || QG_HIST=$?
+  run_test "quality gate rejects a change-history comment" "1" "$QG_HIST"
+
+  printf '%s\n' '// TODO fix later' 'export function ok() { return 1; }' >"$QG_DIR/todo.ts"
+  QG_TODO=0
+  node "$QG" "$QG_DIR/todo.ts" >/dev/null 2>&1 || QG_TODO=$?
+  run_test "quality gate rejects an ownerless TODO" "1" "$QG_TODO"
+
+  DENSITY_FILE="$QG_DIR/dense.ts"
+  {
+    echo 'export function dense() {'
+    for _ in $(seq 1 9); do echo '  return 1;'; done
+    for _ in $(seq 1 2); do echo '  // noise'; done
+    echo '}'
+  } >"$DENSITY_FILE"
+  QG_DEN=0
+  node "$QG" "$DENSITY_FILE" >/dev/null 2>&1 || QG_DEN=$?
+  run_test "quality gate rejects high comment density on added lines" "1" "$QG_DEN"
 else
   echo "[skip] quality gate: node not on PATH"
 fi

@@ -76,6 +76,7 @@ UB_PS51="$(jq -r '[.hooks[][]?.command] | map(select(test("(^|[[:space:]])powers
 UB_FC="$(jq -r '.hooks.beforeSubmitPrompt[0].failClosed' "$UNBLOCK_HOME/.cursor/hooks.json")"
 UB_SS="$(jq -r '.hooks | has("sessionStart")' "$UNBLOCK_HOME/.cursor/hooks.json")"
 UB_STOP="$(jq -r '.hooks | has("stop")' "$UNBLOCK_HOME/.cursor/hooks.json")"
+UB_TURN="$(jq -r '.hooks.stop[0].command // ""' "$UNBLOCK_HOME/.cursor/hooks.json")"
 rm -rf "$UNBLOCK_HOME"
 run_test "regression: submit missing after unblock is restored via pwsh shim" "true" "$UB_HAS"
 run_test "regression: restored submit launcher uses git-bash-shim" "1" "$UB_SHIM"
@@ -83,7 +84,8 @@ run_test "regression: restored submit launcher is pwsh or powershell.exe" "1" "$
 run_test "regression: apply rewrites leftover powershell 5.1 launchers" "0" "$UB_PS51"
 run_test "regression: restored submit stays failClosed true" "true" "$UB_FC"
 run_test "regression: apply does not reactivate sessionStart" "false" "$UB_SS"
-run_test "regression: shim apply drops pack stop and does not restore it" "false" "$UB_STOP"
+run_test "regression: shim apply restores pack stop turn-check" "true" "$UB_STOP"
+run_test "regression: restored stop command runs verdict turn-check" "yes" "$([[ "$UB_TURN" == *turn-check* ]] && echo yes || echo no)"
 
 # Live Windows: powershell.exe -File must exit 0 on an allow (failClosed crash was exit 1).
 PS_BIN=""
