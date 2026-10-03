@@ -6,6 +6,15 @@ This file summarizes the public, official description of ASD-STE100 (Simplified 
 
 ASD-STE100 is a controlled natural language, first released in 1986 (as AECMA Document PSC-85-16598) by what is now ASD (the AeroSpace and Defense Industries Association of Europe). It was built at the request of European airlines — most staffed by non-native English speakers — who needed maintenance documentation that could not be misread, because a misread instruction on an aircraft can kill people. The standard is maintained by the Simplified Technical English Maintenance Group (STEMG) and has been free to download since Issue 6 (2013). The current edition is Issue 9 (January 2025).
 
+## Timeline
+
+| Year | Event |
+|---|---|
+| 1979 | AECMA starts work on a controlled English for airline maintenance documentation. |
+| 1986 | The first AECMA Simplified English guide is published. |
+| 2005 | The guide becomes ASD-STE100 after AECMA merges into ASD in 2004. |
+| Now | Free download on request from asd-ste100.org, maintained by the ASD STEMG. Current edition: Issue 9, January 2025. |
+
 ## Structure
 
 - **53 writing rules across 9 sections** covering word choice, grammar, sentence structure, and style.

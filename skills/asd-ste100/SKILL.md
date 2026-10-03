@@ -29,6 +29,69 @@ Pick a mode before rewriting. If the user does not say which, infer from the tex
 
 The two modes and the structural/lexical split are the same distinction seen from two directions. The split says which rules this skill can verify without ASD's dictionary. The modes say which of them to enforce for a given kind of text.
 
+A user who asks for "80% of the way to STE", "STE but softer", or "mostly STE" is asking for STE-flavored mode. Treat those phrases as that mode and do not invent a third one.
+
+## Write, Rewrite, or Change Format
+
+The skill serves three requests. Decide which one you have before you start.
+
+- **Rewrite.** The user gives text and wants it in STE. Follow the Process below.
+- **Write.** The user asks you to explain, describe, or document something "in STE". Do not write a normal draft and then rewrite it. Plan the structure first (one topic per paragraph, a numbered list for every sequence), then write each sentence inside the limits from the start. The limits table below is the checklist.
+- **Change format.** The reader must understand a system, a flow, or a comparison, not execute a step. Prose is often the wrong container for that. Offer a diagram (Mermaid, or an image when the host can render one) or a self-contained HTML page, and write every label, caption, and sentence inside it in STE. A longer or animated explainer is also an option when the host can produce one. Say which format you chose and why in one line. Do not change format when the user asked for text.
+
+## Limits at a Glance
+
+These numbers are the checkable core of the standard. Apply them in both modes.
+
+| Measure | Limit | Note |
+|---|---|---|
+| Procedural sentence (an instruction) | 20 words | Count whitespace-separated tokens. |
+| Descriptive sentence | 25 words | Same count. |
+| Paragraph | 6 sentences, one topic | Start a new paragraph for a new topic. |
+| Noun cluster | 3 words | "fuel pump valve" passes. "high pressure fuel pump inlet valve" does not: unpack it with a preposition. |
+| Instructions in one sentence | 1 | Two actions that the reader must do at the same time may share a sentence. Name that case when you use it. |
+| Approved vocabulary | about 900 words | One meaning and one part of speech each. Technical names and technical verbs from the project domain are allowed on top of it. |
+
+Three more rules have no number but are as strict:
+
+- Use the same word for the same thing every time.
+- Do not leave out words such as "the", "a", "this", or the verb to save space.
+- Use the active voice in every procedure.
+
+## Verb Forms
+
+| Form | Example | STE |
+|---|---|---|
+| Command (imperative) | Close the valve. | Approved |
+| Simple present | The valve closes. | Approved |
+| Simple past | The valve closed. | Approved |
+| Simple future | The valve will close. | Approved |
+| Infinitive | Turn the knob to close the valve. | Approved |
+| Past participle as adjective | the closed valve | Approved |
+| Progressive (-ing) | The valve is closing. | Not approved |
+| Perfect | The valve has closed. | Not approved. See the exception below. |
+| Passive in a procedure | The valve must be closed. | Not approved. Descriptive text may use passive only when the actor is unknown or irrelevant. |
+
+The "-ing" form is allowed only inside a technical name, for example "landing gear".
+
+## Common Replacements
+
+The standard's dictionary lists an approved alternative next to each unapproved word. These are the swaps that come up most in agent and engineering text. They illustrate the pattern. They are not the dictionary.
+
+| Not approved | Approved | Example |
+|---|---|---|
+| commence | START | Start the pump. |
+| prior to | BEFORE | Before you start the engine, check the oil. |
+| in order to | TO | Remove the panel to open the access door. |
+| utilize | USE | Use a torque wrench. |
+| ensure | MAKE SURE | Make sure that the switch is off. |
+| approximately | ABOUT | Wait for about 10 minutes. |
+| replenish | FILL | Fill the reservoir. |
+| close (adjective, "near") | NEAR | Put the tool near the panel. "Close" stays a verb only. |
+| it is imperative that | (none: write the command) | Make sure that the reservoir is full. |
+
+One sentence, before and after, with the rules it applies: "It is imperative that the operator ensures the hydraulic reservoir is replenished prior to commencing operation." becomes "Make sure that the hydraulic reservoir is full before you start the operation." That is 13 words against a 20-word limit, one command, active voice, simple present, and every word from the approved side of the table above.
+
 ## Source and Scope
 
 This skill encodes the **rule categories** of ASD-STE100 Issue 9 (Jan 2025): 53 writing rules across 9 sections covering word choice, grammar, sentence structure, and style, backed by a dictionary of ~900 approved words (one meaning, one part of speech each) and ~1,200 words to avoid with suggested replacements. See `references/writing-rules.md` for the full rule summary and citations.
@@ -75,7 +138,7 @@ Aircraft manuals never need present perfect, so the exclusion costs the standard
 
 ## Scan Checklist
 
-These six habits cover most of what makes machine-written English hard to parse. Each one is mechanical: you can point at the exact word or punctuation mark that breaks the rule, with no judgment call. Scan for all six before you rewrite anything.
+These eight habits cover most of what makes machine-written English hard to parse. Each one is mechanical: you can point at the exact word or punctuation mark that breaks the rule, with no judgment call. Scan for all eight before you rewrite anything.
 
 1. **Synonym rotation** — the same thing gets several names in one document ("the user", "the customer", "the client"). The reader cannot tell whether they are one thing or three. Fix: pick one name, use it every time.
 2. **Hedge stacking** — helper verbs and qualifiers pile up until the sentence asserts nothing ("it is important to note that this may potentially help to improve"). Fix: state the claim, or delete it.
@@ -83,17 +146,20 @@ These six habits cover most of what makes machine-written English hard to parse.
 4. **Marketing adjectives** — words that claim quality instead of showing it: seamless, robust, powerful, cutting-edge, effortless, blazing-fast. Fix: delete, or replace with the measurement that earns the claim.
 5. **Run-on sentences** — several ideas joined by semicolons or em dashes. Fix: one idea per sentence.
 6. **Soft phrasal verbs** — spin up, reach out, dive into, kick off. Fix: use the single plain verb (start, contact, read, begin).
+7. **Dropped words** — articles, subjects, or verbs cut to save space ("Files not backed up will be lost", "Restart if failing"). Fix: put the word back, even when the sentence gets longer.
+8. **Progressive and perfect verb forms** — "is closing", "has closed", "will be running". Fix: use the simple form ("closes", "closed", "runs"). Keep a perfect form only when it carries a hedge or current relevance, and flag it.
 
 ## Process
 
-1. Pick the mode (Strict or STE-flavored). Say which only when the user asked for the rule table — see Output Format.
-2. Read the input text once for meaning — do not start rewriting before you understand what it must still say afterward.
+1. Pick the request (rewrite, write, or change format) and the mode (Strict or STE-flavored). Say which only when the user asked for the rule table — see Output Format.
+2. Read the input text once for meaning — do not start rewriting before you understand what it must still say afterward. For a write request, list the topics first, one per paragraph, and mark every sequence that becomes a numbered list.
 3. Walk it sentence by sentence. Flag every rule violation from the Core Rewrite Rules tables and every habit from the Scan Checklist. In STE-flavored mode, flag the lexical rules but do not enforce them. For a mechanical first pass over the structural rules, run `scripts/ste-lint.py` (stdin or file args, `--json` for structured output); it checks semicolons, sentence length, phrasal verbs, nominalization, marketing adjectives, synonym rotation, dangling-conjunction in supported list items, passive voice, and compound tenses, and by design never flags hedges or modality. `--baseline N` tolerates N hard violations (for adopting on existing docs); `--disable rule1,rule2` silences named rules.
 4. Rewrite each flagged sentence to fix the violation while preserving the original meaning exactly. If a rewrite would drop necessary precision (a safety condition, a scope qualifier, a number), keep the longer phrasing and flag it instead of silently simplifying.
    - **Check modality before you commit to a rewrite.** Hedges ("may", "could", "sometimes", "is likely to") carry the author's confidence, and confidence is content. A shorter sentence that upgrades a hedge to a fact is not a simplification — it is a different claim. This is the most common way a well-intentioned STE rewrite goes wrong, because hedges are exactly what a length cap tempts you to cut.
    - Never add a fact the source did not state. A rewrite that reads better because it supplies a cause, a frequency, or a mechanism has stopped being a rewrite.
 5. Output the rewritten text (see Output Format). Keep the mode choice and the rule analysis internal unless the user asked to see them.
 6. If the input already complies, say so — do not force changes onto compliant text.
+7. Before you return the text, check it against Limits at a Glance: sentence length, one instruction per sentence, paragraph length, noun clusters, verb forms, and one word per thing. `scripts/ste-lint.py` covers the first of those and the lexical habits. The rest you check by reading.
 
 ## Output Format
 
@@ -122,6 +188,7 @@ Follow the table with a one-line note on anything you deliberately did **not** s
 - Preserve every fact, condition, and scope qualifier in the original.
 - Preserve the strength of every hedge, and add no claim the source did not make.
 - Suggest a one-line glossary entry for domain terms that must stay.
+- Write an explanation in STE from the start when the user asks for one, and offer a diagram or an HTML page when the reader needs to understand a system rather than execute a step.
 
 **Will not:**
 - Reproduce ASD's official ~900-word dictionary as if it were memorized verbatim — always treat the official download as the source of truth for exact approved wording.
