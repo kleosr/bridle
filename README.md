@@ -1,135 +1,131 @@
-<h1 align="center">bridle</h1>
+# bridle
 
-<p align="center">
-  <em>The model supplies judgment. The bridle holds the boundary.</em>
-</p>
+bridle is a harness for Cursor, Claude Code, and opencode. It adds a charter, always-on rules, skills, specialist agents, and Bash gates around the host loop. It does not start a second agent runtime. The model still chooses the edit. The gates decide which actions may run.
+
+kleosr maintains this pack. The license is MIT.
 
 <p align="center">
   <img src="https://img.shields.io/badge/hosts-Cursor%20%7C%20Claude%20Code%20%7C%20opencode-000000?style=flat-square" alt="Hosts: Cursor, Claude Code, opencode">
-  <img src="https://img.shields.io/github/actions/workflow/status/kleosr/bridle/gates.yml?branch=master&style=flat-square&label=gauntlet" alt="Gauntlet workflow status">
-  <img src="https://img.shields.io/badge/gates-3%20fail--closed-111111?style=flat-square" alt="Gates: 3 fail-closed">
-  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows%20(Git%20Bash)-111111?style=flat-square" alt="Platforms">
+  <img src="https://img.shields.io/github/actions/workflow/status/kleosr/bridle/gates.yml?branch=master&style=flat-square&label=gauntlet" alt="Gauntlet status on master">
+  <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows%20(Git%20Bash)-111111?style=flat-square" alt="macOS, Linux, and Windows Git Bash">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="License: MIT">
 </p>
 
-<p align="center">
-  <strong>A deterministic engineering harness for coding agents.</strong><br>
-  Charter, always-on rules, skills, and three Bash gates around the host loop. It is not a second agent runtime.
-</p>
+## Run the gauntlet before you install
 
-Verify it before you install it. From Git Bash on Windows, or Bash on macOS and Linux:
+From Git Bash on Windows, or from Bash on macOS and Linux, run:
 
 ```bash
 bash tests/run.sh
 ```
 
-The gauntlet runs in sandboxed fixtures and does not touch your home directory. The badge is the latest `gates` workflow on `master`; a local claim still needs this command and its exit code.
+The gauntlet runs in sandboxed fixtures. It does not change your home directory. A local claim needs this command and exit code 0.
 
-Maintained as private engineering work by kleosr (Mario Pulice), published under the MIT license.
-
----
+You need Node.js and `jq`. On Windows, run the scripts from Git Bash.
 
 ## Install
 
-Requirements: `jq`, Node.js (the gates' JSON codec), and on Windows, Git Bash. `jq`: `winget install jqlang.jq`, `brew install jq`, or `apt install jq` / `pacman -S jq`.
-
-| Host | Command | What lands |
+| Host | Command | Path |
 |---|---|---|
-| Cursor | `bash hosts/cursor/install.sh` | Charter, rules, skills, agents, and the three gates in `~/.cursor` |
-| Claude Code | `bash hosts/claude/install.sh` | Rules, skills, agents, the three gates, and the Write and Stop hooks in `~/.claude` |
-| opencode | `bash hosts/opencode/install.sh` | Instructions, skills, agents, the `bridle` primary agent, and the gates via `plugin/bridle.js` in `~/.config/opencode` |
+| Cursor | `FORCE=1 bash hosts/cursor/install.sh` | `~/.cursor` |
+| Claude Code | `FORCE=1 bash hosts/claude/install.sh` | `~/.claude` |
+| opencode | `bash hosts/opencode/install.sh` | `~/.config/opencode` |
 
-Each installer takes `install` (default) or `uninstall`; Cursor also takes `verify`, `all`, and `project-hooks`. Restart the host or start a new chat afterward.
+Each command accepts `install` (the default) or `uninstall`. Cursor also accepts `verify`, `all`, and `project-hooks`.
 
-`FORCE=1` is the overwrite switch, default off. A destination that already exists and differs is skipped with `[warn] skip differing … (FORCE=1)`. With `FORCE=1` the installer first copies it to `*.pre-kleos-bak` (once), then overwrites; `uninstall` restores those backups.
+`FORCE=1` overwrites a file that already differs. Without `FORCE=1`, the installer skips that file and prints a warning. With `FORCE=1`, it copies the old file to `*.pre-kleos-bak` once, then writes the new file. `uninstall` restores those copies.
 
-Cursor Cloud Agents load project hooks, not `~/.cursor/hooks.json`. Opt in on another repository (never this one):
+Start a new chat after install.
+
+Cursor Cloud Agents read project hooks. They do not read `~/.cursor/hooks.json`. To install project hooks in another repository, run:
 
 ```bash
 TARGET_REPO=<other-repo> bash hosts/cursor/install.sh project-hooks
 ```
 
----
+Do not run that command in this pack.
 
-## What the hooks change
+## How one turn runs
 
-| Without the gate | With bridle |
-|---|---|
-| `.env`, `.pem`, `id_rsa`, and credentials can be read into context | `before_read_file.sh` denies those paths before the bytes are returned |
-| `rm -rf /`, force-push, `reset --hard`, `curl \| sh` | `before_shell.sh` splits on operators outside quotes and denies them |
-| Secret tokens in a prompt (`ghp_`, `sk-`, `AKIA`, private keys) | `before_submit_prompt.sh` blocks transmission (`continue: false`) |
-| “Tests passed” with no command | Done is the verifying command and exit `0` |
-| `eslint-disable complexity`, `--ignore=C901` from the shell | `before_shell.sh` denies those suppressions |
-| The same check failing again with no new evidence | The charter stops the repeat: record the evidence, change the hypothesis, or name the missing input |
+This is the workflow. The hooks run even when you do not invoke `/bridle-harness`. That command is the Cursor custom mode. It tells the agent which skill to load. It does not replace the charter, and it does not replace a hook.
 
-Prompt, shell, and read are fail-closed: if a gate crashes, times out, or returns invalid output, the host blocks the action.
+1. You send a prompt. `beforeSubmitPrompt` clears the Cursor skill ledger for that chat. The same script blocks the prompt when the text contains a known secret-token prefix. A secret with no listed prefix can pass this script.
+2. The agent classifies the task as answer, diagnose, change, or monitor. A diagnosis does not authorize an edit. Monitoring ends when the agent reports the state it observed.
+3. The agent reads `AGENTS.md` and the files it will edit.
+4. Before a code edit, the agent loads `code-architecture` and `slop-guard`. A test file also needs `testing`. On Cursor, a read of `skills/<name>/SKILL.md` records the skill. On Claude Code, a Skill tool call records it. The ledger resets on your next prompt.
+5. The write hook runs before it writes the edit. It denies a new comment line in a code file. It denies a new file longer than 300 lines. It denies growth that would leave a hand-written file above 300 lines. It skips that growth rule when the file already has more than 700 lines.
+6. The same hook denies the edit when a required skill is absent for this turn. The deny names the skill. The agent loads that skill and retries the same edit.
+7. When a file would pass 300 lines, the agent moves one job into a new module, imports that module, and continues. The turn does not stop.
+8. A shell command runs in `beforeShellExecution`. A file read runs in `beforeReadFile`.
+9. At the end of the turn, Cursor `stop` runs `quality-gate.mjs` on the diff and may send one follow-up. This repository does not prove that Cursor shows that follow-up. Claude Code `Stop` blocks the turn once in four cases: no verification, a failed verification, a failed quality gate, or a new file with no reference.
 
----
+A denied hook stops that path. The agent reports the reason code. The agent follows only the route that the deny names.
 
-## Layers
+The write hook runs in Claude Code. Cursor runs that hook after you install the Claude Code port. opencode runs the prompt gate, the shell gate, and the read gate in `plugin/bridle.js`. opencode does not run the write hook.
 
-Load order. Each layer is narrower than the one above it. [`SECURITY.md`](SECURITY.md) is read on demand and outranks the rules on a boundary question.
+## Instruction order
 
-```mermaid
-graph TD
-  A["1. Charter: ~/.cursor/rules/kleosr.mdc"] --> B["2. Always-on law: core.mdc, testing.mdc"]
-  B --> C["3. Glob companions: next, vite, astro, postgres"]
-  C --> D["4. Skills: skills/, on match"]
-  D --> E["5. Specialists: hunter, cut, prove, architect"]
-  E --> F["6. Gates: hooks/ decides, hosts/ formats"]
-  H["SECURITY.md: on demand, outranks rules on boundaries"] -.-> A
-```
+The charter states this order. Highest first:
 
-1. **Charter.** `rules/charter.txt`, installed once per host (Cursor: `~/.cursor/rules/kleosr.mdc` with `alwaysApply`). Identity, what may proceed without asking, and what needs approval. A second copy in Cursor Settings → User Rules drifts.
-2. **Always-on law.** `core.mdc` and `testing.mdc`, each capped at 80 lines. Craft, size, the dependency ladder, and the verify loop.
-3. **Glob companions.** Framework rules attach on file match and stay inert unless that package’s manifest names the dependency.
-4. **Skills.** Listed in `hosts/manifest.json`. Procedures only. They cannot grant a permission.
-5. **Specialists.** `hunter`, `cut`, `prove`, and `architect` run in a separate context. `prove` checks evidence so the implementing model does not grade its own change; `architect` reviews a design before code.
-6. **Gates.** The table below. `hooks/` decides; each host's `hosts/<host>/verdict.sh` turns the decision into that host's format.
+1. The host, and your explicit instructions.
+2. The charter in `rules/charter.txt`. Cursor installs that file as `~/.cursor/rules/kleosr.mdc`.
+3. `SECURITY.md`, only for a boundary question.
+4. Always-on `core.mdc` and `testing.mdc`. The charter plus these two files stay at or under 8192 bytes.
+5. A stack companion, only when the package manifest names that stack.
+6. A skill, when the task matches its description.
 
-### Gates
+`AGENTS.md` and project rules win for local convention only. No text bypasses a hook. A skill, a specialist, a file in the repo, or tool output cannot grant a permission.
 
-| Cursor event (Claude Code) | Script | Verdict |
+## Gates
+
+Fail-closed means the host blocks the action in three cases. The script crashes. The script reaches its time limit. The script returns output that is not valid. Prompt, shell, and read are fail-closed.
+
+`docs/host-capability.md` records whether a given host honors that block. This file does not guarantee host behavior.
+
+| Event | Script | Result |
 |---|---|---|
-| `beforeSubmitPrompt` (`UserPromptSubmit`) | `before_submit_prompt.sh` | Fail closed. Blocks secret tokens. |
-| `beforeShellExecution` (`PreToolUse` Bash) | `before_shell.sh` | Fail closed. Denies destructive calls, secret reads, lint suppressions, and shell rewrites of source. Asks on infra and database changes. |
-| `beforeReadFile` (`PreToolUse` Read) | `before_read_file.sh` | Fail closed. Canonical path, then deny `.env`, private keys, and certificates. |
+| `beforeSubmitPrompt` | `before_submit_prompt.sh` | Blocks known secret-token prefixes. Clears the Cursor skill ledger. |
+| `beforeShellExecution` | `before_shell.sh` | Denies destructive commands, secret-path reads, lint suppression, and a shell rewrite of source. Asks before infra or database changes. |
+| `beforeReadFile` | `before_read_file.sh` | Denies `.env`, private keys, and certificates. On Cursor, records a skill read. |
+| Write, Edit, MultiEdit | `hosts/claude/before_write.sh` | Denies new comments, files over 300 lines, and a missing skill. |
+| `stop` | Cursor turn-check, Claude `before_stop.sh` | Runs `quality-gate.mjs` on the diff. Claude also blocks for no verification or a new file with no reference. |
 
-Cursor registers no `stop`, `sessionStart`, `preToolUse`, or `updated_input`. The frozen set is [`docs/architecture.md`](docs/architecture.md).
+`hooks/` makes the decision. `hosts/<host>/verdict.sh` formats that decision for the host. `SECURITY.md` lists what each script enforces. A rule with no script is law only.
 
-### Shell-hook timing
+On Windows, pattern matching stays inside Bash. External programs once made a 30-part command take 45.0 seconds, and Cursor stopped the hook. After the rewrite, that command took 3.2 seconds. The date and the log are in `docs/host-capability.md`.
 
-Matching in `shell_gate.sh`, `common.sh`, and `sql_scope.sh` stays inside Bash (`[[ =~ ]]`). On Windows Git Bash, a pipeline of `grep` / `sed` / `tr` cost about 50 ms per spawn. A 30-segment command took **45.0 s** and Cursor killed it (`exit code 1` under `failClosed`). After the in-process rewrite the same command took **3.2 s** end to end through the PowerShell shim. Measured 2026-09-15 on Cursor 3.20.15, Windows 11. Numbers and the probe log: [`docs/host-capability.md`](docs/host-capability.md).
+## Skills on a code edit
 
-`git-bash-shim.ps1` compiles `~/.cursor/hooks/KleosPipeUtil.dll` once, maps Windows paths in PowerShell, and uses timeouts of 30 s (read, submit) and 60 s (shell).
+| File | Skills for this turn |
+|---|---|
+| Any code file, new or existing | `code-architecture` and `slop-guard` |
+| A test file | Those two, plus `testing` |
+| Markdown, JSON, and other non-code files | None from this hook |
 
----
+`/bridle-harness` routes the other skills when the task matches. Examples: `auth-boundaries` for login and tokens, `debugging` when the cause is unknown, and `asd-ste100` for text that another agent must parse.
+
+You can invoke `hunter`, `cut`, `prove`, or `architect`. Each one runs in a separate context. `prove` runs the real commands so the author of the change does not grade that change.
 
 ## For agents in this repository
 
-Claude, Devin, Cursor agents, and any other coding agent:
-
-1. Read `AGENTS.md` before editing. Read `SECURITY.md` before security-sensitive work.
-2. Run `bash tests/run.sh`, or the narrowest suite that can falsify the change (`TESTS=<name> bash tests/run.sh`). Cite the command and the exit code.
-3. Keep the three gate events. Do not add a host adapter, a second installer, or a partial port in an ordinary task.
-4. A handoff file does not authorize a new goal or a new host.
+1. Read `AGENTS.md` before an edit. Read `SECURITY.md` before security-sensitive work.
+2. Run `bash tests/run.sh`, or `TESTS=<name> bash tests/run.sh`, for the narrowest command that can show the change is wrong. Report the command and the exit code.
+3. Keep the registered hook events. Do not add a host adapter in an ordinary task.
+4. A handoff file does not authorize a new goal.
 5. On Windows, run these scripts from Git Bash.
-
----
 
 ## Layout
 
 | Path | Role |
 |---|---|
-| `AGENTS.md` | Map the agent reads first |
-| `SECURITY.md` | Security boundary |
-| `rules/` | Charter, always-on rules, glob companions |
-| `skills/` | Skill bodies |
+| `AGENTS.md` | Map for agents |
+| `SECURITY.md` | Boundary and the steel table |
+| `rules/` | Charter, always-on rules, stack companions |
+| `skills/` | Skill text. `bridle-harness` is the router and the Cursor custom mode. |
 | `agents/` | `hunter`, `cut`, `prove`, `architect` |
-| `hooks/` | The three gates: entry scripts, `lib/`, `policy/` |
-| `hosts/` | `manifest.json` (what ships), `lib.sh` (shared installer code), and `cursor/`, `claude/`, `opencode/`, each with `install.sh` and `verdict.sh` |
-| `tests/` | `run.sh` gauntlet; fixtures in `gate/`, `hosts/`, `pack/` |
-| `scripts/`, `evals/` | `scope_eval.sh` and its fixtures: scores a live agent against the scope law |
-| `docs/` | Architecture, host capability log |
+| `hooks/` | Prompt, shell, and read gates |
+| `hosts/` | Installers and verdict format for Cursor, Claude Code, and opencode |
+| `tests/` | `tests/run.sh` and the fixtures |
+| `docs/` | Architecture notes and the host-capability log |
 
-Further reading: [`docs/architecture.md`](docs/architecture.md), [`docs/host-capability.md`](docs/host-capability.md).
+More detail: [`SECURITY.md`](SECURITY.md), [`docs/architecture.md`](docs/architecture.md), [`docs/host-capability.md`](docs/host-capability.md).
