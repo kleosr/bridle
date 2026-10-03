@@ -3,9 +3,9 @@ name: slop-guard
 description: >-
   Write-time patterns that reject low-evidence TypeScript and JavaScript: fake
   types (unknown contracts, chained or widen-then-assert casts), wasteful array
-  and reducer passes, module mocking, and reflection. Use when writing or
-  editing .ts, .tsx, .js, .jsx, .mjs, or .cjs code. Adds no dependency or lint
-  config; applies to new and changed lines only.
+  and reducer passes, module mocking, and reflection. Use before writing or
+  editing any code file; the type rules are for .ts, .tsx, .js, .jsx, .mjs, and
+  .cjs. Adds no dependency or lint config; applies to new and changed lines only.
 ---
 
 # Slop guard
@@ -13,6 +13,8 @@ description: >-
 Low-evidence code claims a type or a behavior that nothing proves. Write the
 proof into the code, at the boundary where the data enters. Apply this to the
 lines you write or change. Do not migrate old code unless the ask says so.
+In other languages, apply the same idea: parse at the boundary, keep data
+passes linear, and test through real seams.
 
 ## Types carry evidence
 

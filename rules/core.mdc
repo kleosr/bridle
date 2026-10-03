@@ -19,7 +19,7 @@ Claude Code hooks deny these before the edit; elsewhere they are law.
 - Comments: add no comment line to code. Need one? Ask in the report. `comment-added`; done-time `quality-gate.mjs`.
 - New file ≤300 lines (exclusions in hook); split by job. Legacy >700: localized fixes. `new-file-over-300`; net-growing edits past 300: `edit-growth`.
 - Existing file: Edit, never a whole-file Write. `rewrite-existing`
-- Invoke Skill `code-architecture` before a new code file, `testing` before editing a test file, `slop-guard` before any TS/JS edit. `skill-not-loaded`
+- Invoke Skills `code-architecture` and `slop-guard` before any code edit or new code file, `testing` before editing a test file. `skill-not-loaded`
 
 ## Skills
 Load before that edit: network call, worker, cron, deploy → `production-readiness`; login, session, token, role → `auth-boundaries`; data read/write, SQL, cache, endpoint → `cqrs-data-flow`; UI that changes after a mutation → `live-ui-sync`; unknown cause → `debugging`; new service, schema, queue, provider → `system-design`.

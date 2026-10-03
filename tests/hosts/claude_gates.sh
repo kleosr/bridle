@@ -101,12 +101,17 @@ cg_use() {
   jq -cn --arg n "$1" '{type:"user",message:{role:"user",content:[{type:"tool_result",tool_use_id:"u\($n)",content:"x"}]}}'
 }
 CG_ASK="$(cg_user 'add the parser')"
-CG_SG="$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"slop-guard"}')"
+CG_CA="$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"code-architecture"}')"
+CG_SG="$CG_CA"$'\n'"$(cg_use Skill '{"skill":"slop-guard"}')"
 run_test "regression: claude Edit that adds a comment line is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" a $'// parse it\nb')"
 run_test "claude Edit that keeps an existing comment is allowed" "0" "$(cg_turn "$CG_SG" Edit "$CG_H/proj/a.ts" $'// k\na' $'// k\nb')"
-run_test "regression: claude TypeScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.ts" a b)"
-run_test "claude JavaScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.mjs" a b)"
-run_test "claude Python Edit does not need slop-guard" "0" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.py" a b)"
+run_test "regression: claude TypeScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_CA" Edit "$CG_H/proj/a.ts" a b)"
+run_test "claude JavaScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_CA" Edit "$CG_H/proj/a.mjs" a b)"
+run_test "regression: claude Python Edit without slop-guard is denied" "2" "$(cg_turn "$CG_CA" Edit "$CG_H/proj/a.py" a b)"
+run_test "claude Python Edit after code-architecture and slop-guard is allowed" "0" "$(cg_turn "$CG_SG" Edit "$CG_H/proj/a.py" a b)"
+run_test "regression: claude Edit of an existing Python file without code-architecture is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.py" a b)"
+run_test "regression: claude TypeScript Edit with only slop-guard is denied" "2" \
+  "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"slop-guard"}')" Edit "$CG_H/proj/a.ts" a b)"
 run_test "regression: claude Edit adding a shell comment is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.sh" a $'# why\nb')"
 CG_LANGS=""
 for cg_spec in "ex:# why" "clj:;; why" "erl:% why" "ml:(* why *)" "zig:// why"; do
@@ -130,7 +135,7 @@ run_test "claude Write of a new code file after code-architecture is allowed" "0
 run_test "claude new TypeScript file with code-architecture but not slop-guard is denied" "2" \
   "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"code-architecture"}')" Write "$CG_H/proj/parser.ts" "" "export const p = 1")"
 run_test "regression: claude Edit of a test file without the testing skill is denied" "2" \
-  "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/tests/a.test.ts" a b)"
+  "$(cg_turn "$CG_SG" Edit "$CG_H/proj/tests/a.test.ts" a b)"
 run_test "claude Edit of a test file after the testing skill is allowed" "0" \
   "$(cg_turn "$CG_SG"$'\n'"$(cg_use Skill '{"skill":"testing"}')" Edit "$CG_H/proj/tests/a.test.ts" a b)"
 : >"$CG_H/cursor-transcript.jsonl"
@@ -153,8 +158,12 @@ run_test "Cursor second new file in the turn is allowed" "0" "$(cg_cursor_new n2
 run_test "regression: Cursor third new file in a turn is allowed (split, do not stop)" "0" "$(cg_cursor_new n3.ts)"
 cg_cursor_hook before_submit_prompt.sh "$CG_SUBMIT"
 run_test "Cursor turn ledger resets its skills on the user's next prompt" "2" "$(cg_cursor_new n3.ts)"
-cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
 cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/slop-guard/SKILL.md","content":"x"}'
+RESULT="$(jq -n --arg r "$CG_H/proj" --arg t "$CG_H/cursor-transcript.jsonl" --arg f "$GROW" --arg o "$LAST" --arg n "$LAST"$'\nconst y = 2;' \
+  '{cursor_version:"3.21",conversation_id:"conv-1",transcript_path:$t,workspace_roots:[$r],tool_name:"Edit",tool_input:{file_path:$f,old_string:$o,new_string:$n}}' \
+  | HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$CG_W" 2>&1 >/dev/null | grep -c 'needs the code-architecture skill' || true)"
+run_test "regression: Cursor Edit of an existing file without code-architecture is denied" "1" "$RESULT"
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
 run_test "regression: Cursor Write of a 248-line new file in a fresh turn is allowed" "0" \
   "$(cg_cursor_new studio.ts "$(jq -rn '[range(248) | "export const s\(.) = \(.);"] | join("\n")')")"
 run_test "Cursor keeps writing new files after 200 production lines in a turn" "0" "$(cg_cursor_new n4.ts)"

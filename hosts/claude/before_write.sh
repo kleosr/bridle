@@ -117,13 +117,10 @@ else
 fi
 TURN="$(printf '%s\n%s\n' "$PRIOR" "$CALL" | jq -cs "$MERGE" 2>/dev/null)" || exit 0
 REL="${FILE#"$CWD"/}"
-NEED=()
+NEED=(code-architecture slop-guard)
 if [[ "$REL" =~ (^|/)(tests?|__tests__|spec)/|\.(test|spec)\.[a-z]+$|(^|/)test_[^/]*\.py$|_test\.(go|py)$ ]]; then
   NEED+=(testing)
-elif (( NEW_FILE )); then
-  NEED+=(code-architecture)
 fi
-[[ "$REL" =~ \.(tsx?|jsx?|mjs|cjs)$ ]] && NEED+=(slop-guard)
 for SKILL in ${NEED[@]+"${NEED[@]}"}; do
   jq -e --arg s "$SKILL" '.skills | index($s)' <<<"$TURN" >/dev/null \
     || deny skill-not-loaded "$REL needs the $SKILL skill first: invoke Skill $SKILL (Cursor: Read skills/$SKILL/SKILL.md), apply it, then retry this $TOOL."
