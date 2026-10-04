@@ -74,9 +74,16 @@ run_test "bridle-harness does not vendor a second copy of the law" "absent" "$RE
 RESULT="$(test -e "$PACK/skills/kleosr" && echo present || echo absent)|$(manifest_list '.retiredSkills[]' | grep -cx kleosr || true)"
 run_test "regression: one router, the kleosr mode is retired into bridle-harness" "absent|1" "$RESULT"
 run_test "bridle-harness is the Cursor custom mode" "true" "$(awk -F ': ' '$1 == "mode" { print $2; exit }' "$PACK/skills/bridle-harness/SKILL.md")"
-# prompt-brief stops before editing; auto-loading it would add a round trip to every ask.
 run_test "regression: bridle-harness router loads only when invoked" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/bridle-harness/SKILL.md")"
-run_test "prompt-brief requires explicit invocation" "true" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/prompt-brief/SKILL.md")"
+# prompt-brief loads on an ambiguous ask; when the router loads it, the brief must not add a round trip.
+run_test "regression: prompt-brief is model-invocable for ambiguous asks" "" "$(awk -F ': ' '$1 == "disable-model-invocation" { print $2; exit }' "$PACK/skills/prompt-brief/SKILL.md")"
+run_test "regression: router-loaded prompt-brief continues instead of stopping" "1" "$(grep -c 'por un pedido ambiguo | Muestra el brief al inicio del reporte y \*\*sigue\*\*' "$PACK/skills/prompt-brief/SKILL.md" || true)"
+run_test "regression: router gates ambiguous asks through prompt-brief before other skills" "1" "$(grep -c 'carga `prompt-brief` \*\*antes de cualquier otra skill\*\*' "$PACK/skills/bridle-harness/SKILL.md" || true)"
+run_test "regression: router reports once, at the end, in the charter block order" "1" "$(grep -c 'archivos, prueba (comando y exit code), riesgo no verificado' "$PACK/skills/bridle-harness/SKILL.md" || true)"
+run_test "regression: asd-ste100 names the status report shape and its faults" "1" "$(grep -c '^## Status Reports' "$PACK/skills/asd-ste100/SKILL.md" || true)"
+run_test "regression: charter forbids closing offers and trailing questions" "1" "$(grep -c 'no closing offer or question. .*State an assumption. Do not ask it.' "$PACK/rules/charter.txt" || true)"
+run_test "regression: a bug fix adds a new regression test instead of renaming one" "1" "$(grep -c 'never rename an existing one' "$PACK/rules/testing.mdc" || true)"
+run_test "regression: router creates a grounded AGENTS.md when the repo has none" "1" "$(grep -c 'Si el repo no tiene `AGENTS.md`,' "$PACK/skills/bridle-harness/SKILL.md" || true)"
 
 # The instruction order is written once, in the charter's Session list.
 CHARTER_AUTH="$(awk '

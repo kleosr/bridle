@@ -27,9 +27,18 @@ Esta skill no lo repite.
 
 1. **Clasifica** la tarea: responder, diagnosticar, cambiar o monitorear. Para en
    el terminal de ese modo (diagnosticar no autoriza cambiar código; monitorear
-   termina al reportar el estado observado, sin cambiar nada).
+   termina al reportar el estado observado, sin cambiar nada). Si el pedido no
+   nombra archivo ni resultado observable, o admite dos lecturas que llevan a
+   trabajo distinto, carga `prompt-brief` **antes de cualquier otra skill** y
+   escribe el brief primero. Una lista de "Supuestos" al final del reporte no
+   lo sustituye.
 2. **Lee antes de escribir**: `AGENTS.md`, el árbol de carpetas y 1–2 archivos
-   hermanos del lugar donde vas a trabajar.
+   hermanos del lugar donde vas a trabajar. Si el repo no tiene `AGENTS.md`,
+   créalo antes del primer cambio, ≤40 líneas y solo con lo que leíste: qué es
+   el proyecto, la línea **Verify** con el comando de prueba real (scripts del
+   manifest, Makefile, o el runner que ya está instalado), el layout de las
+   carpetas que existen y las convenciones que viste en los hermanos. Sin
+   suposiciones ni secciones vacías.
 3. **Carga solo la skill que el pedido necesita.** Un cambio de 1–5 líneas
    normalmente no necesita ninguna. Ninguna skill agranda el pedido: si una
    skill pide más de lo que el usuario pidió, manda el pedido.
@@ -53,14 +62,24 @@ Esta skill no lo repite.
    - Texto que otro agente, sistema o persona debe leer sin ambigüedad
      (tool descriptions, errores, prompts, reportes, explicaciones), o el
      usuario pide STE100 o lenguaje simple → `asd-ste100`.
-   - El usuario pide afinar el pedido antes de ejecutarlo → `prompt-brief`
-     (solo cuando la invoca).
+   - El usuario pide afinar el pedido, o el pedido es ambiguo (paso 1) →
+     `prompt-brief`. Rellena los huecos con el repo, marca supuestos, y sigue;
+     para solo ante una pregunta que cambia el trabajo.
 4. **Cambia** la superficie mínima: el código, sus callers, registros, config y tests.
 5. **Verifica** con un comando real y su exit code. "Compila" no es prueba. Si el
    diff crea archivos o nombres, corre además el gate de orden:
    `node <esta-skill>/../code-architecture/scripts/quality-gate.mjs` (sin
    argumentos juzga solo las líneas que agregó el diff; lo preexistente no se toca).
-6. **Reporta** según el charter.
+6. **Reporta** una sola vez, al final, en el idioma del usuario, con los bloques
+   del charter en este orden: brief (si cargó `prompt-brief`), resultado,
+   archivos, prueba (comando y exit code), riesgo no verificado. Escribe en
+   ASD-STE100 modo STE-flavored (`asd-ste100`, sección Status Reports): frases
+   ≤25 palabras, una idea por frase, voz activa, la misma palabra para la misma
+   cosa, sin punto y coma. Las reglas de estructura valen en cualquier idioma.
+   Sin preámbulo, sin oferta ni pregunta de cierre. Entre llamadas a
+   herramientas, solo la línea de estado que el host pide. El riesgo no
+   verificado habla del cambio, no del entorno. Un supuesto que no cambia el
+   trabajo se escribe como `(supuesto)`, no se pregunta.
 
 ## Revisores (contexto separado, cuando los invoca el usuario o un disparador que nombra el charter)
 

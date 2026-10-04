@@ -161,6 +161,28 @@ These eight habits cover most of what makes machine-written English hard to pars
 6. If the input already complies, say so — do not force changes onto compliant text.
 7. Before you return the text, check it against Limits at a Glance: sentence length, one instruction per sentence, paragraph length, noun clusters, verb forms, and one word per thing. `scripts/ste-lint.py` covers the first of those and the lexical habits. The rest you check by reading.
 
+## Status Reports
+
+An agent's end-of-task report is a Write request in STE-flavored mode. The user reads it once, without you in the room, so the shape does not change between runs. Write it in the user's language, block names included. The structural rules apply in every language.
+
+Write the report once, at the end of the task. Between tool calls, write only the status line the host asks for. Use these blocks, in this order, and skip a block only when it is empty:
+
+1. **Brief** (only when you made one): goal, files, assumptions marked `(assumed)`.
+2. **Outcome**: one or two sentences. What changed, or what did not and why.
+3. **Files**: each path with one line on what changed in it.
+4. **Proof**: each check as a command and its exit code. "Tests pass" is not proof.
+5. **Unverified risk**: what the proof does not cover in this change. Not the environment, not the host.
+
+These five faults appeared in real agent reports and are the ones to scan for:
+
+| Fault | Seen | Write instead |
+|---|---|---|
+| Closing offer or question | "Tell me the real value and I'll change it." / "Confírmame si $50 está bien." | "Threshold: 5000 cents `(assumed)`. Change the constant `FREE_SHIPPING_MIN_CENTS` to set it." |
+| Narration between tool calls | "First I will read the repo rules, then locate the total." | The one status line the host asks for, or nothing. The report at the end says what you found. |
+| Headings that rotate names | **Brief** / **Changes** / **Test** in one run, **Symptom** / **Cause** / **Fix** in the next | The five blocks above, with the same names every time. |
+| Sentence over 25 words | "If code outside this repo calls it with only the weight, orderCents is undefined, the comparison is false and it keeps charging normal shipping." | "A caller outside this repo may pass only the weight. Then `orderCents` is `undefined` and the function charges normal shipping." |
+| Proof without a command | "Tests pass: 3/3." | "`npm test`: exit 0, 3 pass, 0 fail." |
+
 ## Output Format
 
 **Default: the rewritten text, and nothing else.** Most callers want a result they can paste straight into a tool description, an error string, or a prompt. Print the simplified text on its own. Do not add a preamble about this skill, a mode announcement, a violation count, a summary of what changed, a rule table, or a closing offer to explain further.

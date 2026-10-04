@@ -8,7 +8,7 @@ alwaysApply: true
 Test observable behavior at the narrowest stable boundary. Run the verify this change can break, not the whole suite by default. "Done" is a validator's command + exit code (or a driven UI path) that you ran and cite; a claim that tests passed is not evidence. On red, do not report done. Fix a pre-existing failure only when it blocks verifying the ask, and say so; report the rest and environment blockers. When no check covers the changed path, report the gap and the smallest next check.
 
 - Which command: the repo's `AGENTS.md` Verify line or package scripts. Docs-only changes need no suite.
-- Bug fix: a `regression: <symptom>` test with observed fail-before / pass-after when possible. Flaky is broken.
+- Bug fix: add one new `regression: <symptom>` test, never rename an existing one, with observed fail-before / pass-after when possible. Flaky is broken.
 - A failed check is the next repair job: fix it, rerun it, then rerun the scoped suite.
 - Coverage or mutation only if the repo already runs them; do not add a runner or expose privates.
 - A signature or shared-contract edit cites its caller list next to the proof.

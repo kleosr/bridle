@@ -3,27 +3,51 @@ name: prompt-brief
 description: >-
   Convierte un pedido suelto en un brief preciso antes de ejecutarlo: objetivo,
   archivos, límites, fuera de alcance y el comando que prueba que está hecho.
-  Solo cuando el usuario la invoca (/prompt-brief, "afina este prompt", "arma
-  el brief"). No ejecuta el trabajo hasta que el usuario apruebe el brief.
-disable-model-invocation: true
+  Cada hueco se rellena con evidencia del repo (grep, AGENTS.md, el archivo),
+  nunca con una suposición sin marcar. Úsala cuando el usuario la invoca
+  (/prompt-brief, "afina este prompt", "arma el brief") o cuando el pedido es
+  ambiguo: no nombra archivo ni resultado observable, o admite dos lecturas
+  que llevan a trabajo distinto.
 ---
 
 # Prompt brief
 
 Un modelo hace de más cuando el pedido deja huecos: no sabe dónde parar, así
-que rellena. Esta skill cierra los huecos **antes** de tocar código. El brief es
-corto a propósito: cada línea le quita al modelo una decisión que no le toca.
+que rellena. Esta skill cierra los huecos **antes** de tocar código, con lo que
+el repo dice, no con lo que el modelo imagina. El brief es corto a propósito:
+cada línea le quita al modelo una decisión que no le toca.
+
+## Dos entradas, dos salidas
+
+| Quién la carga | Qué pasa después del brief |
+|---|---|
+| El usuario (`/prompt-brief`, "afina este prompt") | **Para.** Muestra el brief y espera "sí", un ajuste o un "no". No edites nada antes. |
+| El router, por un pedido ambiguo | Muestra el brief al inicio del reporte y **sigue** con el trabajo. Para solo si queda una pregunta que el código no responde y cuya respuesta cambia el trabajo. |
+
+Un pedido es ambiguo cuando falta una de estas tres cosas y el código no la
+resuelve: qué archivo o símbolo se toca, qué resultado observable se espera, o
+cuál de dos lecturas razonables es la pedida. Un pedido de 1–5 líneas con
+archivo y resultado claros no es ambiguo y no necesita brief.
 
 ## Proceso
 
 1. **Lee lo mínimo para aterrizar el pedido**: `AGENTS.md` y los archivos que el
    pedido nombra o que un `grep` del símbolo encuentra. No explores el repo.
-2. **Escribe el brief** con la plantilla de abajo. Cada campo sale del pedido o
-   del código leído; lo que asumas va marcado `(supuesto)`.
-3. **Pregunta solo lo que cambia el trabajo**: máximo 2 preguntas, cada una con
-   la opción que recomiendas. Si nada es ambiguo, no preguntes.
-4. **Para.** Muestra el brief y espera "sí", un ajuste o un "no". No edites nada
-   antes de eso. Con el "sí", ejecuta exactamente el brief bajo `core` y `testing`.
+2. **Rellena cada hueco desde el repo.** Archivo sin nombrar → `grep` del
+   símbolo o del texto que el usuario citó. Convención sin decir → el archivo
+   hermano más cercano. Comando de prueba → la línea Verify de `AGENTS.md` o los
+   scripts del manifest. Cada campo cita de dónde salió (ruta, o el grep que lo
+   encontró).
+3. **Marca lo que el repo no responde.** Si una decisión no sale del pedido ni
+   del código, va como `(supuesto)` con la opción que elegiste y por qué. Nunca
+   inventes una ruta, una API, un flag ni un comportamiento que no leíste.
+4. **Pregunta solo lo que cambia el trabajo**: máximo 2 preguntas, cada una con
+   la opción que recomiendas. Si el supuesto no cambia el trabajo, no preguntes:
+   un valor que se cambia en una línea (un umbral, un nombre, un texto) va como
+   `(supuesto)` en el brief, nunca como "confírmame" o "avísame" al final.
+5. **Sal por la salida que corresponde** (tabla de arriba). Con el "sí" del
+   usuario, o al seguir por el router, ejecuta exactamente el brief bajo `core`
+   y `testing`.
 
 ## Plantilla
 
@@ -53,6 +77,9 @@ Supuestos: <lista corta, o "ninguno">
   depende de este campo" → no se renombra).
 - **Nada que el usuario no pidió.** Si ves una mejora, va como una línea después
   del brief ("Aparte: …"), nunca dentro de "Hacer".
+- **Evidencia antes que memoria.** Un dato del brief que no esté en el pedido o
+  en un archivo leído en esta sesión es un supuesto, aunque suene obvio. Lo que
+  recuerdes de otro proyecto o de una versión vieja de la librería no cuenta.
 
 ## Por tipo de pedido
 

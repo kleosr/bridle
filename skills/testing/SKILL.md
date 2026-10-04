@@ -24,5 +24,5 @@ Skip framework internals, getters, and styling.
 - Match the repo's existing runner, file layout, and naming. Read one sibling test first.
 - Mock true externals only (network, clock, payment, third-party APIs). Never mock the unit under test or in-process helpers.
 - One behavior per test; the name states the behavior, not the method.
-- A bug fix ships `regression: <symptom>` that fails on the old code — observe the red before the fix.
+- A bug fix ships one new `regression: <symptom>` test that fails on the old code — observe the red before the fix. Do not rename an existing test to get the prefix: the old test keeps its name, the new one carries the symptom.
 - Assert on observable output, not on internal calls, unless the call is the contract.
