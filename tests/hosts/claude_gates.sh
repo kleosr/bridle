@@ -109,6 +109,11 @@ run_test "regression: claude TypeScript Edit without slop-guard is denied" "2" "
 run_test "claude JavaScript Edit without slop-guard is denied" "2" "$(cg_turn "$CG_CA" Edit "$CG_H/proj/a.mjs" a b)"
 run_test "regression: claude Python Edit without slop-guard is denied" "2" "$(cg_turn "$CG_CA" Edit "$CG_H/proj/a.py" a b)"
 run_test "claude Python Edit after code-architecture and slop-guard is allowed" "0" "$(cg_turn "$CG_SG" Edit "$CG_H/proj/a.py" a b)"
+CG_READ="$CG_ASK"$'\n'"$(cg_use Read '{"file_path":"/home/u/.claude/skills/code-architecture/SKILL.md"}')"$'\n'"$(cg_use Read '{"file_path":"/home/u/.claude/skills/slop-guard/SKILL.md"}')"
+run_test "regression: claude Edit after Read of SKILL.md without Skill is allowed" "0" \
+  "$(cg_turn "$CG_READ" Edit "$CG_H/proj/a.py" a b)"
+run_test "regression: claude Edit still sees Skill after the next user message" "0" \
+  "$(cg_turn "$CG_SG"$'\n'"$(cg_user 'now change it')" Edit "$CG_H/proj/a.py" a b)"
 run_test "regression: claude Edit of an existing Python file without code-architecture is denied" "2" "$(cg_turn "$CG_ASK" Edit "$CG_H/proj/a.py" a b)"
 run_test "regression: claude TypeScript Edit with only slop-guard is denied" "2" \
   "$(cg_turn "$CG_ASK"$'\n'"$(cg_use Skill '{"skill":"slop-guard"}')" Edit "$CG_H/proj/a.ts" a b)"
@@ -157,13 +162,27 @@ run_test "regression: Cursor Write of a new code file after reading its SKILL.md
 run_test "Cursor second new file in the turn is allowed" "0" "$(cg_cursor_new n2.ts)"
 run_test "regression: Cursor third new file in a turn is allowed (split, do not stop)" "0" "$(cg_cursor_new n3.ts)"
 cg_cursor_hook before_submit_prompt.sh "$CG_SUBMIT"
-run_test "Cursor turn ledger resets its skills on the user's next prompt" "2" "$(cg_cursor_new n3.ts)"
-cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/slop-guard/SKILL.md","content":"x"}'
+run_test "regression: Cursor keeps skills across the user's next prompt" "0" "$(cg_cursor_new n3.ts)"
+cg_cursor_hook before_submit_prompt.sh '{"hook_event_name":"beforeSubmitPrompt","conversation_id":"conv-bare","prompt":"add the parser"}'
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-bare","file_path":"/home/u/.cursor/skills/slop-guard/SKILL.md","content":"x"}'
 RESULT="$(jq -n --arg r "$CG_H/proj" --arg t "$CG_H/cursor-transcript.jsonl" --arg f "$GROW" --arg o "$LAST" --arg n "$LAST"$'\nconst y = 2;' \
-  '{cursor_version:"3.21",conversation_id:"conv-1",transcript_path:$t,workspace_roots:[$r],tool_name:"Edit",tool_input:{file_path:$f,old_string:$o,new_string:$n}}' \
+  '{cursor_version:"3.21",conversation_id:"conv-bare",transcript_path:$t,workspace_roots:[$r],tool_name:"Edit",tool_input:{file_path:$f,old_string:$o,new_string:$n}}' \
   | HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$CG_W" 2>&1 >/dev/null | grep -c 'needs the code-architecture skill' || true)"
 run_test "regression: Cursor Edit of an existing file without code-architecture is denied" "1" "$RESULT"
-cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-1","file_path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-path","path":"/home/u/.cursor/skills/code-architecture/SKILL.md","content":"x"}'
+cg_cursor_hook before_read_file.sh '{"hook_event_name":"beforeReadFile","conversation_id":"conv-path","path":"/home/u/.cursor/skills/slop-guard/SKILL.md","content":"x"}'
+RESULT="$(jq -n --arg r "$CG_H/proj" --arg t "$CG_H/cursor-transcript.jsonl" --arg f "$CG_H/proj/n-path.ts" --arg b "export const p = 1" \
+  '{cursor_version:"3.21",conversation_id:"conv-path",transcript_path:$t,workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:$b}}' \
+  | HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$CG_W" 2>/dev/null && echo 0 || echo $?)"
+run_test "regression: Cursor CLI Read of SKILL.md via path records the skill" "0" "$RESULT"
+printf '%s\n' \
+  '{"role":"user","message":{"content":[{"type":"text","text":"<user_query>edit</user_query>"}]}}' \
+  '{"role":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"path":"/home/u/.cursor/skills/code-architecture/SKILL.md"}},{"type":"tool_use","name":"Read","input":{"path":"/home/u/.cursor/skills/slop-guard/SKILL.md"}}]}}' \
+  >"$CG_H/cli.jsonl"
+RESULT="$(jq -n --arg r "$CG_H/proj" --arg t "$CG_H/cli.jsonl" --arg f "$CG_H/proj/n-cli.ts" --arg b "export const p = 1" \
+  '{cursor_version:"3.21",conversation_id:"conv-cli",transcript_path:$t,workspace_roots:[$r],tool_name:"Write",tool_input:{file_path:$f,content:$b}}' \
+  | HOME="$CG_H" XDG_STATE_HOME="$CG_H/state" bash "$CG_W" 2>/dev/null && echo 0 || echo $?)"
+run_test "regression: Cursor CLI transcript Read of SKILL.md counts without a ledger row" "0" "$RESULT"
 run_test "regression: Cursor Write of a 248-line new file in a fresh turn is allowed" "0" \
   "$(cg_cursor_new studio.ts "$(jq -rn '[range(248) | "export const s\(.) = \(.);"] | join("\n")')")"
 run_test "Cursor keeps writing new files after 200 production lines in a turn" "0" "$(cg_cursor_new n4.ts)"

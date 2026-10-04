@@ -52,7 +52,7 @@ This is the workflow. The hooks run even when you do not invoke `/bridle-harness
 1. You send a prompt. `beforeSubmitPrompt` clears the Cursor skill ledger for that chat. The same script blocks the prompt when the text contains a known secret-token prefix. A secret with no listed prefix can pass this script.
 2. The agent classifies the task as answer, diagnose, change, or monitor. A diagnosis does not authorize an edit. Monitoring ends when the agent reports the state it observed.
 3. The agent reads `AGENTS.md` and the files it will edit.
-4. Before a code edit, the agent loads `code-architecture` and `slop-guard`. A test file also needs `testing`. On Cursor, a read of `skills/<name>/SKILL.md` records the skill. On Claude Code, a Skill tool call records it. The ledger resets on your next prompt.
+4. Before a code edit, the agent loads `code-architecture` and `slop-guard`. A test file also needs `testing`. A `Skill` call or a read of `skills/<name>/SKILL.md` records the skill. That record lasts for the rest of the conversation.
 5. The write hook runs before it writes the edit. It denies a new comment line in a code file. It denies a new file longer than 300 lines. It denies growth that would leave a hand-written file above 300 lines. It skips that growth rule when the file already has more than 700 lines.
 6. The same hook denies the edit when a required skill is absent for this turn. The deny names the skill. The agent loads that skill and retries the same edit.
 7. When a file would pass 300 lines, the agent moves one job into a new module, imports that module, and continues. The turn does not stop.

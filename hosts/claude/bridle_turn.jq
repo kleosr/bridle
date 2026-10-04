@@ -7,6 +7,7 @@ def size($t): if $t.name == "Edit" then churn($t.input.old_string | lines; $t.in
   elif $t.name == "Write" then ($t.input.content | lines | length)
   else ($t.input.new_source | lines | length) end;
 def entry($t): {path: ($t.input.file_path // $t.input.notebook_path), write: ($t.name == "Write"), lines: size($t)};
+def skill_from_path: capture("(?:^|/)skills/(?<s>[A-Za-z0-9_-]+)/SKILL\\.md$")? | .s // empty;
 def lead: if type == "string" then . else ([.[]? | select(.type == "text") | .text][0] // "") end;
 def human: .type == "user" and (.isSidechain | not) and (.isMeta | not)
   and (.message.content | (type == "string" or all(.[]?; .type != "tool_result"))
@@ -14,15 +15,16 @@ def human: .type == "user" and (.isSidechain | not) and (.isMeta | not)
 def doc: test("\\.(md|mdx|txt|rst)$");
 def inert: test("(^|/)(tests?|__tests__|spec|node_modules|dist|build|generated|migrations)/|\\.(test|spec)\\.[a-z]+$|(^|/)test_[^/]*\\.py$|_test\\.(go|py)$|\\.lock$|(package-lock\\.json|pnpm-lock\\.yaml)$");
 reduce inputs as $r ({edits: {}, verify: null, skills: []};
-  if ($r | human) then {edits: {}, verify: null, skills: []}
+  if ($r | human) then {edits: {}, verify: null, skills: .skills}
   elif $r.isSidechain == true then .
-  elif $r.type == "assistant" then
+  elif ($r.type == "assistant" or $r.role == "assistant") then
     reduce ($r.message.content[]? | select(.type == "tool_use")) as $t (.;
       if ($t.name | IN("Edit", "Write", "NotebookEdit")) then .edits[$t.id] = entry($t) | .verify = null
       elif $t.name == "Skill" then .skills += [($t.input.skill // "") | sub("^.*:"; "")]
+      elif $t.name == "Read" then .skills += [(($t.input.file_path // $t.input.path // "") | skill_from_path)]
       elif $t.name == "Bash" and (($t.input.command // "") | test($v)) then .verify = {id: $t.id, ok: null}
       else . end)
-  elif $r.type == "user" then
+  elif ($r.type == "user" or $r.role == "user") then
     reduce ($r.message.content[]? | select(type == "object" and .type == "tool_result")) as $x (.;
       (if $x.is_error == true then del(.edits[$x.tool_use_id]) else . end)
       | (if .verify.id == $x.tool_use_id then .verify.ok = ($x.is_error != true) else . end))

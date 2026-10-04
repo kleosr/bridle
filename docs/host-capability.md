@@ -188,7 +188,7 @@ Hooks installed with `FORCE=1 bash hosts/cursor/install.sh install` and `FORCE=1
 | Cursor `stop` → `followup_message` | A `location.reload()` line was left in `quality-gate.mjs` at turn end. Cursor sent the `bridle: turn-check` findings back as the next user message with no human input. | This run |
 
 ### 2026-10-01 — Cursor turn ledger; Claude Bash and Read live
-Cursor writes its transcript only when a turn ends, so the write hook cannot see the current turn there. Cursor turns are now counted in `${XDG_STATE_HOME:-~/.local/state}/bridle/cursor/<conversation_id>.jsonl`. `beforeSubmitPrompt` clears it. `beforeReadFile` adds a skill when a `skills/<name>/SKILL.md` is read (in the Cursor `host_skip`, with no process spawned). `before_write.sh` adds up the turn from the ledger and the pending call, and appends the call once every check has passed.
+Cursor writes its transcript only when a turn ends, so the write hook cannot see the current turn there. Cursor turns are now counted in `${XDG_STATE_HOME:-~/.local/state}/bridle/cursor/<conversation_id>.jsonl`. `beforeReadFile` adds a skill when a `skills/<name>/SKILL.md` is read (in the Cursor `host_skip`, with no process spawned). `beforeSubmitPrompt` does not clear those reads. `before_write.sh` adds up the turn from the ledger and the pending call, and appends the call once every check has passed. Claude Code counts a `Skill` call or a `Read` of `SKILL.md` in the transcript, and keeps that list when the user sends the next prompt.
 
 | Probe | What was seen | Class |
 |---|---|---|

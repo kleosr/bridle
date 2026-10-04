@@ -111,6 +111,10 @@ if [[ -n "$HOST" ]]; then
   [[ -n "$CONV" ]] || exit 0
   LEDGER="${XDG_STATE_HOME:-$HOME/.local/state}/bridle/cursor/$CONV.jsonl"
   PRIOR="$(cat "$LEDGER" 2>/dev/null)"
+  if [[ -f "$TRANSCRIPT" ]]; then
+    FROM_T="$(jq -n --arg v '$^' --arg cwd "$CWD" -f "$TURN_JQ" --argjson pending null "$TRANSCRIPT" 2>/dev/null)" || FROM_T=""
+    PRIOR="$(printf '%s\n%s\n' "$PRIOR" "$FROM_T")"
+  fi
 else
   [[ -f "$TRANSCRIPT" ]] || exit 0
   PRIOR="$(jq -cn --arg v '$^' --arg cwd "$CWD" -f "$TURN_JQ" --argjson pending null "$TRANSCRIPT" 2>/dev/null)" || exit 0
@@ -123,7 +127,7 @@ if [[ "$REL" =~ (^|/)(tests?|__tests__|spec)/|\.(test|spec)\.[a-z]+$|(^|/)test_[
 fi
 for SKILL in ${NEED[@]+"${NEED[@]}"}; do
   jq -e --arg s "$SKILL" '.skills | index($s)' <<<"$TURN" >/dev/null \
-    || deny skill-not-loaded "$REL needs the $SKILL skill first: invoke Skill $SKILL (Cursor: Read skills/$SKILL/SKILL.md), apply it, then retry this $TOOL."
+    || deny skill-not-loaded "$REL needs the $SKILL skill first: invoke Skill $SKILL or Read skills/$SKILL/SKILL.md, apply it, then retry this $TOOL."
 done
 if [[ -n "$HOST" ]]; then
   { mkdir -p "${LEDGER%/*}" && printf '%s\n' "$CALL" >>"$LEDGER"; } 2>/dev/null || true

@@ -68,13 +68,11 @@ emit_continue() {
 
 host_skip() {
   local ledger conv_re='"conversation_id"[[:space:]]*:[[:space:]]*"([A-Za-z0-9_-]+)"'
-  local skill_re='"file_path"[[:space:]]*:[[:space:]]*"[^"]*/skills/([A-Za-z0-9_-]+)/SKILL\.md"'
+  local skill_re='"(file_path|path)"[[:space:]]*:[[:space:]]*"[^"]*/skills/([A-Za-z0-9_-]+)/SKILL\.md"'
   [[ "$1" =~ $conv_re ]] || return 1
   ledger="${XDG_STATE_HOME:-$HOME/.local/state}/bridle/cursor/${BASH_REMATCH[1]}.jsonl"
-  if [[ "$1" == *'"hook_event_name"'*'"beforeSubmitPrompt"'* ]]; then
-    { mkdir -p "${ledger%/*}" && : >"$ledger"; } 2>/dev/null || true
-  elif [[ "$1" =~ $skill_re ]]; then
-    { mkdir -p "${ledger%/*}" && printf '{"skills":["%s"]}\n' "${BASH_REMATCH[1]}" >>"$ledger"; } 2>/dev/null || true
+  if [[ "$1" =~ $skill_re ]]; then
+    { mkdir -p "${ledger%/*}" && printf '{"skills":["%s"]}\n' "${BASH_REMATCH[2]}" >>"$ledger"; } 2>/dev/null || true
   fi
   return 1
 }
