@@ -65,7 +65,9 @@ Esta skill no lo repite.
    - El usuario pide afinar el pedido, o el pedido es ambiguo (paso 1) →
      `prompt-brief`. Rellena los huecos con el repo, marca supuestos, y sigue;
      para solo ante una pregunta que cambia el trabajo.
-4. **Cambia** la superficie mínima: el código, sus callers, registros, config y tests.
+4. **Cambia** la superficie mínima: el código, sus callers, registros, config y
+   tests. Un bug o una mejora que encuentres fuera del pedido no entra al diff:
+   va en el bloque de riesgo no verificado, con ruta y síntoma.
 5. **Verifica** con un comando real y su exit code. "Compila" no es prueba. Si el
    diff crea archivos o nombres, corre además el gate de orden:
    `node <esta-skill>/../code-architecture/scripts/quality-gate.mjs` (sin
@@ -82,7 +84,9 @@ Esta skill no lo repite.
    idea por frase, voz activa, la misma palabra para la misma cosa, sin punto y
    coma. Sin preámbulo, sin oferta ni pregunta de cierre. Entre llamadas a
    herramientas, solo la línea de estado que el host pide. Un supuesto que no
-   cambia el trabajo se escribe como `(supuesto)`, no se pregunta. No cargues
+   cambia el trabajo se escribe como `(supuesto)` dentro del brief o del
+   resultado, no se pregunta. El reporte termina en el último bloque: después
+   no va ninguna frase, oferta ni pregunta. No cargues
    `asd-ste100` para el reporte: este paso ya trae las reglas. Cárgala solo
    cuando el usuario pide un rewrite STE o el texto va a otro agente o sistema.
 

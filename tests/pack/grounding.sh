@@ -88,6 +88,8 @@ run_test "regression: brief template labels translate with the user's language" 
 run_test "regression: asd-ste100 names the status report shape and its faults" "1" "$(grep -c '^## Status Reports' "$PACK/skills/asd-ste100/SKILL.md" || true)"
 run_test "regression: charter forbids closing offers and trailing questions" "1" "$(grep -c 'no closing offer or question. .*State an assumption. Do not ask it.' "$PACK/rules/charter.txt" || true)"
 run_test "regression: a bug fix adds a new regression test instead of renaming one" "1" "$(grep -c 'never rename an existing one' "$PACK/rules/testing.mdc" || true)"
+run_test "regression: a bug found outside the ask goes to unverified risk, not the diff" "1" "$(grep -c 'fuera del pedido no entra al diff' "$PACK/skills/bridle-harness/SKILL.md" || true)"
+run_test "regression: the report ends at the last block" "1" "$(grep -c 'El reporte termina en el último bloque' "$PACK/skills/bridle-harness/SKILL.md" || true)"
 run_test "regression: router creates a grounded AGENTS.md when the repo has none" "1" "$(grep -c 'Si el repo no tiene `AGENTS.md`,' "$PACK/skills/bridle-harness/SKILL.md" || true)"
 
 # The instruction order is written once, in the charter's Session list.
