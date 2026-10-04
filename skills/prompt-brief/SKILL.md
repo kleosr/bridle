@@ -17,6 +17,9 @@ que rellena. Esta skill cierra los huecos **antes** de tocar código, con lo que
 el repo dice, no con lo que el modelo imagina. El brief es corto a propósito:
 cada línea le quita al modelo una decisión que no le toca.
 
+El brief va en el idioma del último mensaje del usuario, no en el de esta skill.
+La etiqueta cambia con él: `(supuesto)` en español, `(assumed)` en inglés.
+
 ## Dos entradas, dos salidas
 
 | Quién la carga | Qué pasa después del brief |
@@ -63,6 +66,9 @@ Fuera de alcance: <lo cercano que NO se toca: refactors, renombres, otras pantal
 Hecho cuando: <comando + exit esperado, o el recorrido de UI que lo demuestra>
 Supuestos: <lista corta, o "ninguno">
 ```
+
+Los rótulos se traducen al idioma del usuario. En inglés: Objective, Context,
+Files, Do, Limits, Out of scope, Done when, Assumptions.
 
 ## Reglas de un buen brief
 

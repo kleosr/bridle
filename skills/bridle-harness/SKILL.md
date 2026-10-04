@@ -59,9 +59,9 @@ Esta skill no lo repite.
    - Bug con causa desconocida → `debugging`.
    - Escribir o ampliar tests → `testing`.
    - La tarea continúa en otra sesión → `handoff`.
-   - Texto que otro agente, sistema o persona debe leer sin ambigüedad
-     (tool descriptions, errores, prompts, reportes, explicaciones), o el
-     usuario pide STE100 o lenguaje simple → `asd-ste100`.
+   - Texto que otro agente o sistema debe leer sin ambigüedad (tool
+     descriptions, errores, prompts), o el usuario pide STE100 o lenguaje
+     simple → `asd-ste100`. El reporte final no la necesita (paso 6).
    - El usuario pide afinar el pedido, o el pedido es ambiguo (paso 1) →
      `prompt-brief`. Rellena los huecos con el repo, marca supuestos, y sigue;
      para solo ante una pregunta que cambia el trabajo.
@@ -70,16 +70,21 @@ Esta skill no lo repite.
    diff crea archivos o nombres, corre además el gate de orden:
    `node <esta-skill>/../code-architecture/scripts/quality-gate.mjs` (sin
    argumentos juzga solo las líneas que agregó el diff; lo preexistente no se toca).
-6. **Reporta** una sola vez, al final, en el idioma del usuario, con los bloques
-   del charter en este orden: brief (si cargó `prompt-brief`), resultado,
-   archivos, prueba (comando y exit code), riesgo no verificado. Escribe en
-   ASD-STE100 modo STE-flavored (`asd-ste100`, sección Status Reports): frases
-   ≤25 palabras, una idea por frase, voz activa, la misma palabra para la misma
-   cosa, sin punto y coma. Las reglas de estructura valen en cualquier idioma.
-   Sin preámbulo, sin oferta ni pregunta de cierre. Entre llamadas a
-   herramientas, solo la línea de estado que el host pide. El riesgo no
-   verificado habla del cambio, no del entorno. Un supuesto que no cambia el
-   trabajo se escribe como `(supuesto)`, no se pregunta.
+6. **Reporta** una sola vez, al final, en el idioma del último mensaje del
+   usuario (español, inglés o el que use), títulos de bloque y etiquetas
+   incluidos: `(supuesto)` en español, `(assumed)` en inglés. Esta skill y sus
+   hermanas están en español, pero eso no fija el idioma: si el usuario
+   escribió en inglés, el reporte y las líneas de estado van en inglés. Bloques
+   en este orden: brief (si cargó `prompt-brief`), resultado (1–2 frases),
+   archivos (una línea por ruta), prueba (comando y exit code), riesgo no
+   verificado (solo lo que la prueba no cubre del cambio; vacío se omite).
+   Reglas ASD-STE100 que valen en cualquier idioma: frases ≤25 palabras, una
+   idea por frase, voz activa, la misma palabra para la misma cosa, sin punto y
+   coma. Sin preámbulo, sin oferta ni pregunta de cierre. Entre llamadas a
+   herramientas, solo la línea de estado que el host pide. Un supuesto que no
+   cambia el trabajo se escribe como `(supuesto)`, no se pregunta. No cargues
+   `asd-ste100` para el reporte: este paso ya trae las reglas. Cárgala solo
+   cuando el usuario pide un rewrite STE o el texto va a otro agente o sistema.
 
 ## Revisores (contexto separado, cuando los invoca el usuario o un disparador que nombra el charter)
 

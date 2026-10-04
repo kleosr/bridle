@@ -1,6 +1,6 @@
 ---
 name: asd-ste100
-description: "Use when English text must be parsed without a human to resolve ambiguity — tool descriptions, error messages, inter-agent instructions, system prompts, status reports — and misreading has a real cost, or when text reads as dense, hedged, or easy to misparse. Triggers: disambiguate, STE100 rewrite, apply Simplified Technical English, plain-language rewrite, controlled-language rewrite, rewrite so an agent cannot misread this. Not for creative or marketing copy."
+description: "Use when English text must be parsed without a human to resolve ambiguity — tool descriptions, error messages, inter-agent instructions, system prompts, status reports — and misreading has a real cost, or when text reads as dense, hedged, or easy to misparse. Triggers: disambiguate, STE100 rewrite, apply Simplified Technical English, plain-language rewrite, controlled-language rewrite, rewrite so an agent cannot misread this. Not for creative or marketing copy, and not for the agent's own end-of-task report: the harness router carries those rules, in the user's language."
 version: 0.4.0
 ---
 
@@ -163,7 +163,7 @@ These eight habits cover most of what makes machine-written English hard to pars
 
 ## Status Reports
 
-An agent's end-of-task report is a Write request in STE-flavored mode. The user reads it once, without you in the room, so the shape does not change between runs. Write it in the user's language, block names included. The structural rules apply in every language.
+An agent's end-of-task report is a Write request in STE-flavored mode. The user reads it once, without you in the room, so the shape does not change between runs. Write it in the language of the user's last message (Spanish, English, or any other), block names included. The structural rules apply in every language. The harness router (`bridle-harness`, step 6) carries this section's rules, so an agent does not load this skill to write its report. This section is the reference for the rules and for the faults to scan for.
 
 Write the report once, at the end of the task. Between tool calls, write only the status line the host asks for. Use these blocks, in this order, and skip a block only when it is empty:
 
